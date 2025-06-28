@@ -119,6 +119,8 @@ def check_mongodb_connection(mongo_client, app):
         except Exception as e:
             logger.error(f"MongoDB client is closed: {str(e)}")
             try:
+                from pymongo import MongoClient
+                import certifi
                 new_client = MongoClient(
                     app.config['MONGO_URI'],
                     connect=False,
@@ -145,6 +147,8 @@ def setup_session(app):
     try:
         if not check_mongodb_connection(mongo_client, app):
             logger.error("MongoDB client is not open, attempting to reinitialize")
+            from pymongo import MongoClient
+            import certifi
             mongo_client_new = MongoClient(
                 app.config['MONGO_URI'],
                 connect=False,
@@ -271,24 +275,25 @@ def create_app():
     
     # Initialize scheduler
     try:
-        scheduler = init_scheduler(app, get_mongo_db())
-        app.config['SCHEDULER'] = scheduler
-        logger.info("Scheduler initialized successfully")
-        def shutdown_scheduler():
-            try:
-                if scheduler and scheduler.running:
-                    scheduler.shutdown(wait=True)
-                    logger.info("Scheduler shutdown successfully")
-            except Exception as e:
-                logger.error(f"Error shutting down scheduler: {str(e)}", exc_info=True)
-        atexit.register(shutdown_scheduler)
+        with app.app_context():
+            scheduler = init_scheduler(app, get_mongo_db())
+            app.config['SCHEDULER'] = scheduler
+            logger.info("Scheduler initialized successfully")
+            def shutdown_scheduler():
+                try:
+                    if scheduler and scheduler.running:
+                        scheduler.shutdown(wait=True)
+                        logger.info("Scheduler shutdown successfully")
+                except Exception as e:
+                    logger.error(f"Error shutting down scheduler: {str(e)}", exc_info=True)
+            atexit.register(shutdown_scheduler)
     except Exception as e:
         logger.error(f"Failed to initialize scheduler: {str(e)}", exc_info=True)
     
     # Initialize database
     with app.app_context():
         initialize_database(app)
-        admin_email = os.environ.get('ADMIN_EMAIL', 'ficore@gmail.com')
+        admin_email = os.environ.get('ADMIN_EMAIL', 'ficorerecords@gmail.com')
         admin_password = os.environ.get('ADMIN_PASSWORD', 'Admin123!')
         admin_username = os.environ.get('ADMIN_USERNAME', 'admin')
         admin_user = get_user_by_email(get_mongo_db(), admin_email)
@@ -309,53 +314,111 @@ def create_app():
         else:
             logger.info(f"Admin user already exists with email: {admin_email}")
     
-    # Register blueprints - Existing accounting blueprints
-    from users.routes import users_bp
-    from agents.routes import agents_bp
-    from common.routes import common_bp
-    from coins.routes import coins_bp
-    from creditors.routes import creditors_bp
-    from dashboard.routes import dashboard_bp
-    from debtors.routes import debtors_bp
-    from inventory.routes import inventory_bp
-    from payments.routes import payments_bp
-    from receipts.routes import receipts_bp
-    from reports.routes import reports_bp
-    from settings.routes import settings_bp
-    from admin.routes import admin_bp
+    # Register blueprints - Import all existing blueprints
+    try:
+        from users.routes import users_bp
+        app.register_blueprint(users_bp, url_prefix='/users')
+        logger.info("Registered users blueprint")
+    except ImportError as e:
+        logger.warning(f"Could not import users blueprint: {e}")
     
-    # Register new personal finance blueprints
-    from personal.bill import bill_bp
-    from personal.budget import budget_bp
-    from personal.emergency_fund import emergency_fund_bp
-    from personal.financial_health import financial_health_bp
-    from personal.learning_hub import learning_hub_bp
-    from personal.net_worth import net_worth_bp
-    from personal.quiz import quiz_bp
+    try:
+        from agents.routes import agents_bp
+        app.register_blueprint(agents_bp, url_prefix='/agents')
+        logger.info("Registered agents blueprint")
+    except ImportError as e:
+        logger.warning(f"Could not import agents blueprint: {e}")
     
-    # Register existing accounting blueprints
-    app.register_blueprint(users_bp, url_prefix='/users')
-    app.register_blueprint(agents_bp, url_prefix='/agents')
-    app.register_blueprint(common_bp, url_prefix='/common')
-    app.register_blueprint(coins_bp, url_prefix='/coins')
-    app.register_blueprint(creditors_bp, url_prefix='/creditors')
-    app.register_blueprint(dashboard_bp, url_prefix='/dashboard')
-    app.register_blueprint(debtors_bp, url_prefix='/debtors')
-    app.register_blueprint(inventory_bp, url_prefix='/inventory')
-    app.register_blueprint(payments_bp, url_prefix='/payments')
-    app.register_blueprint(receipts_bp, url_prefix='/receipts')
-    app.register_blueprint(reports_bp, url_prefix='/reports')
-    app.register_blueprint(settings_bp, url_prefix='/settings')
-    app.register_blueprint(admin_bp, url_prefix='/admin')
+    try:
+        from coins.routes import coins_bp
+        app.register_blueprint(coins_bp, url_prefix='/coins')
+        logger.info("Registered coins blueprint")
+    except ImportError as e:
+        logger.warning(f"Could not import coins blueprint: {e}")
+    
+    try:
+        from creditors.routes import creditors_bp
+        app.register_blueprint(creditors_bp, url_prefix='/creditors')
+        logger.info("Registered creditors blueprint")
+    except ImportError as e:
+        logger.warning(f"Could not import creditors blueprint: {e}")
+    
+    try:
+        from dashboard.routes import dashboard_bp
+        app.register_blueprint(dashboard_bp, url_prefix='/dashboard')
+        logger.info("Registered dashboard blueprint")
+    except ImportError as e:
+        logger.warning(f"Could not import dashboard blueprint: {e}")
+    
+    try:
+        from debtors.routes import debtors_bp
+        app.register_blueprint(debtors_bp, url_prefix='/debtors')
+        logger.info("Registered debtors blueprint")
+    except ImportError as e:
+        logger.warning(f"Could not import debtors blueprint: {e}")
+    
+    try:
+        from inventory.routes import inventory_bp
+        app.register_blueprint(inventory_bp, url_prefix='/inventory')
+        logger.info("Registered inventory blueprint")
+    except ImportError as e:
+        logger.warning(f"Could not import inventory blueprint: {e}")
+    
+    try:
+        from payments.routes import payments_bp
+        app.register_blueprint(payments_bp, url_prefix='/payments')
+        logger.info("Registered payments blueprint")
+    except ImportError as e:
+        logger.warning(f"Could not import payments blueprint: {e}")
+    
+    try:
+        from receipts.routes import receipts_bp
+        app.register_blueprint(receipts_bp, url_prefix='/receipts')
+        logger.info("Registered receipts blueprint")
+    except ImportError as e:
+        logger.warning(f"Could not import receipts blueprint: {e}")
+    
+    try:
+        from reports.routes import reports_bp
+        app.register_blueprint(reports_bp, url_prefix='/reports')
+        logger.info("Registered reports blueprint")
+    except ImportError as e:
+        logger.warning(f"Could not import reports blueprint: {e}")
+    
+    try:
+        from settings.routes import settings_bp
+        app.register_blueprint(settings_bp, url_prefix='/settings')
+        logger.info("Registered settings blueprint")
+    except ImportError as e:
+        logger.warning(f"Could not import settings blueprint: {e}")
+    
+    try:
+        from admin.routes import admin_bp
+        app.register_blueprint(admin_bp, url_prefix='/admin')
+        logger.info("Registered admin blueprint")
+    except ImportError as e:
+        logger.warning(f"Could not import admin blueprint: {e}")
     
     # Register personal finance blueprints
-    app.register_blueprint(bill_bp, url_prefix='/personal/bill')
-    app.register_blueprint(budget_bp, url_prefix='/personal/budget')
-    app.register_blueprint(emergency_fund_bp, url_prefix='/personal/emergency_fund')
-    app.register_blueprint(financial_health_bp, url_prefix='/personal/financial_health')
-    app.register_blueprint(learning_hub_bp, url_prefix='/personal/learning_hub')
-    app.register_blueprint(net_worth_bp, url_prefix='/personal/net_worth')
-    app.register_blueprint(quiz_bp, url_prefix='/personal/quiz')
+    try:
+        from personal.bill import bill_bp
+        from personal.budget import budget_bp
+        from personal.emergency_fund import emergency_fund_bp
+        from personal.financial_health import financial_health_bp
+        from personal.learning_hub import learning_hub_bp
+        from personal.net_worth import net_worth_bp
+        from personal.quiz import quiz_bp
+        
+        app.register_blueprint(bill_bp, url_prefix='/personal/bill')
+        app.register_blueprint(budget_bp, url_prefix='/personal/budget')
+        app.register_blueprint(emergency_fund_bp, url_prefix='/personal/emergency_fund')
+        app.register_blueprint(financial_health_bp, url_prefix='/personal/financial_health')
+        app.register_blueprint(learning_hub_bp, url_prefix='/personal/learning_hub')
+        app.register_blueprint(net_worth_bp, url_prefix='/personal/net_worth')
+        app.register_blueprint(quiz_bp, url_prefix='/personal/quiz')
+        logger.info("Registered all personal finance blueprints")
+    except ImportError as e:
+        logger.error(f"Could not import personal finance blueprints: {e}")
     
     # Jinja2 globals and filters
     app.jinja_env.globals.update(
