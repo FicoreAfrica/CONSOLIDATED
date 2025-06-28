@@ -1,0 +1,47 @@
+<!-- Example Jinja2 template showing how to use translations -->
+<!DOCTYPE html>
+<html lang="{{ current_lang }}">
+<head>
+    <title>{{ trans('main_page_title') }}</title>
+</head>
+<body>
+    <!-- Core translations (prefixed) -->
+    <h1>{{ trans('core_welcome') }}</h1>
+    
+    <!-- Main translations (prefixed or unprefixed) -->
+    <nav>
+        <a href="/">{{ trans('main_home') }}</a>
+        <a href="/about">{{ trans('About') }}</a>  <!-- Unprefixed, will check main module -->
+        <a href="/contact">{{ trans('Contact') }}</a>
+    </nav>
+    
+    <!-- Module-specific translations -->
+    <div class="quiz-section">
+        <h2>{{ trans('quiz_personality_quiz') }}</h2>
+        <button>{{ trans('quiz_start_quiz') }}</button>
+    </div>
+    
+    <!-- Bill translations -->
+    <div class="bills">
+        <h3>{{ trans('bill_dashboard') }}</h3>
+        <p>{{ trans('bill_manage_bills') }}</p>
+    </div>
+    
+    <!-- Emergency fund translations -->
+    <div class="emergency-fund">
+        <h3>{{ trans('emergency_fund_calculator') }}</h3>
+        <button>{{ trans('emergency_fund_start_emergency_fund') }}</button>
+    </div>
+    
+    <!-- Translations with parameters -->
+    <p>{{ trans('bill_paid_count', count=5) }}</p>
+    <p>{{ trans('emergency_fund_insight_savings_gap', savings_gap='50000', months='6') }}</p>
+    
+    <!-- Common UI elements (automatically routed to main module) -->
+    <footer>
+        <a href="/help">{{ trans('Help') }}</a>
+        <a href="/support">{{ trans('Support') }}</a>
+        <a href="/privacy">{{ trans('Privacy') }}</a>
+    </footer>
+</body>
+</html>
