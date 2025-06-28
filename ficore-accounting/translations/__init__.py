@@ -39,7 +39,7 @@ try:
     
     # Import main translations (treating as core-level but separate)
     try:
-        from .main_translations import MAIN_TRANSLATIONS as translations_main
+        from .main_translations import TRANSLATIONS as translations_main
     except ImportError:
         logger.warning("main_translations.py not found, using empty translations")
         translations_main = {'en': {}, 'ha': {}}
