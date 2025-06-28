@@ -13,6 +13,16 @@ from flask_limiter.util import get_remote_address
 from flask_mailman import Mail
 from extensions import mongo_client
 
+# Import translation functions to support different import patterns
+try:
+    from translations import trans, get_translations
+except ImportError:
+    # Fallback if translations module is not available
+    def trans(key, lang=None, **kwargs):
+        return key
+    def get_translations(lang='en'):
+        return {'trans': lambda key, **kwargs: key}
+
 logger = logging.getLogger(__name__)
 
 # Initialize limiter and mail as singletons
@@ -190,3 +200,68 @@ def check_mongodb_connection(mongo_client, app):
     except Exception as e:
         logger.error(f"MongoDB connection error: {str(e)}", exc_info=True)
         return False
+
+# Translation utility functions for blueprints
+def get_template_translations(lang=None):
+    """
+    Get translation function for templates.
+    
+    Args:
+        lang: Language code ('en', 'ha'). Defaults to session['lang'] or 'en'.
+    
+    Returns:
+        Dictionary with 'trans' function for use in templates.
+    """
+    if lang is None:
+        lang = session.get('lang', 'en')
+    
+    return {
+        'trans': lambda key, **kwargs: trans(key, lang=lang, **kwargs),
+        'current_lang': lang
+    }
+
+def get_blueprint_context():
+    """
+    Get standard context for blueprint templates including translations.
+    
+    Returns:
+        Dictionary with translation functions and common template variables.
+    """
+    current_lang = session.get('lang', 'en')
+    
+    return {
+        'trans': lambda key, **kwargs: trans(key, lang=current_lang, **kwargs),
+        'translations': lambda key, **kwargs: trans(key, lang=current_lang, **kwargs),  # Alternative name
+        'trans_function': lambda key, **kwargs: trans(key, lang=current_lang, **kwargs),  # Legacy support
+        'current_lang': current_lang,
+        'is_english': current_lang == 'en',
+        'is_hausa': current_lang == 'ha',
+        'format_currency': format_currency,
+        'format_date': format_date
+    }
+
+def setup_blueprint_translations(blueprint):
+    """
+    Set up translation context processor for a blueprint.
+    
+    Args:
+        blueprint: Flask blueprint instance
+    """
+    @blueprint.app_context_processor
+    def inject_blueprint_translations():
+        """Make translations available to all templates in this blueprint."""
+        return get_blueprint_context()
+
+# Backward compatibility aliases
+translations = trans  # For blueprints using 'translations' import
+trans_function_compat = trans  # For blueprints using 'trans_function' import
+
+# Export translation functions for different import patterns
+__all__ = [
+    'get_limiter', 'get_mail', 'get_user_query', 'is_admin', 'is_valid_email',
+    'requires_role', 'check_coin_balance', 'sanitize_input', 'generate_invoice_number',
+    'format_currency', 'format_date', 'get_mongo_db', 'close_mongo_db',
+    'check_mongodb_connection', 'get_template_translations', 'get_blueprint_context',
+    'setup_blueprint_translations', 'trans', 'translations', 'trans_function_compat',
+    'get_translations'
+]
