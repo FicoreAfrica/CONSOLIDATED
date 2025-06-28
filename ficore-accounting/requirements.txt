@@ -9,7 +9,7 @@ Flask-Babel==4.0.0
 Babel==2.16.0
 Werkzeug==3.0.4
 Jinja2==3.1.4
-setuptools>=70.0.0,<81
+setuptools>=65.0.0,<66.0.0
 Flask-Session==0.8.0
 email-validator==2.2.0
 Flask-Limiter==3.8.0
