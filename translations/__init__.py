@@ -36,6 +36,14 @@ try:
     from .translations_financial_health import FINANCIAL_HEALTH_TRANSLATIONS as translations_financial_health
     from .translations_net_worth import NET_WORTH_TRANSLATIONS as translations_net_worth
     from .translations_learning_hub import LEARNING_HUB_TRANSLATIONS as translations_learning_hub
+    
+    # Import main translations (treating as core-level but separate)
+    try:
+        from .main_translations import MAIN_TRANSLATIONS as translations_main
+    except ImportError:
+        logger.warning("main_translations.py not found, using empty translations")
+        translations_main = {'en': {}, 'ha': {}}
+        
 except ImportError as e:
     logger.error(f"Failed to import translation module: {str(e)}", exc_info=True)
     raise
@@ -43,6 +51,7 @@ except ImportError as e:
 # Map module names to translation dictionaries
 translation_modules = {
     'core': translations_core,
+    'main': translations_main,  # Add main translations as separate module
     'quiz': translations_quiz,
     'mailersend': translations_mailersend,
     'bill': translations_bill,
@@ -57,6 +66,7 @@ translation_modules = {
 # Map key prefixes to module names
 KEY_PREFIX_TO_MODULE = {
     'core_': 'core',
+    'main_': 'main',  # Add main prefix mapping
     'quiz_': 'quiz',
     'badge_': 'quiz',  # Route badge_ keys to QUIZ_TRANSLATIONS
     'mailersend_': 'mailersend',
@@ -72,6 +82,14 @@ KEY_PREFIX_TO_MODULE = {
 # Quiz-specific keys without prefixes
 QUIZ_SPECIFIC_KEYS = {'Yes', 'No', 'See Results'}
 
+# Main-specific keys without prefixes (common navigation and UI elements)
+MAIN_SPECIFIC_KEYS = {
+    'Home', 'About', 'Contact', 'Login', 'Logout', 'Register', 'Profile',
+    'Settings', 'Help', 'Support', 'Terms', 'Privacy', 'FAQ', 'Documentation',
+    'Get Started', 'Learn More', 'Try Now', 'Sign Up', 'Sign In', 'Welcome',
+    'Dashboard', 'Tools', 'Features', 'Pricing', 'Blog', 'News', 'Updates'
+}
+
 # Log loaded translations
 for module_name, translations in translation_modules.items():
     for lang in ['en', 'ha']:
@@ -83,7 +101,7 @@ def trans(key: str, lang: Optional[str] = None, **kwargs: str) -> str:
     Translate a key using the appropriate module's translation dictionary.
     
     Args:
-        key: The translation key (e.g., 'core_submit', 'quiz_yes', 'Yes').
+        key: The translation key (e.g., 'core_submit', 'main_welcome', 'quiz_yes', 'Yes').
         lang: Language code ('en', 'ha'). Defaults to session['lang'] or 'en'.
         **kwargs: String formatting parameters for the translated string.
     
@@ -95,6 +113,7 @@ def trans(key: str, lang: Optional[str] = None, **kwargs: str) -> str:
         - Uses session['lang'] if lang is None and request context exists.
         - Logs warnings for missing translations.
         - Uses g.logger if available, else the default logger.
+        - Checks main translations for common UI elements without prefixes.
     """
     current_logger = g.get('logger', logger) if has_request_context() else logger
     session_id = session.get('sid', 'no-session-id') if has_request_context() else 'no-session-id'
@@ -108,12 +127,28 @@ def trans(key: str, lang: Optional[str] = None, **kwargs: str) -> str:
 
     # Determine module based on key prefix or specific keys
     module_name = 'core'
+    
+    # Check for specific prefix mappings first
     for prefix, mod in KEY_PREFIX_TO_MODULE.items():
         if key.startswith(prefix):
             module_name = mod
             break
+    
+    # Check for quiz-specific keys
     if key in QUIZ_SPECIFIC_KEYS and has_request_context() and '/quiz/' in request.path:
         module_name = 'quiz'
+    
+    # Check for main-specific keys (common UI elements)
+    elif key in MAIN_SPECIFIC_KEYS:
+        module_name = 'main'
+    
+    # If no specific module found and key doesn't have a prefix, check main first, then core
+    elif '_' not in key:
+        # Try main module first for unprefixed keys
+        main_module = translation_modules.get('main', {})
+        main_lang_dict = main_module.get(lang, {})
+        if key in main_lang_dict:
+            module_name = 'main'
 
     module = translation_modules.get(module_name, translation_modules['core'])
     lang_dict = module.get(lang, {})
@@ -160,4 +195,30 @@ def get_translations(lang: Optional[str] = None) -> Dict[str, callable]:
         'trans': lambda key, **kwargs: trans(key, lang=lang, **kwargs)
     }
 
-__all__ = ['trans']
+def get_all_translations() -> Dict[str, Dict[str, Dict[str, str]]]:
+    """
+    Get all translations from all modules.
+    
+    Returns:
+        A dictionary with module names as keys and their translation dictionaries as values.
+    """
+    return translation_modules.copy()
+
+def get_module_translations(module_name: str, lang: Optional[str] = None) -> Dict[str, str]:
+    """
+    Get translations for a specific module and language.
+    
+    Args:
+        module_name: Name of the translation module (e.g., 'core', 'main', 'quiz').
+        lang: Language code ('en', 'ha'). Defaults to session['lang'] or 'en'.
+    
+    Returns:
+        Dictionary of translations for the specified module and language.
+    """
+    if lang is None:
+        lang = session.get('lang', 'en') if has_request_context() else 'en'
+    
+    module = translation_modules.get(module_name, {})
+    return module.get(lang, {})
+
+__all__ = ['trans', 'get_translations', 'get_all_translations', 'get_module_translations']
