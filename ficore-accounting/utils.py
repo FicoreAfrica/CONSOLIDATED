@@ -5,7 +5,7 @@ from datetime import datetime, date
 from flask import flash, request, redirect, url_for, current_app, g, session
 from flask_login import current_user
 from functools import wraps
-from translations import trans_function
+from translations import trans as trans_function
 from pymongo.errors import ConnectionFailure
 from gridfs import GridFS
 from flask_limiter import Limiter
