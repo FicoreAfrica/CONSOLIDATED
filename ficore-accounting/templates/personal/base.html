@@ -52,14 +52,14 @@
                             {{ t('general_tools', default='Tools') | e }}
                         </a>
                         <ul class="dropdown-menu" aria-labelledby="toolsDropdown">
-                            <li><a class="dropdown-item" href="{{ url_for('financial_health.step1') | e }}">{{ t('financial_health_financial_health_score', default='Financial Health Score') | e }}</a></li>
-                            <li><a class="dropdown-item" href="{{ url_for('quiz.step1', course_id='financial_quiz') | e }}">{{ t('quiz_personality_quiz', default='Personality Quiz') | e }}</a></li>
+                            <li><a class="dropdown-item" href="{{ url_for('financial_health.main') | e }}">{{ t('financial_health_financial_health_score', default='Financial Health Score') | e }}</a></li>
+                            <li><a class="dropdown-item" href="{{ url_for('quiz.main', course_id='financial_quiz') | e }}">{{ t('quiz_personality_quiz', default='Personality Quiz') | e }}</a></li>
                             <li><a class="dropdown-item" href="{{ url_for('general_dashboard') | e }}">{{ t('general_general_dashboard', default='General Dashboard') | e }}</a></li>
-                            <li><a class="dropdown-item" href="{{ url_for('budget.step1') | e }}">{{ t('budget_budget_planner', default='Budget Planner') | e }}</a></li>
-                            <li><a class="dropdown-item" href="{{ url_for('bill.form_step1') | e }}">{{ t('bill_bill_planner', default='Bill Planner') | e }}</a></li>
-                            <li><a class="dropdown-item" href="{{ url_for('emergency_fund.step1') | e }}">{{ t('emergency_fund_calculator', default='Emergency Fund Planner') | e }}</a></li>
-                            <li><a class="dropdown-item" href="{{ url_for('net_worth.step1') | e }}">{{ t('net_worth_net_worth_calculator', default='Net Worth Tracker') | e }}</a></li>
-                            <li><a class="dropdown-item" href="{{ url_for('learning_hub.courses') | e }}">{{ t('learning_hub_courses', default='Learning Hub') | e }}</a></li>
+                            <li><a class="dropdown-item" href="{{ url_for('budget.main') | e }}">{{ t('budget_budget_planner', default='Budget Planner') | e }}</a></li>
+                            <li><a class="dropdown-item" href="{{ url_for('bill.main') | e }}">{{ t('bill_bill_planner', default='Bill Planner') | e }}</a></li>
+                            <li><a class="dropdown-item" href="{{ url_for('emergency_fund.main') | e }}">{{ t('emergency_fund_calculator', default='Emergency Fund Planner') | e }}</a></li>
+                            <li><a class="dropdown-item" href="{{ url_for('net_worth.main') | e }}">{{ t('net_worth_net_worth_calculator', default='Net Worth Tracker') | e }}</a></li>
+                            <li><a class="dropdown-item" href="{{ url_for('learning_hub.main') | e }}">{{ t('learning_hub_courses', default='Learning Hub') | e }}</a></li>
                         </ul>
                     </li>
                     <li class="nav-item dropdown">
@@ -85,7 +85,7 @@
                     </li>
                     {% if current_user.get('is_admin', False) %}
                     <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('admin.overview') | e }}">{{ t('admin_admin_panel', default='Admin Panel') | e }}</a>
+                        <a class="nav-link" href="{{ url_for('admin_blueprint.dashboard') | e }}">{{ t('admin_admin_panel', default='Admin Panel') | e }}</a>
                     </li>
                     {% endif %}
                 </ul>
@@ -98,7 +98,7 @@
                             </button>
                         </li>
                         <li class="nav-item">
-                            <a class="profile-icon" href="{{ url_for('auth.profile') | e }}" data-bs-toggle="tooltip" data-bs-title="{{ t('general_profile_tooltip', default='Manage your account') | e }}" aria-label="{{ t('general_profile', default='Profile') | e }}">
+                            <a class="profile-icon" href="{{ url_for('settings_blueprint.profile') | e }}" data-bs-toggle="tooltip" data-bs-title="{{ t('general_profile_tooltip', default='Manage your account') | e }}" aria-label="{{ t('general_profile', default='Profile') | e }}">
                                 <i class="bi bi-person-dash"></i>
                             </a>
                         </li>
@@ -107,20 +107,20 @@
                                 {{ current_user.display_name | default(t('general_profile', default='Profile') | e) | e }}
                             </a>
                             <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="profileDropdown">
-                                <li><a class="dropdown-item" href="{{ url_for('auth.profile') | e }}">{{ t('general_profile', default='Profile') | e }}</a></li>
+                                <li><a class="dropdown-item" href="{{ url_for('settings_blueprint.profile') | e }}">{{ t('general_profile', default='Profile') | e }}</a></li>
                                 <li><a class="dropdown-item" href="{{ url_for('feedback') | e }}">{{ t('general_feedback', default='Send Feedback') | e }}</a></li>
                                 {% if current_user.get('is_admin', False) %}
-                                <li><a class="dropdown-item" href="{{ url_for('admin.overview') | e }}">{{ t('admin_admin_panel', default='Admin Panel') | e }}</a></li>
+                                <li><a class="dropdown-item" href="{{ url_for('admin_blueprint.dashboard') | e }}">{{ t('admin_admin_panel', default='Admin Panel') | e }}</a></li>
                                 {% endif %}
-                                <li><a class="dropdown-item" href="{{ url_for('auth.logout') | e }}">{{ t('general_logout', default='Logout') | e }}</a></li>
+                                <li><a class="dropdown-item" href="{{ url_for('users_blueprint.logout') | e }}">{{ t('general_logout', default='Logout') | e }}</a></li>
                             </ul>
                         </li>
                     {% else %}
                         <li class="nav-item">
-                            <a class="nav-link" href="{{ url_for('auth.signin') | e }}" data-bs-toggle="tooltip" data-bs-title="{{ t('general_login_tooltip', default='Log in to your account') | e }}">{{ t('general_login', default='Login') | e }}</a>
+                            <a class="nav-link" href="{{ url_for('users_blueprint.login') | e }}" data-bs-toggle="tooltip" data-bs-title="{{ t('general_login_tooltip', default='Log in to your account') | e }}">{{ t('general_login', default='Login') | e }}</a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link" href="{{ url_for('auth.signup') | e }}" data-bs-toggle="tooltip" data-bs-title="{{ t('general_signup_tooltip', default='Create a new account') | e }}">{{ t('general_signup', default='Sign Up') | e }}</a></li>
+                            <a class="nav-link" href="{{ url_for('users_blueprint.signup') | e }}" data-bs-toggle="tooltip" data-bs-title="{{ t('general_signup_tooltip', default='Create a new account') | e }}">{{ t('general_signup', default='Sign Up') | e }}</a></li>
                     {% endif %}
                     <li class="nav-item dropdown">
                         <a class="nav-link dropdown-toggle" href="#" id="languageDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false" data-bs-title="{{ t('general_language_tooltip', default='Change language') | e }}" aria-label="{{ t('general_language', default='Language') | e }}">
@@ -132,7 +132,7 @@
                         </ul>
                     </li>
                     <li class="nav-item">
-                        <button class="nav-link btn btn-link" id="darkModeToggle" onclick="toggleDarkMode()" data-bs-toggle="tooltip" data vedono="tooltip" data-bs-title="{{ t('general_mode_toggle_tooltip_switch_to_dark', default='Switch to dark mode') | e }}" aria-label="{{ t('general_mode_toggle_dark', default='Toggle dark mode') | e }}">
+                        <button class="nav-link btn btn-link" id="darkModeToggle" onclick="toggleDarkMode()" data-bs-toggle="tooltip" data-bs-title="{{ t('general_mode_toggle_tooltip_switch_to_dark', default='Switch to dark mode') | e }}" aria-label="{{ t('general_mode_toggle_dark', default='Toggle dark mode') | e }}">
                             <i class="bi bi-moon-stars"></i>
                         </button>
                     </li>
@@ -179,11 +179,11 @@
                 <i class="bi bi-list-ul"></i>
                 <span>{{ t('general_general_dashboard', default='Dashboard') }}</span>
             </a>
-            <a href="{{ url_for('budget.step1') }}" class="nav-item {% if request.endpoint == 'budget.step1' %}active{% endif %}">
+            <a href="{{ url_for('budget.main') }}" class="nav-item {% if request.endpoint == 'budget.main' %}active{% endif %}">
                 <i class="bi bi-calculator"></i>
                 <span>{{ t('budget_budget_planner', default='Budget') }}</span>
             </a>
-            <a href="{{ url_for('net_worth.step1') }}" class="nav-item {% if request.endpoint == 'net_worth.step1' %}active{% endif %}">
+            <a href="{{ url_for('net_worth.main') }}" class="nav-item {% if request.endpoint == 'net_worth.main' %}active{% endif %}">
                 <i class="bi bi-balance-scale"></i>
                 <span>{{ t('net_worth_net_worth_calculator', default='Net Worth') }}</span>
             </a>
@@ -195,13 +195,30 @@
                 <i class="bi bi-calculator"></i>
                 <span>{{ t('general_taxation', default='Taxation') }}</span>
             </a>
-            <a href="{{ url_for('auth.profile') }}" class="nav-item {% if request.endpoint == 'auth.profile' %}active{% endif %}">
+            <a href="{{ url_for('settings_blueprint.profile') }}" class="nav-item {% if request.endpoint == 'settings_blueprint.profile' %}active{% endif %}">
                 <i class="bi bi-person"></i>
                 <span>{{ t('general_profile', default='Profile') }}</span>
             </a>
         </div>
     </nav>
     {% endif %}
+
+    <div class="modal fade" id="notificationModal" tabindex="-1" aria-labelledby="notificationModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="notificationModalLabel">{{ t('general_notifications', default='Notifications') | e }}</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="{{ t('general_close', default='Close') | e }}"></button>
+                </div>
+                <div class="modal-body" id="notificationBody">
+                    <p>{{ t('general_loading_notifications', default='Loading notifications...') | e }}</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{{ t('general_close', default='Close') | e }}</button>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <footer class="footer mt-5" style="background: linear-gradient(90deg, #003087, #004D40); color: white;">
         <div class="container text-center py-4" role="contentinfo">
@@ -222,9 +239,9 @@
                 <a href="mailto:support@ficoreafrica.com" class="text-white"><i class="fas fa-envelope"></i> {{ t('general_contact_us', default='Contact Us') | e }}</a>
                 <a href="{{ url_for('feedback') | e }}" class="text-white"><i class="fas fa-comment"></i> {{ t('general_provide_feedback', default='Provide Feedback') | e }}</a>
                 {% if current_user.is_authenticated %}
-                <a href="{{ url_for('auth.logout') | e }}" class="text-white"><i class="fas fa-sign-out-alt"></i> {{ t('general_logout', default='Logout') | e }}</a>
+                <a href="{{ url_for('users_blueprint.logout') | e }}" class="text-white"><i class="fas fa-sign-out-alt"></i> {{ t('general_logout', default='Logout') | e }}</a>
                 {% else %}
-                <a href="{{ url_for('auth.signin') | e }}" class="text-white"><i class="fas fa-sign-in-alt"></i> {{ t('general_login', default='Login') | e }}</a>
+                <a href="{{ url_for('users_blueprint.login') | e }}" class="text-white"><i class="fas fa-sign-in-alt"></i> {{ t('general_login', default='Login') | e }}</a>
                 {% endif %}
             </div>
         </div>
@@ -235,6 +252,23 @@
     <script src="{{ url_for('static', filename='js/scripts.js') | e }}"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function() {
+            // Only use stored value, default to light mode
+            const storedDarkMode = localStorage.getItem('dark_mode');
+            const isDark = storedDarkMode === 'true';
+            if (isDark) {
+                document.documentElement.classList.add('dark-mode');
+            } else {
+                document.documentElement.classList.remove('dark-mode');
+            }
+
+            // Set initial dark mode toggle icon
+            const darkModeToggle = document.getElementById('darkModeToggle');
+            if (darkModeToggle) {
+                darkModeToggle.querySelector('i').className = isDark ? 'bi bi-sun' : 'bi bi-moon-stars';
+                darkModeToggle.setAttribute('data-bs-title', isDark ? '{{ t("general_mode_toggle_tooltip_switch_to_light", default="Switch to light mode") | e }}' : '{{ t("general_mode_toggle_tooltip_switch_to_dark", default="Switch to dark mode") | e }}');
+                darkModeToggle.setAttribute('aria-label', isDark ? '{{ t("general_mode_toggle_light", default="Toggle light mode") | e }}' : '{{ t("general_mode_toggle_dark", default="Toggle dark mode") | e }}');
+            }
+
             // Form validation
             document.querySelectorAll('form.validate-form').forEach(form => {
                 form.addEventListener('submit', function(e) {
