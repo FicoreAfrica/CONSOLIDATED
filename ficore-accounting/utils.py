@@ -103,7 +103,7 @@ def get_mongo_db():
     Get MongoDB database connection.
     
     Returns:
-        Database object or None if connection fails
+        Database object
     """
     try:
         global mongo_client
@@ -117,10 +117,10 @@ def get_mongo_db():
             return mongo_client.ficodb
         
         logger.error(trans('general_no_mongo_client', default='No MongoDB client available'))
-        return None
+        raise RuntimeError("No MongoDB client available")
     except Exception as e:
         logger.error(f"{trans('general_mongo_connection_error', default='Error getting MongoDB connection')}: {str(e)}", exc_info=True)
-        return None
+        raise
 
 def close_mongo_db():
     """
