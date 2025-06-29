@@ -42,6 +42,17 @@
                     <li class="nav-item">
                         <a class="nav-link" href="{{ url_for('contact') | e }}" data-bs-toggle="tooltip" data-bs-title="{{ trans('contact_tooltip', default='Get in touch') | e }}">{{ trans('contact', default='Contact') | e }}</a>
                     </li>
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="featuresDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false" data-bs-title="{{ trans('features_tooltip', default='Explore additional features') | e }}" aria-label="{{ trans('features', default='Features') | e }}">
+                            {{ trans('features', default='Features') | e }}
+                        </a>
+                        <ul class="dropdown-menu" aria-labelledby="featuresDropdown">
+                            <li><a class="dropdown-item" href="{{ url_for('common_bp.news_list') | e }}">{{ trans('ficore_news', default='Ficore News') | e }}</a></li>
+                            <li><a class="dropdown-item" href="{{ url_for('taxation_bp.calculate_tax') | e }}">{{ trans('calculate_your_tax', default='Calculate Your Tax') | e }}</a></li>
+                            <li><a class="dropdown-item" href="{{ url_for('taxation_bp.payment_info') | e }}">{{ trans('tax_payment_information', default='Tax Payment Information') | e }}</a></li>
+                            <li><a class="dropdown-item" href="{{ url_for('taxation_bp.reminders') | e }}">{{ trans('your_tax_reminders', default='Your Tax Reminders') | e }}</a></li>
+                        </ul>
+                    </li>
                     
                     {% if current_user.role == 'agent' %}
                         <!-- Agent Navigation -->
@@ -219,7 +230,7 @@
                 <ul class="navbar-nav ms-auto align-items-center header-actions">
                     {% if current_user.is_authenticated %}
                         <li class="nav-item">
-                            <button class="notification-bell" id="notificationBell" data-bs-toggle="modal" data-bs-target="#notificationModal" data-bs-title="{{ trans('notifications_tooltip', default='View notifications') | e }}" aria-label="{{ trans('notifications', default='Notifications') | e }}">
+                            <button class="notification-bell" id="notificationBell" data-bs-toggle="modal" data-bs-target="#notificationModal" data-bs-title="{{ trans('notifications tooltip', default='View notifications') | e }}" aria-label="{{ trans('notifications', default='Notifications') | e }}">
                                 <i class="bi bi-bell"></i>
                                 <span class="notification-badge" id="notificationBadge"></span>
                             </button>
@@ -247,8 +258,7 @@
                             <a class="nav-link" href="{{ url_for('users_blueprint.login') | e }}" data-bs-toggle="tooltip" data-bs-title="{{ trans('login_tooltip', default='Log in to your account') | e }}">{{ trans('login', default='Login') | e }}</a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link" href="{{ url_for('users_blueprint.signup') | e }}" data-bs-toggle="tooltip" data-bs-title="{{ trans('signup_tooltip', default='Create a new account') | e }}">{{ trans('signup', default='Sign Up') | e }}</a>
-                        </li>
+                            <a class="nav-link" href="{{ url_for('users_blueprint.signup') | e }}" data-bs-toggle="tooltip" data-bs-title="{{ trans('signup_tooltip', default='Create a new account') | e }}">{{ trans('signup', default='Sign Up') | e }}</a></li>
                     {% endif %}
                     <li class="nav-item dropdown">
                         <a class="nav-link dropdown-toggle" href="#" id="languageDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false" data-bs-title="{{ trans('language_tooltip', default='Change language') | e }}" aria-label="{{ trans('language', default='Language') | e }}">
@@ -307,6 +317,14 @@
             <a href="{{ url_for('inventory_blueprint.index') }}" class="nav-item {% if request.endpoint == 'inventory_blueprint.index' %}active{% endif %}">
                 <i class="bi bi-box-seam"></i>
                 <span>{{ trans('inventory', default='Inventory') }}</span>
+            </a>
+            <a href="{{ url_for('common_bp.news_list') }}" class="nav-item {% if request.endpoint == 'common_bp.news_list' %}active{% endif %}">
+                <i class="bi bi-newspaper"></i>
+                <span>{{ trans('ficore_news', default='News') }}</span>
+            </a>
+            <a href="{{ url_for('taxation_bp.calculate_tax') }}" class="nav-item {% if request.endpoint == 'taxation_bp.calculate_tax' %}active{% endif %}">
+                <i class="bi bi-calculator"></i>
+                <span>{{ trans('calculate_your_tax', default='Tax') }}</span>
             </a>
             <a href="{{ url_for('settings_blueprint.profile') }}" class="nav-item {% if request.endpoint == 'settings_blueprint.profile' %}active{% endif %}">
                 <i class="bi bi-person"></i>
