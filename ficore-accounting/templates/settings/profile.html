@@ -3,7 +3,7 @@
 {% block content %}
 <div class="container mt-4">
     <div class="d-flex align-items-center mb-4">
-        <a href="{{ url_for('dashboard_blueprint.index') }}" class="back-arrow me-3">←</a>
+        <a href="{{ url_for('dashboard.index') }}" class="back-arrow me-3">←</a>
         <h1>{{ t('settings_hello_user', default='Hello') }}, {{ user.display_name or user._id }}!</h1>
         <div class="profile-pic-container ms-auto">
             <img src="{{ url_for('static', filename='img/default_profile.png') }}" alt="{{ t('settings_profile_picture', default='Profile Picture') }}" class="profile-pic" onerror="this.src='{{ url_for('static', filename='img/ficore_records_logo.png') }}';">
@@ -26,6 +26,31 @@
             </strong> 
             <span class="info-icon" title="{{ t('settings_' + user.role + '_account_info', default=user.role|capitalize + ' account gives you access to specific features tailored to your role.') }}">ⓘ</span>
         </p>
+    </div>
+
+    <!-- Explore Your Tools Button Section -->
+    <div class="d-grid mb-4">
+        {% if user.role == 'personal' %}
+            <button class="btn btn-primary btn-lg explore-tools-btn" onclick="location.href='{{ url_for('index') }}'">
+                <i class="bi bi-compass me-2"></i> {{ t('settings_explore_personal_tools', default='Explore Your Personal Finance Tools') }}
+            </button>
+            <small class="text-muted text-center mt-2">{{ t('settings_explore_personal_description', default='Access budgeting, bill tracking, financial health scoring, and more!') }}</small>
+        {% elif user.role == 'trader' %}
+            <button class="btn btn-primary btn-lg explore-tools-btn" onclick="location.href='{{ url_for('index') }}'">
+                <i class="bi bi-briefcase me-2"></i> {{ t('settings_explore_business_tools', default='Explore Your Business Tools') }}
+            </button>
+            <small class="text-muted text-center mt-2">{{ t('settings_explore_business_description', default='Manage debtors, creditors, inventory, payments, and business analytics!') }}</small>
+        {% elif user.role == 'agent' %}
+            <button class="btn btn-primary btn-lg explore-tools-btn" onclick="location.href='{{ url_for('agents_bp.dashboard') }}'">
+                <i class="bi bi-people me-2"></i> {{ t('settings_explore_agent_tools', default='Explore Your Agent Dashboard') }}
+            </button>
+            <small class="text-muted text-center mt-2">{{ t('settings_explore_agent_description', default='Access your agent dashboard to help users and manage your activities!') }}</small>
+        {% elif user.role == 'admin' %}
+            <button class="btn btn-primary btn-lg explore-tools-btn" onclick="location.href='{{ url_for('admin_blueprint.dashboard') }}'">
+                <i class="bi bi-gear me-2"></i> {{ t('settings_explore_admin_tools', default='Explore Admin Dashboard') }}
+            </button>
+            <small class="text-muted text-center mt-2">{{ t('settings_explore_admin_description', default='Access administrative tools to manage users, system settings, and analytics!') }}</small>
+        {% endif %}
     </div>
 
     <div class="d-grid mb-4">
@@ -363,6 +388,52 @@
         cursor: help;
         color: var(--text-muted);
         margin-left: 5px;
+    }
+    
+    /* Explore Tools Button Styling */
+    .explore-tools-btn {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border: none;
+        border-radius: 12px;
+        padding: 16px 24px;
+        font-weight: 600;
+        font-size: 1.1rem;
+        box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+        transition: all 0.3s ease;
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .explore-tools-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+        background: linear-gradient(135deg, #5a6fd8 0%, #6a4190 100%);
+    }
+    
+    .explore-tools-btn:active {
+        transform: translateY(0);
+    }
+    
+    .explore-tools-btn::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+        transition: left 0.5s;
+    }
+    
+    .explore-tools-btn:hover::before {
+        left: 100%;
+    }
+    
+    @media (max-width: 768px) {
+        .explore-tools-btn {
+            font-size: 1rem;
+            padding: 14px 20px;
+        }
     }
 </style>
 
