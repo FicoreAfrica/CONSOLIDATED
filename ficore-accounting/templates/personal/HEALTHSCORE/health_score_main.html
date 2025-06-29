@@ -1,5 +1,5 @@
 {% extends "personal/base.html" %}
-{% block title %}{{ trans('financial_health_score') | default('Financial Health Score') }}{% endblock %}
+{% block title %}{{ t('financial_health_score', default='Financial Health Score') }}{% endblock %}
 {% block extra_head %}
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
@@ -7,17 +7,17 @@
 {% endblock %}
 {% block content %}
 <div class="container">
-    {% set tool_name = 'financial_health_score' | default('Financial Health Score') %}
+    {% set tool_name = 'financial_health_score' %}
     {% set tool_icon = 'fa-heartbeat' %}
-    {% set subtitle = trans('financial_health_assess_finances') | default('Assess your financial health and get personalized insights') %}
+    {% set subtitle = t('financial_health_assess_finances', default='Assess your financial health and get personalized insights') %}
     {% include 'personal/GENERAL/tool_header.html' %}
 
     {% with messages = get_flashed_messages(with_categories=true) %}
         {% if messages %}
             {% for category, message in messages %}
                 <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
-                    {{ trans('core_' + message) | default(message) }}
-                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="{{ trans('core_close') | default('Close') }}"></button>
+                    {{ t('general_' + message, default=message) }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="{{ t('general_close', default='Close') }}"></button>
                 </div>
             {% endfor %}
         {% endif %}
@@ -27,12 +27,12 @@
     <ul class="nav nav-tabs mb-4" id="healthScoreTabs" role="tablist">
         <li class="nav-item" role="presentation">
             <button class="nav-link active" id="assessment-tab" data-bs-toggle="tab" data-bs-target="#assessment" type="button" role="tab" aria-controls="assessment" aria-selected="true">
-                <i class="fas fa-stethoscope"></i> {{ trans('financial_health_assessment') | default('Assessment') }}
+                <i class="fas fa-stethoscope"></i> {{ t('financial_health_assessment', default='Assessment') }}
             </button>
         </li>
         <li class="nav-item" role="presentation">
             <button class="nav-link" id="dashboard-tab" data-bs-toggle="tab" data-bs-target="#dashboard" type="button" role="tab" aria-controls="dashboard" aria-selected="false">
-                <i class="fas fa-chart-line"></i> {{ trans('financial_health_dashboard') | default('Dashboard') }}
+                <i class="fas fa-chart-line"></i> {{ t('financial_health_dashboard', default='Dashboard') }}
             </button>
         </li>
     </ul>
@@ -48,37 +48,37 @@
                 <!-- Personal Information -->
                 <div class="card mb-4">
                     <div class="card-header">
-                        <h5><i class="fas fa-user"></i> {{ trans('financial_health_personal_info') | default('Personal Information') }}</h5>
+                        <h5><i class="fas fa-user"></i> {{ t('financial_health_personal_info', default='Personal Information') }}</h5>
                     </div>
                     <div class="card-body">
                         <div class="row">
                             <div class="col-md-6">
                                 <div class="mb-3">
-                                    <label class="form-label">{{ trans('core_first_name') | default('First Name') }}</label>
-                                    {{ form.first_name(class="form-control", placeholder=trans('core_first_name_placeholder') | default('e.g., Ahmad, Kamal, Musa')) }}
-                                    <div class="invalid-feedback">{{ trans('core_first_name_required') | default('First name is required') }}</div>
+                                    <label class="form-label">{{ t('general_first_name', default='First Name') }}</label>
+                                    {{ form.first_name(class="form-control", placeholder=t('general_first_name_placeholder', default='e.g., Ahmad, Kamal, Musa')) }}
+                                    <div class="invalid-feedback">{{ t('general_first_name_required', default='First name is required') }}</div>
                                 </div>
                             </div>
                             <div class="col-md-6">
                                 <div class="mb-3">
-                                    <label class="form-label">{{ trans('core_email') | default('Email') }}</label>
-                                    {{ form.email(class="form-control", placeholder=trans('core_email_placeholder') | default('e.g., ahmad@example.com')) }}
-                                    <div class="invalid-feedback">{{ trans('core_email_required') | default('Valid email is required') }}</div>
+                                    <label class="form-label">{{ t('general_email', default='Email') }}</label>
+                                    {{ form.email(class="form-control", placeholder=t('general_email_placeholder', default='e.g., ahmad@example.com')) }}
+                                    <div class="invalid-feedback">{{ t('general_email_required', default='Valid email is required') }}</div>
                                 </div>
                             </div>
                         </div>
                         <div class="row">
                             <div class="col-md-6">
                                 <div class="mb-3">
-                                    <label class="form-label">{{ trans('financial_health_user_type') | default('User Type') }}</label>
+                                    <label class="form-label">{{ t('financial_health_user_type', default='User Type') }}</label>
                                     {{ form.user_type(class="form-select") }}
-                                    <div class="form-text">{{ trans('financial_health_individual_or_business') | default('Are you an individual or business?') }}</div>
+                                    <div class="form-text">{{ t('financial_health_individual_or_business', default='Are you an individual or business?') }}</div>
                                 </div>
                             </div>
                             <div class="col-md-6">
                                 <div class="mb-3 form-check mt-4">
                                     {{ form.send_email(class="form-check-input") }}
-                                    <label class="form-check-label">{{ trans('financial_health_send_email') | default('Send me my health score by email') }}</label>
+                                    <label class="form-check-label">{{ t('financial_health_send_email', default='Send me my health score by email') }}</label>
                                 </div>
                             </div>
                         </div>
@@ -88,24 +88,24 @@
                 <!-- Income & Expenses -->
                 <div class="card mb-4">
                     <div class="card-header">
-                        <h5><i class="fas fa-money-bill-wave"></i> {{ trans('financial_health_income_expenses') | default('Income & Expenses') }}</h5>
+                        <h5><i class="fas fa-money-bill-wave"></i> {{ t('financial_health_income_expenses', default='Income & Expenses') }}</h5>
                     </div>
                     <div class="card-body">
                         <div class="row">
                             <div class="col-md-6">
                                 <div class="mb-3">
-                                    <label class="form-label">{{ trans('financial_health_monthly_income') | default('Monthly Income') }}</label>
-                                    {{ form.income(class="form-control number-input", placeholder=trans('financial_health_income_placeholder') | default('e.g., 500,000')) }}
-                                    <div class="invalid-feedback">{{ trans('financial_health_income_required') | default('Income is required') }}</div>
-                                    <div class="form-text">{{ trans('financial_health_income_tooltip') | default('Income from business, salary, gifts, investments') }}</div>
+                                    <label class="form-label">{{ t('financial_health_monthly_income', default='Monthly Income') }}</label>
+                                    {{ form.income(class="form-control number-input", placeholder=t('financial_health_income_placeholder', default='e.g., 500,000')) }}
+                                    <div class="invalid-feedback">{{ t('financial_health_income_required', default='Income is required') }}</div>
+                                    <div class="form-text">{{ t('financial_health_income_tooltip', default='Income from business, salary, gifts, investments') }}</div>
                                 </div>
                             </div>
                             <div class="col-md-6">
                                 <div class="mb-3">
-                                    <label class="form-label">{{ trans('financial_health_monthly_expenses') | default('Monthly Expenses') }}</label>
-                                    {{ form.expenses(class="form-control number-input", placeholder=trans('financial_health_expenses_placeholder') | default('e.g., 300,000')) }}
-                                    <div class="invalid-feedback">{{ trans('financial_health_expenses_required') | default('Expenses are required') }}</div>
-                                    <div class="form-text">{{ trans('financial_health_expenses_tooltip') | default('Expenses like food, clothing, outings, data subscriptions') }}</div>
+                                    <label class="form-label">{{ t('financial_health_monthly_expenses', default='Monthly Expenses') }}</label>
+                                    {{ form.expenses(class="form-control number-input", placeholder=t('financial_health_expenses_placeholder', default='e.g., 300,000')) }}
+                                    <div class="invalid-feedback">{{ t('financial_health_expenses_required', default='Expenses are required') }}</div>
+                                    <div class="form-text">{{ t('financial_health_expenses_tooltip', default='Expenses like food, clothing, outings, data subscriptions') }}</div>
                                 </div>
                             </div>
                         </div>
@@ -115,24 +115,24 @@
                 <!-- Debt Details (Optional) -->
                 <div class="card mb-4">
                     <div class="card-header">
-                        <h5><i class="fas fa-credit-card"></i> {{ trans('financial_health_debt_details') | default('Debt Details (Optional)') }}</h5>
+                        <h5><i class="fas fa-credit-card"></i> {{ t('financial_health_debt_details', default='Debt Details (Optional)') }}</h5>
                     </div>
                     <div class="card-body">
                         <div class="row">
                             <div class="col-md-6">
                                 <div class="mb-3">
-                                    <label class="form-label">{{ trans('financial_health_total_debt') | default('Total Debt') }}</label>
-                                    {{ form.debt(class="form-control number-input", placeholder=trans('financial_health_debt_placeholder') | default('e.g., 200,000')) }}
-                                    <div class="invalid-feedback">{{ trans('financial_health_debt_must_be_positive') | default('Debt must be positive') }}</div>
-                                    <div class="form-text">{{ trans('financial_health_debt_tooltip') | default('Borrowings from banks, friends, colleagues') }}</div>
+                                    <label class="form-label">{{ t('financial_health_total_debt', default='Total Debt') }}</label>
+                                    {{ form.debt(class="form-control number-input", placeholder=t('financial_health_debt_placeholder', default='e.g., 200,000')) }}
+                                    <div class="invalid-feedback">{{ t('financial_health_debt_must_be_positive', default='Debt must be positive') }}</div>
+                                    <div class="form-text">{{ t('financial_health_debt_tooltip', default='Borrowings from banks, friends, colleagues') }}</div>
                                 </div>
                             </div>
                             <div class="col-md-6">
                                 <div class="mb-3">
-                                    <label class="form-label">{{ trans('financial_health_average_interest_rate') | default('Average Interest Rate (%)') }}</label>
-                                    {{ form.interest_rate(class="form-control number-input", placeholder=trans('financial_health_interest_rate_placeholder') | default('e.g., 5')) }}
-                                    <div class="invalid-feedback">{{ trans('financial_health_interest_rate_must_be_positive') | default('Interest rate must be positive') }}</div>
-                                    <div class="form-text">{{ trans('financial_health_interest_rate_tooltip') | default('Average interest rate on debts (% per year)') }}</div>
+                                    <label class="form-label">{{ t('financial_health_average_interest_rate', default='Average Interest Rate (%)') }}</label>
+                                    {{ form.interest_rate(class="form-control number-input", placeholder=t('financial_health_interest_rate_placeholder', default='e.g., 5')) }}
+                                    <div class="invalid-feedback">{{ t('financial_health_interest_rate_must_be_positive', default='Interest rate must be positive') }}</div>
+                                    <div class="form-text">{{ t('financial_health_interest_rate_tooltip', default='Average interest rate on debts (% per year)') }}</div>
                                 </div>
                             </div>
                         </div>
@@ -140,7 +140,7 @@
                 </div>
 
                 <button type="submit" class="btn btn-primary btn-lg">
-                    <i class="fas fa-calculator"></i> {{ trans('financial_health_calculate_health_score') | default('Calculate Health Score') }}
+                    <i class="fas fa-calculator"></i> {{ t('financial_health_calculate_health_score', default='Calculate Health Score') }}
                 </button>
             </form>
         </div>
@@ -152,7 +152,7 @@
                     <div class="col-md-4">
                         <div class="card bg-success text-white">
                             <div class="card-body text-center">
-                                <h6>{{ trans('financial_health_your_score') | default('Your Score') }}</h6>
+                                <h6>{{ t('financial_health_your_score', default='Your Score') }}</h6>
                                 <h2>{{ latest_record.score | default(0) }}/100</h2>
                             </div>
                         </div>
@@ -160,7 +160,7 @@
                     <div class="col-md-4">
                         <div class="card bg-info text-white">
                             <div class="card-body text-center">
-                                <h6>{{ trans('financial_health_status') | default('Status') }}</h6>
+                                <h6>{{ t('financial_health_status', default='Status') }}</h6>
                                 <h4>{{ latest_record.status | default('Unknown') }}</h4>
                             </div>
                         </div>
@@ -168,7 +168,7 @@
                     <div class="col-md-4">
                         <div class="card bg-warning text-white">
                             <div class="card-body text-center">
-                                <h6>{{ trans('financial_health_savings_rate') | default('Savings Rate') }}</h6>
+                                <h6>{{ t('financial_health_savings_rate', default='Savings Rate') }}</h6>
                                 <h4>{{ latest_record.savings_rate | default(0) }}%</h4>
                             </div>
                         </div>
@@ -178,7 +178,7 @@
                 <!-- Score Gauge Chart -->
                 <div class="card mb-4">
                     <div class="card-header">
-                        <h5><i class="fas fa-chart-pie"></i> {{ trans('financial_health_score_visualization') | default('Score Visualization') }}</h5>
+                        <h5><i class="fas fa-chart-pie"></i> {{ t('financial_health_score_visualization', default='Score Visualization') }}</h5>
                     </div>
                     <div class="card-body">
                         <canvas id="scoreGauge" class="score-gauge"></canvas>
@@ -188,7 +188,7 @@
                 <!-- Financial Metrics Chart -->
                 <div class="card mb-4">
                     <div class="card-header">
-                        <h5><i class="fas fa-chart-bar"></i> {{ trans('financial_health_financial_metrics') | default('Financial Metrics') }}</h5>
+                        <h5><i class="fas fa-chart-bar"></i> {{ t('financial_health_financial_metrics', default='Financial Metrics') }}</h5>
                     </div>
                     <div class="card-body">
                         <canvas id="scoreChart"></canvas>
@@ -200,24 +200,24 @@
                     <div class="col-md-6">
                         <div class="card">
                             <div class="card-header">
-                                <h6>{{ trans('financial_health_financial_details') | default('Financial Details') }}</h6>
+                                <h6>{{ t('financial_health_financial_details', default='Financial Details') }}</h6>
                             </div>
                             <div class="card-body">
                                 <ul class="list-group list-group-flush">
                                     <li class="list-group-item d-flex justify-content-between">
-                                        <span>{{ trans('financial_health_monthly_income') | default('Monthly Income') }}</span>
+                                        <span>{{ t('financial_health_monthly_income', default='Monthly Income') }}</span>
                                         <strong>₦{{ latest_record.income | default(0) | format_number }}</strong>
                                     </li>
                                     <li class="list-group-item d-flex justify-content-between">
-                                        <span>{{ trans('financial_health_monthly_expenses') | default('Monthly Expenses') }}</span>
+                                        <span>{{ t('financial_health_monthly_expenses', default='Monthly Expenses') }}</span>
                                         <strong>₦{{ latest_record.expenses | default(0) | format_number }}</strong>
                                     </li>
                                     <li class="list-group-item d-flex justify-content-between">
-                                        <span>{{ trans('financial_health_total_debt') | default('Total Debt') }}</span>
+                                        <span>{{ t('financial_health_total_debt', default='Total Debt') }}</span>
                                         <strong>₦{{ latest_record.debt | default(0) | format_number }}</strong>
                                     </li>
                                     <li class="list-group-item d-flex justify-content-between">
-                                        <span>{{ trans('financial_health_debt_to_income_ratio') | default('Debt-to-Income Ratio') }}</span>
+                                        <span>{{ t('financial_health_debt_to_income_ratio', default='Debt-to-Income Ratio') }}</span>
                                         <strong>{{ latest_record.debt_to_income | default(0) }}%</strong>
                                     </li>
                                 </ul>
@@ -227,7 +227,7 @@
                     <div class="col-md-6">
                         <div class="card">
                             <div class="card-header">
-                                <h6>{{ trans('financial_health_badges') | default('Badges') }}</h6>
+                                <h6>{{ t('financial_health_badges', default='Badges') }}</h6>
                             </div>
                             <div class="card-body">
                                 {% if latest_record.badges %}
@@ -235,7 +235,7 @@
                                         <span class="badge bg-success me-1 mb-1">{{ badge }}</span>
                                     {% endfor %}
                                 {% else %}
-                                    <p class="text-muted">{{ trans('financial_health_no_badges_earned_yet') | default('No badges earned yet') }}</p>
+                                    <p class="text-muted">{{ t('financial_health_no_badges_earned_yet', default='No badges earned yet') }}</p>
                                 {% endif %}
                             </div>
                         </div>
@@ -246,7 +246,7 @@
                 {% if insights %}
                     <div class="card mt-4">
                         <div class="card-header">
-                            <h6><i class="fas fa-lightbulb"></i> {{ trans('financial_health_insights') | default('Insights') }}</h6>
+                            <h6><i class="fas fa-lightbulb"></i> {{ t('financial_health_insights', default='Insights') }}</h6>
                         </div>
                         <div class="card-body">
                             <ul class="list-unstyled">
@@ -261,7 +261,7 @@
                 {% if tips %}
                     <div class="card mt-4">
                         <div class="card-header">
-                            <h6><i class="fas fa-rocket"></i> {{ trans('financial_health_tips_for_improving_score') | default('Tips for Improving Score') }}</h6>
+                            <h6><i class="fas fa-rocket"></i> {{ t('financial_health_tips_for_improving_score', default='Tips for Improving Score') }}</h6>
                         </div>
                         <div class="card-body">
                             <ul class="list-unstyled">
@@ -276,8 +276,8 @@
                 <div class="card">
                     <div class="card-body text-center">
                         <i class="fas fa-heartbeat fa-3x mb-3 text-muted"></i>
-                        <p>{{ trans('financial_health_no_financial_health_data_available') | default('No financial health data available') }}</p>
-                        <p>{{ trans('financial_health_complete_assessment') | default('Complete the assessment to see your financial health score.') }}</p>
+                        <p>{{ t('financial_health_no_financial_health_data_available', default='No financial health data available') }}</p>
+                        <p>{{ t('financial_health_complete_assessment', default='Complete the assessment to see your financial health score.') }}</p>
                     </div>
                 </div>
             {% endif %}
@@ -288,13 +288,13 @@
     {% if current_user.is_authenticated %}
         <div class="card mt-4">
             <div class="card-header">
-                <h5>{{ trans('share_ficore', lang=lang) | default('Share Ficore Africa with Friends') }}</h5>
+                <h5>{{ t('general_share_ficore', default='Share Ficore Africa with Friends') }}</h5>
             </div>
             <div class="card-body">
-                <p>{{ trans('core_share_ficore_invite', lang=lang) | default('Invite your friends to join Ficore Africa and manage their finances better!') }}</p>
+                <p>{{ t('general_share_ficore_invite', default='Invite your friends to join Ficore Africa and manage their finances better!') }}</p>
                 <div class="input-group mb-3">
                     <input type="text" class="form-control" id="referralLink" value="{{ url_for('auth.signup', ref=current_user.referral_code, _external=True) }}" readonly>
-                    <button class="btn btn-primary" type="button" onclick="copyReferralLink()">{{ trans('core_profile_copy_link', lang=lang) | default('Copy') }}</button>
+                    <button class="btn btn-primary" type="button" onclick="copyReferralLink()">{{ t('general_profile_copy_link', default='Copy') }}</button>
                 </div>
             </div>
         </div>
@@ -327,7 +327,7 @@ document.addEventListener('DOMContentLoaded', function() {
             const numValue = parseFloat(cleanValue) || 0;
             if (!isInterestRate && numValue > 10000000000) {
                 cleanValue = '10000000000';
-                alert('{{ trans('core_input_cannot_exceed_10_billion') | default('Input cannot exceed ₦10 billion') }}');
+                alert('{{ t('general_input_cannot_exceed_10_billion', default='Input cannot exceed ₦10 billion') }}');
             }
             const formatted = formatNumber(cleanValue);
             input.value = formatted;
@@ -398,13 +398,13 @@ document.addEventListener('DOMContentLoaded', function() {
         type: 'bar',
         data: {
             labels: [
-                '{{ trans('financial_health_your_score') | default('Score') }}',
-                '{{ trans('financial_health_debt_to_income_ratio') | default('Debt-to-Income') }}',
-                '{{ trans('financial_health_savings_rate') | default('Savings Rate') }}',
-                '{{ trans('financial_health_interest_burden') | default('Interest Burden') }}'
+                '{{ t('financial_health_your_score', default='Score') }}',
+                '{{ t('financial_health_debt_to_income_ratio', default='Debt-to-Income') }}',
+                '{{ t('financial_health_savings_rate', default='Savings Rate') }}',
+                '{{ t('financial_health_interest_burden', default='Interest Burden') }}'
             ],
             datasets: [{
-                label: '{{ trans('financial_health_metrics') | default('Metrics') }}',
+                label: '{{ t('financial_health_metrics', default='Metrics') }}',
                 data: [
                     {{ latest_record.score | default(0) }},
                     {{ latest_record.debt_to_income | default(0) }},
@@ -441,7 +441,7 @@ document.addEventListener('DOMContentLoaded', function() {
         const referralLink = document.getElementById('referralLink');
         referralLink.select();
         document.execCommand('copy');
-        alert('{{ trans('profile_link_copied', lang=lang) | default('Referral link copied to clipboard!') }}');
+        alert('{{ t('general_profile_link_copied', default='Referral link copied to clipboard!') }}');
     };
 });
 </script>

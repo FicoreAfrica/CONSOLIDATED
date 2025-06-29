@@ -1,48 +1,9 @@
-<script type="text/javascript">
-        var gk_isXlsx = false;
-        var gk_xlsxFileLookup = {};
-        var gk_fileData = {};
-        function filledCell(cell) {
-          return cell !== '' && cell != null;
-        }
-        function loadFileData(filename) {
-        if (gk_isXlsx && gk_xlsxFileLookup[filename]) {
-            try {
-                var workbook = XLSX.read(gk_fileData[filename], { type: 'base64' });
-                var firstSheetName = workbook.SheetNames[0];
-                var worksheet = workbook.Sheets[firstSheetName];
-
-                // Convert sheet to JSON to filter blank rows
-                var jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1, blankrows: false, defval: '' });
-                // Filter out blank rows (rows where all cells are empty, null, or undefined)
-                var filteredData = jsonData.filter(row => row.some(filledCell));
-
-                // Heuristic to find the header row by ignoring rows with fewer filled cells than the next row
-                var headerRowIndex = filteredData.findIndex((row, index) =>
-                  row.filter(filledCell).length >= filteredData[index + 1]?.filter(filledCell).length
-                );
-                // Fallback
-                if (headerRowIndex === -1 || headerRowIndex > 25) {
-                  headerRowIndex = 0;
-                }
-
-                // Convert filtered JSON back to CSV
-                var csv = XLSX.utils.aoa_to_sheet(filteredData.slice(headerRowIndex)); // Create a new sheet from filtered array of arrays
-                csv = XLSX.utils.sheet_to_csv(csv, { header: 1 });
-                return csv;
-            } catch (e) {
-                console.error(e);
-                return "";
-            }
-        }
-        return gk_fileData[filename] || "";
-        }
-        </script><!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="{{ lang | default('en') }}">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{ trans('quiz_report_subject', default='Your Financial Personality Quiz Results', lang=lang) }}</title>
+    <title>{{ t('quiz_report_subject', default='Your Financial Personality Quiz Results') }}</title>
     <style>
         body {
             font-family: 'Arial', sans-serif;
@@ -155,74 +116,74 @@
 <body>
     <div class="container">
         <div class="header">
-            <h1>{{ trans('quiz_financial_personality_quiz', default='Financial Personality Quiz', lang=lang) }}</h1>
+            <h1>{{ t('quiz_financial_personality_quiz', default='Financial Personality Quiz') }}</h1>
         </div>
         <div class="content">
-            <p>{{ trans('core_dear', default='Dear', lang=lang) }} {{ data.first_name | default(trans('core_user', default='User', lang=lang)) }},</p>
-            <p>{{ trans('quiz_quiz_summary_intro', default='Thank you for completing the Financial Personality Quiz. Below are your personalized results.', lang=lang) }}</p>
+            <p>{{ t('general_dear', default='Dear') }} {{ data.first_name | default(t('general_user', default='User')) }},</p>
+            <p>{{ t('quiz_quiz_summary_intro', default='Thank you for completing the Financial Personality Quiz. Below are your personalized results.') }}</p>
             
-            <h2>{{ trans('quiz_your_financial_personality_results', default='Your Financial Personality Results', lang=lang) }}</h2>
+            <h2>{{ t('quiz_your_financial_personality_results', default='Your Financial Personality Results') }}</h2>
             <table class="metrics-table">
                 <tr>
-                    <td class="label">{{ trans('core_created_at', default='Created At', lang=lang) }}</td>
+                    <td class="label">{{ t('general_created_at', default='Created At') }}</td>
                     <td>{{ data.created_at }}</td>
                 </tr>
                 <tr>
-                    <td class="label">{{ trans('quiz_your_personality', default='Your Personality', lang=lang) }}</td>
-                    <td>{{ trans('quiz_' + data.personality.lower() + '_description', default=data.personality, lang=lang) }}</td>
+                    <td class="label">{{ t('quiz_your_personality', default='Your Personality') }}</td>
+                    <td>{{ t('quiz_' + data.personality.lower() + '_description', default=data.personality) }}</td>
                 </tr>
                 <tr>
-                    <td class="label">{{ trans('quiz_score', default='Score', lang=lang) }}</td>
+                    <td class="label">{{ t('quiz_score', default='Score') }}</td>
                     <td>{{ data.score }} / 30</td>
                 </tr>
             </table>
 
-            <h2>{{ trans('quiz_badges', default='Badges', lang=lang) }}</h2>
+            <h2>{{ t('quiz_badges', default='Badges') }}</h2>
             {% if data.badges %}
                 <div>
                     {% for badge in data.badges %}
-                        <span class="badge {{ badge.color_class }}">{{ trans('badge_' + badge.name.lower().replace(' ', '_'), default=badge.name, lang=lang) }}</span>
+                        <span class="badge {{ badge.color_class }}">{{ t('quiz_badge_' + badge.name.lower().replace(' ', '_'), default=badge.name) }}</span>
                     {% endfor %}
                 </div>
             {% else %}
-                <p>{{ trans('quiz_no_badges', default='No badges earned yet.', lang=lang) }}</p>
+                <p>{{ t('quiz_no_badges', default='No badges earned yet.') }}</p>
             {% endif %}
 
-            <h2>{{ trans('quiz_insights', default='Insights', lang=lang) }}</h2>
+            <h2>{{ t('quiz_insights', default='Insights') }}</h2>
             <ul>
                 {% if data.insights %}
                     {% for insight in data.insights %}
                         <li>{{ insight }}</li>
                     {% endfor %}
                 {% else %}
-                    <li>{{ trans('quiz_no_insights', default='No specific insights available.', lang=lang) }}</li>
+                    <li>{{ t('quiz_no_insights', default='No specific insights available.') }}</li>
                 {% endif %}
             </ul>
 
-            <h2>{{ trans('quiz_tips_for_improving_financial_habits', default='Tips for Improving Financial Habits', lang=lang) }}</h2>
+            <h2>{{ t('quiz_tips_for_improving_financial_habits', default='Tips for Improving Financial Habits') }}</h2>
             <ul>
                 {% if data.tips %}
                     {% for tip in data.tips %}
                         <li>{{ tip }}</li>
                     {% endfor %}
                 {% else %}
-                    <li>{{ trans('quiz_review_goals', default='Review your financial goals regularly to stay on track.', lang=lang) }}</li>
+                    <li>{{ t('quiz_review_goals', default='Review your financial goals regularly to stay on track.') }}</li>
                 {% endif %}
                 {% if data.personality in ['Spender', 'Balanced', 'Avoider'] %}
-                    <li>{{ trans('quiz_use_budgeting_app', default='Use a budgeting app to track and manage your expenses.', lang=lang) }}</li>
+                    <li>{{ t('quiz_use_budgeting_app', default='Use a budgeting app to track and manage your expenses.') }}</li>
                 {% endif %}
                 {% if data.personality != 'Saver' %}
-                    <li>{{ trans('quiz_set_emergency_fund', default='Start building an emergency fund for unexpected expenses.', lang=lang) }}</li>
+                    <li>{{ t('quiz_set_emergency_fund', default='Start building an emergency fund for unexpected expenses.') }}</li>
                 {% endif %}
             </ul>
 
             <p>
-                <a href="{{ data.cta_url }}" class="btn">{{ trans('quiz_view_dashboard', default='View Your Results', lang=lang) }}</a>
+                <a href="{{ data.cta_url }}" class="btn">{{ t('quiz_view_dashboard', default='View Your Results') }}</a>
             </p>
-            <p>{{ trans('core_thank_you', default='Thank you for using FiCore Africa!', lang=lang) }}</p>
+            <p>{{ t('general_thank_you', default='Thank you for using FiCore Africa!') }}</p>
         </div>
         <div class="footer">
-            <p>{{ trans('core_powered_by', default='Powered by FiCore Africa', lang=lang) }}</p>
+            <p>{{ t('general_powered_by', default='Powered by FiCore Africa') }}</p>
         </div>
     </div>
 </body>

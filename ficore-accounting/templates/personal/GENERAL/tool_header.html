@@ -6,7 +6,7 @@
         <i class="fas {{ tool_icon }} tool-icon"></i>
       {% endif %}
       {# Use translation for tool_name if available, otherwise just print tool_name #}
-      {{ trans(tool_name) | default(tool_name) }}
+      {{ t(tool_name, default=tool_name) }}
     </h2>
     {% if subtitle %}
       <p class="tool-subtitle">{{ subtitle }}</p>
@@ -14,7 +14,7 @@
     {% if step and total_steps and step_labels %}
       <div class="step-indicator">
         <span class="step-text">
-          Step {{ step }} of {{ total_steps }} – {{ step_labels[step - 1] }}
+          {{ t('general_step', default='Step') }} {{ step }} {{ t('general_of', default='of') }} {{ total_steps }} – {{ step_labels[step - 1] }}
         </span>
         <div class="step-progress">
           {% for i in range(total_steps) %}

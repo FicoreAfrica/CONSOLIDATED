@@ -1,23 +1,23 @@
 {% extends "base.html" %}
-{% block title %}{{ trans('admin_dashboard_title', default='Admin Dashboard', lang=lang) }}{% endblock %}
+{% block title %}{{ t('admin_dashboard_title', default='Admin Dashboard') }}{% endblock %}
 {% block content %}
 <div class="container py-8" id="dashboard">
     <!-- Color Toggle Buttons -->
     <div class="mb-6 flex flex-wrap gap-2">
-        <button class="btn btn-secondary" onclick="changeColorScheme('red')">Red Theme</button>
-        <button class="btn btn-secondary" onclick="changeColorScheme('blue')">Blue Theme</button>
-        <button class="btn btn-secondary" onclick="changeColorScheme('green')">Green Theme</button>
-        <button class="btn btn-secondary" onclick="changeColorScheme('purple')">Purple Theme</button>
+        <button class="btn btn-secondary" onclick="changeColorScheme('red')">{{ t('admin_red_theme', default='Red Theme') }}</button>
+        <button class="btn btn-secondary" onclick="changeColorScheme('blue')">{{ t('admin_blue_theme', default='Blue Theme') }}</button>
+        <button class="btn btn-secondary" onclick="changeColorScheme('green')">{{ t('admin_green_theme', default='Green Theme') }}</button>
+        <button class="btn btn-secondary" onclick="changeColorScheme('purple')">{{ t('admin_purple_theme', default='Purple Theme') }}</button>
     </div>
 
-    <h1 class="card-title mb-4" id="main-title">{{ trans('admin_dashboard_title', default='Admin Dashboard', lang=lang) }}</h1>
+    <h1 class="card-title mb-4" id="main-title">{{ t('admin_dashboard_title', default='Admin Dashboard') }}</h1>
     <a href="{{ url_for('learning_hub.upload_content') }}" 
        class="btn btn-primary mb-4" 
        id="upload-button">
         <i class="fas fa-upload mr-2"></i>
-        {{ trans('learning_hub_upload_content', default='Upload Learning Content', lang=lang) }}
+        {{ t('learning_hub_upload_content', default='Upload Learning Content') }}
     </a>
-    <p class="card-text text-lg mb-6" id="desc-text">{{ trans('admin_dashboard_desc', default='View and analyze platform usage and engagement metrics', lang=lang) }}</p>
+    <p class="card-text text-lg mb-6" id="desc-text">{{ t('admin_dashboard_desc', default='View and analyze platform usage and engagement metrics') }}</p>
 
     <!-- Navigation Tabs -->
     <ul class="nav nav-tabs mb-6" id="nav-tabs">
@@ -25,14 +25,14 @@
             <a class="nav-link {{ 'active' if request.endpoint == 'admin.overview' else '' }}"
                href="{{ url_for('admin.overview') }}"
                id="overview-tab">
-                {{ trans('admin_overview', default='Overview', lang=lang) }}
+                {{ t('admin_overview', default='Overview') }}
             </a>
         </li>
         <li class="nav-item">
             <a class="nav-link {{ 'active' if request.endpoint == 'admin.tool_usage' else '' }}"
                href="{{ url_for('admin.tool_usage') }}"
                id="tool-usage-tab">
-                {{ trans('admin_tool_usage', default='Tool Usage', lang=lang) }}
+                {{ t('admin_tool_usage', default='Tool Usage') }}
             </a>
         </li>
     </ul>
@@ -42,34 +42,34 @@
         <form method="GET" action="{{ url_for('admin.tool_usage') }}">
             <div class="flex flex-wrap gap-4">
                 <div class="flex-1 md:w-1/4">
-                    <label for="tool_name" class="form-label" id="tool-label">{{ trans('admin_filter_tool', default='Tool Name', lang=lang) }}</label>
+                    <label for="tool_name" class="form-label" id="tool-label">{{ t('admin_filter_tool', default='Tool Name') }}</label>
                     <select name="tool_name" id="tool_name" class="form-control">
-                        <option value="">{{ trans('admin_all_tools', default='All Tools', lang=lang) }}</option>
+                        <option value="">{{ t('admin_all_tools', default='All Tools') }}</option>
                         {% for tool in valid_tools %}
-                            <option value="{{ tool }}" {{ 'selected' if tool == tool_name }}>{{ trans('tool_' + tool, default=tool.replace('_', ' ').title(), lang=lang) }}</option>
+                            <option value="{{ tool }}" {{ 'selected' if tool == tool_name }}>{{ t('tool_' + tool, default=tool.replace('_', ' ').title()) }}</option>
                         {% endfor %}
                     </select>
                 </div>
                 <div class="flex-1 md:w-1/4">
-                    <label for="action" class="form-label" id="action-label">{{ trans('admin_filter_action', default='Action', lang=lang) }}</label>
+                    <label for="action" class="form-label" id="action-label">{{ t('admin_filter_action', default='Action') }}</label>
                     <select name="action" id="action" class="form-control">
-                        <option value="">{{ trans('admin_all_actions', default='All Actions', lang=lang) }}</option>
+                        <option value="">{{ t('admin_all_actions', default='All Actions') }}</option>
                         {% for act in available_actions %}
                             <option value="{{ act }}" {{ 'selected' if act == action }}>{{ act.replace('_', ' ').title() }}</option>
                         {% endfor %}
                     </select>
                 </div>
                 <div class="flex-1 md:w-1/4">
-                    <label for="start_date" class="form-label" id="start-label">{{ trans('admin_start_date', default='Start Date', lang=lang) }}</label>
+                    <label for="start_date" class="form-label" id="start-label">{{ t('admin_start_date', default='Start Date') }}</label>
                     <input type="date" name="start_date" id="start_date" class="form-control" value="{{ start_date or '' }}">
                 </div>
                 <div class="flex-1 md:w-1/4">
-                    <label for="end_date" class="form-label" id="end-label">{{ trans('admin_end_date', default='End Date', lang=lang) }}</label>
+                    <label for="end_date" class="form-label" id="end-label">{{ t('admin_end_date', default='End Date') }}</label>
                     <input type="date" name="end_date" id="end_date" class="form-control" value="{{ end_date or '' }}">
                 </div>
                 <div class="flex items-end">
                     <button type="submit" class="btn btn-primary w-full" id="filter-button">
-                        {{ trans('admin_filter', default='Apply Filter', lang=lang) }}
+                        {{ t('admin_filter', default='Apply Filter') }}
                     </button>
                 </div>
             </div>
@@ -81,73 +81,73 @@
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-6" id="metrics-grid">
         <div class="card p-6 md:col-span-2 border-2" id="metric-1">
             <h5 class="card-title text-xl font-semibold" id="metric-title-1">
-                <i class="fas fa-users mr-2"></i>{{ trans('admin_total_users', default='Total Users', lang=lang) }}
+                <i class="fas fa-users mr-2"></i>{{ t('admin_total_users', default='Total Users') }}
             </h5>
             <p class="text-5xl font-bold mt-2" id="metric-value-1">
                 {% if metrics.total_users and metrics.total_users > 0 %}
                     {{ metrics.total_users }}
                 {% else %}
-                    {{ trans('admin_no_users', default='No users yet', lang=lang) }}
+                    {{ t('admin_no_users', default='No users yet') }}
                 {% endif %}
             </p>
         </div>
         <div class="card p-4" id="metric-2">
-            <h5 class="card-title text-xl font-semibold" id="metric-title-2">{{ trans('admin_new_users_24h', default='New Users (24h)', lang=lang) }}</h5>
+            <h5 class="card-title text-xl font-semibold" id="metric-title-2">{{ t('admin_new_users_24h', default='New Users (24h)') }}</h5>
             <p class="text-5xl font-bold mt-2" id="metric-value-2">
                 {% if metrics.new_users_last_24h and metrics.new_users_last_24h > 0 %}
                     {{ metrics.new_users_last_24h }}
                 {% else %}
-                    {{ trans('admin_no_new_users', default='No new users today', lang=lang) }}
+                    {{ t('admin_no_new_users', default='No new users today') }}
                 {% endif %}
             </p>
         </div>
         <div class="card p-4" id="metric-3">
-            <h5 class="card-title text-xl font-semibold" id="metric-title-3">{{ trans('admin_total_referrals', default='Total Referrals', lang=lang) }}</h5>
+            <h5 class="card-title text-xl font-semibold" id="metric-title-3">{{ t('admin_total_referrals', default='Total Referrals') }}</h5>
             <p class="text-5xl font-bold mt-2" id="metric-value-3">
                 {% if metrics.total_referrals and metrics.total_referrals > 0 %}
                     {{ metrics.total_referrals }}
                 {% else %}
-                    {{ trans('admin_no_referrals', default='No referrals yet', lang=lang) }}
+                    {{ t('admin_no_referrals', default='No referrals yet') }}
                 {% endif %}
             </p>
         </div>
         <div class="card p-4" id="metric-4">
-            <h5 class="card-title text-xl font-semibold" id="metric-title-4">{{ trans('admin_new_referrals_24h', default='New Referrals (24h)', lang=lang) }}</h5>
+            <h5 class="card-title text-xl font-semibold" id="metric-title-4">{{ t('admin_new_referrals_24h', default='New Referrals (24h)') }}</h5>
             <p class="text-5xl font-bold mt-2" id="metric-value-4">
                 {% if metrics.new_referrals_last_24h and metrics.new_referrals_last_24h > 0 %}
                     {{ metrics.new_referrals_last_24h }}
                 {% else %}
-                    {{ trans('admin_no_new_referrals', default='No new referrals today', lang=lang) }}
+                    {{ t('admin_no_new_referrals', default='No new referrals today') }}
                 {% endif %}
             </p>
         </div>
         <div class="card p-4" id="metric-5">
-            <h5 class="card-title text-xl font-semibold" id="metric-title-5">{{ trans('admin_referral_conversion_rate', default='Referral Conversion Rate', lang=lang) }}</h5>
+            <h5 class="card-title text-xl font-semibold" id="metric-title-5">{{ t('admin_referral_conversion_rate', default='Referral Conversion Rate') }}</h5>
             <p class="text-5xl font-bold mt-2" id="metric-value-5">
                 {% if metrics.referral_conversion_rate and metrics.referral_conversion_rate > 0 %}
                     {{ metrics.referral_conversion_rate }}%
                 {% else %}
-                    {{ trans('admin_no_conversion', default='No conversions yet', lang=lang) }}
+                    {{ t('admin_no_conversion', default='No conversions yet') }}
                 {% endif %}
             </p>
         </div>
         <div class="card p-4" id="metric-6">
-            <h5 class="card-title text-xl font-semibold" id="metric-title-6">{{ trans('admin_avg_feedback_rating', default='Avg Feedback Rating', lang=lang) }}</h5>
+            <h5 class="card-title text-xl font-semibold" id="metric-title-6">{{ t('admin_avg_feedback_rating', default='Avg Feedback Rating') }}</h5>
             <p class="text-5xl font-bold mt-2" id="metric-value-6">
                 {% if metrics.avg_feedback_rating and metrics.avg_feedback_rating > 0 %}
                     {{ metrics.avg_feedback_rating }}
                 {% else %}
-                    {{ trans('admin_no_feedback', default='No feedback yet', lang=lang) }}
+                    {{ t('admin_no_feedback', default='No feedback yet') }}
                 {% endif %}
             </p>
         </div>
         <div class="card p-4" id="metric-7">
-            <h5 class="card-title text-xl font-semibold" id="metric-title-7">{{ trans('admin_tool_usage_total', default='Total Tool Usage', lang=lang) }}</h5>
+            <h5 class="card-title text-xl font-semibold" id="metric-title-7">{{ t('admin_tool_usage_total', default='Total Tool Usage') }}</h5>
             <p class="text-5xl font-bold mt-2" id="metric-value-7">
                 {% if metrics.tool_usage_total and metrics.tool_usage_total > 0 %}
                     {{ metrics.tool_usage_total }}
                 {% else %}
-                    {{ trans('admin_no_tool_usage', default='No tool usage yet', lang=lang) }}
+                    {{ t('admin_no_tool_usage', default='No tool usage yet') }}
                 {% endif %}
             </p>
         </div>
@@ -156,34 +156,34 @@
     <!-- Top Tools and Action Breakdown -->
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6" id="tools-grid">
         <div class="card p-6" id="tools-div">
-            <h5 class="card-title text-xl font-semibold mb-4" id="tools-title">{{ trans('admin_top_tools', default='Top Tools', lang=lang) }}</h5>
+            <h5 class="card-title text-xl font-semibold mb-4" id="tools-title">{{ t('admin_top_tools', default='Top Tools') }}</h5>
             <ul class="list-disc pl-5">
                 {% for tool, count in metrics.top_tools %}
                     {% set outer_idx = loop.index %}
                     <li class="mb-2" id="tool-item-{{ outer_idx }}">
-                        {{ trans('tool_' + tool, default=tool.replace('_', ' ').title(), lang=lang) }}: 
+                        {{ t('tool_' + tool, default=tool.replace('_', ' ').title()) }}: 
                         {% if count and count > 0 %}
-                            {{ count }} {{ trans('admin_uses', default='uses', lang=lang) }}
+                            {{ count }} {{ t('admin_uses', default='uses') }}
                         {% else %}
-                            {{ trans('admin_no_tool_uses', default='No uses yet', lang=lang) }}
+                            {{ t('admin_no_tool_uses', default='No uses yet') }}
                         {% endif %}
                         <ul class="list-circle pl-6 mt-1">
                             {% for action, action_count in (metrics.action_breakdown.get(tool, []) or []) %}
                                 <li id="action-item-{{ outer_idx }}-{{ loop.index }}">
                                     {{ action.replace('_', ' ').title() }}: 
                                     {% if action_count and action_count > 0 %}
-                                        {{ action_count }} {{ trans('admin_uses', default='uses', lang=lang) }}
+                                        {{ action_count }} {{ t('admin_uses', default='uses') }}
                                     {% else %}
-                                        {{ trans('admin_no_action_uses', default='No uses yet', lang=lang) }}
+                                        {{ t('admin_no_action_uses', default='No uses yet') }}
                                     {% endif %}
                                 </li>
                             {% else %}
-                                <li id="no-action-{{ outer_idx }}">{{ trans('admin_no_actions', default='No actions available', lang=lang) }}</li>
+                                <li id="no-action-{{ outer_idx }}">{{ t('admin_no_actions', default='No actions available') }}</li>
                             {% endfor %}
                         </ul>
                     </li>
                 {% else %}
-                    <li>{{ trans('admin_no_tools', default='No tools used yet', lang=lang) }}</li>
+                    <li>{{ t('admin_no_tools', default='No tools used yet') }}</li>
                 {% endfor %}
             </ul>
         </div>
@@ -194,22 +194,22 @@
     {% if request.endpoint == 'admin.tool_usage' %}
     <div class="card mb-8" id="logs-div">
         <div class="p-6">
-            <h5 class="card-title text-xl font-semibold mb-4" id="logs-title">{{ trans('admin_usage_logs', default='Usage Logs', lang=lang) }}</h5>
+            <h5 class="card-title text-xl font-semibold mb-4" id="logs-title">{{ t('admin_usage_logs', default='Usage Logs') }}</h5>
             <a href="{{ url_for('admin.export_csv', tool_name=tool_name or '', start_date=start_date or '', end_date=end_date or '', action=action or '') }}" 
                class="btn btn-secondary mb-3" 
                id="export-link">
-                {{ trans('admin_export_csv', default='Export CSV', lang=lang) }}
+                {{ t('admin_export_csv', default='Export CSV') }}
             </a>
             <div class="overflow-x-auto">
                 <table class="table w-full" id="logs-table">
                     <thead>
                         <tr>
-                            <th class="py-3 px-4 text-base font-medium" id="id-header">{{ trans('admin_id', default='ID', lang=lang) }}</th>
-                            <th class="py-3 px-4 text-base font-medium" id="user-header">{{ trans('admin_user_id', default='User ID', lang=lang) }}</th>
-                            <th class="py-3 px-4 text-base font-medium" id="session-header">{{ trans('admin_session_id', default='Session ID', lang=lang) }}</th>
-                            <th class="py-3 px-4 text-base font-medium" id="tool-header">{{ trans('admin_tool_name', default='Tool Name', lang=lang) }}</th>
-                            <th class="py-3 px-4 text-base font-medium" id="action-header">{{ trans('admin_action', default='Action', lang=lang) }}</th>
-                            <th class="py-3 px-4 text-base font-medium" id="created-header">{{ trans('admin_created_at', default='Created', lang=lang) }}</th>
+                            <th class="py-3 px-4 text-base font-medium" id="id-header">{{ t('admin_id', default='ID') }}</th>
+                            <th class="py-3 px-4 text-base font-medium" id="user-header">{{ t('admin_user_id', default='User ID') }}</th>
+                            <th class="py-3 px-4 text-base font-medium" id="session-header">{{ t('admin_session_id', default='Session ID') }}</th>
+                            <th class="py-3 px-4 text-base font-medium" id="tool-header">{{ t('admin_tool_name', default='Tool Name') }}</th>
+                            <th class="py-3 px-4 text-base font-medium" id="action-header">{{ t('admin_action', default='Action') }}</th>
+                            <th class="py-3 px-4 text-base font-medium" id="created-header">{{ t('admin_created_at', default='Created') }}</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -218,13 +218,13 @@
                                 <td class="py-2 px-4" id="log-id-{{ loop.index }}">{{ log.id }}</td>
                                 <td class="py-2 px-4" id="log-user-{{ loop.index }}">{{ log.user_id or 'anonymous' }}</td>
                                 <td class="py-2 px-4" id="log-session-{{ loop.index }}">{{ log.session_id }}</td>
-                                <td class="py-2 px-4" id="log-tool-{{ loop.index }}">{{ trans('tool_' + log.tool_name, default=log.tool_name.replace('_', ' ').title(), lang=lang) }}</td>
+                                <td class="py-2 px-4" id="log-tool-{{ loop.index }}">{{ t('tool_' + log.tool_name, default=log.tool_name.replace('_', ' ').title()) }}</td>
                                 <td class="py-2 px-4" id="log-action-{{ loop.index }}">{{ log.action.replace('_', ' ').title() if log.action else 'N/A' }}</td>
                                 <td class="py-2 px-4" id="log-created-{{ loop.index }}">{{ log.created_at|format_datetime if log.created_at else 'N/A' }}</td>
                             </tr>
                         {% else %}
                             <tr>
-                                <td colspan="6" class="py-2 px-4 text-center" id="no-logs">{{ trans('admin_no_logs', default='No logs found', lang=lang) }}</td>
+                                <td colspan="6" class="py-2 px-4 text-center" id="no-logs">{{ t('admin_no_logs', default='No logs found') }}</td>
                             </tr>
                         {% endfor %}
                     </tbody>
