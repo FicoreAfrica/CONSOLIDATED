@@ -79,8 +79,10 @@ def is_valid_email(email):
     email_regex = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
     return re.match(email_regex, email) is not None
 
-def requires_role(role):
-    """Decorator to restrict access to a specific role."""
+def requires_role(roles):
+    """Decorator to restrict access to specific roles or list of roles."""
+    if isinstance(roles, str):
+        roles = [roles]
     def decorator(f):
         @wraps(f)
         def decorated_function(*args, **kwargs):
@@ -89,7 +91,7 @@ def requires_role(role):
             if not current_user.is_authenticated:
                 flash(trans_function('login_required', default='Please log in to access this page'), 'danger')
                 return redirect(url_for('users_bp.login'))
-            if current_user.role != role:
+            if current_user.role not in roles:
                 flash(trans_function('forbidden_access', default='Access denied'), 'danger')
                 return redirect(url_for('index'))
             return f(*args, **kwargs)
