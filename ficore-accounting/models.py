@@ -1,5 +1,5 @@
 from datetime import datetime
-from pymongo import MongoClient, ASCENDING, DESCENDING
+from pymongo import ASCENDING, DESCENDING
 from pymongo.errors import ConnectionFailure, ServerSelectionTimeoutError, DuplicateKeyError
 from werkzeug.security import generate_password_hash
 from bson import ObjectId
@@ -8,6 +8,7 @@ import logging
 import uuid
 import time
 from translations import trans
+from utils import get_mongo_db  # Import get_mongo_db from utils.py
 
 logger = logging.getLogger('ficore_app')
 
@@ -44,16 +45,14 @@ SAMPLE_COURSES = [
 
 def get_db(mongo_uri=None):
     """
-    Connects to the MongoDB database specified by mongo_uri.
-    Returns the database object.
+    Get MongoDB database connection using the global client from utils.py.
+    
+    Returns:
+        Database object
     """
     try:
-        mongo_uri = mongo_uri or os.getenv('MONGO_URI', 'mongodb://localhost:27017/minirecords')
-        client = MongoClient(mongo_uri, uuidRepresentation='standard')
-        db_name = mongo_uri.split('/')[-1].split('?')[0] or 'minirecords'
-        db = client[db_name]
-        db.command('ping')
-        logger.info(f"Successfully connected to MongoDB database: {db_name}")
+        db = get_mongo_db()
+        logger.info(f"Successfully connected to MongoDB database: {db.name}")
         return db
     except Exception as e:
         logger.error(f"Error connecting to database: {str(e)}")
@@ -62,11 +61,11 @@ def get_db(mongo_uri=None):
 def initialize_database(app):
     max_retries = 3
     retry_delay = 1
-    mongo_client = MongoClient(os.getenv('MONGO_URI', 'mongodb://localhost:27017/minirecords'))
     
     for attempt in range(max_retries):
         try:
-            mongo_client.admin.command('ping')
+            db = get_db()
+            db.command('ping')
             logger.info(f"Attempt {attempt + 1}/{max_retries} - {trans('general_database_connection_established', default='MongoDB connection established')}")
             break
         except (ConnectionFailure, ServerSelectionTimeoutError) as e:
