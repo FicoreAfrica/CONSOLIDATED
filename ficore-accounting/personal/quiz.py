@@ -9,19 +9,15 @@ import json
 import logging
 from translations import trans
 from mailersend_email import send_email, EMAIL_CONFIG
-from utils import mongo_client, requires_role, is_admin
 from models import log_tool_usage
 from session_utils import create_anonymous_session
+from utils import requires_role, is_admin, get_mongo_db
 
 # Configure logging
 logger = logging.getLogger('ficore_app')
 
 # Define the quiz blueprint
 quiz_bp = Blueprint('quiz', __name__, template_folder='templates/QUIZ', url_prefix='/QUIZ')
-
-# Get MongoDB database
-def get_mongo_db():
-    return mongo_client.ficodb
 
 def custom_login_required(f):
     """Custom login decorator that allows both authenticated users and anonymous sessions."""

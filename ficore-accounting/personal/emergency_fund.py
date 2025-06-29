@@ -8,11 +8,11 @@ from datetime import datetime
 import uuid
 import json
 from translations import trans
-from utils import mongo_client, requires_role, is_admin
 from bson import ObjectId
 from models import log_tool_usage
 import os
 from session_utils import create_anonymous_session
+from utils import requires_role, is_admin, get_mongo_db
 
 emergency_fund_bp = Blueprint(
     'emergency_fund',
@@ -20,10 +20,6 @@ emergency_fund_bp = Blueprint(
     template_folder='templates/EMERGENCYFUND',
     url_prefix='/EMERGENCYFUND'
 )
-
-# Get MongoDB database
-def get_mongo_db():
-    return mongo_client.ficodb
 
 def custom_login_required(f):
     """Custom login decorator that allows both authenticated users and anonymous sessions."""

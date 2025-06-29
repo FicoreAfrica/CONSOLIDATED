@@ -10,13 +10,13 @@ import uuid
 import json
 import os
 from translations import trans
-from utils import mongo_client, requires_role, is_admin
 from werkzeug.utils import secure_filename
 from models import log_tool_usage
 import pymongo
 import logging
 from flask import g
 from session_utils import create_anonymous_session
+from utils import requires_role, is_admin, get_mongo_db
 
 learning_hub_bp = Blueprint(
     'learning_hub',
@@ -24,10 +24,6 @@ learning_hub_bp = Blueprint(
     template_folder='templates/personal/LEARNINGHUB',
     url_prefix='/LEARNINGHUB'
 )
-
-# Get MongoDB database
-def get_mongo_db():
-    return mongo_client.ficodb
 
 def custom_login_required(f):
     """Custom login decorator that allows both authenticated users and anonymous sessions."""

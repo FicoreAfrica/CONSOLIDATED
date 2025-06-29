@@ -9,8 +9,8 @@ from datetime import datetime
 import uuid
 import json
 from models import log_tool_usage
-from utils import mongo_client, requires_role, is_admin
 from session_utils import create_anonymous_session
+from utils import requires_role, is_admin, get_mongo_db
 
 net_worth_bp = Blueprint(
     'net_worth',
@@ -18,10 +18,6 @@ net_worth_bp = Blueprint(
     template_folder='templates/NETWORTH',
     url_prefix='/NETWORTH'
 )
-
-# Get MongoDB database
-def get_mongo_db():
-    return mongo_client.ficodb
 
 def custom_login_required(f):
     """Custom login decorator that allows both authenticated users and anonymous sessions."""
