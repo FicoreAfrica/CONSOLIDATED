@@ -18,7 +18,10 @@ from scheduler_setup import init_scheduler
 from models import create_user, get_user_by_email, get_user, get_financial_health, get_budgets, get_bills, get_net_worth, get_emergency_funds, get_learning_progress, get_quiz_results, to_dict_financial_health, to_dict_budget, to_dict_bill, to_dict_net_worth, to_dict_emergency_fund, to_dict_learning_progress, to_dict_quiz_result, initialize_database
 from utils import trans_function, is_valid_email, get_mongo_db, close_mongo_db, get_limiter, get_mail, requires_role, check_coin_balance
 from session_utils import create_anonymous_session
-from translations.core import trans
+
+# Import the new translation system
+from translations import trans, get_translations, get_all_translations, get_module_translations
+
 from extensions import mongo_client, login_manager, flask_session, csrf, babel, compress
 from flask_login import login_required, current_user
 from flask_wtf.csrf import CSRFError
@@ -61,7 +64,7 @@ def admin_required(f):
         if not current_user.is_authenticated:
             return redirect(url_for('users_bp.login'))
         if current_user.role != 'admin':
-            flash(trans('no_permission', default='You do not have permission to access this page.'), 'danger')
+            flash(trans('general_no_permission', default='You do not have permission to access this page.'), 'danger')
             return redirect(url_for('index'))
         return f(*args, **kwargs)
     return decorated_function
@@ -100,7 +103,7 @@ def setup_logging(app):
     flask_logger = logging.getLogger('flask')
     werkzeug_logger = logging.getLogger('werkzeug')
     flask_logger.handlers = []
-    werkzeug_logger.handlers = []  # Fixed typo from Sciencedirect_logger
+    werkzeug_logger.handlers = []
     flask_logger.addHandler(handler)
     werkzeug_logger.addHandler(handler)
     flask_logger.setLevel(logging.INFO)
@@ -141,7 +144,7 @@ def check_mongodb_connection(mongo_client, app):
                 logger.error(f"Failed to reinitialize MongoDB client: {str(reinit_e)}")
                 return False
     except Exception as e:
-        logger.error(f"MongoDB connection error deliberated: Burgundy: {str(e)}", exc_info=True)
+        logger.error(f"MongoDB connection error: {str(e)}", exc_info=True)
         return False
 
 def setup_session(app):
@@ -190,7 +193,7 @@ class User:
     def __init__(self, id, email, display_name=None, role='personal'):
         self.id = id
         self.email = email
-        self.display_name = display_name or id  # Fixed typo from dishplay_name
+        self.display_name = display_name or id
         self.role = role
 
     def get(self, key, default=None):
@@ -258,7 +261,7 @@ def create_app():
     # Configure Flask-Login
     login_manager.init_app(app)
     login_manager.login_view = 'users_bp.login'
-    login_manager.login_message = trans('login_required', default='Please log in to access this page.')
+    login_manager.login_message = trans('general_login_required', default='Please log in to access this page.')
     login_manager.login_message_category = 'info'
     
     @login_manager.user_loader
@@ -429,7 +432,8 @@ def create_app():
         WAITLIST_FORM_URL=app.config.get('WAITLIST_FORM_URL', '#'),
         CONSULTANCY_FORM_URL=app.config.get('CONSULTANCY_FORM_URL', '#'),
         trans=trans,
-        trans_function=trans_function
+        trans_function=trans_function,
+        get_translations=get_translations
     )
     
     @app.template_filter('safe_nav')
@@ -520,6 +524,7 @@ def create_app():
         return {
             'google_client_id': app.config.get('GOOGLE_CLIENT_ID', ''),
             'trans': context_trans,
+            'get_translations': get_translations,
             'current_year': datetime.now().year,
             'LINKEDIN_URL': app.config.get('LINKEDIN_URL', '#'),
             'TWITTER_URL': app.config.get('TWITTER_URL', '#'),
@@ -529,7 +534,11 @@ def create_app():
             'CONSULTANCY_FORM_URL': app.config.get('CONSULTANCY_FORM_URL', '#'),
             'current_lang': lang,
             'current_user': current_user if has_request_context() else None,
-            'csrf_token': csrf.generate_csrf
+            'csrf_token': csrf.generate_csrf,
+            'available_languages': [
+                {'code': 'en', 'name': trans('general_english', lang=lang)},
+                {'code': 'ha', 'name': trans('general_hausa', lang=lang)}
+            ]
         }
     
     # Security headers
@@ -547,6 +556,48 @@ def create_app():
         response.headers['X-Content-Type-Options'] = 'nosniff'
         response.headers['Strict-Transport-Security'] = 'max-age=31536000; includeSubDomains'
         return response
+    
+    # Language switching route
+    @app.route('/change-language', methods=['POST'])
+    def change_language():
+        """Handle AJAX language switching"""
+        try:
+            data = request.get_json()
+            new_lang = data.get('language', 'en')
+            
+            if new_lang in ['en', 'ha']:
+                session['lang'] = new_lang
+                
+                # Update user preference if authenticated
+                if current_user.is_authenticated:
+                    try:
+                        get_mongo_db().users.update_one(
+                            {'_id': current_user.id}, 
+                            {'$set': {'language': new_lang}}
+                        )
+                    except Exception as e:
+                        logger.warning(f"Could not update user language preference: {str(e)}")
+                
+                logger.info(f"Language changed to {new_lang}", 
+                           extra={'session_id': session.get('sid', 'no-session-id')})
+                
+                return jsonify({
+                    'success': True, 
+                    'message': trans('general_language_changed', lang=new_lang)
+                })
+            else:
+                return jsonify({
+                    'success': False, 
+                    'message': trans('general_invalid_language')
+                }), 400
+                
+        except Exception as e:
+            logger.error(f"Error changing language: {str(e)}", 
+                        extra={'session_id': session.get('sid', 'no-session-id')})
+            return jsonify({
+                'success': False, 
+                'message': trans('general_error')
+            }), 500
     
     # Routes
     @app.route('/', methods=['GET', 'HEAD'])
@@ -574,11 +625,12 @@ def create_app():
                 t=trans,
                 courses=courses,
                 lang=lang,
-                sample_courses=courses
+                sample_courses=courses,
+                title=trans('general_welcome', lang=lang)
             )
         except Exception as e:
             logger.error(f"Error in index route: {str(e)}", exc_info=True)
-            flash(trans('learning_hub_error_message', default='An error occurred'), 'danger')
+            flash(trans('general_error', default='An error occurred'), 'danger')
             return render_template('error.html', t=trans, lang=lang, error=str(e)), 500
     
     @app.route('/general_dashboard')
@@ -612,10 +664,14 @@ def create_app():
             quiz_records = [to_dict_quiz_result(qr) for qr in quiz_records]
             data['quiz'] = quiz_records[0] if quiz_records else {'personality': None, 'score': None}
             logger.info(f"Retrieved data for session {session.get('sid', 'no-session-id')}")
-            return render_template('personal/GENERAL/general_dashboard.html', data=data, t=trans, lang=lang)
+            return render_template('personal/GENERAL/general_dashboard.html', 
+                                 data=data, 
+                                 t=trans, 
+                                 lang=lang,
+                                 title=trans('general_dashboard', lang=lang))
         except Exception as e:
             logger.error(f"Error in general_dashboard: {str(e)}", exc_info=True)
-            flash(trans('global_error_message', default='An error occurred'), 'danger')
+            flash(trans('general_error', default='An error occurred'), 'danger')
             default_data = {
                 'financial_health': {'score': None, 'status': None},
                 'budget': {'surplus_deficit': None, 'savings_goal': None},
@@ -625,7 +681,11 @@ def create_app():
                 'learning_progress': {},
                 'quiz': {'personality': None, 'score': None}
             }
-            return render_template('personal/GENERAL/general_dashboard.html', data=default_data, t=trans, lang=lang), 500
+            return render_template('personal/GENERAL/general_dashboard.html', 
+                                 data=default_data, 
+                                 t=trans, 
+                                 lang=lang,
+                                 title=trans('general_dashboard', lang=lang)), 500
     
     @app.route('/logout')
     def logout():
@@ -635,33 +695,45 @@ def create_app():
             session_lang = session.get('lang', 'en')
             session.clear()
             session['lang'] = session_lang
-            flash(trans('learning_hub_success_logout', default='Successfully logged out'), 'success')
+            flash(trans('general_logout_successful', default='Successfully logged out'), 'success')
             return redirect(url_for('index'))
         except Exception as e:
             logger.error(f"Error in logout: {str(e)}", exc_info=True)
-            flash(trans('global_error_message', default='An error occurred'), 'danger')
+            flash(trans('general_error', default='An error occurred'), 'danger')
             return redirect(url_for('index'))
     
     @app.route('/about')
     def about():
         lang = session.get('lang', 'en')
         logger.info("Serving about page")
-        return render_template('general/about.html', t=trans, lang=lang)
+        return render_template('general/about.html', 
+                             t=trans, 
+                             lang=lang,
+                             title=trans('general_about', lang=lang))
     
     @app.route('/contact')
     def contact():
         lang = session.get('lang', 'en')
-        return render_template('general/contact.html', t=trans, lang=lang)
+        return render_template('general/contact.html', 
+                             t=trans, 
+                             lang=lang,
+                             title=trans('general_contact', lang=lang))
     
     @app.route('/privacy')
     def privacy():
         lang = session.get('lang', 'en')
-        return render_template('general/privacy.html', t=trans, lang=lang)
+        return render_template('general/privacy.html', 
+                             t=trans, 
+                             lang=lang,
+                             title=trans('general_privacy', lang=lang))
     
     @app.route('/terms')
     def terms():
         lang = session.get('lang', 'en')
-        return render_template('general/terms.html', t=trans, lang=lang)
+        return render_template('general/terms.html', 
+                             t=trans, 
+                             lang=lang,
+                             title=trans('general_terms', lang=lang))
     
     @app.route('/health')
     def health():
@@ -679,11 +751,44 @@ def create_app():
             return jsonify(status), 500
     
     @app.route('/api/translations/<lang>')
-    def get_translations(lang):
-        valid_langs = ['en', 'ha']
-        if lang in valid_langs:
-            return jsonify({'translations': app.config.get('TRANSLATIONS', {}).get(lang, app.config.get('TRANSLATIONS', {}).get('en', {}))})
-        return jsonify({'translations': app.config.get('TRANSLATIONS', {}).get('en', {})}), 400
+    def get_translations_api(lang):
+        """API endpoint to get all translations for a language"""
+        try:
+            if lang not in ['en', 'ha']:
+                return jsonify({'error': trans('general_invalid_language')}), 400
+            
+            all_translations = get_all_translations()
+            result = {}
+            
+            # Flatten all translations for the requested language
+            for module_name, module_translations in all_translations.items():
+                if lang in module_translations:
+                    result.update(module_translations[lang])
+            
+            return jsonify({'translations': result})
+            
+        except Exception as e:
+            logger.error(f"API translations error: {str(e)}", 
+                        extra={'session_id': session.get('sid', 'no-session-id')})
+            return jsonify({'error': trans('general_error')}), 500
+    
+    @app.route('/api/translate')
+    def api_translate():
+        """API endpoint for single translation"""
+        try:
+            key = request.args.get('key')
+            lang = request.args.get('lang', session.get('lang', 'en'))
+            
+            if not key:
+                return jsonify({'error': trans('general_missing_key')}), 400
+            
+            translation = trans(key, lang=lang)
+            return jsonify({'key': key, 'translation': translation, 'lang': lang})
+            
+        except Exception as e:
+            logger.error(f"API translate error: {str(e)}", 
+                        extra={'session_id': session.get('sid', 'no-session-id')})
+            return jsonify({'error': trans('general_error')}), 500
     
     @app.route('/set_language/<lang>')
     def set_language(lang):
@@ -694,10 +799,10 @@ def create_app():
             if current_user.is_authenticated:
                 get_mongo_db().users.update_one({'_id': current_user.id}, {'$set': {'language': new_lang}})
             logger.info(f"Language set to {new_lang}")
-            flash(trans('learning_hub_success_language_updated', default='Language updated successfully'), 'success')
+            flash(trans('general_language_changed', default='Language updated successfully'), 'success')
         except Exception as e:
             logger.error(f"Session operation failed: {str(e)}")
-            flash(trans('invalid_language', default='Invalid language'), 'danger')
+            flash(trans('general_invalid_language', default='Invalid language'), 'danger')
         return redirect(request.referrer or url_for('index'))
     
     @app.route('/acknowledge_consent', methods=['POST'])
@@ -762,7 +867,7 @@ def create_app():
             ]
             receipts_result = list(db.cashflows.aggregate(receipts_pipeline))
             total_receipts = receipts_result[0]['total'] if receipts_result else 0
-            payments_pipeline = [  # Fixed typo from payments Router
+            payments_pipeline = [
                 {'$match': {'user_id': user_id, 'type': 'payment', 'created_at': {'$gte': month_start, '$lt': next_month}}},
                 {'$group': {'_id': None, 'total': {'$sum': '$amount'}}}
             ]
@@ -893,21 +998,21 @@ def create_app():
         lang = session.get('lang', 'en')
         logger.info("Handling feedback")
         tool_options = [
-            ['profile', trans('profile_section', default='Profile')],
-            ['coins', trans('coins_section', default='Coins')],
-            ['debtors', trans('debtors_section', default='People')],
-            ['creditors', trans('creditors_section')],
-            ['receipts', trans('receipts_section', default='Receipts')],
-            ['payment', trans('payments_section', default='Payments')],
-            ['inventory', trans('inventory_section', default='Inventory')],
-            ['report', trans('report_section', default='Reports')],
-            ['financial_health', trans('financial_health_section', default='Financial Health')],
-            ['budget', trans('budget_section', default='Budget')],
-            ['bill', trans('bill_section', default='Bill')],
-            ['net_worth', trans('net_worth_section', default='Net Worth')],
-            ['emergency_fund', trans('emergency_fund_section', default='Emergency Fund')],
-            ['learning', trans('learning_section', default='Learning')],
-            ['quiz', trans('quiz_section', default='Quiz')]
+            ['profile', trans('general_profile', default='Profile')],
+            ['coins', trans('coins_dashboard', default='Coins')],
+            ['debtors', trans('debtors_dashboard', default='Debtors')],
+            ['creditors', trans('creditors_dashboard', default='Creditors')],
+            ['receipts', trans('receipts_dashboard', default='Receipts')],
+            ['payment', trans('payments_dashboard', default='Payments')],
+            ['inventory', trans('inventory_dashboard', default='Inventory')],
+            ['report', trans('reports_dashboard', default='Reports')],
+            ['financial_health', trans('financial_health_calculator', default='Financial Health')],
+            ['budget', trans('budget_budget_planner', default='Budget')],
+            ['bill', trans('bill_bill_planner', default='Bill')],
+            ['net_worth', trans('net_worth_calculator', default='Net Worth')],
+            ['emergency_fund', trans('emergency_fund_calculator', default='Emergency Fund')],
+            ['learning', trans('learning_hub_courses', default='Learning')],
+            ['quiz', trans('quiz_personality_quiz', default='Quiz')]
         ]
         if request.method == 'POST':
             try:
@@ -918,11 +1023,11 @@ def create_app():
                 valid_tools = [option[0] for option in tool_options]
                 if not tool_name or tool_name not in valid_tools:
                     logger.error(f"Invalid feedback tool: {tool_name}")
-                    flash(trans('error_feedback_form', default='Please select a valid tool'), 'danger')
+                    flash(trans('general_invalid_input', default='Please select a valid tool'), 'danger')
                     return render_template('personal/GENERAL/feedback.html', t=trans, lang=lang, tool_options=tool_options)
                 if not rating or not rating.isdigit() or int(rating) < 1 or int(rating) > 5:
                     logger.error(f"Invalid rating: {rating}")
-                    flash(trans('error_feedback_rating', default='Please provide a rating between 1 and 5'), 'danger')
+                    flash(trans('general_invalid_input', default='Please provide a rating between 1 and 5'), 'danger')
                     return render_template('personal/GENERAL/feedback.html', t=trans, lang=lang, tool_options=tool_options)
                 if current_user.is_authenticated:
                     from coins.routes import get_user_query
@@ -945,7 +1050,7 @@ def create_app():
                     'comment': comment or None,
                     'timestamp': datetime.utcnow()
                 }
-                create_feedback(get_mongo_db(), feedback_entry)  # Fixed syntax error
+                create_feedback(get_mongo_db(), feedback_entry)
                 get_mongo_db().audit_logs.insert_one({
                     'admin_id': 'system',
                     'action': 'submit_feedback',
@@ -953,31 +1058,35 @@ def create_app():
                     'timestamp': datetime.utcnow()
                 })
                 logger.info(f"Feedback submitted: tool={tool_name}, rating={rating}, session={session.get('sid', 'no-session-id')}")
-                flash(trans('success_feedback', default='Thank you for your feedback!'), 'success')
+                flash(trans('general_thank_you', default='Thank you for your feedback!'), 'success')
                 return redirect(url_for('index'))
             except ValueError as e:
                 logger.error(f"User not found: {str(e)}")
-                flash(trans('user_not_found', default='User not found'), 'danger')
+                flash(trans('general_error', default='User not found'), 'danger')
             except Exception as e:
                 logger.error(f"Error processing feedback: {str(e)}", exc_info=True)
-                flash(trans('error_feedback', default='Error occurred during feedback submission'), 'danger')
+                flash(trans('general_error', default='Error occurred during feedback submission'), 'danger')
                 return render_template('personal/GENERAL/feedback.html', t=trans, lang=lang, tool_options=tool_options), 500
         logger.info("Rendering feedback index template")
-        return render_template('personal/GENERAL/feedback.html', t=trans, lang=lang, tool_options=tool_options)
+        return render_template('personal/GENERAL/feedback.html', 
+                             t=trans, 
+                             lang=lang, 
+                             tool_options=tool_options,
+                             title=trans('general_feedback', lang=lang))
     
     @app.route('/setup', methods=['GET'])
     @limiter.limit("10 per minute")
     def setup_database_route():
         setup_key = request.args.get('key')
         if setup_key != os.getenv('SETUP_KEY', 'setup-secret'):
-            return render_template('errors/403.html', content=trans('forbidden_access', default='Access denied')), 403
+            return render_template('errors/403.html', content=trans('general_access_denied', default='Access denied')), 403
         try:
             initialize_database(app)
-            flash(trans('database_setup_success', default='Database setup successful'), 'success')
+            flash(trans('general_success', default='Database setup successful'), 'success')
             return redirect(url_for('index'))
         except Exception as e:
-            flash(trans('database_setup_error', default='An error occurred during database setup'), 'danger')
-            return render_template('errors/500.html', content=trans('internal_error', default='Internal server error')), 500
+            flash(trans('general_error', default='An error occurred during database setup'), 'danger')
+            return render_template('errors/500.html', content=trans('general_error', default='Internal server error')), 500
     
     @app.route('/static/<path:filename>')
     def static_files(filename):
@@ -1017,19 +1126,31 @@ def create_app():
     @app.errorhandler(403)
     def forbidden(e):
         lang = session.get('lang', 'en')
-        return render_template('errors/403.html', message=trans('forbidden', default='Forbidden'), t=trans, lang=lang), 403
+        return render_template('errors/403.html', 
+                             message=trans('general_access_denied', default='Forbidden'), 
+                             t=trans, 
+                             lang=lang,
+                             title=trans('general_access_denied', lang=lang)), 403
     
     @app.errorhandler(404)
     def page_not_found(e):
         lang = session.get('lang', 'en')
         logger.error(f"Error 404: {str(e)}")
-        return render_template('errors/404.html', message=trans('page_not_found', default='Page not found'), t=trans, lang=lang), 404
+        return render_template('errors/404.html', 
+                             message=trans('general_page_not_found', default='Page not found'), 
+                             t=trans, 
+                             lang=lang,
+                             title=trans('general_page_not_found', lang=lang)), 404
     
     @app.errorhandler(500)
     def internal_server_error(e):
         lang = session.get('lang', 'en')
         logger.error(f"Server error: {str(e)}", exc_info=True)
-        return render_template('errors/500.html', message=trans('internal_server_error', default='Internal server error'), t=trans, lang=lang), 500
+        return render_template('errors/500.html', 
+                             message=trans('general_error', default='Internal server error'), 
+                             t=trans, 
+                             lang=lang,
+                             title=trans('general_error', lang=lang)), 500
     
     @app.errorhandler(CSRFError)
     def handle_csrf_error(e):
@@ -1053,7 +1174,12 @@ def create_app():
             if 'lang' not in session:
                 session['lang'] = request.accept_languages.best_match(['en', 'ha'], 'en')
                 logger.info(f"Set default language to {session['lang']}")
+            
+            # Make translation functions available globally
+            g.trans = trans
+            g.get_translations = get_translations
             g.logger = logger
+            
             if current_user.is_authenticated:
                 if 'session_id' not in session:
                     session['session_id'] = str(uuid.uuid4())
@@ -1071,12 +1197,27 @@ def create_app():
                         'set_language'
                     ]
                     if request.endpoint not in allowed_endpoints:
-                        flash(trans('setup_required', default='Please complete your profile setup'), 'warning')
+                        flash(trans('general_setup_required', default='Please complete your profile setup'), 'warning')
                         if current_user.role == 'agent':
                             return redirect(url_for('users_bp.agent_setup_wizard'))
                         return redirect(url_for('users_bp.personal_setup_wizard'))
         except Exception as e:
             logger.error(f"Error in before_request: {str(e)}", exc_info=True)
+    
+    # Development routes (only in debug mode)
+    if app.debug:
+        @app.route('/dev/translations')
+        def dev_translations():
+            """Development route to view all translations"""
+            all_translations = get_all_translations()
+            return render_template('dev/translations.html', 
+                                 translations=all_translations,
+                                 title='Translation Debug')
+        
+        @app.route('/dev/session')
+        def dev_session():
+            """Development route to view session data"""
+            return jsonify(dict(session))
     
     return app
 
