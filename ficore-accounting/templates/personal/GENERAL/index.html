@@ -141,7 +141,7 @@
                                     <div class="card-body">
                                         <h3 class="card-title"><i class="fas fa-balance-scale"></i> {{ trans('net_worth_net_worth_calculator') | default('Net Worth Tracker') }}</h3>
                                         <p class="card-text">{{ trans('net_worth_description') | default('Your Net worth is your assets minus liabilities') }}</p>
-                                        <a href="{{ url_for('net_worth.step1') }}" class="btn btn-primary" data- bs-toggle="tooltip" data-bs-placement="top" title="{{ trans('core_advisory_only') | default('This is an advisory tool only. Ficore does not store or access your funds.') }}" aria-label="{{ trans('net_worth_start_net_worth') | default('Start Net Worth Tracker') }}">{{ trans('core_start') | default('Start') }}</a>
+                                        <a href="{{ url_for('net_worth.step1') }}" class="btn btn-primary" data-bs-toggle="tooltip" data-bs-placement="top" title="{{ trans('core_advisory_only') | default('This is an advisory tool only. Ficore does not store or access your funds.') }}" aria-label="{{ trans('net_worth_start_net_worth') | default('Start Net Worth Tracker') }}">{{ trans('core_start') | default('Start') }}</a>
                                     </div>
                                 </div>
                             </div>
@@ -204,6 +204,36 @@
                             </div>
                         </div>
                     </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="navigation-cards my-4">
+        <h3 class="section-title mb-3">{{ trans('core_explore_features', default='Explore Features') }}</h3>
+        <div class="row g-3">
+            <div class="col-6 col-md-4">
+                <div class="nav-card">
+                    <div class="nav-card-icon">
+                        <i class="bi bi-newspaper"></i>
+                    </div>
+                    <div class="nav-card-content">
+                        <h4>{{ trans('core_news', default='News') }}</h4>
+                        <p>{{ trans('core_news_desc', default='Stay updated with financial news') }}</p>
+                    </div>
+                    <a href="{{ url_for('common_bp.news_list') }}" class="nav-card-link"></a>
+                </div>
+            </div>
+            <div class="col-6 col-md-4">
+                <div class="nav-card">
+                    <div class="nav-card-icon">
+                        <i class="bi bi-calculator"></i>
+                    </div>
+                    <div class="nav-card-content">
+                        <h4>{{ trans('core_taxation', default='Taxation') }}</h4>
+                        <p>{{ trans('core_taxation_desc', default='Calculate and manage taxes') }}</p>
+                    </div>
+                    <a href="{{ url_for('taxation_bp.calculate_tax') }}" class="nav-card-link"></a>
                 </div>
             </div>
         </div>
