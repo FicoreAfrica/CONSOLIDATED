@@ -7,6 +7,7 @@ from flask_mail import Mail
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
 from pymongo import MongoClient
+from pymongo.errors import ConnectionError
 from translations import trans
 
 # Flask extensions - defined here to avoid having too many files
@@ -26,6 +27,7 @@ compress = Compress()
 
 # Set up logging with session support
 root_logger = logging.getLogger('ficore_app')
+root_logger.setLevel(logging.INFO)
 
 class SessionFormatter(logging.Formatter):
     def format(self, record):
@@ -112,12 +114,28 @@ def get_mongo_db():
             if client:
                 return client.ficodb
         
-        # Fallback: use global mongo_client
-        if mongo_client:
-            return mongo_client.ficodb
+        # Initialize MongoDB client if not already initialized
+        if mongo_client is None:
+            mongo_uri = current_app.config.get('MONGO_URI')
+            if not mongo_uri:
+                logger.error(trans('general_no_mongo_client', default='No MongoDB client available: MONGO_URI not set'))
+                raise RuntimeError("No MongoDB client available: MONGO_URI not set")
+            try:
+                mongo_client = MongoClient(
+                    mongo_uri,
+                    serverSelectionTimeoutMS=5000,
+                    tlsCAFile=current_app.config.get('MONGO_CA_FILE', None)
+                )
+                mongo_client.admin.command('ping')
+                logger.info(trans('general_mongo_connection_established', default='MongoDB connection established'))
+            except ConnectionError as e:
+                logger.error(f"{trans('general_mongo_connection_error', default='Error connecting to MongoDB')}: {str(e)}")
+                raise RuntimeError(f"No MongoDB client available: {str(e)}")
+            except Exception as e:
+                logger.error(f"{trans('general_mongo_connection_error', default='Error connecting to MongoDB')}: {str(e)}")
+                raise RuntimeError(f"No MongoDB client available: {str(e)}")
         
-        logger.error(trans('general_no_mongo_client', default='No MongoDB client available'))
-        raise RuntimeError("No MongoDB client available")
+        return mongo_client.ficodb
     except Exception as e:
         logger.error(f"{trans('general_mongo_connection_error', default='Error getting MongoDB connection')}: {str(e)}", exc_info=True)
         raise
