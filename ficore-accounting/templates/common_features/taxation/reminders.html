@@ -1,13 +1,13 @@
 {% extends "base.html" %}
 {% block content %}
-<h1>Your Tax Reminders</h1>
+<h1>{{ t('general_your_tax_reminders', default='Your Tax Reminders') }}</h1>
 {% if reminders %}
     <ul>
     {% for reminder in reminders %}
-        <li>{{ reminder.message }} - Due on {{ reminder.reminder_date.strftime('%Y-%m-%d') }}</li>
+        <li>{{ reminder.message }} - {{ t('general_due_on', default='Due on') }} {{ reminder.reminder_date.strftime('%Y-%m-%d') }}</li>
     {% endfor %}
     </ul>
 {% else %}
-    <p>No reminders found.</p>
+    <p>{{ t('general_no_reminders_found', default='No reminders found.') }}</p>
 {% endif %}
 {% endblock %}

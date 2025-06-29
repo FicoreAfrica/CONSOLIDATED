@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 {% block content %}
-<h1>Tax Calculation Result</h1>
-<p>For an amount of {{ amount }}, your tax obligation is {{ tax }}.</p>
-<p>Explanation: {{ explanation }}</p>
-<a href="{{ url_for('taxation_bp.calculate_tax') }}" class="btn btn-secondary">Back to Calculator</a>
+<h1>{{ t('general_tax_calculation_result', default='Tax Calculation Result') }}</h1>
+<p>{{ t('general_for_amount_of', default='For an amount of') }} {{ amount }}, {{ t('general_your_tax_obligation_is', default='your tax obligation is') }} {{ tax }}.</p>
+<p>{{ t('general_explanation', default='Explanation') }}: {{ explanation }}</p>
+<a href="{{ url_for('taxation_bp.calculate_tax') }}" class="btn btn-secondary">{{ t('general_back_to_calculator', default='Back to Calculator') }}</a>
 {% endblock %}

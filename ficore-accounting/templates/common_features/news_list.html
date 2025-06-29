@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 {% block content %}
-<h1>Ficore News</h1>
+<h1>{{ t('general_ficore_news', default='Ficore News') }}</h1>
 <ul class="list-group">
 {% for article in articles %}
     <li class="list-group-item">

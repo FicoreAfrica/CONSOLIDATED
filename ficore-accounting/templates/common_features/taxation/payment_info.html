@@ -1,10 +1,10 @@
 {% extends "base.html" %}
 {% block content %}
-<h1>Tax Payment Information</h1>
-<p>Find below the list of tax offices where you can pay your taxes:</p>
+<h1>{{ t('general_tax_payment_information', default='Tax Payment Information') }}</h1>
+<p>{{ t('general_find_below_tax_offices', default='Find below the list of tax offices where you can pay your taxes') }}:</p>
 <ul>
 {% for location in locations %}
-    <li>{{ location.name }} - {{ address }} (Contact: {{ location.contact }})</li>
+    <li>{{ location.name }} - {{ address }} ({{ t('general_contact', default='Contact') }}: {{ location.contact }})</li>
 {% endfor %}
 </ul>
 <!-- TODO: Add map integration -->

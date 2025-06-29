@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 {% block content %}
-<h1>Calculate Your Tax</h1>
-<p>Enter your {% if role == 'personal' %}monthly salary{% elif role == 'trader' %}monthly turnover{% else %}relevant amount{% endif %} to calculate your tax obligation.</p>
+<h1>{{ t('general_calculate_your_tax', default='Calculate Your Tax') }}</h1>
+<p>{{ t('general_enter_your', default='Enter your') }} {% if role == 'personal' %}{{ t('general_monthly_salary', default='monthly salary') }}{% elif role == 'trader' %}{{ t('general_monthly_turnover', default='monthly turnover') }}{% else %}{{ t('general_relevant_amount', default='relevant amount') }}{% endif %} {{ t('general_to_calculate_tax_obligation', default='to calculate your tax obligation') }}.</p>
 <form method="POST">
     {{ form.hidden_tag() }}
     <div class="form-group">

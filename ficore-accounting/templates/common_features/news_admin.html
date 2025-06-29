@@ -1,67 +1,67 @@
 {% extends "base.html" %}
 {% block content %}
-<h1>News Management</h1>
+<h1>{{ t('general_news_management', default='News Management') }}</h1>
 
 {% if edit_mode %}
-    <h2>Edit News Article</h2>
+    <h2>{{ t('general_edit_news_article', default='Edit News Article') }}</h2>
 {% else %}
-    <h2>Add New Article</h2>
+    <h2>{{ t('general_add_new_article', default='Add New Article') }}</h2>
 {% endif %}
 
 <form method="POST" action="{{ url_for('common_bp.news_management') if not edit_mode else url_for('common_bp.edit_news', article_id=article.id) }}">
     <div class="mb-3">
-        <label for="title" class="form-label">Title</label>
+        <label for="title" class="form-label">{{ t('general_title', default='Title') }}</label>
         <input type="text" class="form-control" id="title" name="title" value="{{ article.title if edit_mode else '' }}" required>
     </div>
     <div class="mb-3">
-        <label for="content" class="form-label">Content</label>
+        <label for="content" class="form-label">{{ t('general_content', default='Content') }}</label>
         <textarea class="form-control" id="content" name="content" rows="5" required>{{ article.content if edit_mode else '' }}</textarea>
     </div>
     <div class="mb-3">
-        <label for="source_link" class="form-label">Source Link (Optional)</label>
+        <label for="source_link" class="form-label">{{ t('general_source_link_optional', default='Source Link (Optional)') }}</label>
         <input type="url" class="form-control" id="source_link" name="source_link" value="{{ article.source_link if edit_mode else '' }}">
     </div>
     <div class="mb-3">
-        <label for="category" class="form-label">Category</label>
+        <label for="category" class="form-label">{{ t('general_category', default='Category') }}</label>
         <select class="form-select" id="category" name="category">
-            <option value="" {% if not article.category and edit_mode %}selected{% endif %}>None</option>
-            <option value="Market" {% if edit_mode and article.category == 'Market' %}selected{% endif %}>Market</option>
-            <option value="Policy" {% if edit_mode and article.category == 'Policy' %}selected{% endif %}>Policy</option>
-            <option value="Tips" {% if edit_mode and article.category == 'Tips' %}selected{% endif %}>Tips</option>
+            <option value="" {% if not article.category and edit_mode %}selected{% endif %}>{{ t('general_none', default='None') }}</option>
+            <option value="Market" {% if edit_mode and article.category == 'Market' %}selected{% endif %}>{{ t('general_market', default='Market') }}</option>
+            <option value="Policy" {% if edit_mode and article.category == 'Policy' %}selected{% endif %}>{{ t('general_policy', default='Policy') }}</option>
+            <option value="Tips" {% if edit_mode and article.category == 'Tips' %}selected{% endif %}>{{ t('general_tips', default='Tips') }}</option>
         </select>
     </div>
     {% if edit_mode %}
         <div class="mb-3 form-check">
             <input type="checkbox" class="form-check-input" id="is_active" name="is_active" {% if article.is_active %}checked{% endif %}>
-            <label for="is_active" class="form-check-label">Active</label>
+            <label for="is_active" class="form-check-label">{{ t('general_active', default='Active') }}</label>
         </div>
     {% endif %}
-    <button type="submit" class="btn btn-primary">{{ 'Update' if edit_mode else 'Add' }} Article</button>
+    <button type="submit" class="btn btn-primary">{{ t('general_update', default='Update') if edit_mode else t('general_add', default='Add') }} {{ t('general_article', default='Article') }}</button>
 </form>
 
 {% if not edit_mode %}
-    <h2 class="mt-5">All News Articles</h2>
+    <h2 class="mt-5">{{ t('general_all_news_articles', default='All News Articles') }}</h2>
     <table class="table">
         <thead>
             <tr>
-                <th>Title</th>
-                <th>Category</th>
-                <th>Published</th>
-                <th>Active</th>
-                <th>Actions</th>
+                <th>{{ t('general_title', default='Title') }}</th>
+                <th>{{ t('general_category', default='Category') }}</th>
+                <th>{{ t('general_published', default='Published') }}</th>
+                <th>{{ t('general_active', default='Active') }}</th>
+                <th>{{ t('general_actions', default='Actions') }}</th>
             </tr>
         </thead>
         <tbody>
         {% for article in articles %}
             <tr>
                 <td>{{ article.title }}</td>
-                <td>{{ article.category or 'None' }}</td>
+                <td>{{ article.category or t('general_none', default='None') }}</td>
                 <td>{{ article.published_at.strftime('%Y-%m-%d') }}</td>
-                <td>{{ 'Yes' if article.is_active else 'No' }}</td>
+                <td>{{ t('general_yes', default='Yes') if article.is_active else t('general_no', default='No') }}</td>
                 <td>
-                    <a href="{{ url_for('common_bp.edit_news', article_id=article.id) }}" class="btn btn-sm btn-warning">Edit</a>
+                    <a href="{{ url_for('common_bp.edit_news', article_id=article.id) }}" class="btn btn-sm btn-warning">{{ t('general_edit', default='Edit') }}</a>
                     <form action="{{ url_for('common_bp.delete_news', article_id=article.id) }}" method="POST" style="display:inline;">
-                        <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Are you sure?')">Delete</button>
+                        <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('{{ t('general_are_you_sure', default='Are you sure?') }}')">{{ t('general_delete', default='Delete') }}</button>
                     </form>
                 </td>
             </tr>

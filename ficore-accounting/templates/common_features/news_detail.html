@@ -1,10 +1,10 @@
 {% extends "base.html" %}
 {% block content %}
 <h1>{{ article.title }}</h1>
-<p><small class="text-muted">Published on: {{ article.published_at.strftime('%Y-%m-%d') }}</small></p>
+<p><small class="text-muted">{{ t('general_published_on', default='Published on') }}: {{ article.published_at.strftime('%Y-%m-%d') }}</small></p>
 {% if article.source_link %}
-    <p><a href="{{ article.source_link }}" target="_blank">Source</a></p>
+    <p><a href="{{ article.source_link }}" target="_blank">{{ t('general_source', default='Source') }}</a></p>
 {% endif %}
 <div>{{ article.content | safe }}</div>
-<a href="{{ url_for('common_bp.news_list') }}" class="btn btn-primary mt-3">Back to News</a>
+<a href="{{ url_for('common_bp.news_list') }}" class="btn btn-primary mt-3">{{ t('general_back_to_news', default='Back to News') }}</a>
 {% endblock %}

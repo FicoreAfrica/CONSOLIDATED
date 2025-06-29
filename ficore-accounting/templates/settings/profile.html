@@ -1,48 +1,48 @@
 {% extends 'base.html' %}
-{% block title %}{{ trans('my_profile', default='My Profile') }} - FiCore{% endblock %}
+{% block title %}{{ t('settings_my_profile', default='My Profile') }} - FiCore{% endblock %}
 {% block content %}
 <div class="container mt-4">
     <div class="d-flex align-items-center mb-4">
         <a href="{{ url_for('dashboard_blueprint.index') }}" class="back-arrow me-3">←</a>
-        <h1>{{ trans('hello_user', default='Hello') }}, {{ user.display_name or user._id }}!</h1>
+        <h1>{{ t('settings_hello_user', default='Hello') }}, {{ user.display_name or user._id }}!</h1>
         <div class="profile-pic-container ms-auto">
-            <img src="{{ url_for('static', filename='img/default_profile.png') }}" alt="Profile Picture" class="profile-pic" onerror="this.src='{{ url_for('static', filename='img/ficore_records_logo.png') }}';">
+            <img src="{{ url_for('static', filename='img/default_profile.png') }}" alt="{{ t('settings_profile_picture', default='Profile Picture') }}" class="profile-pic" onerror="this.src='{{ url_for('static', filename='img/ficore_records_logo.png') }}';">
             <span class="edit-profile-pic-icon">✎</span>
         </div>
     </div>
 
     <div class="card card-body mb-3">
-        <p class="mb-0">{{ trans('account_type', default='Account Type') }}: 
+        <p class="mb-0">{{ t('settings_account_type', default='Account Type') }}: 
             <strong>
                 {% if user.role == 'personal' %}
-                    {{ trans('personal_account', default='Personal Account') }}
+                    {{ t('settings_personal_account', default='Personal Account') }}
                 {% elif user.role == 'trader' %}
-                    {{ trans('trader_account', default='Trader Account') }}
+                    {{ t('settings_trader_account', default='Trader Account') }}
                 {% elif user.role == 'agent' %}
-                    {{ trans('agent_account', default='Agent Account') }}
+                    {{ t('settings_agent_account', default='Agent Account') }}
                 {% elif user.role == 'admin' %}
-                    {{ trans('admin_account', default='Admin Account') }}
+                    {{ t('settings_admin_account', default='Admin Account') }}
                 {% endif %}
             </strong> 
-            <span class="info-icon" title="{{ trans(user.role + '_account_info', default=user.role|capitalize + ' account gives you access to specific features tailored to your role.') }}">ⓘ</span>
+            <span class="info-icon" title="{{ t('settings_' + user.role + '_account_info', default=user.role|capitalize + ' account gives you access to specific features tailored to your role.') }}">ⓘ</span>
         </p>
     </div>
 
     <div class="d-grid mb-4">
         <button class="btn btn-outline-primary" onclick="location.href='{{ url_for('feedback') }}'">
-            <i class="bi bi-chat-dots me-2"></i> {{ trans('provide_feedback', default='Provide Feedback') }}
+            <i class="bi bi-chat-dots me-2"></i> {{ t('settings_provide_feedback', default='Provide Feedback') }}
         </button>
     </div>
 
     <section class="profile-section mb-4">
-        <h2>{{ trans('personal_data', default='Personal Data') }}</h2>
+        <h2>{{ t('settings_personal_data', default='Personal Data') }}</h2>
         <div class="card card-body">
             <form method="POST" action="{{ url_for('settings_blueprint.profile') }}">
                 {{ form.csrf_token }}
 
                 <div class="form-group mb-3">
-                    <label for="full_name" class="form-label">{{ trans('full_name', default='Full Name') }}</label>
-                    {{ form.full_name(placeholder=trans('full_name_placeholder', default='Enter your full name')) }}
+                    <label for="full_name" class="form-label">{{ t('settings_full_name', default='Full Name') }}</label>
+                    {{ form.full_name(placeholder=t('settings_full_name_placeholder', default='Enter your full name')) }}
                     {% if form.full_name.errors %}
                         {% for error in form.full_name.errors %}
                             <p class="text-danger mt-1">{{ error }}</p>
@@ -51,8 +51,8 @@
                 </div>
 
                 <div class="form-group mb-3">
-                    <label for="phone" class="form-label">{{ trans('phone_number', default='Phone Number') }}</label>
-                    {{ form.phone(placeholder=trans('phone_placeholder', default='+234xxxxxxxxx')) }}
+                    <label for="phone" class="form-label">{{ t('settings_phone_number', default='Phone Number') }}</label>
+                    {{ form.phone(placeholder=t('settings_phone_placeholder', default='+234xxxxxxxxx')) }}
                     {% if form.phone.errors %}
                         {% for error in form.phone.errors %}
                             <p class="text-danger mt-1">{{ error }}</p>
@@ -61,8 +61,8 @@
                 </div>
 
                 <div class="form-group mb-3">
-                    <label for="email" class="form-label">{{ trans('email', default='Email') }}</label>
-                    {{ form.email(placeholder=trans('email_placeholder', default='your@email.com')) }}
+                    <label for="email" class="form-label">{{ t('general_email', default='Email') }}</label>
+                    {{ form.email(placeholder=t('settings_email_placeholder', default='your@email.com')) }}
                     {% if form.email.errors %}
                         {% for error in form.email.errors %}
                             <p class="text-danger mt-1">{{ error }}</p>
@@ -72,11 +72,11 @@
 
                 {% if user.role == 'personal' %}
                 <hr class="my-4">
-                <h5>{{ trans('personal_information', default='Personal Information') }}</h5>
+                <h5>{{ t('settings_personal_information', default='Personal Information') }}</h5>
                 
                 <div class="form-group mb-3">
-                    <label for="first_name" class="form-label">{{ trans('first_name', default='First Name') }}</label>
-                    {{ form.first_name(placeholder=trans('first_name_placeholder', default='Enter your first name')) }}
+                    <label for="first_name" class="form-label">{{ t('general_first_name', default='First Name') }}</label>
+                    {{ form.first_name(placeholder=t('settings_first_name_placeholder', default='Enter your first name')) }}
                     {% if form.first_name.errors %}
                         {% for error in form.first_name.errors %}
                             <p class="text-danger mt-1">{{ error }}</p>
@@ -85,8 +85,8 @@
                 </div>
 
                 <div class="form-group mb-3">
-                    <label for="last_name" class="form-label">{{ trans('last_name', default='Last Name') }}</label>
-                    {{ form.last_name(placeholder=trans('last_name_placeholder', default='Enter your last name')) }}
+                    <label for="last_name" class="form-label">{{ t('general_last_name', default='Last Name') }}</label>
+                    {{ form.last_name(placeholder=t('settings_last_name_placeholder', default='Enter your last name')) }}
                     {% if form.last_name.errors %}
                         {% for error in form.last_name.errors %}
                             <p class="text-danger mt-1">{{ error }}</p>
@@ -95,8 +95,8 @@
                 </div>
 
                 <div class="form-group mb-3">
-                    <label for="personal_address" class="form-label">{{ trans('address', default='Address') }}</label>
-                    {{ form.personal_address(placeholder=trans('address_placeholder', default='Enter your address')) }}
+                    <label for="personal_address" class="form-label">{{ t('general_address', default='Address') }}</label>
+                    {{ form.personal_address(placeholder=t('settings_address_placeholder', default='Enter your address')) }}
                     {% if form.personal_address.errors %}
                         {% for error in form.personal_address.errors %}
                             <p class="text-danger mt-1">{{ error }}</p>
@@ -106,11 +106,11 @@
 
                 {% elif user.role == 'trader' %}
                 <hr class="my-4">
-                <h5>{{ trans('business_information', default='Business Information') }}</h5>
+                <h5>{{ t('settings_business_information', default='Business Information') }}</h5>
                 
                 <div class="form-group mb-3">
-                    <label for="business_name" class="form-label">{{ trans('business_name', default='Business Name') }}</label>
-                    {{ form.business_name(placeholder=trans('business_name_placeholder', default='Your Business Name')) }}
+                    <label for="business_name" class="form-label">{{ t('settings_business_name', default='Business Name') }}</label>
+                    {{ form.business_name(placeholder=t('settings_business_name_placeholder', default='Your Business Name')) }}
                     {% if form.business_name.errors %}
                         {% for error in form.business_name.errors %}
                             <p class="text-danger mt-1">{{ error }}</p>
@@ -119,8 +119,8 @@
                 </div>
                 
                 <div class="form-group mb-3">
-                    <label for="business_address" class="form-label">{{ trans('business_address', default='Business Address') }}</label>
-                    {{ form.business_address(placeholder=trans('business_address_placeholder', default='Your Business Address')) }}
+                    <label for="business_address" class="form-label">{{ t('settings_business_address', default='Business Address') }}</label>
+                    {{ form.business_address(placeholder=t('settings_business_address_placeholder', default='Your Business Address')) }}
                     {% if form.business_address.errors %}
                         {% for error in form.business_address.errors %}
                             <p class="text-danger mt-1">{{ error }}</p>
@@ -129,8 +129,8 @@
                 </div>
                 
                 <div class="form-group mb-3">
-                    <label for="industry" class="form-label">{{ trans('industry', default='Industry') }}</label>
-                    {{ form.industry(placeholder=trans('industry_placeholder', default='e.g., Retail, Services, Manufacturing')) }}
+                    <label for="industry" class="form-label">{{ t('settings_industry', default='Industry') }}</label>
+                    {{ form.industry(placeholder=t('settings_industry_placeholder', default='e.g., Retail, Services, Manufacturing')) }}
                     {% if form.industry.errors %}
                         {% for error in form.industry.errors %}
                             <p class="text-danger mt-1">{{ error }}</p>
@@ -139,8 +139,8 @@
                 </div>
 
                 <div class="form-group mb-3">
-                    <label for="products_services" class="form-label">{{ trans('products_services', default='Products/Services') }}</label>
-                    {{ form.products_services(placeholder=trans('products_services_placeholder', default='e.g., Clothing, Consulting')) }}
+                    <label for="products_services" class="form-label">{{ t('settings_products_services', default='Products/Services') }}</label>
+                    {{ form.products_services(placeholder=t('settings_products_services_placeholder', default='e.g., Clothing, Consulting')) }}
                     {% if form.products_services.errors %}
                         {% for error in form.products_services.errors %}
                             <p class="text-danger mt-1">{{ error }}</p>
@@ -150,11 +150,11 @@
 
                 {% elif user.role == 'agent' %}
                 <hr class="my-4">
-                <h5>{{ trans('agent_information', default='Agent Information') }}</h5>
+                <h5>{{ t('settings_agent_information', default='Agent Information') }}</h5>
                 
                 <div class="form-group mb-3">
-                    <label for="agent_name" class="form-label">{{ trans('agent_name', default='Agent Name') }}</label>
-                    {{ form.agent_name(placeholder=trans('agent_name_placeholder', default='Enter agent name')) }}
+                    <label for="agent_name" class="form-label">{{ t('settings_agent_name', default='Agent Name') }}</label>
+                    {{ form.agent_name(placeholder=t('settings_agent_name_placeholder', default='Enter agent name')) }}
                     {% if form.agent_name.errors %}
                         {% for error in form.agent_name.errors %}
                             <p class="text-danger mt-1">{{ error }}</p>
@@ -163,8 +163,8 @@
                 </div>
 
                 <div class="form-group mb-3">
-                    <label for="agent_id" class="form-label">{{ trans('agent_id', default='Agent ID') }}</label>
-                    {{ form.agent_id(placeholder=trans('agent_id_placeholder', default='Enter agent ID')) }}
+                    <label for="agent_id" class="form-label">{{ t('settings_agent_id', default='Agent ID') }}</label>
+                    {{ form.agent_id(placeholder=t('settings_agent_id_placeholder', default='Enter agent ID')) }}
                     {% if form.agent_id.errors %}
                         {% for error in form.agent_id.errors %}
                             <p class="text-danger mt-1">{{ error }}</p>
@@ -173,8 +173,8 @@
                 </div>
 
                 <div class="form-group mb-3">
-                    <label for="area" class="form-label">{{ trans('area', default='Area') }}</label>
-                    {{ form.area(placeholder=trans('area_placeholder', default='Enter your area')) }}
+                    <label for="area" class="form-label">{{ t('settings_area', default='Area') }}</label>
+                    {{ form.area(placeholder=t('settings_area_placeholder', default='Enter your area')) }}
                     {% if form.area.errors %}
                         {% for error in form.area.errors %}
                             <p class="text-danger mt-1">{{ error }}</p>
@@ -183,8 +183,8 @@
                 </div>
 
                 <div class="form-group mb-3">
-                    <label for="agent_role" class="form-label">{{ trans('agent_role', default='Role') }}</label>
-                    {{ form.agent_role(placeholder=trans('agent_role_placeholder', default='e.g., Sales Agent, Support Agent')) }}
+                    <label for="agent_role" class="form-label">{{ t('settings_agent_role', default='Role') }}</label>
+                    {{ form.agent_role(placeholder=t('settings_agent_role_placeholder', default='e.g., Sales Agent, Support Agent')) }}
                     {% if form.agent_role.errors %}
                         {% for error in form.agent_role.errors %}
                             <p class="text-danger mt-1">{{ error }}</p>
@@ -201,28 +201,28 @@
     </section>
 
     <section class="profile-section mb-4">
-        <h2>{{ trans('app_settings', default='App Settings') }}</h2>
+        <h2>{{ t('settings_app_settings', default='App Settings') }}</h2>
         <div class="card card-body">
             <a href="{{ url_for('settings_blueprint.language') }}" class="list-item">
-                <i class="bi bi-translate icon-left"></i> {{ trans('language', default='Language') }}
+                <i class="bi bi-translate icon-left"></i> {{ t('settings_language', default='Language') }}
                 <i class="bi bi-chevron-right icon-right"></i>
             </a>
             <div class="list-item toggle-item">
-                <i class="bi bi-currency-dollar icon-left"></i> {{ trans('show_kobo', default='Show kobo (Amounts in the format 00.00)') }}
+                <i class="bi bi-currency-dollar icon-left"></i> {{ t('settings_show_kobo', default='Show kobo (Amounts in the format 00.00)') }}
                 <div class="form-check form-switch ms-auto">
                     <input class="form-check-input" type="checkbox" id="showKoboToggle" {% if user.settings.get('show_kobo') %}checked{% endif %}>
                     <label class="form-check-label" for="showKoboToggle"></label>
                 </div>
             </div>
             <div class="list-item toggle-item">
-                <i class="bi bi-eye-slash icon-left"></i> {{ trans('incognito_mode', default='Incognito mode (Hide balance)') }}
+                <i class="bi bi-eye-slash icon-left"></i> {{ t('settings_incognito_mode', default='Incognito mode (Hide balance)') }}
                 <div class="form-check form-switch ms-auto">
                     <input class="form-check-input" type="checkbox" id="incognitoModeToggle" {% if user.settings.get('incognito_mode') %}checked{% endif %}>
                     <label class="form-check-label" for="incognitoModeToggle"></label>
                 </div>
             </div>
             <div class="list-item toggle-item">
-                <i class="bi bi-volume-up icon-left"></i> {{ trans('app_sounds', default='App sounds') }}
+                <i class="bi bi-volume-up icon-left"></i> {{ t('settings_app_sounds', default='App sounds') }}
                 <div class="form-check form-switch ms-auto">
                     <input class="form-check-input" type="checkbox" id="appSoundsToggle" {% if user.settings.get('app_sounds') %}checked{% endif %}>
                     <label class="form-check-label" for="appSoundsToggle"></label>
@@ -232,24 +232,24 @@
     </section>
 
     <section class="profile-section mb-4">
-        <h2>{{ trans('security', default='Security') }}</h2>
+        <h2>{{ t('settings_security', default='Security') }}</h2>
         <div class="card card-body">
             <div class="list-item toggle-item">
-                <i class="bi bi-fingerprint icon-left"></i> {{ trans('use_fingerprint_password', default='Use Fingerprint ID (For password)') }}
+                <i class="bi bi-fingerprint icon-left"></i> {{ t('settings_use_fingerprint_password', default='Use Fingerprint ID (For password)') }}
                 <div class="form-check form-switch ms-auto">
                     <input class="form-check-input" type="checkbox" id="fingerprintPasswordToggle" {% if user.security_settings.get('fingerprint_password') %}checked{% endif %}>
                     <label class="form-check-label" for="fingerprintPasswordToggle"></label>
                 </div>
             </div>
             <div class="list-item toggle-item">
-                <i class="bi bi-fingerprint icon-left"></i> {{ trans('use_fingerprint_pin', default='Use Fingerprint ID (For transaction PIN)') }}
+                <i class="bi bi-fingerprint icon-left"></i> {{ t('settings_use_fingerprint_pin', default='Use Fingerprint ID (For transaction PIN)') }}
                 <div class="form-check form-switch ms-auto">
                     <input class="form-check-input" type="checkbox" id="fingerprintPinToggle" {% if user.security_settings.get('fingerprint_pin') %}checked{% endif %}>
                     <label class="form-check-label" for="fingerprintPinToggle"></label>
                 </div>
             </div>
             <div class="list-item toggle-item">
-                <i class="bi bi-shield-lock icon-left"></i> {{ trans('hide_sensitive_data', default='Hide sensitive data (Disable screenshots)') }}
+                <i class="bi bi-shield-lock icon-left"></i> {{ t('settings_hide_sensitive_data', default='Hide sensitive data (Disable screenshots)') }}
                 <div class="form-check form-switch ms-auto">
                     <input class="form-check-input" type="checkbox" id="hideSensitiveDataToggle" {% if user.security_settings.get('hide_sensitive_data') %}checked{% endif %}>
                     <label class="form-check-label" for="hideSensitiveDataToggle"></label>
@@ -259,18 +259,18 @@
     </section>
 
     <section class="profile-section mb-4">
-        <h2>{{ trans('about', default='About') }}</h2>
+        <h2>{{ t('general_about', default='About') }}</h2>
         <div class="card card-body">
             <a href="{{ url_for('contact') }}" class="list-item">
-                <i class="bi bi-headset icon-left"></i> {{ trans('support', default='Support (Our contacts)') }}
+                <i class="bi bi-headset icon-left"></i> {{ t('settings_support', default='Support (Our contacts)') }}
                 <i class="bi bi-chevron-right icon-right"></i>
             </a>
             <a href="{{ url_for('feedback') }}" class="list-item">
-                <i class="bi bi-star icon-left"></i> {{ trans('rate_app', default='Rate the app (Tell us about your experience)') }}
+                <i class="bi bi-star icon-left"></i> {{ t('settings_rate_app', default='Rate the app (Tell us about your experience)') }}
                 <i class="bi bi-chevron-right icon-right"></i>
             </a>
             <a href="{{ url_for('about') }}" class="list-item">
-                <i class="bi bi-info-circle icon-left"></i> {{ trans('about_ficore', default='About FiCore') }}
+                <i class="bi bi-info-circle icon-left"></i> {{ t('settings_about_ficore', default='About FiCore') }}
                 <i class="bi bi-chevron-right icon-right"></i>
             </a>
         </div>
@@ -278,7 +278,7 @@
 
     <div class="d-grid mb-4">
         <button class="btn btn-danger" onclick="location.href='{{ url_for('users_blueprint.logout') }}'">
-            <i class="bi bi-box-arrow-right me-2"></i> {{ trans('logout', default='Log out') }}
+            <i class="bi bi-box-arrow-right me-2"></i> {{ t('general_logout', default='Log out') }}
         </button>
     </div>
 
@@ -387,13 +387,13 @@
                 .then(response => response.json())
                 .then(data => {
                     if (!data.success) {
-                        alert('{{ trans('failed_to_update_setting', default='Failed to update setting') }}: ' + (data.message || '{{ trans('unknown_error', default='Unknown error') }}'));
+                        alert('{{ t('settings_failed_to_update_setting', default='Failed to update setting') }}: ' + (data.message || '{{ t('general_unknown_error', default='Unknown error') }}'));
                         this.checked = !value;
                     }
                 })
                 .catch(error => {
                     console.error('Error updating setting:', error);
-                    alert('{{ trans('error_occurred', default='An error occurred. Please try again.') }}');
+                    alert('{{ t('general_error_occurred', default='An error occurred. Please try again.') }}');
                     this.checked = !value;
                 });
             });
