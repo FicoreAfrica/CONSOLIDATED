@@ -1,11 +1,13 @@
 from datetime import datetime
 from pymongo import ASCENDING, DESCENDING
+from pymongo.errors import ConnectionError, ServerSelectionTimeoutError, DuplicateKeyError
 from utils import get_mongo_db, check_mongodb_connection
 from extensions import mongo_client
 from logging import getLogger
 from werkzeug.security import generate_password_hash, check_password_hash
 from bson import ObjectId
 import uuid
+import time
 
 logger = getLogger('ficore_app')
 
@@ -42,6 +44,7 @@ SAMPLE_COURSES = [
 
 def initialize_database(app):
     max_retries = 3
+    retry_delay = 1  # seconds
     for attempt in range(max_retries):
         try:
             if check_mongodb_connection(mongo_client, app):
@@ -52,10 +55,13 @@ def initialize_database(app):
                 if attempt == max_retries - 1:
                     logger.error("Max retries reached: MongoDB connection not established")
                     raise RuntimeError("MongoDB connection failed after max retries")
-        except Exception as e:
-            logger.error(f"Failed to initialize database (attempt {attempt + 1}/{max_retries}): {e}", exc_info=True)
+                time.sleep(retry_delay)
+        except (ConnectionError, ServerSelectionTimeoutError) as e:
+            logger.error(f"Failed to initialize database (attempt {attempt + 1}/{max_retries}): {e}")
             if attempt == max_retries - 1:
                 raise
+            time.sleep(retry_delay)
+    
     try:
         db_instance = get_mongo_db()
         try:
@@ -65,6 +71,7 @@ def initialize_database(app):
             raise RuntimeError("MongoDB client is closed")
         logger.info(f"MongoDB database: {db_instance.name}")
         collections = db_instance.list_collection_names()
+        
         collection_schemas = {
             'users': {
                 'validator': {
@@ -184,7 +191,7 @@ def initialize_database(app):
                             'buying_price': {'bsonType': ['double', 'null'], 'minimum': 0},
                             'selling_price': {'bsonType': ['double', 'null'], 'minimum': 0},
                             'threshold': {'bsonType': ['int', 'null'], 'minimum': 0},
-                            'updated_at': {'bsonType': ['date', 'null']}
+                            'updated_at': {'bsonType at': ['date', 'null']}
                         }
                     }
                 },
@@ -299,85 +306,378 @@ def initialize_database(app):
                 ]
             },
             'sessions': {
-                'validator': {},
+                'validator': {
+                    '$jsonSchema': {
+                        'bsonType': 'object',
+                        'required': ['_id', 'user_id', 'expiration'],
+                        'properties': {
+                            '_id': {'bsonType': 'string'},
+                            'user_id': {'bsonType': 'string'},
+                            'expiration': {'bsonType': 'date'},
+                            'data': {'bsonType': ['object', 'null']}
+                        }
+                    }
+                },
                 'indexes': [
                     {'key': [('expiration', ASCENDING)], 'expireAfterSeconds': 0, 'name': 'expiration_1'}
                 ]
             },
             'courses': {
+                'validator': {
+                    '$jsonSchema': {
+                        'bsonType': 'object',
+                        'required': ['id', 'title_key', 'title_en', 'title_ha', 'description_en', 'description_ha', 'is_premium'],
+                        'properties': {
+                            'id': {'bsonType': 'string'},
+                            'title_key': {'bsonType': 'string'},
+                            'title_en': {'bsonType': 'string'},
+                            'title_ha': {'bsonType': 'string'},
+                            'description_en': {'bsonType': 'string'},
+                            'description_ha': {'bsonType': 'string'},
+                            'is_premium': {'bsonType': 'bool'}
+                        }
+                    }
+                },
                 'indexes': [
                     {'key': [('id', ASCENDING)], 'unique': True}
                 ]
             },
             'content_metadata': {
+                'validator': {
+                    '$jsonSchema': {
+                        'bsonType': 'object',
+                        'required': ['course_id', 'lesson_id'],
+                        'properties': {
+                            'course_id': {'bsonType': 'string'},
+                            'lesson_id': {'bsonType': 'string'},
+                            'title': {'bsonType': ['string', 'null']},
+                            'content': {'bsonType': ['string', 'null']}
+                        }
+                    }
+                },
                 'indexes': [
                     {'key': [('course_id', ASCENDING), ('lesson_id', ASCENDING)], 'unique': True}
                 ]
             },
             'financial_health': {
+                'validator': {
+                    '$jsonSchema': {
+                        'bsonType': 'object',
+                        'required': ['user_id', 'score', 'status', 'created_at'],
+                        'properties': {
+                            'user_id': {'bsonType': 'string'},
+                            'session_id': {'bsonType': ['string', 'null']},
+                            'score': {'bsonType': 'int'},
+                            'status': {'bsonType': 'string'},
+                            'debt_to_income': {'bsonType': ['double', 'null']},
+                            'savings_rate': {'bsonType': ['double', 'null']},
+                            'interest_burden': {'bsonType': ['double', 'null']},
+                            'badges': {'bsonType': ['array', 'null']},
+                            'created_at': {'bsonType': 'date'}
+                        }
+                    }
+                },
                 'indexes': [
-                    {'key': [('session_id', ASCENDING)]},
-                    {'key': [('user_id', ASCENDING)]}
+                    {'key': [('session_id', ASCENDING)], 'sparse': True},
+                    {'key': [('user_id', ASCENDING)]},
+                    {'key': [('created_at', DESCENDING)]}
                 ]
             },
             'budgets': {
+                'validator': {
+                    '$jsonSchema': {
+                        'bsonType': 'object',
+                        'required': ['user_id', 'income', 'created_at'],
+                        'properties': {
+                            'user_id': {'bsonType': 'string'},
+                            'session_id': {'bsonType': ['string', 'null']},
+                            'income': {'bsonType': 'double', 'minimum': 0},
+                            'fixed_expenses': {'bsonType': ['double', 'null'], 'minimum': 0},
+                            'variable_expenses': {'bsonType': ['double', 'null'], 'minimum': 0},
+                            'savings_goal': {'bsonType': ['double', 'null'], 'minimum': 0},
+                            'surplus_deficit': {'bsonType': ['double', 'null']},
+                            'housing': {'bsonType': ['double', 'null'], 'minimum': 0},
+                            'food': {'bsonType': ['double', 'null'], 'minimum': 0},
+                            'transport': {'bsonType': ['double', 'null'], 'minimum': 0},
+                            'dependents': {'bsonType': ['double', 'null'], 'minimum': 0},
+                            'miscellaneous': {'bsonType': ['double', 'null'], 'minimum': 0},
+                            'others': {'bsonType': ['double', 'null'], 'minimum': 0},
+                            'created_at': {'bsonType': 'date'}
+                        }
+                    }
+                },
                 'indexes': [
-                    {'key': [('session_id', ASCENDING)]},
-                    {'key': [('user_id', ASCENDING)]}
+                    {'key': [('session_id', ASCENDING)], 'sparse': True},
+                    {'key': [('user_id', ASCENDING)]},
+                    {'key': [('created_at', DESCENDING)]}
                 ]
             },
             'bills': {
+                'validator': {
+                    '$jsonSchema': {
+                        'bsonType': 'object',
+                        'required': ['user_id', 'bill_name', 'amount', 'due_date', 'status'],
+                        'properties': {
+                            'user_id': {'bsonType': 'string'},
+                            'session_id': {'bsonType': ['string', 'null']},
+                            'bill_name': {'bsonType': 'string'},
+                            'amount': {'bsonType': 'double', 'minimum': 0},
+                            'due_date': {'bsonType': 'date'},
+                            'frequency': {'bsonType': ['string', 'null']},
+                            'category': {'bsonType': ['string', 'null']},
+                            'status': {'enum': ['pending', 'paid', 'overdue']},
+                            'send_email': {'bsonType': 'bool'},
+                            'reminder_days': {'bsonType': ['int', 'null'], 'minimum': 0},
+                            'user_email': {'bsonType': ['string', 'null']},
+                            'first_name': {'bsonType': ['string', 'null']}
+                        }
+                    }
+                },
                 'indexes': [
-                    {'key': [('session_id', ASCENDING)]},
+                    {'key': [('session_id', ASCENDING)], 'sparse': True},
                     {'key': [('user_id', ASCENDING)]},
-                    {'key': [('user_email', ASCENDING)]},
+                    {'key': [('user_email', ASCENDING)], 'sparse': True},
                     {'key': [('status', ASCENDING)]},
                     {'key': [('due_date', ASCENDING)]}
                 ]
             },
             'net_worth': {
+                'validator': {
+                    '$jsonSchema': {
+                        'bsonType': 'object',
+                        'required': ['user_id', 'total_assets', 'total_liabilities', 'net_worth', 'created_at'],
+                        'properties': {
+                            'user_id': {'bsonType': 'string'},
+                            'session_id': {'bsonType': ['string', 'null']},
+                            'cash_savings': {'bsonType': ['double', 'null'], 'minimum': 0},
+                            'investments': {'bsonType': ['double', 'null'], 'minimum': 0},
+                            'property': {'bsonType': ['double', 'null'], 'minimum': 0},
+                            'loans': {'bsonType': ['double', 'null'], 'minimum': 0},
+                            'total_assets': {'bsonType': 'double', 'minimum': 0},
+                            'total_liabilities': {'bsonType': 'double', 'minimum': 0},
+                            'net_worth': {'bsonType': 'double'},
+                            'badges': {'bsonType': ['array', 'null']},
+                            'created_at': {'bsonType': 'date'}
+                        }
+                    }
+                },
                 'indexes': [
-                    {'key': [('session_id', ASCENDING)]},
-                    {'key': [('user_id', ASCENDING)]}
+                    {'key': [('session_id', ASCENDING)], 'sparse': True},
+                    {'key': [('user_id', ASCENDING)]},
+                    {'key': [('created_at', DESCENDING)]}
                 ]
             },
             'emergency_funds': {
+                'validator': {
+                    '$jsonSchema': {
+                        'bsonType': 'object',
+                        'required': ['user_id', 'current_savings', 'target_amount', 'created_at'],
+                        'properties': {
+                            'user_id': {'bsonType': 'string'},
+                            'session_id': {'bsonType': ['string', 'null']},
+                            'monthly_expenses': {'bsonType': ['double', 'null'], 'minimum': 0},
+                            'monthly_income': {'bsonType': ['double', 'null'], 'minimum': 0},
+                            'current_savings': {'bsonType': 'double', 'minimum': 0},
+                            'risk_tolerance_level': {'bsonType': ['string', 'null']},
+                            'dependents': {'bsonType': ['int', 'null'], 'minimum': 0},
+                            'timeline': {'bsonType': ['int', 'null'], 'minimum': 0},
+                            'recommended_months': {'bsonType': ['int', 'null'], 'minimum': 0},
+                            'target_amount': {'bsonType': 'double', 'minimum': 0},
+                            'savings_gap': {'bsonType': ['double', 'null'], 'minimum': 0},
+                            'monthly_savings': {'bsonType': ['double', 'null'], 'minimum': 0},
+                            'percent_of_income': {'bsonType': ['double', 'null']},
+                            'badges': {'bsonType': ['array', 'null']},
+                            'created_at': {'bsonType': 'date'}
+                        }
+                    }
+                },
                 'indexes': [
-                    {'key': [('session_id', ASCENDING)]},
-                    {'key': [('user_id', ASCENDING)]}
+                    {'key': [('session_id', ASCENDING)], 'sparse': True},
+                    {'key': [('user_id', ASCENDING)]},
+                    {'key': [('created_at', DESCENDING)]}
                 ]
             },
             'learning_progress': {
+                'validator': {
+                    '$jsonSchema': {
+                        'bsonType': 'object',
+                        'required': ['user_id', 'course_id'],
+                        'properties': {
+                            'user_id': {'bsonType': 'string'},
+                            'session_id': {'bsonType': ['string', 'null']},
+                            'course_id': {'bsonType': 'string'},
+                            'lessons_completed': {'bsonType': ['array', 'null']},
+                            'quiz_scores': {'bsonType': ['object', 'null']},
+                            'current_lesson': {'bsonType': ['string', 'null']}
+                        }
+                    }
+                },
                 'indexes': [
                     {'key': [('user_id', ASCENDING), ('course_id', ASCENDING)], 'unique': True},
-                    {'key': [('session_id', ASCENDING), ('course_id', ASCENDING)], 'unique': True},
-                    {'key': [('session_id', ASCENDING)]},
+                    {'key': [('session_id', ASCENDING), ('course_id', ASCENDING)], 'unique': True, 'sparse': True},
+                    {'key': [('session_id', ASCENDING)], 'sparse': True},
                     {'key': [('user_id', ASCENDING)]}
                 ]
             },
             'quiz_results': {
+                'validator': {
+                    '$jsonSchema': {
+                        'bsonType': 'object',
+                        'required': ['user_id', 'score', 'created_at'],
+                        'properties': {
+                            'user_id': {'bsonType': 'string'},
+                            'session_id': {'bsonType': ['string', 'null']},
+                            'personality': {'bsonType': ['string', 'null']},
+                            'score': {'bsonType': 'int'},
+                            'badges': {'bsonType': ['array', 'null']},
+                            'insights': {'bsonType': ['array', 'null']},
+                            'tips': {'bsonType': ['array', 'null']},
+                            'created_at': {'bsonType': 'date'}
+                        }
+                    }
+                },
                 'indexes': [
-                    {'key': [('session_id', ASCENDING)]},
-                    {'key': [('user_id', ASCENDING)]}
+                    {'key': [('session_id', ASCENDING)], 'sparse': True},
+                    {'key': [('user_id', ASCENDING)]},
+                    {'key': [('created_at', DESCENDING)]}
                 ]
             },
             'tool_usage': {
+                'validator': {
+                    '$jsonSchema': {
+                        'bsonType': 'object',
+                        'required': ['tool_name', 'timestamp'],
+                        'properties': {
+                            'tool_name': {'bsonType': 'string'},
+                            'user_id': {'bsonType': ['string', 'null']},
+                            'session_id': {'bsonType': ['string', 'null']},
+                            'action': {'bsonType': ['string', 'null']},
+                            'timestamp': {'bsonType': 'date'}
+                        }
+                    }
+                },
                 'indexes': [
-                    {'key': [('session_id', ASCENDING)]},
-                    {'key': [('user_id', ASCENDING)]},
+                    {'key': [('session_id', ASCENDING)], 'sparse': True},
+                    {'key': [('user_id', ASCENDING)], 'sparse': True},
                     {'key': [('tool_name', ASCENDING)]}
                 ]
             },
             'reset_tokens': {
+                'validator': {
+                    '$jsonSchema': {
+                        'bsonType': 'object',
+                        'required': ['token', 'user_id', 'created_at'],
+                        'properties': {
+                            'token': {'bsonType': 'string'},
+                            'user_id': {'bsonType': 'string'},
+                            'created_at': {'bsonType': 'date'},
+                            'expiry': {'bsonType': ['date', 'null']}
+                        }
+                    }
+                },
                 'indexes': [
-                    {'key': [('token', ASCENDING)], 'unique': True}
+                    {'key': [('token', ASCENDING)], 'unique': True},
+                    {'key': [('created_at', DESCENDING)]}
+                ]
+            },
+            'news_articles': {
+                'validator': {
+                    '$jsonSchema': {
+                        'bsonType': 'object',
+                        'required': ['title', 'content', 'source_type', 'published_at'],
+                        'properties': {
+                            'title': {'bsonType': 'string'},
+                            'content': {'bsonType': 'string'},
+                            'source_type': {'enum': ['admin', 'api']},
+                            'source_link': {'bsonType': ['string', 'null']},
+                            'published_at': {'bsonType': 'date'},
+                            'category': {'bsonType': ['string', 'null']},
+                            'is_verified': {'bsonType': 'bool'},
+                            'is_active': {'bsonType': 'bool'}
+                        }
+                    }
+                },
+                'indexes': [
+                    {'key': [('published_at', DESCENDING)]},
+                    {'key': [('category', ASCENDING)], 'sparse': True},
+                    {'key': [('is_active', ASCENDING)]}
+                ]
+            },
+            'tax_rates': {
+                'validator': {
+                    '$jsonSchema': {
+                        'bsonType': 'object',
+                        'required': ['role', 'min_income', 'max_income', 'rate', 'description'],
+                        'properties': {
+                            'role': {'enum': ['personal', 'trader', 'agent', 'admin']},
+                            'min_income': {'bsonType': 'double', 'minimum': 0},
+                            'max_income': {'bsonType': ['double', 'null'], 'minimum': 0},
+                            'rate': {'bsonType': 'double', 'minimum': 0, 'maximum': 1},
+                            'description': {'bsonType': 'string'}
+                        }
+                    }
+                },
+                'indexes': [
+                    {'key': [('role', ASCENDING)]},
+                    {'key': [('min_income', ASCENDING), ('max_income', ASCENDING)]}
+                ]
+            },
+            'payment_locations': {
+                'validator': {
+                    '$jsonSchema': {
+                        'bsonType': 'object',
+                        'required': ['name', 'address', 'contact'],
+                        'properties': {
+                            'name': {'bsonType': 'string'},
+                            'address': {'bsonType': 'string'},
+                            'contact': {'bsonType': 'string'},
+                            'coordinates': {
+                                'bsonType': ['object', 'null'],
+                                'properties': {
+                                    'lat': {'bsonType': 'double'},
+                                    'lng': {'bsonType': 'double'}
+                                }
+                            }
+                        }
+                    }
+                },
+                'indexes': [
+                    {'key': [('name', ASCENDING)]},
+                    {'key': [('coordinates.lat', ASCENDING), ('coordinates.lng', ASCENDING)], 'sparse': True}
+                ]
+            },
+            'tax_reminders': {
+                'validator': {
+                    '$jsonSchema': {
+                        'bsonType': 'object',
+                        'required': ['user_id', 'tax_type', 'due_date', 'amount', 'status', 'created_at'],
+                        'properties': {
+                            'user_id': {'bsonType': 'string'},
+                            'tax_type': {'bsonType': 'string'},
+                            'due_date': {'bsonType': 'date'},
+                            'amount': {'bsonType': 'double', 'minimum': 0},
+                            'status': {'enum': ['pending', 'sent', 'paid']},
+                            'created_at': {'bsonType': 'date'},
+                            'notification_id': {'bsonType': ['string', 'null']},
+                            'sent_at': {'bsonType': ['date', 'null']},
+                            'payment_location_id': {'bsonType': ['string', 'null']}
+                        }
+                    }
+                },
+                'indexes': [
+                    {'key': [('user_id', ASCENDING)]},
+                    {'key': [('due_date', ASCENDING)]},
+                    {'key': [('status', ASCENDING)]},
+                    {'key': [('notification_id', ASCENDING)], 'sparse': True}
                 ]
             }
         }
+        
         for collection_name, config in collection_schemas.items():
             if collection_name not in collections:
                 db_instance.create_collection(collection_name, validator=config.get('validator', {}))
                 logger.info(f"Created collection: {collection_name}")
+            
             existing_indexes = db_instance[collection_name].index_information()
             for index in config.get('indexes', []):
                 keys = index['key']
@@ -395,21 +695,36 @@ def initialize_database(app):
                             logger.warning(f"Index conflict on {collection_name}: {keys}. Existing options: {existing_options}, Requested: {options}")
                         break
                 if not index_exists:
-                    if collection_name == 'sessions' and index_name == 'expiration_1':
-                        if 'expiration_1' not in existing_indexes:
-                            db_instance[collection_name].create_index(keys, **options)
-                            logger.info(f"Created index on {collection_name}: {keys} with options {options}")
-                    else:
-                        db_instance[collection_name].create_index(keys, **options)
-                        logger.info(f"Created index on {collection_name}: {keys} with options {options}")
+                    db_instance[collection_name].create_index(keys, **options)
+                    logger.info(f"Created index on {collection_name}: {keys} with options {options}")
+        
         courses_collection = db_instance.courses
         if courses_collection.count_documents({}) == 0:
             for course in SAMPLE_COURSES:
                 courses_collection.insert_one(course)
             logger.info("Initialized courses in MongoDB")
         app.config['COURSES'] = list(courses_collection.find({}, {'_id': 0}))
+        
+        # Initialize tax-related sample data
+        tax_rates_collection = db_instance.tax_rates
+        if tax_rates_collection.count_documents({}) == 0:
+            sample_rates = [
+                {'role': 'personal', 'min_income': 0, 'max_income': 100000, 'rate': 0.1, 'description': '10% tax for income up to 100,000'},
+                {'role': 'trader', 'min_income': 0, 'max_income': 500000, 'rate': 0.15, 'description': '15% tax for turnover up to 500,000'},
+            ]
+            tax_rates_collection.insert_many(sample_rates)
+            logger.info("Initialized tax rates in MongoDB")
+        
+        payment_locations_collection = db_instance.payment_locations
+        if payment_locations_collection.count_documents({}) == 0:
+            sample_locations = [
+                {'name': 'Gombe State IRS Office', 'address': '123 Tax Street, Gombe', 'contact': '+234 123 456 7890', 'coordinates': {'lat': 10.2896, 'lng': 11.1673}},
+            ]
+            payment_locations_collection.insert_many(sample_locations)
+            logger.info("Initialized payment locations in MongoDB")
+    
     except Exception as e:
-        logger.error(f"Failed to initialize database indexes/courses: {str(e)}", exc_info=True)
+        logger.error(f"Failed to initialize database indexes/courses/tax data: {str(e)}", exc_info=True)
         raise
 
 # User class for Flask-Login - aligned with users blueprint expectations
@@ -449,8 +764,9 @@ class User:
 def create_user(db, user_data):
     """Create a new user in the database - matches users blueprint expectations"""
     try:
-        # Use username as _id to match users blueprint pattern
         user_id = user_data.get('username', user_data['email'].split('@')[0]).lower()
+        if 'password' in user_data:
+            user_data['password_hash'] = generate_password_hash(user_data['password'])
         
         user_doc = {
             '_id': user_id,
@@ -484,6 +800,9 @@ def create_user(db, user_data):
             language=user_doc['language'],
             dark_mode=user_doc['dark_mode']
         )
+    except DuplicateKeyError as e:
+        logger.error(f"Error creating user: Duplicate key error - {str(e)}")
+        raise ValueError("User with this email or username already exists")
     except Exception as e:
         logger.error(f"Error creating user: {str(e)}")
         raise
@@ -496,7 +815,7 @@ def get_user_by_email(db, email):
             return User(
                 id=user_doc['_id'],
                 email=user_doc['email'],
-                username=user_doc['_id'],  # username is the _id in users blueprint
+                username=user_doc['_id'],
                 role=user_doc.get('role', 'personal'),
                 display_name=user_doc.get('display_name'),
                 is_admin=user_doc.get('is_admin', False),
@@ -508,7 +827,7 @@ def get_user_by_email(db, email):
         return None
     except Exception as e:
         logger.error(f"Error getting user by email {email}: {str(e)}")
-        return None
+        raise
 
 def get_user(db, user_id):
     """Get user by ID - matches users blueprint expectations"""
@@ -518,7 +837,7 @@ def get_user(db, user_id):
             return User(
                 id=user_doc['_id'],
                 email=user_doc['email'],
-                username=user_doc['_id'],  # username is the _id in users blueprint
+                username=user_doc['_id'],
                 role=user_doc.get('role', 'personal'),
                 display_name=user_doc.get('display_name'),
                 is_admin=user_doc.get('is_admin', False),
@@ -530,70 +849,96 @@ def get_user(db, user_id):
         return None
     except Exception as e:
         logger.error(f"Error getting user by ID {user_id}: {str(e)}")
-        return None
+        raise
 
 # Personal finance data retrieval functions
 def get_financial_health(db, filter_kwargs):
     """Get financial health records"""
     try:
-        collection_name = 'financial_health_scores'
-        if collection_name in db.list_collection_names():
-            return list(db[collection_name].find(filter_kwargs).sort('created_at', -1))
-        return []
+        return list(db.financial_health.find(filter_kwargs).sort('created_at', DESCENDING))
     except Exception as e:
         logger.error(f"Error getting financial health: {str(e)}")
-        return []
+        raise
 
 def get_budgets(db, filter_kwargs):
     """Get budget records"""
     try:
-        return list(db.budgets.find(filter_kwargs).sort('created_at', -1))
+        return list(db.budgets.find(filter_kwargs).sort('created_at', DESCENDING))
     except Exception as e:
         logger.error(f"Error getting budgets: {str(e)}")
-        return []
+        raise
 
 def get_bills(db, filter_kwargs):
     """Get bill records"""
     try:
-        return list(db.bills.find(filter_kwargs).sort('due_date', 1))
+        return list(db.bills.find(filter_kwargs).sort('due_date', ASCENDING))
     except Exception as e:
         logger.error(f"Error getting bills: {str(e)}")
-        return []
+        raise
 
 def get_net_worth(db, filter_kwargs):
     """Get net worth records"""
     try:
-        collection_name = 'net_worth_data'
-        if collection_name in db.list_collection_names():
-            return list(db[collection_name].find(filter_kwargs).sort('created_at', -1))
-        return []
+        return list(db.net_worth.find(filter_kwargs).sort('created_at', DESCENDING))
     except Exception as e:
         logger.error(f"Error getting net worth: {str(e)}")
-        return []
+        raise
 
 def get_emergency_funds(db, filter_kwargs):
     """Get emergency fund records"""
     try:
-        return list(db.emergency_funds.find(filter_kwargs).sort('created_at', -1))
+        return list(db.emergency_funds.find(filter_kwargs).sort('created_at', DESCENDING))
     except Exception as e:
         logger.error(f"Error getting emergency funds: {str(e)}")
-        return []
+        raise
 
 def get_learning_progress(db, filter_kwargs):
     """Get learning progress records"""
     try:
-        return list(db.learning_materials.find(filter_kwargs))
+        return list(db.learning_progress.find(filter_kwargs))
     except Exception as e:
         logger.error(f"Error getting learning progress: {str(e)}")
-        return []
+        raise
 
 def get_quiz_results(db, filter_kwargs):
     """Get quiz result records"""
     try:
-        return list(db.quiz_responses.find(filter_kwargs).sort('created_at', -1))
+        return list(db.quiz_results.find(filter_kwargs).sort('created_at', DESCENDING))
     except Exception as e:
         logger.error(f"Error getting quiz results: {str(e)}")
-        return []
+        raise
+
+def get_news_articles(db, filter_kwargs):
+    """Get news article records"""
+    try:
+        return list(db.news_articles.find(filter_kwargs).sort('published_at', DESCENDING))
+    except Exception as e:
+        logger.error(f"Error getting news articles: {str(e)}")
+        raise
+
+def get_tax_rates(db, filter_kwargs):
+    """Get tax rate records"""
+    try:
+        return list(db.tax_rates.find(filter_kwargs).sort('min_income', ASCENDING))
+    except Exception as e:
+        logger.error(f"Error getting tax rates: {str(e)}")
+        raise
+
+def get_payment_locations(db, filter_kwargs):
+    """Get payment location records"""
+    try:
+        return list(db.payment_locations.find(filter_kwargs).sort('name', ASCENDING))
+    except Exception as e:
+        logger.error(f"Error getting payment locations: {str(e)}")
+        raise
+
+def get_tax_reminders(db, filter_kwargs):
+    """Get tax reminder records"""
+    try:
+        return list(db.tax_reminders.find(filter_kwargs).sort('due_date', ASCENDING))
+    except Exception as e:
+        logger.error(f"Error getting tax reminders: {str(e)}")
+        raise
 
 # Data conversion functions for templates
 def to_dict_financial_health(record):
@@ -707,17 +1052,78 @@ def to_dict_quiz_result(record):
         'created_at': record.get('created_at')
     }
 
+def to_dict_news_article(record):
+    """Convert news article record to dict"""
+    if not record:
+        return {'title': None, 'content': None}
+    return {
+        'id': str(record.get('_id', '')),
+        'title': record.get('title', ''),
+        'content': record.get('content', ''),
+        'source_type': record.get('source_type', ''),
+        'source_link': record.get('source_link'),
+        'published_at': record.get('published_at'),
+        'category': record.get('category'),
+        'is_verified': record.get('is_verified', False),
+        'is_active': record.get('is_active', True)
+    }
+
+def to_dict_tax_rate(record):
+    """Convert tax rate record to dict"""
+    if not record:
+        return {'rate': None, 'description': None}
+    return {
+        'id': str(record.get('_id', '')),
+        'role': record.get('role', ''),
+        'min_income': record.get('min_income', 0),
+        'max_income': record.get('max_income'),
+        'rate': record.get('rate', 0),
+        'description': record.get('description', '')
+    }
+
+def to_dict_payment_location(record):
+    """Convert payment location record to dict"""
+    if not record:
+        return {'name': None, 'address': None}
+    return {
+        'id': str(record.get('_id', '')),
+        'name': record.get('name', ''),
+        'address': record.get('address', ''),
+        'contact': record.get('contact', ''),
+        'coordinates': record.get('coordinates')
+    }
+
+def to_dict_tax_reminder(record):
+    """Convert tax reminder record to dict"""
+    if not record:
+        return {'tax_type': None, 'amount': None}
+    return {
+        'id': str(record.get('_id', '')),
+        'user_id': record.get('user_id', ''),
+        'tax_type': record.get('tax_type', ''),
+        'due_date': record.get('due_date'),
+        'amount': record.get('amount', 0),
+        'status': record.get('status', ''),
+        'created_at': record.get('created_at'),
+        'notification_id': record.get('notification_id'),
+        'sent_at': record.get('sent_at'),
+        'payment_location_id': record.get('payment_location_id')
+    }
+
 # Utility functions
 def create_feedback(db, feedback_data):
     """Create feedback record"""
     try:
+        required_fields = ['user_id', 'tool_name', 'rating', 'timestamp']
+        if not all(field in feedback_data for field in required_fields):
+            raise ValueError("Missing required feedback fields")
         db.feedback.insert_one(feedback_data)
         logger.info(f"Created feedback record for tool: {feedback_data.get('tool_name')}")
     except Exception as e:
         logger.error(f"Error creating feedback: {str(e)}")
         raise
 
-def log_tool_usage(mongo, tool_name, user_id=None, session_id=None, action=None):
+def log_tool_usage(db, tool_name, user_id=None, session_id=None, action=None):
     """Log tool usage for analytics"""
     try:
         usage_data = {
@@ -727,14 +1133,62 @@ def log_tool_usage(mongo, tool_name, user_id=None, session_id=None, action=None)
             'action': action,
             'timestamp': datetime.utcnow()
         }
-        
-        # Handle both mongo db object and mongo client
-        if hasattr(mongo, 'db'):
-            mongo.db.tool_usage.insert_one(usage_data)
-        else:
-            mongo.tool_usage.insert_one(usage_data)
-        
+        db.tool_usage.insert_one(usage_data)
         logger.info(f"Logged tool usage: {tool_name} - {action}")
     except Exception as e:
         logger.error(f"Error logging tool usage: {str(e)}")
         # Don't raise exception for logging failures
+
+def create_news_article(db, article_data):
+    """Create a news article in the database"""
+    try:
+        required_fields = ['title', 'content', 'source_type', 'published_at']
+        if not all(field in article_data for field in required_fields):
+            raise ValueError("Missing required news article fields")
+        article_data.setdefault('is_verified', False)
+        article_data.setdefault('is_active', True)
+        result = db.news_articles.insert_one(article_data)
+        logger.info(f"Created news article with ID: {result.inserted_id}")
+        return str(result.inserted_id)
+    except Exception as e:
+        logger.error(f"Error creating news article: {str(e)}")
+        raise
+
+def create_tax_rate(db, tax_rate_data):
+    """Create a tax rate in the database"""
+    try:
+        required_fields = ['role', 'min_income', 'max_income', 'rate', 'description']
+        if not all(field in tax_rate_data for field in required_fields):
+            raise ValueError("Missing required tax rate fields")
+        result = db.tax_rates.insert_one(tax_rate_data)
+        logger.info(f"Created tax rate with ID: {result.inserted_id}")
+        return str(result.inserted_id)
+    except Exception as e:
+        logger.error(f"Error creating tax rate: {str(e)}")
+        raise
+
+def create_payment_location(db, location_data):
+    """Create a payment location in the database"""
+    try:
+        required_fields = ['name', 'address', 'contact']
+        if not all(field in location_data for field in required_fields):
+            raise ValueError("Missing required payment location fields")
+        result = db.payment_locations.insert_one(location_data)
+        logger.info(f"Created payment location with ID: {result.inserted_id}")
+        return str(result.inserted_id)
+    except Exception as e:
+        logger.error(f"Error creating payment location: {str(e)}")
+        raise
+
+def create_tax_reminder(db, reminder_data):
+    """Create a tax reminder in the database"""
+    try:
+        required_fields = ['user_id', 'tax_type', 'due_date', 'amount', 'status', 'created_at']
+        if not all(field in reminder_data for field in required_fields):
+            raise ValueError("Missing required tax reminder fields")
+        result = db.tax_reminders.insert_one(reminder_data)
+        logger.info(f"Created tax reminder with ID: {result.inserted_id}")
+        return str(result.inserted_id)
+    except Exception as e:
+        logger.error(f"Error creating tax reminder: {str(e)}")
+        raise
