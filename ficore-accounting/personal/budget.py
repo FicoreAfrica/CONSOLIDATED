@@ -16,8 +16,8 @@ from utils import requires_role, is_admin, get_mongo_db
 budget_bp = Blueprint(
     'budget',
     __name__,
-    template_folder='templates/BUDGET',
-    url_prefix='/BUDGET'
+    template_folder='templates',
+    url_prefix='/budget'
 )
 
 def strip_commas(value):
@@ -298,7 +298,7 @@ def main():
 
         current_app.logger.info(f"Rendering main for session {session['sid']} {'(anonymous)' if session.get('is_anonymous') else ''}: {len(budgets_dict)} budgets found")
         return render_template(
-            'BUDGET/budget_main.html',
+            'personal/BUDGET/budget_main.html',
             form=form,
             budgets=budgets_dict,
             latest_budget=latest_budget,
@@ -314,7 +314,7 @@ def main():
         current_app.logger.exception(f"Unexpected error in budget.main for session {session['sid']}: {str(e)}")
         flash(trans("budget_dashboard_load_error", lang), "danger")
         return render_template(
-            'BUDGET/budget_main.html',
+            'personal/BUDGET/budget_main.html',
             form=form,
             budgets={},
             latest_budget={
