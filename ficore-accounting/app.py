@@ -521,7 +521,7 @@ def create_app():
             'CONSULTANCY_FORM_URL': app.config.get('CONSULTANCY_FORM_URL', '#'),
             'current_lang': lang,
             'current_user': current_user if has_request_context() else None,
-            'csrf_token': csrf.generate_csrf,
+            'csrf_token': csrf.generate_csrf_token,
             'available_languages': [
                 {'code': 'en', 'name': trans('general_english', lang=lang)},
                 {'code': 'ha', 'name': trans('general_hausa', lang=lang)}
