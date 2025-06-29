@@ -112,66 +112,26 @@ def setup_logging(app):
     
     logger.info("Logging setup complete with StreamHandler for ficore_app, flask, and werkzeug")
 
-def check_mongodb_connection(mongo_client, app):
+def check_mongodb_connection(app):
     try:
-        if mongo_client is None:
-            logger.error("MongoDB client is None")
-            return False
-        mongo_client.admin.command('ping')
+        db = get_mongo_db()
+        db.command('ping')
         logger.info("MongoDB connection verified with ping")
         return True
     except Exception as e:
-        logger.error(f"MongoDB client is closed: {str(e)}")
-        try:
-            from pymongo import MongoClient
-            import certifi
-            new_client = MongoClient(
-                app.config['MONGO_URI'],
-                connect=False,
-                tlsCAFile=certifi.where(),
-                maxPoolSize=20,
-                socketTimeoutMS=60000,
-                connectTimeoutMS=30000,
-                serverSelectionTimeoutMS=30000,
-                retryWrites=True
-            )
-            new_client.admin.command('ping')
-            logger.info("New MongoDB client reinitialized successfully")
-            global mongo_client
-            mongo_client = new_client
-            app.config['MONGO_CLIENT'] = mongo_client
-            return True
-        except Exception as reinit_e:
-            logger.error(f"Failed to reinitialize MongoDB client: {str(reinit_e)}")
-            return False
+        logger.error(f"MongoDB connection failed: {str(e)}")
+        return False
 
 def setup_session(app):
     try:
-        global mongo_client
-        if not check_mongodb_connection(mongo_client, app):
-            logger.error("MongoDB client is not open, attempting to reinitialize")
-            from pymongo import MongoClient
-            import certifi
-            mongo_client_new = MongoClient(
-                app.config['MONGO_URI'],
-                connect=False,
-                tlsCAFile=certifi.where(),
-                maxPoolSize=20,
-                socketTimeoutMS=60000,
-                connectTimeoutMS=30000,
-                serverSelectionTimeoutMS=30000,
-                retryWrites=True
-            )
-            if not check_mongodb_connection(mongo_client_new, app):
-                logger.error("MongoDB client could not be reinitialized, falling back to filesystem session")
-                app.config['SESSION_TYPE'] = 'filesystem'
-                flask_session.init_app(app)
-                logger.info("Session configured with filesystem fallback")
-                return
-            app.config['MONGO_CLIENT'] = mongo_client_new
-            mongo_client = mongo_client_new
+        if not check_mongodb_connection(app):
+            logger.error("MongoDB client is not available, falling back to filesystem session")
+            app.config['SESSION_TYPE'] = 'filesystem'
+            flask_session.init_app(app)
+            logger.info("Session configured with filesystem fallback")
+            return
         app.config['SESSION_TYPE'] = 'mongodb'
-        app.config['SESSION_MONGODB'] = mongo_client
+        app.config['SESSION_MONGODB'] = get_mongo_db()
         app.config['SESSION_MONGODB_DB'] = 'ficodb'
         app.config['SESSION_MONGODB_COLLECT'] = 'sessions'
         app.config['SESSION_PERMANENT'] = True
@@ -247,33 +207,6 @@ def create_app():
         logger.warning("Google OAuth2 credentials not set")
     if not app.config['SMTP_USERNAME'] or not app.config['SMTP_PASSWORD']:
         logger.warning("SMTP credentials not set")
-    
-    # Initialize MongoDB client with retries
-    global mongo_client
-    max_retries = 3
-    for attempt in range(max_retries):
-        try:
-            from pymongo import MongoClient
-            import certifi
-            mongo_client = MongoClient(
-                app.config['MONGO_URI'],
-                connect=False,
-                tlsCAFile=certifi.where(),
-                maxPoolSize=20,
-                socketTimeoutMS=60000,
-                connectTimeoutMS=30000,
-                serverSelectionTimeoutMS=30000,
-                retryWrites=True
-            )
-            mongo_client.admin.command('ping')
-            app.config['MONGO_CLIENT'] = mongo_client
-            logger.info(f"MongoDB client initialized (attempt {attempt + 1}/{max_retries})")
-            break
-        except Exception as e:
-            logger.error(f"Failed to initialize MongoDB client (attempt {attempt + 1}/{max_retries}): {str(e)}")
-            if attempt == max_retries - 1:
-                raise RuntimeError("Failed to connect to MongoDB after max retries")
-            time.sleep(2)  # Wait before retrying
     
     # Initialize extensions
     setup_logging(app)
@@ -766,7 +699,7 @@ def create_app():
         logger.info("Health check")
         status = {"status": "healthy"}
         try:
-            if not check_mongodb_connection(mongo_client, app):
+            if not check_mongodb_connection(app):
                 raise RuntimeError("MongoDB connection unavailable")
             get_mongo_db().command('ping')
             return jsonify(status), 200
@@ -1231,7 +1164,12 @@ def create_app():
                         return redirect(url_for('users_blueprint.setup_wizard'))
         except Exception as e:
             logger.error(f"Error in before_request: {str(e)}", exc_info=True)
-    
+
+    @app.teardown_request
+    def teardown_request(exception=None):
+        if hasattr(g, 'mongo_client'):
+            close_mongo_db()
+
     # Development routes (only in debug mode)
     if app.debug:
         @app.route('/dev/translations')
