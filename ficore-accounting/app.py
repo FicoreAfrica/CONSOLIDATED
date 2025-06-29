@@ -190,10 +190,16 @@ def create_app():
         logger.error("MONGO_URI environment variable is not set")
         raise ValueError("MONGO_URI must be set in environment variables")
     try:
-        MongoClient(app.config['MONGO_URI'], serverSelectionTimeoutMS=5000).admin.command('ping')
+        # Initial test connection to ensure MongoDB is reachable
+        client = MongoClient(app.config['MONGO_URI'], serverSelectionTimeoutMS=5000, tlsCAFile=os.getenv('MONGO_CA_FILE', None))
+        client.admin.command('ping')
+        client.close()
     except ConfigurationError as e:
         logger.error(f"Invalid MONGO_URI format: {str(e)}")
         raise
+    except Exception as e:
+        logger.error(f"MongoDB connection test failed: {str(e)}")
+        raise RuntimeError(f"Failed to connect to MongoDB: {str(e)}")
     
     app.config['GOOGLE_CLIENT_ID'] = os.environ.get('GOOGLE_CLIENT_ID')
     app.config['GOOGLE_CLIENT_SECRET'] = os.environ.get('GOOGLE_CLIENT_SECRET')
@@ -260,15 +266,14 @@ def create_app():
     
     # Initialize database and taxation collections
     with app.app_context():
-        initialize_database(app)
-        db = get_mongo_db()
         try:
+            initialize_database(app)
+            db = get_mongo_db()
             # Initialize personal finance collections if not already present
             personal_finance_collections = [
                 'budgets', 'bills', 'emergency_funds', 'financial_health_scores', 
                 'net_worth_data', 'quiz_responses', 'learning_materials'
             ]
-            
             for collection_name in personal_finance_collections:
                 if collection_name not in db.list_collection_names():
                     db.create_collection(collection_name)
@@ -276,35 +281,21 @@ def create_app():
             
             # Create indexes for personal finance collections
             try:
-                # Bills collection indexes
                 db.bills.create_index([('user_id', 1), ('due_date', 1)])
                 db.bills.create_index([('session_id', 1), ('due_date', 1)])
                 db.bills.create_index([('status', 1)])
-                
-                # Budgets collection indexes
                 db.budgets.create_index([('user_id', 1), ('created_at', -1)])
                 db.budgets.create_index([('session_id', 1), ('created_at', -1)])
-                
-                # Emergency funds collection indexes
                 db.emergency_funds.create_index([('user_id', 1), ('created_at', -1)])
                 db.emergency_funds.create_index([('session_id', 1), ('created_at', -1)])
-                
-                # Financial health collection indexes
                 db.financial_health_scores.create_index([('user_id', 1), ('created_at', -1)])
                 db.financial_health_scores.create_index([('session_id', 1), ('created_at', -1)])
-                
-                # Net worth collection indexes
                 db.net_worth_data.create_index([('user_id', 1), ('created_at', -1)])
                 db.net_worth_data.create_index([('session_id', 1), ('created_at', -1)])
-                
-                # Quiz responses collection indexes
                 db.quiz_responses.create_index([('user_id', 1), ('created_at', -1)])
                 db.quiz_responses.create_index([('session_id', 1), ('created_at', -1)])
-                
-                # Learning materials collection indexes
                 db.learning_materials.create_index([('user_id', 1), ('course_id', 1)])
                 db.learning_materials.create_index([('session_id', 1), ('course_id', 1)])
-                
                 logger.info("Created indexes for personal finance collections")
             except Exception as e:
                 logger.warning(f"Some indexes may already exist: {str(e)}")
@@ -316,20 +307,17 @@ def create_app():
                 db.create_collection('payment_locations')
             if 'tax_reminders' not in db.list_collection_names():
                 db.create_collection('tax_reminders')
-            # Insert sample tax rates if collection is empty
             if db.tax_rates.count_documents({}) == 0:
                 sample_rates = [
                     {'role': 'personal', 'min_income': 0, 'max_income': 100000, 'rate': 0.1, 'description': '10% tax for income up to 100,000'},
                     {'role': 'trader', 'min_income': 0, 'max_income': 500000, 'rate': 0.15, 'description': '15% tax for turnover up to 500,000'},
                 ]
                 db.tax_rates.insert_many(sample_rates)
-            # Insert sample payment locations if collection is empty
             if db.payment_locations.count_documents({}) == 0:
                 sample_locations = [
                     {'name': 'Gombe State IRS Office', 'address': '123 Tax Street, Gombe', 'contact': '+234 123 456 7890', 'coordinates': {'lat': 10.2896, 'lng': 11.1673}},
                 ]
                 db.payment_locations.insert_many(sample_locations)
-            # Admin user creation
             admin_email = os.environ.get('ADMIN_EMAIL', 'ficore@gmail.com')
             admin_password = os.environ.get('ADMIN_PASSWORD', 'Admin123!')
             admin_username = os.environ.get('ADMIN_USERNAME', 'admin')
@@ -350,18 +338,15 @@ def create_app():
                 logger.info(f"Admin user created with email: {admin_email}")
             else:
                 logger.info(f"Admin user already exists with email: {admin_email}")
-        except AttributeError as e:
-            logger.error(f"Database object is None: {str(e)}")
-            raise
         except Exception as e:
-            logger.error(f"Error creating collections: {str(e)}")
+            logger.error(f"Error creating collections or initializing database: {str(e)}")
             raise
     
     # Register blueprints - Existing accounting blueprints
     from users.routes import users_bp
     from agents.routes import agents_bp
     from common_features.routes import common_bp
-    from common_features.taxation import taxation_bp  # Added for taxation feature
+    from common_features.taxation import taxation_bp
     from creditors.routes import creditors_bp
     from dashboard.routes import dashboard_bp
     from debtors.routes import debtors_bp
@@ -380,65 +365,49 @@ def create_app():
     from personal.net_worth import net_worth_bp
     from personal.quiz import quiz_bp
     
-    # Register existing accounting blueprints with consistent naming
     app.register_blueprint(users_bp, url_prefix='/users')
     logger.info("Registered users blueprint")
-    
     app.register_blueprint(agents_bp, url_prefix='/agents')
     logger.info("Registered agents blueprint")
-    
-    app.register_blueprint(common_bp)  # No url_prefix for direct routes like /news and /admin/news_management
-    
-    app.register_blueprint(taxation_bp)  # No url_prefix for direct routes like /calculate, /payment-info, /reminders
-    
-    # Try to register coins blueprint with error handling
+    app.register_blueprint(common_bp)
+    logger.info("Registered common blueprint")
+    app.register_blueprint(taxation_bp)
+    logger.info("Registered taxation blueprint")
     try:
         from coins.routes import coins_bp
         app.register_blueprint(coins_bp, url_prefix='/coins')
         logger.info("Registered coins blueprint")
     except Exception as e:
         logger.warning(f"Could not import coins blueprint: {str(e)}")
-    
     app.register_blueprint(creditors_bp, url_prefix='/creditors')
     logger.info("Registered creditors blueprint")
-    
     app.register_blueprint(dashboard_bp, url_prefix='/dashboard')
     logger.info("Registered dashboard blueprint")
-    
     app.register_blueprint(debtors_bp, url_prefix='/debtors')
     logger.info("Registered debtors blueprint")
-    
     app.register_blueprint(inventory_bp, url_prefix='/inventory')
     logger.info("Registered inventory blueprint")
-    
     app.register_blueprint(payments_bp, url_prefix='/payments')
     logger.info("Registered payments blueprint")
-    
     app.register_blueprint(receipts_bp, url_prefix='/receipts')
     logger.info("Registered receipts blueprint")
-    
     app.register_blueprint(reports_bp, url_prefix='/reports')
     logger.info("Registered reports blueprint")
-    
     app.register_blueprint(settings_bp, url_prefix='/settings')
     logger.info("Registered settings blueprint")
-    
-    # Try to register admin blueprint with error handling
     try:
         from admin.routes import admin_bp
         app.register_blueprint(admin_bp, url_prefix='/admin')
         logger.info("Registered admin blueprint")
     except Exception as e:
         logger.warning(f"Could not import admin blueprint: {str(e)}")
-    
-    # Register personal finance blueprints with consistent URL structure
-    app.register_blueprint(bill_bp)  # Uses /BILL prefix from blueprint
-    app.register_blueprint(budget_bp)  # Uses /BUDGET prefix from blueprint
-    app.register_blueprint(emergency_fund_bp)  # Uses /EMERGENCYFUND prefix from blueprint
-    app.register_blueprint(financial_health_bp)  # Uses /HEALTHSCORE prefix from blueprint
-    app.register_blueprint(learning_hub_bp)  # Uses /LEARNINGHUB prefix from blueprint
-    app.register_blueprint(net_worth_bp)  # Uses /NETWORTH prefix from blueprint
-    app.register_blueprint(quiz_bp)  # Uses /QUIZ prefix from blueprint
+    app.register_blueprint(bill_bp)
+    app.register_blueprint(budget_bp)
+    app.register_blueprint(emergency_fund_bp)
+    app.register_blueprint(financial_health_bp)
+    app.register_blueprint(learning_hub_bp)
+    app.register_blueprint(net_worth_bp)
+    app.register_blueprint(quiz_bp)
     logger.info("Registered all personal finance blueprints")
     
     # Jinja2 globals and filters
