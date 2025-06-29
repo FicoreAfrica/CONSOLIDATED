@@ -16,8 +16,8 @@ from session_utils import create_anonymous_session
 bill_bp = Blueprint(
     'bill',
     __name__,
-    template_folder='templates/BILL',
-    url_prefix='/BILL'
+    template_folder='templates',
+    url_prefix='/bill'
 )
 
 def strip_commas(value):
@@ -312,7 +312,7 @@ def main():
                 continue
 
         return render_template(
-            'BILL/bill_main.html',
+            'personal/BILL/bill_main.html',
             form=form,
             bills=bills_data,
             paid_count=paid_count,
@@ -338,7 +338,7 @@ def main():
         current_app.logger.exception(f"Error in bill.main: {str(e)}")
         flash(trans('bill_dashboard_load_error', lang), 'danger')
         return render_template(
-            'BILL/bill_main.html',
+            'personal/BILL/bill_main.html',
             form=form,
             bills=[],
             paid_count=0,
