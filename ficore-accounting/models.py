@@ -69,7 +69,7 @@ def initialize_database(app):
             mongo_client.admin.command('ping')
             logger.info(f"Attempt {attempt + 1}/{max_retries} - {trans('general_database_connection_established', default='MongoDB connection established')}")
             break
-        except (ConnectionError, ServerSelectionTimeoutError) as e:
+        except (ConnectionFailure, ServerSelectionTimeoutError) as e:
             logger.error(f"Failed to initialize database (attempt {attempt + 1}/{max_retries}): {e}")
             if attempt == max_retries - 1:
                 raise RuntimeError(trans('general_database_connection_failed', default='MongoDB connection failed after max retries'))
