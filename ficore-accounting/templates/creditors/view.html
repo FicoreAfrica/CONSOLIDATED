@@ -1,23 +1,23 @@
 {% extends "base.html" %}
-{% block title %}{{ trans('creditor_details', default='Creditor Details') }} - FiCore{% endblock %}
+{% block title %}{{ t('creditors_details', default='Creditor Details') }} - FiCore{% endblock %}
 {% block content %}
 <div class="container mt-4">
     <div class="page-title">
-        <h1>{{ trans('creditor_details', default='Creditor Details') }}</h1>
+        <h1>{{ t('creditors_details', default='Creditor Details') }}</h1>
         <small class="text-muted">{{ creditor.name }}</small>
     </div>
     <div class="card">
         <div class="card-body">
             <div class="row">
                 <div class="col-md-6">
-                    <p><strong>{{ trans('name', default='Name') }}:</strong> {{ creditor.name }}</p>
-                    <p><strong>{{ trans('amount_owed', default='Amount Owed') }}:</strong> {{ format_currency(creditor.amount_owed) }}</p>
-                    <p><strong>{{ trans('contact', default='Contact') }}:</strong> {{ creditor.contact or 'N/A' }}</p>
+                    <p><strong>{{ t('general_name', default='Name') }}:</strong> {{ creditor.name }}</p>
+                    <p><strong>{{ t('creditors_amount_owed', default='Amount Owed') }}:</strong> {{ format_currency(creditor.amount_owed) }}</p>
+                    <p><strong>{{ t('general_contact', default='Contact') }}:</strong> {{ creditor.contact or 'N/A' }}</p>
                 </div>
                 <div class="col-md-6">
-                    <p><strong>{{ trans('description', default='Description') }}:</strong> {{ creditor.description or trans('no_description', default='No description provided') }}</p>
-                    <p><strong>{{ trans('date_recorded', default='Date Recorded') }}:</strong> {{ format_date(creditor.created_at) }}</p>
-                    <p><strong>{{ trans('reminders_sent', default='Reminders Sent') }}:</strong> {{ creditor.get('reminder_count', 0) }}</p>
+                    <p><strong>{{ t('general_description', default='Description') }}:</strong> {{ creditor.description or t('general_no_description', default='No description provided') }}</p>
+                    <p><strong>{{ t('general_date_recorded', default='Date Recorded') }}:</strong> {{ format_date(creditor.created_at) }}</p>
+                    <p><strong>{{ t('general_reminders_sent', default='Reminders Sent') }}:</strong> {{ creditor.get('reminder_count', 0) }}</p>
                 </div>
             </div>
         </div>
@@ -26,8 +26,8 @@
                 <a href="{{ url_for('creditors_blueprint.generate_iou', id=creditor._id) }}" 
                    class="btn btn-success btn-sm"
                    data-bs-toggle="tooltip" 
-                   title="{{ trans('download_iou', default='Download IOU') }}">
-                    {{ trans('download_iou', default='Download IOU') }}
+                   title="{{ t('general_download_iou', default='Download IOU') }}">
+                    {{ t('general_download_iou', default='Download IOU') }}
                 </a>
                 {% if creditor.contact %}
                 <button type="button" 
@@ -35,8 +35,8 @@
                         data-id="{{ creditor._id }}" 
                         data-contact="{{ creditor.contact }}"
                         data-bs-toggle="tooltip" 
-                        title="{{ trans('share_iou', default='Share IOU') }}">
-                    {{ trans('share_iou', default='Share IOU') }}
+                        title="{{ t('general_share_iou', default='Share IOU') }}">
+                    {{ t('general_share_iou', default='Share IOU') }}
                 </button>
                 <button type="button" 
                         class="btn btn-warning btn-sm reminder-btn" 
@@ -46,29 +46,29 @@
                         data-contact="{{ creditor.contact }}" 
                         data-date="{{ format_date(creditor.created_at) }}"
                         data-bs-toggle="tooltip" 
-                        title="{{ trans('send_delivery_reminder', default='Send Delivery Reminder') }}">
-                    {{ trans('reminder', default='Reminder') }}
+                        title="{{ t('creditors_send_delivery_reminder', default='Send Delivery Reminder') }}">
+                    {{ t('general_reminder', default='Reminder') }}
                 </button>
                 <button type="button" 
                         class="btn btn-primary btn-sm snooze-btn" 
                         data-id="{{ creditor._id }}" 
                         data-name="{{ creditor.name }}"
                         data-bs-toggle="tooltip" 
-                        title="{{ trans('snooze_reminder', default='Snooze Reminder') }}">
-                    {{ trans('snooze', default='Snooze') }}
+                        title="{{ t('general_snooze_reminder', default='Snooze Reminder') }}">
+                    {{ t('general_snooze', default='Snooze') }}
                 </button>
                 {% endif %}
                 <a href="{{ url_for('creditors_blueprint.edit', id=creditor._id) }}" 
                    class="btn btn-primary btn-sm"
                    data-bs-toggle="tooltip" 
-                   title="{{ trans('edit', default='Edit') }}">
-                    {{ trans('edit', default='Edit') }}
+                   title="{{ t('general_edit', default='Edit') }}">
+                    {{ t('general_edit', default='Edit') }}
                 </a>
                 <a href="{{ url_for('creditors_blueprint.index') }}" 
                    class="btn btn-secondary btn-sm"
                    data-bs-toggle="tooltip" 
-                   title="{{ trans('back', default='Back') }}">
-                    {{ trans('back', default='Back') }}
+                   title="{{ t('general_back', default='Back') }}">
+                    {{ t('general_back', default='Back') }}
                 </a>
             </div>
         </div>
@@ -80,31 +80,31 @@
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title" id="reminderModalLabel">{{ trans('send_delivery_reminder', default='Send Delivery Reminder') }}</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="{{ trans('close', default='Close') }}"></button>
+                <h5 class="modal-title" id="reminderModalLabel">{{ t('creditors_send_delivery_reminder', default='Send Delivery Reminder') }}</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="{{ t('general_close', default='Close') }}"></button>
             </div>
             <div class="modal-body">
                 <form id="reminderForm">
                     <div class="mb-3">
-                        <label for="reminderType" class="form-label">{{ trans('reminder_type', default='Reminder Type') }}</label>
+                        <label for="reminderType" class="form-label">{{ t('general_reminder_type', default='Reminder Type') }}</label>
                         <select class="form-select" id="reminderType" required>
-                            <option value="sms">{{ trans('sms', default='SMS') }}</option>
-                            <option value="whatsapp">{{ trans('whatsapp', default='WhatsApp') }}</option>
+                            <option value="sms">{{ t('general_sms', default='SMS') }}</option>
+                            <option value="whatsapp">{{ t('general_whatsapp', default='WhatsApp') }}</option>
                         </select>
                     </div>
                     <div class="mb-3">
-                        <label for="reminderMessage" class="form-label">{{ trans('message', default='Message') }}</label>
+                        <label for="reminderMessage" class="form-label">{{ t('general_message', default='Message') }}</label>
                         <textarea class="form-control" id="reminderMessage" rows="4" required></textarea>
-                        <div class="form-text">{{ trans('reminder_cost', default='Cost: 2 coins per reminder') }}</div>
+                        <div class="form-text">{{ t('general_reminder_cost', default='Cost: 2 coins per reminder') }}</div>
                     </div>
                 </form>
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-primary" id="sendReminderBtn">
-                    {{ trans('send_reminder', default='Send Reminder') }}
+                    {{ t('general_send_reminder', default='Send Reminder') }}
                 </button>
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
-                    {{ trans('cancel', default='Cancel') }}
+                    {{ t('general_cancel', default='Cancel') }}
                 </button>
             </div>
         </div>
@@ -116,29 +116,29 @@
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title" id="snoozeModalLabel">{{ trans('snooze_reminder', default='Snooze Reminder') }}</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="{{ trans('close', default='Close') }}"></button>
+                <h5 class="modal-title" id="snoozeModalLabel">{{ t('general_snooze_reminder', default='Snooze Reminder') }}</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="{{ t('general_close', default='Close') }}"></button>
             </div>
             <div class="modal-body">
                 <form id="snoozeForm">
                     <div class="mb-3">
-                        <label for="snoozeDays" class="form-label">{{ trans('snooze_duration', default='Snooze Duration') }}</label>
+                        <label for="snoozeDays" class="form-label">{{ t('general_snooze_duration', default='Snooze Duration') }}</label>
                         <select class="form-select" id="snoozeDays" required>
-                            <option value="1">{{ trans('1_day', default='1 Day') }}</option>
-                            <option value="3">{{ trans('3_days', default='3 Days') }}</option>
-                            <option value="7">{{ trans('7_days', default='7 Days') }}</option>
-                            <option value="14">{{ trans('14_days', default='14 Days') }}</option>
+                            <option value="1">{{ t('general_1_day', default='1 Day') }}</option>
+                            <option value="3">{{ t('general_3_days', default='3 Days') }}</option>
+                            <option value="7">{{ t('general_7_days', default='7 Days') }}</option>
+                            <option value="14">{{ t('general_14_days', default='14 Days') }}</option>
                         </select>
-                        <div class="form-text">{{ trans('snooze_cost', default='Cost: 1 coin per snooze') }}</div>
+                        <div class="form-text">{{ t('general_snooze_cost', default='Cost: 1 coin per snooze') }}</div>
                     </div>
                 </form>
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-primary" id="snoozeReminderBtn">
-                    {{ trans('snooze', default='Snooze') }}
+                    {{ t('general_snooze', default='Snooze') }}
                 </button>
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
-                    {{ trans('cancel', default='Cancel') }}
+                    {{ t('general_cancel', default='Cancel') }}
                 </button>
             </div>
         </div>
@@ -165,7 +165,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const debtId = button.dataset.id;
             const contact = button.dataset.contact;
             if (!contact) {
-                alert('{{ trans('no_contact', default='No contact provided for sharing') }}');
+                alert('{{ t('general_no_contact', default='No contact provided for sharing') }}');
                 return;
             }
             fetch(`/creditors/share/${debtId}`)
@@ -174,12 +174,12 @@ document.addEventListener('DOMContentLoaded', () => {
                     if (data.success) {
                         window.open(data.whatsapp_link, '_blank');
                     } else {
-                        alert('{{ trans('failed_to_share_iou', default='Failed to share IOU') }}: ' + (data.message || 'Unknown error'));
+                        alert('{{ t('general_failed_to_share_iou', default='Failed to share IOU') }}: ' + (data.message || 'Unknown error'));
                     }
                 })
                 .catch(error => {
                     console.error('Error sharing IOU:', error);
-                    alert('{{ trans('error_sharing_iou', default='Error sharing IOU') }}');
+                    alert('{{ t('general_error_sharing_iou', default='Error sharing IOU') }}');
                 });
         });
     });
@@ -200,7 +200,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 created_at: date
             };
             
-            const defaultMessage = `Hi ${name}, this is a reminder about the {{ trans('currency_symbol', default='₦') }}${amount} delivery/service recorded on FiCore Records (${date}). Please provide update on delivery status.`;
+            const defaultMessage = `Hi ${name}, this is a reminder about the {{ t('general_currency_symbol', default='₦') }}${amount} delivery/service recorded on FiCore Records (${date}). Please provide update on delivery status.`;
             document.getElementById('reminderMessage').value = defaultMessage;
             
             new bootstrap.Modal(document.getElementById('reminderModal')).show();
@@ -215,12 +215,12 @@ document.addEventListener('DOMContentLoaded', () => {
         const message = document.getElementById('reminderMessage').value;
         
         if (!message.trim()) {
-            alert('{{ trans('message_required', default='Message is required') }}');
+            alert('{{ t('general_message_required', default='Message is required') }}');
             return;
         }
         
         this.disabled = true;
-        this.textContent = '{{ trans('sending', default='Sending...') }}';
+        this.textContent = '{{ t('general_sending', default='Sending...') }}';
         
         fetch('/creditors/send_reminder', {
             method: 'POST',
@@ -238,20 +238,20 @@ document.addEventListener('DOMContentLoaded', () => {
         .then(response => response.json())
         .then(data => {
             if (data.success) {
-                alert('{{ trans('reminder_sent_successfully', default='Reminder sent successfully') }}');
+                alert('{{ t('general_reminder_sent_successfully', default='Reminder sent successfully') }}');
                 bootstrap.Modal.getInstance(document.getElementById('reminderModal')).hide();
                 location.reload();
             } else {
-                alert('{{ trans('failed_to_send_reminder', default='Failed to send reminder') }}: ' + (data.message || 'Unknown error'));
+                alert('{{ t('general_failed_to_send_reminder', default='Failed to send reminder') }}: ' + (data.message || 'Unknown error'));
             }
         })
         .catch(error => {
             console.error('Error sending reminder:', error);
-            alert('{{ trans('error_sending_reminder', default='Error sending reminder') }}');
+            alert('{{ t('general_error_sending_reminder', default='Error sending reminder') }}');
         })
         .finally(() => {
             this.disabled = false;
-            this.textContent = '{{ trans('send_reminder', default='Send Reminder') }}';
+            this.textContent = '{{ t('general_send_reminder', default='Send Reminder') }}';
         });
     });
 
@@ -274,7 +274,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const snoozeDays = parseInt(document.getElementById('snoozeDays').value);
         
         this.disabled = true;
-        this.textContent = '{{ trans('snoozing', default='Snoozing...') }}';
+        this.textContent = '{{ t('general_snoozing', default='Snoozing...') }}';
         
         fetch('/creditors/send_reminder', {
             method: 'POST',
@@ -290,20 +290,20 @@ document.addEventListener('DOMContentLoaded', () => {
         .then(response => response.json())
         .then(data => {
             if (data.success) {
-                alert('{{ trans('snooze_set_successfully', default='Snooze set successfully') }}');
+                alert('{{ t('general_snooze_set_successfully', default='Snooze set successfully') }}');
                 bootstrap.Modal.getInstance(document.getElementById('snoozeModal')).hide();
                 location.reload();
             } else {
-                alert('{{ trans('failed_to_set_snooze', default='Failed to set snooze') }}: ' + (data.message || 'Unknown error'));
+                alert('{{ t('general_failed_to_set_snooze', default='Failed to set snooze') }}: ' + (data.message || 'Unknown error'));
             }
         })
         .catch(error => {
             console.error('Error setting snooze:', error);
-            alert('{{ trans('error_setting_snooze', default='Error setting snooze') }}');
+            alert('{{ t('general_error_setting_snooze', default='Error setting snooze') }}');
         })
         .finally(() => {
             this.disabled = false;
-            this.textContent = '{{ trans('snooze', default='Snooze') }}';
+            this.textContent = '{{ t('general_snooze', default='Snooze') }}';
         });
     });
 });

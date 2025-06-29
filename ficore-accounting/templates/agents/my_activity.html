@@ -1,13 +1,13 @@
 {% extends "agents/base_agent.html" %}
-{% block title %}{{ trans('my_activity', default='My Activity') }} - FiCore{% endblock %}
+{% block title %}{{ t('agents_my_activity', default='My Activity') }} - FiCore{% endblock %}
 
 {% block agent_content %}
 <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
-    <h1 class="h2">{{ trans('my_activity', default='My Activity') }}</h1>
+    <h1 class="h2">{{ t('agents_my_activity', default='My Activity') }}</h1>
     <div class="btn-toolbar mb-2 mb-md-0">
         <div class="btn-group me-2">
             <button type="button" class="btn btn-sm btn-outline-secondary" onclick="window.print()">
-                <i class="bi bi-printer me-1"></i>{{ trans('print', default='Print') }}
+                <i class="bi bi-printer me-1"></i>{{ t('general_print', default='Print') }}
             </button>
         </div>
     </div>
@@ -18,34 +18,34 @@
     <div class="col-md-3">
         <div class="card text-center">
             <div class="card-body">
-                <h5 class="card-title text-primary">{{ trans('total_traders_registered', default='Total Traders Registered') }}</h5>
+                <h5 class="card-title text-primary">{{ t('agents_total_traders_registered', default='Total Traders Registered') }}</h5>
                 <h2 class="card-text">{{ total_traders_registered }}</h2>
-                <small class="text-muted">{{ trans('since_joining', default='Since joining') }}</small>
+                <small class="text-muted">{{ t('agents_since_joining', default='Since joining') }}</small>
             </div>
         </div>
     </div>
     <div class="col-md-3">
         <div class="card text-center">
             <div class="card-body">
-                <h5 class="card-title text-success">{{ trans('total_tokens_facilitated', default='Total Tokens Facilitated') }}</h5>
+                <h5 class="card-title text-success">{{ t('agents_total_tokens_facilitated', default='Total Tokens Facilitated') }}</h5>
                 <h2 class="card-text">{{ format_currency(total_tokens_amount) }}</h2>
-                <small class="text-muted">{{ trans('total_value', default='Total value') }}</small>
+                <small class="text-muted">{{ t('agents_total_value', default='Total value') }}</small>
             </div>
         </div>
     </div>
     <div class="col-md-3">
         <div class="card text-center">
             <div class="card-body">
-                <h5 class="card-title text-info">{{ trans('activities_completed', default='Activities Completed') }}</h5>
+                <h5 class="card-title text-info">{{ t('agents_activities_completed', default='Activities Completed') }}</h5>
                 <h2 class="card-text">{{ activities|length }}</h2>
-                <small class="text-muted">{{ trans('total_actions', default='Total actions') }}</small>
+                <small class="text-muted">{{ t('agents_total_actions', default='Total actions') }}</small>
             </div>
         </div>
     </div>
     <div class="col-md-3">
         <div class="card text-center">
             <div class="card-body">
-                <h5 class="card-title text-warning">{{ trans('performance_rating', default='Performance Rating') }}</h5>
+                <h5 class="card-title text-warning">{{ t('agents_performance_rating', default='Performance Rating') }}</h5>
                 <h2 class="card-text">
                     {% if total_traders_registered >= 10 %}
                         <span class="text-success">★★★★★</span>
@@ -55,7 +55,7 @@
                         <span class="text-info">★★★☆☆</span>
                     {% endif %}
                 </h2>
-                <small class="text-muted">{{ trans('based_on_performance', default='Based on performance') }}</small>
+                <small class="text-muted">{{ t('agents_based_on_performance', default='Based on performance') }}</small>
             </div>
         </div>
     </div>
@@ -66,7 +66,7 @@
     <div class="col-md-12">
         <div class="card">
             <div class="card-header">
-                <h5 class="mb-0">{{ trans('activity_timeline', default='Activity Timeline') }}</h5>
+                <h5 class="mb-0">{{ t('agents_activity_timeline', default='Activity Timeline') }}</h5>
             </div>
             <div class="card-body">
                 {% if activities %}
@@ -95,18 +95,18 @@
                                                 <div class="flex-grow-1">
                                                     <h6 class="mb-1">
                                                         {% if activity.activity_type == 'trader_registration' %}
-                                                            {{ trans('registered_new_trader', default='Registered New Trader') }}
+                                                            {{ t('agents_registered_new_trader', default='Registered New Trader') }}
                                                         {% elif activity.activity_type == 'token_facilitation' %}
-                                                            {{ trans('facilitated_token_purchase', default='Facilitated Token Purchase') }}
+                                                            {{ t('agents_facilitated_token_purchase', default='Facilitated Token Purchase') }}
                                                         {% elif activity.activity_type == 'report_generation' %}
-                                                            {{ trans('generated_trader_report', default='Generated Trader Report') }}
+                                                            {{ t('reports_generated_trader_report', default='Generated Trader Report') }}
                                                         {% else %}
                                                             {{ activity.activity_type.replace('_', ' ').title() }}
                                                         {% endif %}
                                                     </h6>
                                                     <p class="mb-1 text-muted">
                                                         {% if activity.trader_id %}
-                                                            {{ trans('trader', default='Trader') }}: <strong>{{ activity.trader_id }}</strong>
+                                                            {{ t('agents_trader', default='Trader') }}: <strong>{{ activity.trader_id }}</strong>
                                                         {% endif %}
                                                         {% if activity.details %}
                                                             {% if activity.details.business_name %}
@@ -116,7 +116,7 @@
                                                                 • {{ format_currency(activity.details.amount) }}
                                                             {% endif %}
                                                             {% if activity.details.coins %}
-                                                                • {{ activity.details.coins }} coins
+                                                                • {{ activity.details.coins }} {{ t('coins_coins', default='coins') }}
                                                             {% endif %}
                                                             {% if activity.details.payment_method %}
                                                                 • {{ activity.details.payment_method.replace('_', ' ').title() }}
@@ -138,10 +138,10 @@
                 {% else %}
                     <div class="text-center py-5">
                         <i class="bi bi-activity text-muted" style="font-size: 3rem;"></i>
-                        <h5 class="mt-3 text-muted">{{ trans('no_activities_yet', default='No activities yet') }}</h5>
-                        <p class="text-muted">{{ trans('start_by_registering_trader', default='Start by registering a trader or facilitating token purchases') }}</p>
+                        <h5 class="mt-3 text-muted">{{ t('agents_no_activities_yet', default='No activities yet') }}</h5>
+                        <p class="text-muted">{{ t('agents_start_by_registering_trader', default='Start by registering a trader or facilitating token purchases') }}</p>
                         <a href="{{ url_for('agents_bp.register_trader') }}" class="btn btn-primary">
-                            <i class="bi bi-person-plus me-2"></i>{{ trans('register_first_trader', default='Register First Trader') }}
+                            <i class="bi bi-person-plus me-2"></i>{{ t('agents_register_first_trader', default='Register First Trader') }}
                         </a>
                     </div>
                 {% endif %}
@@ -156,7 +156,7 @@
     <div class="col-md-12">
         <div class="card">
             <div class="card-header">
-                <h5 class="mb-0">{{ trans('monthly_performance', default='Monthly Performance') }}</h5>
+                <h5 class="mb-0">{{ t('agents_monthly_performance', default='Monthly Performance') }}</h5>
             </div>
             <div class="card-body">
                 <canvas id="performanceChart" width="400" height="200"></canvas>
@@ -201,19 +201,19 @@ document.addEventListener('DOMContentLoaded', function() {
         data: {
             labels: labels,
             datasets: [{
-                label: '{{ trans("trader_registrations", default="Trader Registrations") }}',
+                label: '{{ t("agents_trader_registrations", default="Trader Registrations") }}',
                 data: traderRegistrations,
                 borderColor: 'rgb(75, 192, 192)',
                 backgroundColor: 'rgba(75, 192, 192, 0.2)',
                 tension: 0.1
             }, {
-                label: '{{ trans("token_facilitations", default="Token Facilitations") }}',
+                label: '{{ t("agents_token_facilitations", default="Token Facilitations") }}',
                 data: tokenFacilitations,
                 borderColor: 'rgb(255, 99, 132)',
                 backgroundColor: 'rgba(255, 99, 132, 0.2)',
                 tension: 0.1
             }, {
-                label: '{{ trans("report_generations", default="Report Generations") }}',
+                label: '{{ t("reports_report_generations", default="Report Generations") }}',
                 data: reportGenerations,
                 borderColor: 'rgb(54, 162, 235)',
                 backgroundColor: 'rgba(54, 162, 235, 0.2)',
@@ -225,7 +225,7 @@ document.addEventListener('DOMContentLoaded', function() {
             plugins: {
                 title: {
                     display: true,
-                    text: '{{ trans("monthly_activity_trend", default="Monthly Activity Trend") }}'
+                    text: '{{ t("agents_monthly_activity_trend", default="Monthly Activity Trend") }}'
                 }
             },
             scales: {
