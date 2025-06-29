@@ -7,7 +7,7 @@ from flask_mail import Mail
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
 from pymongo import MongoClient
-from pymongo.errors import ConnectionError
+from pymongo.errors import ConnectionFailure
 from translations import trans
 
 # Flask extensions - defined here to avoid having too many files
@@ -128,7 +128,7 @@ def get_mongo_db():
                 )
                 mongo_client.admin.command('ping')
                 logger.info(trans('general_mongo_connection_established', default='MongoDB connection established'))
-            except ConnectionError as e:
+            except ConnectionFailure as e:
                 logger.error(f"{trans('general_mongo_connection_error', default='Error connecting to MongoDB')}: {str(e)}")
                 raise RuntimeError(f"No MongoDB client available: {str(e)}")
             except Exception as e:
