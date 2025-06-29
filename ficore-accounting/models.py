@@ -1,6 +1,6 @@
 from datetime import datetime
 from pymongo import MongoClient, ASCENDING, DESCENDING
-from pymongo.errors import ConnectionError, ServerSelectionTimeoutError, DuplicateKeyError
+from pymongo.errors import ConnectionFailure, ServerSelectionTimeoutError, DuplicateKeyError
 from werkzeug.security import generate_password_hash
 from bson import ObjectId
 import os
