@@ -9,6 +9,188 @@
             <p class="alert alert-info">{{ t('admin_view_all_data', default='You are viewing all users\' data as an admin.') }}</p>
         {% endif %}
 
+        <!-- Personal Finance Section for Personal Users and Admins -->
+        {% if current_user.role in ['personal', 'admin'] %}
+        <div class="mb-5">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h3 class="text-primary">
+                    <i class="fas fa-chart-pie me-2"></i>
+                    {{ t('general_personal_finance', default='Personal Finance') }}
+                </h3>
+                {% if personal_finance_summary.has_personal_data %}
+                    <small class="text-muted">{{ t('dashboard_personal_finance_overview', default='Your financial overview') }}</small>
+                {% endif %}
+            </div>
+
+            {% if personal_finance_summary.has_personal_data %}
+                <!-- Personal Finance Quick Stats -->
+                <div class="row g-3 mb-4">
+                    {% if personal_finance_summary.latest_budget %}
+                    <div class="col-md-3">
+                        <div class="card border-0 shadow-sm h-100">
+                            <div class="card-body text-center">
+                                <div class="text-primary mb-2">
+                                    <i class="fas fa-calculator fa-2x"></i>
+                                </div>
+                                <h6 class="card-title">{{ t('budget_title', default='Budget') }}</h6>
+                                <p class="card-text">
+                                    <span class="h5 {{ 'text-success' if personal_finance_summary.latest_budget.surplus_deficit > 0 else 'text-danger' }}">
+                                        {{ personal_finance_summary.latest_budget.surplus_deficit | format_currency }}
+                                    </span><br>
+                                    <small class="text-muted">{{ t('budget_surplus_deficit', default='Surplus/Deficit') }}</small>
+                                </p>
+                                <a href="{{ url_for('budget.main') }}" class="btn btn-outline-primary btn-sm">{{ t('general_view', default='View') }}</a>
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    {% if personal_finance_summary.latest_financial_health %}
+                    <div class="col-md-3">
+                        <div class="card border-0 shadow-sm h-100">
+                            <div class="card-body text-center">
+                                <div class="text-success mb-2">
+                                    <i class="fas fa-heartbeat fa-2x"></i>
+                                </div>
+                                <h6 class="card-title">{{ t('financial_health_title', default='Health Score') }}</h6>
+                                <p class="card-text">
+                                    <span class="h5 text-primary">{{ personal_finance_summary.latest_financial_health.score }}/100</span><br>
+                                    <small class="text-muted">{{ personal_finance_summary.latest_financial_health.status }}</small>
+                                </p>
+                                <a href="{{ url_for('financial_health.main') }}" class="btn btn-outline-success btn-sm">{{ t('general_view', default='View') }}</a>
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    {% if personal_finance_summary.total_bills > 0 %}
+                    <div class="col-md-3">
+                        <div class="card border-0 shadow-sm h-100">
+                            <div class="card-body text-center">
+                                <div class="text-warning mb-2">
+                                    <i class="fas fa-file-invoice fa-2x"></i>
+                                </div>
+                                <h6 class="card-title">{{ t('bill_title', default='Bills') }}</h6>
+                                <p class="card-text">
+                                    <span class="h5 text-primary">{{ personal_finance_summary.total_bills }}</span><br>
+                                    <small class="text-muted">
+                                        {% if personal_finance_summary.overdue_bills > 0 %}
+                                            <span class="text-danger">{{ personal_finance_summary.overdue_bills }} {{ t('bill_overdue', default='overdue') }}</span>
+                                        {% else %}
+                                            {{ t('bill_all_current', default='All current') }}
+                                        {% endif %}
+                                    </small>
+                                </p>
+                                <a href="{{ url_for('bill.main') }}" class="btn btn-outline-warning btn-sm">{{ t('general_view', default='View') }}</a>
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    {% if personal_finance_summary.latest_net_worth %}
+                    <div class="col-md-3">
+                        <div class="card border-0 shadow-sm h-100">
+                            <div class="card-body text-center">
+                                <div class="text-info mb-2">
+                                    <i class="fas fa-chart-line fa-2x"></i>
+                                </div>
+                                <h6 class="card-title">{{ t('net_worth_title', default='Net Worth') }}</h6>
+                                <p class="card-text">
+                                    <span class="h5 {{ 'text-success' if personal_finance_summary.latest_net_worth.net_worth > 0 else 'text-danger' }}">
+                                        {{ personal_finance_summary.latest_net_worth.net_worth | format_currency }}
+                                    </span><br>
+                                    <small class="text-muted">{{ t('net_worth_total', default='Total Net Worth') }}</small>
+                                </p>
+                                <a href="{{ url_for('net_worth.main') }}" class="btn btn-outline-info btn-sm">{{ t('general_view', default='View') }}</a>
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+
+                <!-- Personal Finance Quick Actions -->
+                <div class="card border-0 shadow-sm mb-4">
+                    <div class="card-header bg-light">
+                        <h5 class="mb-0">{{ t('general_quick_actions', default='Quick Actions') }}</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row g-2">
+                            <div class="col-md-2 col-6">
+                                <a href="{{ url_for('budget.main') }}" class="btn btn-outline-primary w-100">
+                                    <i class="fas fa-calculator d-block mb-1"></i>
+                                    <small>{{ t('budget_title', default='Budget') }}</small>
+                                </a>
+                            </div>
+                            <div class="col-md-2 col-6">
+                                <a href="{{ url_for('bill.main') }}" class="btn btn-outline-warning w-100">
+                                    <i class="fas fa-file-invoice d-block mb-1"></i>
+                                    <small>{{ t('bill_title', default='Bills') }}</small>
+                                </a>
+                            </div>
+                            <div class="col-md-2 col-6">
+                                <a href="{{ url_for('emergency_fund.main') }}" class="btn btn-outline-success w-100">
+                                    <i class="fas fa-shield-alt d-block mb-1"></i>
+                                    <small>{{ t('emergency_fund_title', default='Emergency Fund') }}</small>
+                                </a>
+                            </div>
+                            <div class="col-md-2 col-6">
+                                <a href="{{ url_for('financial_health.main') }}" class="btn btn-outline-info w-100">
+                                    <i class="fas fa-heartbeat d-block mb-1"></i>
+                                    <small>{{ t('financial_health_title', default='Health Score') }}</small>
+                                </a>
+                            </div>
+                            <div class="col-md-2 col-6">
+                                <a href="{{ url_for('net_worth.main') }}" class="btn btn-outline-secondary w-100">
+                                    <i class="fas fa-chart-line d-block mb-1"></i>
+                                    <small>{{ t('net_worth_title', default='Net Worth') }}</small>
+                                </a>
+                            </div>
+                            <div class="col-md-2 col-6">
+                                <a href="{{ url_for('learning_hub.main') }}" class="btn btn-outline-dark w-100">
+                                    <i class="fas fa-graduation-cap d-block mb-1"></i>
+                                    <small>{{ t('learning_hub_title', default='Learning') }}</small>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            {% else %}
+                <!-- Getting Started Section for Personal Users -->
+                <div class="card border-0 shadow-sm mb-4">
+                    <div class="card-body text-center py-5">
+                        <div class="mb-4">
+                            <i class="fas fa-chart-pie fa-4x text-primary opacity-50"></i>
+                        </div>
+                        <h4 class="mb-3">{{ t('dashboard_welcome_personal_finance', default='Welcome to Personal Finance') }}</h4>
+                        <p class="text-muted mb-4">{{ t('dashboard_personal_finance_intro', default='Take control of your finances with our comprehensive personal finance tools. Start by creating your first budget or tracking your bills.') }}</p>
+                        <div class="row g-2 justify-content-center">
+                            <div class="col-md-2 col-6">
+                                <a href="{{ url_for('budget.main') }}" class="btn btn-primary w-100">
+                                    <i class="fas fa-calculator d-block mb-1"></i>
+                                    <small>{{ t('budget_create_first', default='Create Budget') }}</small>
+                                </a>
+                            </div>
+                            <div class="col-md-2 col-6">
+                                <a href="{{ url_for('bill.main') }}" class="btn btn-outline-primary w-100">
+                                    <i class="fas fa-file-invoice d-block mb-1"></i>
+                                    <small>{{ t('bill_add_first', default='Add Bills') }}</small>
+                                </a>
+                            </div>
+                            <div class="col-md-2 col-6">
+                                <a href="{{ url_for('quiz.main') }}" class="btn btn-outline-primary w-100">
+                                    <i class="fas fa-question-circle d-block mb-1"></i>
+                                    <small>{{ t('quiz_take_first', default='Take Quiz') }}</small>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            {% endif %}
+        </div>
+        {% endif %}
+
+        <!-- Trader/Business Section for Traders and Admins -->
+        {% if current_user.role in ['trader', 'admin'] %}
         <div class="mb-4">
             <h3>{{ t('general_quick_actions', default='Quick Actions') }}</h3>
             <div class="d-flex flex-wrap gap-2">
@@ -346,11 +528,12 @@
                 </div>
             </div>
         </div>
+        {% endif %}
     {% else %}
         <div class="text-center py-5">
             <h3>{{ t('dashboard_welcome_to_ficore', default='Welcome to FiCore') }}</h3>
             <p class="text-muted">{{ t('dashboard_please_login', default='Please log in to view your dashboard.') }}</p>
-            <a href="{{ url_for('auth.login') }}" class="btn btn-primary">{{ t('general_login', default='Log In') }}</a>
+            <a href="{{ url_for('users_blueprint.login') }}" class="btn btn-primary">{{ t('general_login', default='Log In') }}</a>
         </div>
     {% endif %}
 </div>
