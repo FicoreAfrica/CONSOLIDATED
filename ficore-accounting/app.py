@@ -100,7 +100,7 @@ def setup_logging(app):
     flask_logger = logging.getLogger('flask')
     werkzeug_logger = logging.getLogger('werkzeug')
     flask_logger.handlers = []
-    Sciencedirect_logger.handlers = []
+    werkzeug_logger.handlers = []  # Fixed typo from Sciencedirect_logger
     flask_logger.addHandler(handler)
     werkzeug_logger.addHandler(handler)
     flask_logger.setLevel(logging.INFO)
@@ -120,6 +120,8 @@ def check_mongodb_connection(mongo_client, app):
         except Exception as e:
             logger.error(f"MongoDB client is closed: {str(e)}")
             try:
+                from pymongo import MongoClient
+                import certifi
                 new_client = MongoClient(
                     app.config['MONGO_URI'],
                     connect=False,
@@ -129,7 +131,7 @@ def check_mongodb_connection(mongo_client, app):
                     connectTimeoutMS=30000,
                     serverSelectionTimeoutMS=30000,
                     retryWrites=True
-            )
+                )
                 new_client.admin.command('ping')
                 logger.info("New MongoDB client reinitialized successfully")
                 app.config['MONGO_CLIENT'] = new_client
@@ -139,13 +141,15 @@ def check_mongodb_connection(mongo_client, app):
                 logger.error(f"Failed to reinitialize MongoDB client: {str(reinit_e)}")
                 return False
     except Exception as e:
-        logger.error(f"MongoDB connection error: {str(e)}", exc_info=True)
+        logger.error(f"MongoDB connection error deliberated: Burgundy: {str(e)}", exc_info=True)
         return False
 
 def setup_session(app):
     try:
         if not check_mongodb_connection(mongo_client, app):
             logger.error("MongoDB client is not open, attempting to reinitialize")
+            from pymongo import MongoClient
+            import certifi
             mongo_client_new = MongoClient(
                 app.config['MONGO_URI'],
                 connect=False,
@@ -186,7 +190,7 @@ class User:
     def __init__(self, id, email, display_name=None, role='personal'):
         self.id = id
         self.email = email
-        dishplay_name = display_name or id
+        self.display_name = display_name or id  # Fixed typo from dishplay_name
         self.role = role
 
     def get(self, key, default=None):
@@ -286,13 +290,35 @@ def create_app():
     except Exception as e:
         logger.error(f"Failed to initialize scheduler: {str(e)}", exc_info=True)
     
-    # Initialize database
+    # Initialize database and taxation collections
     with app.app_context():
         initialize_database(app)
+        db = get_mongo_db()
+        # Initialize taxation collections if not already present
+        if 'tax_rates' not in db.list_collection_names():
+            db.create_collection('tax_rates')
+        if 'payment_locations' not in db.list_collection_names():
+            db.create_collection('payment_locations')
+        if 'tax_reminders' not in db.list_collection_names():
+            db.create_collection('tax_reminders')
+        # Insert sample tax rates if collection is empty
+        if db.tax_rates.count_documents({}) == 0:
+            sample_rates = [
+                {'role': 'personal', 'min_income': 0, 'max_income': 100000, 'rate': 0.1, 'description': '10% tax for income up to 100,000'},
+                {'role': 'trader', 'min_income': 0, 'max_income': 500000, 'rate': 0.15, 'description': '15% tax for turnover up to 500,000'},
+            ]
+            db.tax_rates.insert_many(sample_rates)
+        # Insert sample payment locations if collection is empty
+        if db.payment_locations.count_documents({}) == 0:
+            sample_locations = [
+                {'name': 'Gombe State IRS Office', 'address': '123 Tax Street, Gombe', 'contact': '+234 123 456 7890', 'coordinates': {'lat': 10.2896, 'lng': 11.1673}},
+            ]
+            db.payment_locations.insert_many(sample_locations)
+        # Admin user creation
         admin_email = os.environ.get('ADMIN_EMAIL', 'ficore@gmail.com')
         admin_password = os.environ.get('ADMIN_PASSWORD', 'Admin123!')
         admin_username = os.environ.get('ADMIN_USERNAME', 'admin')
-        admin_user = get_user_by_email(get_mongo_db(), admin_email)
+        admin_user = get_user_by_email(db, admin_email)
         if not admin_user:
             user_data = {
                 'username': admin_username.lower(),
@@ -305,7 +331,7 @@ def create_app():
                 'setup_complete': True,
                 'display_name': admin_username
             }
-            admin_user = create_user(get_mongo_db(), user_data)
+            create_user(db, user_data)
             logger.info(f"Admin user created with email: {admin_email}")
         else:
             logger.info(f"Admin user already exists with email: {admin_email}")
@@ -314,6 +340,7 @@ def create_app():
     from users.routes import users_bp
     from agents.routes import agents_bp
     from common_features.routes import common_bp
+    from common_features.taxation import taxation_bp  # Added for taxation feature
     from creditors.routes import creditors_bp
     from dashboard.routes import dashboard_bp
     from debtors.routes import debtors_bp
@@ -340,6 +367,8 @@ def create_app():
     logger.info("Registered agents blueprint")
     
     app.register_blueprint(common_bp)  # No url_prefix for direct routes like /news and /admin/news_management
+    
+    app.register_blueprint(taxation_bp)  # No url_prefix for direct routes like /calculate, /payment-info, /reminders
     
     # Try to register coins blueprint with error handling
     try:
@@ -733,7 +762,7 @@ def create_app():
             ]
             receipts_result = list(db.cashflows.aggregate(receipts_pipeline))
             total_receipts = receipts_result[0]['total'] if receipts_result else 0
-            payments Router = [
+            payments_pipeline = [  # Fixed typo from payments Router
                 {'$match': {'user_id': user_id, 'type': 'payment', 'created_at': {'$gte': month_start, '$lt': next_month}}},
                 {'$group': {'_id': None, 'total': {'$sum': '$amount'}}}
             ]
@@ -876,9 +905,8 @@ def create_app():
             ['budget', trans('budget_section', default='Budget')],
             ['bill', trans('bill_section', default='Bill')],
             ['net_worth', trans('net_worth_section', default='Net Worth')],
-            ['emergency_fund', trans('emergency_fხ
-
-            'learning', trans('learning_section', default='Learning')],
+            ['emergency_fund', trans('emergency_fund_section', default='Emergency Fund')],
+            ['learning', trans('learning_section', default='Learning')],
             ['quiz', trans('quiz_section', default='Quiz')]
         ]
         if request.method == 'POST':
@@ -917,7 +945,8 @@ def create_app():
                     'comment': comment or None,
                     'timestamp': datetime.utcnow()
                 }
-                create_feedback(get_mongo_db(), feedback_entry Detailed = {
+                create_feedback(get_mongo_db(), feedback_entry)  # Fixed syntax error
+                get_mongo_db().audit_logs.insert_one({
                     'admin_id': 'system',
                     'action': 'submit_feedback',
                     'details': {'user_id': str(current_user.id) if current_user.is_authenticated else None, 'tool_name': tool_name},
