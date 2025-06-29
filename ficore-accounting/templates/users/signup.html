@@ -1,8 +1,8 @@
 {% extends 'base.html' %}
-{% block title %}{{ trans('create_account') | default('Sign Up') | escape }}{% endblock %}
+{% block title %}{{ t('general_create_account', default='Sign Up') | escape }}{% endblock %}
 {% block content %}
 <div class="container my-5">
-    <h1 class="text-center mb-4">{{ trans('create_account') | default('Sign Up') | escape }}</h1>
+    <h1 class="text-center mb-4">{{ t('general_create_account', default='Sign Up') | escape }}</h1>
     <div class="card mx-auto" style="max-width: 400px;">
         <div class="card-body">
             {% with messages = get_flashed_messages(with_categories=true) %}
@@ -10,16 +10,16 @@
                     <div class="alert alert-{{ messages[0][1] }} alert-dismissible fade show" role="alert">
                         {{ messages[0][0] | escape }}
                         {% if messages[0][1] in ['danger', 'error'] %}
-                            <p>{{ trans('check_details', default='Please check your email and username for typos (e.g., ensure you used @gmail.com, not @gmai.com).') | escape }}</p>
+                            <p>{{ t('general_check_details', default='Please check your email and username for typos (e.g., ensure you used @gmail.com, not @gmai.com).') | escape }}</p>
                         {% endif %}
-                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="{{ trans('close', default='Close') | escape }}"></button>
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="{{ t('general_close', default='Close') | escape }}"></button>
                     </div>
                 {% endif %}
             {% endwith %}
             <form class="validate-form needs-validation" method="POST" action="{{ url_for('users_blueprint.signup') }}" novalidate aria-labelledby="signup-form-title">
                 {{ form.hidden_tag() }}
                 <div class="form-group mb-3">
-                    {{ form.username.label(class="form-label", **{"for": "username"}) | safe }}
+                    <label class="form-label" for="username">{{ t('general_username', default='Username') }}</label>
                     {{ form.username(class="form-control" + (" is-invalid" if form.username.errors else ""), value=form.username.data or '', required=True, id="username", **{"aria-describedby": "usernameFeedback" if form.username.errors else "", "aria-required": "true"}) | safe }}
                     {% if form.username.errors %}
                         <div id="usernameFeedback" class="invalid-feedback" role="alert">
@@ -30,7 +30,7 @@
                     {% endif %}
                 </div>
                 <div class="form-group mb-3">
-                    {{ form.email.label(class="form-label", **{"for": "email"}) | safe }}
+                    <label class="form-label" for="email">{{ t('general_email', default='Email') }}</label>
                     {{ form.email(class="form-control" + (" is-invalid" if form.email.errors else ""), value=form.email.data or '', required=True, id="email", **{"aria-describedby": "emailFeedback" if form.email.errors else "", "aria-required": "true"}) | safe }}
                     {% if form.email.errors %}
                         <div id="emailFeedback" class="invalid-feedback" role="alert">
@@ -41,9 +41,9 @@
                     {% endif %}
                 </div>
                 <div class="form-group mb-3 position-relative">
-                    {{ form.password.label(class="form-label", **{"for": "password"}) | safe }}
+                    <label class="form-label" for="password">{{ t('general_password', default='Password') }}</label>
                     {{ form.password(class="form-control" + (" is-invalid" if form.password.errors else ""), required=True, id="password", **{"aria-describedby": "passwordFeedback" if form.password.errors else "", "aria-required": "true"}) | safe }}
-                    <span class="password-toggle" onclick="togglePassword('password', 'toggle-password-icon')" role="button" aria-label="{{ trans('toggle_password_visibility', default='Toggle password visibility') | escape }}" tabindex="0">
+                    <span class="password-toggle" onclick="togglePassword('password', 'toggle-password-icon')" role="button" aria-label="{{ t('general_toggle_password_visibility', default='Toggle password visibility') | escape }}" tabindex="0">
                         <i class="bi bi-eye" id="toggle-password-icon" aria-hidden="true"></i>
                     </span>
                     {% if form.password.errors %}
@@ -55,7 +55,7 @@
                     {% endif %}
                 </div>
                 <div class="form-group mb-3">
-                    {{ form.role.label(class="form-label", **{"for": "role"}) | safe }}
+                    <label class="form-label" for="role">{{ t('general_role', default='Role') }}</label>
                     {{ form.role(class="form-select" + (" is-invalid" if form.role.errors else ""), required=True, id="role", **{"aria-describedby": "roleFeedback" if form.role.errors else "", "aria-required": "true"}) | safe }}
                     {% if form.role.errors %}
                         <div id="roleFeedback" class="invalid-feedback" role="alert">
@@ -66,7 +66,7 @@
                     {% endif %}
                 </div>
                 <div class="form-group mb-3">
-                    {{ form.language.label(class="form-label", **{"for": "language"}) | safe }}
+                    <label class="form-label" for="language">{{ t('general_language', default='Language') }}</label>
                     {{ form.language(class="form-select" + (" is-invalid" if form.language.errors else ""), required=True, id="language", **{"aria-describedby": "languageFeedback" if form.language.errors else "", "aria-required": "true"}) | safe }}
                     {% if form.language.errors %}
                         <div id="languageFeedback" class="invalid-feedback" role="alert">
@@ -77,10 +77,10 @@
                     {% endif %}
                 </div>
                 <div class="text-center">
-                    <button type="submit" class="btn btn-primary" aria-label="{{ trans('create_account', default='Sign Up') | escape }}">{{ trans('create_account') | default('Sign Up') | escape }}</button>
+                    <button type="submit" class="btn btn-primary" aria-label="{{ t('general_create_account', default='Sign Up') | escape }}">{{ t('general_create_account', default='Sign Up') | escape }}</button>
                 </div>
                 <div class="text-center mt-3">
-                    <a href="{{ url_for('users_blueprint.login') }}" aria-label="{{ trans('already_have_account', default='Already have an account? Sign In') | escape }}">{{ trans('already_have_account') | default('Already have an account? Sign In') | escape }}</a>
+                    <a href="{{ url_for('users_blueprint.login') }}" aria-label="{{ t('general_already_have_account', default='Already have an account? Sign In') | escape }}">{{ t('general_already_have_account', default='Already have an account? Sign In') | escape }}</a>
                 </div>
             </form>
         </div>
@@ -96,12 +96,12 @@ function togglePassword(inputId, iconId) {
         input.type = 'text';
         icon.classList.remove('bi-eye');
         icon.classList.add('bi-eye-slash');
-        icon.setAttribute('aria-label', '{{ trans('hide_password', default='Hide password') | escape }}');
+        icon.setAttribute('aria-label', '{{ t("general_hide_password", default="Hide password") | escape }}');
     } else {
         input.type = 'password';
         icon.classList.remove('bi-eye-slash');
         icon.classList.add('bi-eye');
-        icon.setAttribute('aria-label', '{{ trans('show_password', default='Show password') | escape }}');
+        icon.setAttribute('aria-label', '{{ t("general_show_password", default="Show password") | escape }}');
     }
 }
 // Bootstrap form validation
