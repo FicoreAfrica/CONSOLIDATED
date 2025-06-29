@@ -244,6 +244,30 @@
                         <a href="{{ url_for('feedback') }}" class="nav-card-link"></a>
                     </div>
                 </div>
+                <div class="col-6 col-md-4">
+                    <div class="nav-card">
+                        <div class="nav-card-icon">
+                            <i class="bi bi-newspaper"></i>
+                        </div>
+                        <div class="nav-card-content">
+                            <h4>{{ trans('news', default='News') }}</h4>
+                            <p>{{ trans('news_desc', default='Stay updated with financial news') }}</p>
+                        </div>
+                        <a href="{{ url_for('common_bp.news_list') }}" class="nav-card-link"></a>
+                    </div>
+                </div>
+                <div class="col-6 col-md-4">
+                    <div class="nav-card">
+                        <div class="nav-card-icon">
+                            <i class="bi bi-calculator"></i>
+                        </div>
+                        <div class="nav-card-content">
+                            <h4>{{ trans('taxation', default='Taxation') }}</h4>
+                            <p>{{ trans('taxation_desc', default='Calculate and manage taxes') }}</p>
+                        </div>
+                        <a href="{{ url_for('taxation_bp.calculate_tax') }}" class="nav-card-link"></a>
+                    </div>
+                </div>
             </div>
         </div>
 
