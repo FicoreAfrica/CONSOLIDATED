@@ -17,8 +17,8 @@ from utils import requires_role, is_admin, get_mongo_db
 emergency_fund_bp = Blueprint(
     'emergency_fund',
     __name__,
-    template_folder='templates/EMERGENCYFUND',
-    url_prefix='/EMERGENCYFUND'
+    template_folder='templates',
+    url_prefix='/emergency_fund'
 )
 
 def custom_login_required(f):
@@ -262,7 +262,7 @@ def main():
 
         current_app.logger.info(f"Rendering main template")
         return render_template(
-            'EMERGENCYFUND/emergency_fund_main.html',
+            'personal/EMERGENCYFUND/emergency_fund_main.html',
             form=form,
             records=records,
             latest_record=latest_record,
@@ -283,7 +283,7 @@ def main():
         current_app.logger.error(f"Error in main: {str(e)}", exc_info=True)
         flash(trans('emergency_fund_load_dashboard_error', lang=lang), 'danger')
         return render_template(
-            'EMERGENCYFUND/emergency_fund_main.html',
+            'personal/EMERGENCYFUND/emergency_fund_main.html',
             form=form,
             records=[],
             latest_record={},
