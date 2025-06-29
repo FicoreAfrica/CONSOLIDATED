@@ -24,6 +24,10 @@ from translations import trans, get_translations, get_all_translations, get_modu
 
 from flask_login import login_required, current_user
 from flask_wtf.csrf import CSRFError
+import time
+from pymongo import MongoClient
+import certifi
+from pymongo.errors import ConfigurationError
 
 # Load environment variables
 load_dotenv()
@@ -115,36 +119,33 @@ def check_mongodb_connection(mongo_client, app):
         if mongo_client is None:
             logger.error("MongoDB client is None")
             return False
-        try:
-            mongo_client.admin.command('ping')
-            logger.info("MongoDB connection verified with ping")
-            return True
-        except Exception as e:
-            logger.error(f"MongoDB client is closed: {str(e)}")
-            try:
-                from pymongo import MongoClient
-                import certifi
-                new_client = MongoClient(
-                    app.config['MONGO_URI'],
-                    connect=False,
-                    tlsCAFile=certifi.where(),
-                    maxPoolSize=20,
-                    socketTimeoutMS=60000,
-                    connectTimeoutMS=30000,
-                    serverSelectionTimeoutMS=30000,
-                    retryWrites=True
-                )
-                new_client.admin.command('ping')
-                logger.info("New MongoDB client reinitialized successfully")
-                app.config['MONGO_CLIENT'] = new_client
-                app.config['SESSION_MONGODB'] = new_client
-                return True
-            except Exception as reinit_e:
-                logger.error(f"Failed to reinitialize MongoDB client: {str(reinit_e)}")
-                return False
+        mongo_client.admin.command('ping')
+        logger.info("MongoDB connection verified with ping")
+        return True
     except Exception as e:
-        logger.error(f"MongoDB connection error: {str(e)}", exc_info=True)
-        return False
+        logger.error(f"MongoDB client is closed: {str(e)}")
+        try:
+            from pymongo import MongoClient
+            import certifi
+            new_client = MongoClient(
+                app.config['MONGO_URI'],
+                connect=False,
+                tlsCAFile=certifi.where(),
+                maxPoolSize=20,
+                socketTimeoutMS=60000,
+                connectTimeoutMS=30000,
+                serverSelectionTimeoutMS=30000,
+                retryWrites=True
+            )
+            new_client.admin.command('ping')
+            logger.info("New MongoDB client reinitialized successfully")
+            global mongo_client
+            mongo_client = new_client
+            app.config['MONGO_CLIENT'] = mongo_client
+            return True
+        except Exception as reinit_e:
+            logger.error(f"Failed to reinitialize MongoDB client: {str(reinit_e)}")
+            return False
 
 def setup_session(app):
     try:
@@ -230,6 +231,11 @@ def create_app():
     if not app.config['MONGO_URI']:
         logger.error("MONGO_URI environment variable is not set")
         raise ValueError("MONGO_URI must be set in environment variables")
+    try:
+        MongoClient(app.config['MONGO_URI'], serverSelectionTimeoutMS=5000).admin.command('ping')
+    except ConfigurationError as e:
+        logger.error(f"Invalid MONGO_URI format: {str(e)}")
+        raise
     
     app.config['GOOGLE_CLIENT_ID'] = os.environ.get('GOOGLE_CLIENT_ID')
     app.config['GOOGLE_CLIENT_SECRET'] = os.environ.get('GOOGLE_CLIENT_SECRET')
@@ -244,26 +250,32 @@ def create_app():
     if not app.config['SMTP_USERNAME'] or not app.config['SMTP_PASSWORD']:
         logger.warning("SMTP credentials not set")
     
-    # Initialize MongoDB client first
+    # Initialize MongoDB client with retries
     global mongo_client
-    try:
-        from pymongo import MongoClient
-        import certifi
-        mongo_client = MongoClient(
-            app.config['MONGO_URI'],
-            connect=False,
-            tlsCAFile=certifi.where(),
-            maxPoolSize=20,
-            socketTimeoutMS=60000,
-            connectTimeoutMS=30000,
-            serverSelectionTimeoutMS=30000,
-            retryWrites=True
-        )
-        app.config['MONGO_CLIENT'] = mongo_client
-        logger.info("MongoDB client initialized")
-    except Exception as e:
-        logger.error(f"Failed to initialize MongoDB client: {str(e)}")
-        mongo_client = None
+    max_retries = 3
+    for attempt in range(max_retries):
+        try:
+            from pymongo import MongoClient
+            import certifi
+            mongo_client = MongoClient(
+                app.config['MONGO_URI'],
+                connect=False,
+                tlsCAFile=certifi.where(),
+                maxPoolSize=20,
+                socketTimeoutMS=60000,
+                connectTimeoutMS=30000,
+                serverSelectionTimeoutMS=30000,
+                retryWrites=True
+            )
+            mongo_client.admin.command('ping')
+            app.config['MONGO_CLIENT'] = mongo_client
+            logger.info(f"MongoDB client initialized (attempt {attempt + 1}/{max_retries})")
+            break
+        except Exception as e:
+            logger.error(f"Failed to initialize MongoDB client (attempt {attempt + 1}/{max_retries}): {str(e)}")
+            if attempt == max_retries - 1:
+                raise RuntimeError("Failed to connect to MongoDB after max retries")
+            time.sleep(2)  # Wait before retrying
     
     # Initialize extensions
     setup_logging(app)
@@ -319,94 +331,100 @@ def create_app():
     with app.app_context():
         initialize_database(app)
         db = get_mongo_db()
-        
-        # Initialize personal finance collections if not already present
-        personal_finance_collections = [
-            'budgets', 'bills', 'emergency_funds', 'financial_health_scores', 
-            'net_worth_data', 'quiz_responses', 'learning_materials'
-        ]
-        
-        for collection_name in personal_finance_collections:
-            if collection_name not in db.list_collection_names():
-                db.create_collection(collection_name)
-                logger.info(f"Created personal finance collection: {collection_name}")
-        
-        # Create indexes for personal finance collections
         try:
-            # Bills collection indexes
-            db.bills.create_index([('user_id', 1), ('due_date', 1)])
-            db.bills.create_index([('session_id', 1), ('due_date', 1)])
-            db.bills.create_index([('status', 1)])
+            # Initialize personal finance collections if not already present
+            personal_finance_collections = [
+                'budgets', 'bills', 'emergency_funds', 'financial_health_scores', 
+                'net_worth_data', 'quiz_responses', 'learning_materials'
+            ]
             
-            # Budgets collection indexes
-            db.budgets.create_index([('user_id', 1), ('created_at', -1)])
-            db.budgets.create_index([('session_id', 1), ('created_at', -1)])
+            for collection_name in personal_finance_collections:
+                if collection_name not in db.list_collection_names():
+                    db.create_collection(collection_name)
+                    logger.info(f"Created personal finance collection: {collection_name}")
             
-            # Emergency funds collection indexes
-            db.emergency_funds.create_index([('user_id', 1), ('created_at', -1)])
-            db.emergency_funds.create_index([('session_id', 1), ('created_at', -1)])
+            # Create indexes for personal finance collections
+            try:
+                # Bills collection indexes
+                db.bills.create_index([('user_id', 1), ('due_date', 1)])
+                db.bills.create_index([('session_id', 1), ('due_date', 1)])
+                db.bills.create_index([('status', 1)])
+                
+                # Budgets collection indexes
+                db.budgets.create_index([('user_id', 1), ('created_at', -1)])
+                db.budgets.create_index([('session_id', 1), ('created_at', -1)])
+                
+                # Emergency funds collection indexes
+                db.emergency_funds.create_index([('user_id', 1), ('created_at', -1)])
+                db.emergency_funds.create_index([('session_id', 1), ('created_at', -1)])
+                
+                # Financial health collection indexes
+                db.financial_health_scores.create_index([('user_id', 1), ('created_at', -1)])
+                db.financial_health_scores.create_index([('session_id', 1), ('created_at', -1)])
+                
+                # Net worth collection indexes
+                db.net_worth_data.create_index([('user_id', 1), ('created_at', -1)])
+                db.net_worth_data.create_index([('session_id', 1), ('created_at', -1)])
+                
+                # Quiz responses collection indexes
+                db.quiz_responses.create_index([('user_id', 1), ('created_at', -1)])
+                db.quiz_responses.create_index([('session_id', 1), ('created_at', -1)])
+                
+                # Learning materials collection indexes
+                db.learning_materials.create_index([('user_id', 1), ('course_id', 1)])
+                db.learning_materials.create_index([('session_id', 1), ('course_id', 1)])
+                
+                logger.info("Created indexes for personal finance collections")
+            except Exception as e:
+                logger.warning(f"Some indexes may already exist: {str(e)}")
             
-            # Financial health collection indexes
-            db.financial_health_scores.create_index([('user_id', 1), ('created_at', -1)])
-            db.financial_health_scores.create_index([('session_id', 1), ('created_at', -1)])
-            
-            # Net worth collection indexes
-            db.net_worth_data.create_index([('user_id', 1), ('created_at', -1)])
-            db.net_worth_data.create_index([('session_id', 1), ('created_at', -1)])
-            
-            # Quiz responses collection indexes
-            db.quiz_responses.create_index([('user_id', 1), ('created_at', -1)])
-            db.quiz_responses.create_index([('session_id', 1), ('created_at', -1)])
-            
-            # Learning materials collection indexes
-            db.learning_materials.create_index([('user_id', 1), ('course_id', 1)])
-            db.learning_materials.create_index([('session_id', 1), ('course_id', 1)])
-            
-            logger.info("Created indexes for personal finance collections")
+            # Initialize taxation collections if not already present
+            if 'tax_rates' not in db.list_collection_names():
+                db.create_collection('tax_rates')
+            if 'payment_locations' not in db.list_collection_names():
+                db.create_collection('payment_locations')
+            if 'tax_reminders' not in db.list_collection_names():
+                db.create_collection('tax_reminders')
+            # Insert sample tax rates if collection is empty
+            if db.tax_rates.count_documents({}) == 0:
+                sample_rates = [
+                    {'role': 'personal', 'min_income': 0, 'max_income': 100000, 'rate': 0.1, 'description': '10% tax for income up to 100,000'},
+                    {'role': 'trader', 'min_income': 0, 'max_income': 500000, 'rate': 0.15, 'description': '15% tax for turnover up to 500,000'},
+                ]
+                db.tax_rates.insert_many(sample_rates)
+            # Insert sample payment locations if collection is empty
+            if db.payment_locations.count_documents({}) == 0:
+                sample_locations = [
+                    {'name': 'Gombe State IRS Office', 'address': '123 Tax Street, Gombe', 'contact': '+234 123 456 7890', 'coordinates': {'lat': 10.2896, 'lng': 11.1673}},
+                ]
+                db.payment_locations.insert_many(sample_locations)
+            # Admin user creation
+            admin_email = os.environ.get('ADMIN_EMAIL', 'ficore@gmail.com')
+            admin_password = os.environ.get('ADMIN_PASSWORD', 'Admin123!')
+            admin_username = os.environ.get('ADMIN_USERNAME', 'admin')
+            admin_user = get_user_by_email(db, admin_email)
+            if not admin_user:
+                user_data = {
+                    'username': admin_username.lower(),
+                    'email': admin_email.lower(),
+                    'password_hash': generate_password_hash(admin_password),
+                    'is_admin': True,
+                    'role': 'admin',
+                    'created_at': datetime.utcnow(),
+                    'lang': 'en',
+                    'setup_complete': True,
+                    'display_name': admin_username
+                }
+                create_user(db, user_data)
+                logger.info(f"Admin user created with email: {admin_email}")
+            else:
+                logger.info(f"Admin user already exists with email: {admin_email}")
+        except AttributeError as e:
+            logger.error(f"Database object is None: {str(e)}")
+            raise
         except Exception as e:
-            logger.warning(f"Some indexes may already exist: {str(e)}")
-        
-        # Initialize taxation collections if not already present
-        if 'tax_rates' not in db.list_collection_names():
-            db.create_collection('tax_rates')
-        if 'payment_locations' not in db.list_collection_names():
-            db.create_collection('payment_locations')
-        if 'tax_reminders' not in db.list_collection_names():
-            db.create_collection('tax_reminders')
-        # Insert sample tax rates if collection is empty
-        if db.tax_rates.count_documents({}) == 0:
-            sample_rates = [
-                {'role': 'personal', 'min_income': 0, 'max_income': 100000, 'rate': 0.1, 'description': '10% tax for income up to 100,000'},
-                {'role': 'trader', 'min_income': 0, 'max_income': 500000, 'rate': 0.15, 'description': '15% tax for turnover up to 500,000'},
-            ]
-            db.tax_rates.insert_many(sample_rates)
-        # Insert sample payment locations if collection is empty
-        if db.payment_locations.count_documents({}) == 0:
-            sample_locations = [
-                {'name': 'Gombe State IRS Office', 'address': '123 Tax Street, Gombe', 'contact': '+234 123 456 7890', 'coordinates': {'lat': 10.2896, 'lng': 11.1673}},
-            ]
-            db.payment_locations.insert_many(sample_locations)
-        # Admin user creation
-        admin_email = os.environ.get('ADMIN_EMAIL', 'ficore@gmail.com')
-        admin_password = os.environ.get('ADMIN_PASSWORD', 'Admin123!')
-        admin_username = os.environ.get('ADMIN_USERNAME', 'admin')
-        admin_user = get_user_by_email(db, admin_email)
-        if not admin_user:
-            user_data = {
-                'username': admin_username.lower(),
-                'email': admin_email.lower(),
-                'password_hash': generate_password_hash(admin_password),
-                'is_admin': True,
-                'role': 'admin',
-                'created_at': datetime.utcnow(),
-                'lang': 'en',
-                'setup_complete': True,
-                'display_name': admin_username
-            }
-            create_user(db, user_data)
-            logger.info(f"Admin user created with email: {admin_email}")
-        else:
-            logger.info(f"Admin user already exists with email: {admin_email}")
+            logger.error(f"Error creating collections: {str(e)}")
+            raise
     
     # Register blueprints - Existing accounting blueprints
     from users.routes import users_bp
