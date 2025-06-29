@@ -12,7 +12,7 @@ from bson import ObjectId
 from extensions import mongo
 from models import log_tool_usage
 from session_utils import create_anonymous_session
-from app import custom_login_required
+from utils import requires_role, is_admin
 
 bill_bp = Blueprint(
     'bill',
@@ -39,6 +39,17 @@ def calculate_next_due_date(due_date, frequency):
         return due_date + timedelta(days=90)
     else:
         return due_date
+
+def custom_login_required(f):
+    """Custom login decorator that allows both authenticated users and anonymous sessions."""
+    from functools import wraps
+    
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if current_user.is_authenticated or session.get('is_anonymous', False):
+            return f(*args, **kwargs)
+        return redirect(url_for('users_blueprint.login', next=request.url))
+    return decorated_function
 
 class BillForm(FlaskForm):
     first_name = StringField(trans('general_first_name', default='First Name'))
@@ -106,6 +117,7 @@ class BillForm(FlaskForm):
 
 @bill_bp.route('/main', methods=['GET', 'POST'])
 @custom_login_required
+@requires_role(['personal', 'admin'])
 def main():
     """Main bill management interface with tabbed layout."""
     if 'sid' not in session:
@@ -320,7 +332,8 @@ def main():
             upcoming_bills=upcoming_bills,
             tips=tips,
             t=trans,
-            lang=lang
+            lang=lang,
+            tool_title=trans('bill_title', default='Bill Manager', lang=lang)
         )
 
     except Exception as e:
@@ -345,7 +358,8 @@ def main():
             upcoming_bills=[],
             tips=tips,
             t=trans,
-            lang=lang
+            lang=lang,
+            tool_title=trans('bill_title', default='Bill Manager', lang=lang)
         )
 
 @bill_bp.route('/unsubscribe/<email>')

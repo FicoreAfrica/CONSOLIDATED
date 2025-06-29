@@ -13,7 +13,7 @@ from bson import ObjectId
 from models import log_tool_usage
 import os
 from session_utils import create_anonymous_session
-from app import custom_login_required
+from utils import requires_role, is_admin
 
 emergency_fund_bp = Blueprint(
     'emergency_fund',
@@ -21,6 +21,17 @@ emergency_fund_bp = Blueprint(
     template_folder='templates/EMERGENCYFUND',
     url_prefix='/EMERGENCYFUND'
 )
+
+def custom_login_required(f):
+    """Custom login decorator that allows both authenticated users and anonymous sessions."""
+    from functools import wraps
+    
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if current_user.is_authenticated or session.get('is_anonymous', False):
+            return f(*args, **kwargs)
+        return redirect(url_for('users_blueprint.login', next=request.url))
+    return decorated_function
 
 class CommaSeparatedFloatField(FloatField):
     def process_formdata(self, valuelist):
@@ -77,6 +88,7 @@ class EmergencyFundForm(FlaskForm):
 
 @emergency_fund_bp.route('/main', methods=['GET', 'POST'])
 @custom_login_required
+@requires_role(['personal', 'admin'])
 def main():
     """Main emergency fund interface with tabbed layout."""
     if 'sid' not in session:
@@ -264,7 +276,8 @@ def main():
                 trans('budget_tip_monthly_savings', lang=lang)
             ],
             t=trans,
-            lang=lang
+            lang=lang,
+            tool_title=trans('emergency_fund_title', default='Emergency Fund Calculator', lang=lang)
         )
 
     except Exception as e:
@@ -284,7 +297,8 @@ def main():
                 trans('budget_tip_monthly_savings', lang=lang)
             ],
             t=trans,
-            lang=lang
+            lang=lang,
+            tool_title=trans('emergency_fund_title', default='Emergency Fund Calculator', lang=lang)
         ), 500
 
 @emergency_fund_bp.route('/unsubscribe/<email>')

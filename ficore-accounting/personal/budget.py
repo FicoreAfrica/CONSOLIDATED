@@ -12,7 +12,7 @@ from extensions import mongo
 from bson import ObjectId
 from models import log_tool_usage
 from session_utils import create_anonymous_session
-from app import custom_login_required
+from utils import requires_role, is_admin
 
 budget_bp = Blueprint(
     'budget',
@@ -26,6 +26,17 @@ def strip_commas(value):
     if isinstance(value, str):
         return value.replace(',', '')
     return value
+
+def custom_login_required(f):
+    """Custom login decorator that allows both authenticated users and anonymous sessions."""
+    from functools import wraps
+    
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if current_user.is_authenticated or session.get('is_anonymous', False):
+            return f(*args, **kwargs)
+        return redirect(url_for('users_blueprint.login', next=request.url))
+    return decorated_function
 
 class BudgetForm(FlaskForm):
     first_name = StringField(trans('general_first_name', default='First Name'))
@@ -91,6 +102,7 @@ class BudgetForm(FlaskForm):
 
 @budget_bp.route('/main', methods=['GET', 'POST'])
 @custom_login_required
+@requires_role(['personal', 'admin'])
 def main():
     """Main budget management interface with tabbed layout."""
     if 'sid' not in session:
@@ -295,7 +307,8 @@ def main():
             tips=tips,
             insights=insights,
             t=trans,
-            lang=lang
+            lang=lang,
+            tool_title=trans('budget_title', default='Budget Planner', lang=lang)
         )
 
     except Exception as e:
@@ -327,5 +340,6 @@ def main():
             ],
             insights=[],
             t=trans,
-            lang=lang
+            lang=lang,
+            tool_title=trans('budget_title', default='Budget Planner', lang=lang)
         )

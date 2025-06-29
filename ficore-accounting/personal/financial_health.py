@@ -11,7 +11,7 @@ from translations import trans
 from extensions import mongo
 from models import log_tool_usage
 from session_utils import create_anonymous_session
-from app import custom_login_required
+from utils import requires_role, is_admin
 
 financial_health_bp = Blueprint(
     'financial_health',
@@ -19,6 +19,17 @@ financial_health_bp = Blueprint(
     template_folder='templates/HEALTHSCORE',
     url_prefix='/HEALTHSCORE'
 )
+
+def custom_login_required(f):
+    """Custom login decorator that allows both authenticated users and anonymous sessions."""
+    from functools import wraps
+    
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if current_user.is_authenticated or session.get('is_anonymous', False):
+            return f(*args, **kwargs)
+        return redirect(url_for('users_blueprint.login', next=request.url))
+    return decorated_function
 
 def get_mongo_collection():
     return mongo.db['financial_health_scores']
@@ -100,6 +111,7 @@ class FinancialHealthForm(FlaskForm):
 
 @financial_health_bp.route('/main', methods=['GET', 'POST'])
 @custom_login_required
+@requires_role(['personal', 'admin'])
 def main():
     """Main financial health interface with tabbed layout."""
     if 'sid' not in session:
@@ -306,7 +318,8 @@ def main():
             total_users=total_users,
             average_score=average_score,
             t=trans,
-            lang=lang
+            lang=lang,
+            tool_title=trans('financial_health_title', default='Financial Health Score', lang=lang)
         )
 
     except Exception as e:
@@ -328,5 +341,6 @@ def main():
             total_users=0,
             average_score=0,
             t=trans,
-            lang=lang
+            lang=lang,
+            tool_title=trans('financial_health_title', default='Financial Health Score', lang=lang)
         ), 500

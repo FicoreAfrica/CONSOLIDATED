@@ -12,13 +12,24 @@ from mailersend_email import send_email, EMAIL_CONFIG
 from extensions import mongo
 from models import log_tool_usage
 from session_utils import create_anonymous_session
-from app import custom_login_required
+from utils import requires_role, is_admin
 
 # Configure logging
 logger = logging.getLogger('ficore_app')
 
 # Define the quiz blueprint
 quiz_bp = Blueprint('quiz', __name__, template_folder='templates/QUIZ', url_prefix='/QUIZ')
+
+def custom_login_required(f):
+    """Custom login decorator that allows both authenticated users and anonymous sessions."""
+    from functools import wraps
+    
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if current_user.is_authenticated or session.get('is_anonymous', False):
+            return f(*args, **kwargs)
+        return redirect(url_for('users_blueprint.login', next=request.url))
+    return decorated_function
 
 class QuizForm(FlaskForm):
     first_name = StringField(trans('general_first_name', default='First Name'), validators=[DataRequired()], render_kw={
@@ -158,6 +169,7 @@ def assign_badges(score, lang='en'):
 
 @quiz_bp.route('/main', methods=['GET', 'POST'])
 @custom_login_required
+@requires_role(['personal', 'admin'])
 def main():
     """Main quiz interface with tabbed layout."""
     if 'sid' not in session:
@@ -294,7 +306,8 @@ def main():
             course_id=course_id,
             lang=lang,
             max_score=30,
-            t=trans
+            t=trans,
+            tool_title=trans('quiz_title', default='Financial Quiz', lang=lang)
         )
 
     except Exception as e:
@@ -310,5 +323,6 @@ def main():
             course_id=course_id,
             lang=lang,
             max_score=30,
-            t=trans
+            t=trans,
+            tool_title=trans('quiz_title', default='Financial Quiz', lang=lang)
         ), 500

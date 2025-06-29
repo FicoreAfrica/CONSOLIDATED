@@ -17,7 +17,7 @@ import pymongo
 import logging
 from flask import g
 from session_utils import create_anonymous_session
-from app import custom_login_required
+from utils import requires_role, is_admin
 
 learning_hub_bp = Blueprint(
     'learning_hub',
@@ -25,6 +25,17 @@ learning_hub_bp = Blueprint(
     template_folder='templates/personal/LEARNINGHUB',
     url_prefix='/LEARNINGHUB'
 )
+
+def custom_login_required(f):
+    """Custom login decorator that allows both authenticated users and anonymous sessions."""
+    from functools import wraps
+    
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if current_user.is_authenticated or session.get('is_anonymous', False):
+            return f(*args, **kwargs)
+        return redirect(url_for('users_blueprint.login', next=request.url))
+    return decorated_function
 
 # Initialize CSRF protection
 csrf = CSRFProtect()
@@ -410,6 +421,8 @@ def calculate_progress_summary():
 
 @learning_hub_bp.route('/')
 @learning_hub_bp.route('/main')
+@custom_login_required
+@requires_role(['personal', 'admin'])
 def main():
     """Main learning hub interface with all functionality."""
     if 'sid' not in session:
@@ -454,7 +467,8 @@ def main():
             profile_form=profile_form,
             profile_data=profile_data,
             t=trans,
-            lang=lang
+            lang=lang,
+            tool_title=trans('learning_hub_title', default='Learning Hub', lang=lang)
         )
         
     except Exception as e:
@@ -471,7 +485,8 @@ def main():
             profile_form=LearningHubProfileForm(),
             profile_data={},
             t=trans,
-            lang=lang
+            lang=lang,
+            tool_title=trans('learning_hub_title', default='Learning Hub', lang=lang)
         ), 500
 
 @learning_hub_bp.route('/api/course/<course_id>')

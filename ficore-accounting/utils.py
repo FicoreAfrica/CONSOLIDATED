@@ -186,13 +186,17 @@ def requires_role(role):
         def decorated_function(*args, **kwargs):
             if not current_user.is_authenticated:
                 flash(trans('general_login_required', default='Please log in to access this page.'), 'warning')
-                return redirect(url_for('users_bp.login'))
+                return redirect(url_for('users_blueprint.login'))
+            
+            # Allow admins to access all tools
+            if is_admin():
+                return f(*args, **kwargs)
             
             # Handle both single role and list of roles
             allowed_roles = role if isinstance(role, list) else [role]
             if current_user.role not in allowed_roles:
                 flash(trans('general_access_denied', default='You do not have permission to access this page.'), 'danger')
-                return redirect(url_for('index'))
+                return redirect(url_for('dashboard.index'))
             
             return f(*args, **kwargs)
         return decorated_function
@@ -254,7 +258,7 @@ def is_admin():
     """
     try:
         from flask_login import current_user
-        return current_user.is_authenticated and current_user.role == 'admin'
+        return current_user.is_authenticated and (current_user.role == 'admin' or getattr(current_user, 'is_admin', False))
     except Exception:
         return False
 

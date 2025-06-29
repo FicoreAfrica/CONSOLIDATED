@@ -227,6 +227,7 @@ def log_audit_action(action, details=None):
         logger.error(f"Error logging audit action: {str(e)}")
 
 def get_setup_wizard_route(role):
+    """Get the appropriate setup wizard route based on user role."""
     if role == 'personal':
         return 'users_blueprint.personal_setup_wizard'
     elif role == 'trader':
@@ -236,11 +237,37 @@ def get_setup_wizard_route(role):
     else:
         return 'users_blueprint.setup_wizard'  # Fallback to trader setup
 
+def get_post_login_redirect(user_role):
+    """Determine where to redirect user after login based on their role."""
+    if user_role == 'personal':
+        return url_for('index')  # Personal users go to personal finance home
+    elif user_role == 'trader':
+        return url_for('index')  # Traders go to business tools home
+    elif user_role == 'agent':
+        return url_for('agents_bp.dashboard')
+    elif user_role == 'admin':
+        return url_for('admin_blueprint.dashboard')
+    else:
+        return url_for('index')  # Default fallback
+
+def get_explore_tools_redirect(user_role):
+    """Determine where to redirect user when they click 'Explore Your Tools' based on their role."""
+    if user_role == 'personal':
+        return url_for('index')  # Personal users go to personal finance tools
+    elif user_role == 'trader':
+        return url_for('index')  # Traders go to business tools
+    elif user_role == 'agent':
+        return url_for('agents_bp.dashboard')  # Agents go to agent dashboard
+    elif user_role == 'admin':
+        return url_for('admin_blueprint.dashboard')  # Admins go to admin dashboard
+    else:
+        return url_for('index')  # Default fallback
+
 @users_bp.route('/login', methods=['GET', 'POST'])
 @limiter.limit("50/hour")
 def login():
     if current_user.is_authenticated:
-        return redirect(url_for('dashboard_blueprint.index'))
+        return redirect(get_post_login_redirect(current_user.role))
     if 'session_id' not in session:
         session['session_id'] = str(uuid.uuid4())
     form = LoginForm()
@@ -291,7 +318,7 @@ def login():
                     if not user.get('setup_complete', False):
                         setup_route = get_setup_wizard_route(user.get('role', 'personal'))
                         return redirect(url_for(setup_route))
-                    return redirect(url_for('settings_blueprint.profile'))
+                    return redirect(get_post_login_redirect(user.get('role', 'personal')))
             from app import User
             user_obj = User(user['_id'], user['email'], user.get('display_name'), user.get('role', 'personal'))
             login_user(user_obj, remember=True)
@@ -301,7 +328,7 @@ def login():
             if not user.get('setup_complete', False):
                 setup_route = get_setup_wizard_route(user.get('role', 'personal'))
                 return redirect(url_for(setup_route))
-            return redirect(url_for('settings_blueprint.profile'))
+            return redirect(get_post_login_redirect(user.get('role', 'personal')))
         except errors.PyMongoError as e:
             logger.error(f"MongoDB error during login: {str(e)}")
             flash(trans('general_database_error', default='An error occurred while accessing the database. Please try again later.'), 'danger')
@@ -316,7 +343,7 @@ def login():
 @limiter.limit("50/hour")
 def verify_2fa():
     if current_user.is_authenticated:
-        return redirect(url_for('dashboard_blueprint.index'))
+        return redirect(get_post_login_redirect(current_user.role))
     if 'pending_user_id' not in session:
         flash(trans('general_invalid_2fa_session', default='Invalid 2FA session. Please log in again'), 'danger')
         return redirect(url_for('users_blueprint.login'))
@@ -347,7 +374,7 @@ def verify_2fa():
                 if not user.get('setup_complete', False):
                     setup_route = get_setup_wizard_route(user.get('role', 'personal'))
                     return redirect(url_for(setup_route))
-                return redirect(url_for('settings_blueprint.profile'))
+                return redirect(get_post_login_redirect(user.get('role', 'personal')))
             flash(trans('general_invalid_otp', default='Invalid or expired OTP'), 'danger')
             logger.warning(f"Failed 2FA attempt for username: {username}")
         except errors.PyMongoError as e:
@@ -364,7 +391,7 @@ def verify_2fa():
 @limiter.limit("50/hour")
 def signup():
     if current_user.is_authenticated:
-        return redirect(url_for('dashboard_blueprint.index'))
+        return redirect(get_post_login_redirect(current_user.role))
     form = SignupForm()
     if form.validate_on_submit():
         try:
@@ -442,7 +469,7 @@ def signup():
 @limiter.limit("50/hour")
 def forgot_password():
     if current_user.is_authenticated:
-        return redirect(url_for('dashboard_blueprint.index'))
+        return redirect(get_post_login_redirect(current_user.role))
     form = ForgotPasswordForm()
     if form.validate_on_submit():
         try:
@@ -486,7 +513,7 @@ def forgot_password():
 @limiter.limit("50/hour")
 def reset_password():
     if current_user.is_authenticated:
-        return redirect(url_for('dashboard_blueprint.index'))
+        return redirect(get_post_login_redirect(current_user.role))
     token = request.args.get('token')
     try:
         email = URLSafeTimedSerializer(current_app.config['SECRET_KEY']).loads(token, salt='reset-salt', max_age=900)
@@ -531,7 +558,7 @@ def setup_wizard():
     user_id = request.args.get('user_id', current_user.id) if is_admin() and request.args.get('user_id') else current_user.id
     user = db.users.find_one({'_id': user_id})
     if user.get('setup_complete', False):
-        return redirect(url_for('dashboard_blueprint.index'))
+        return redirect(get_post_login_redirect(user.get('role', 'trader')))
     form = BusinessSetupForm()
     if form.validate_on_submit():
         try:
@@ -558,7 +585,7 @@ def setup_wizard():
             log_audit_action('complete_setup_wizard', {'user_id': user_id, 'updated_by': current_user.id})
             logger.info(f"Business setup completed for user: {user_id} by {current_user.id}")
             flash(trans('general_business_setup_success', default='Business setup completed'), 'success')
-            return redirect(url_for('settings_blueprint.profile', user_id=user_id) if is_admin() else url_for('settings_blueprint.profile'))
+            return redirect(url_for('settings_blueprint.profile', user_id=user_id) if is_admin() else get_post_login_redirect(user.get('role', 'trader')))
         except errors.PyMongoError as e:
             logger.error(f"MongoDB error during business setup for {user_id}: {str(e)}")
             flash(trans('general_database_error', default='An error occurred while accessing the database. Please try again later.'), 'danger')
@@ -577,7 +604,7 @@ def personal_setup_wizard():
     user_id = request.args.get('user_id', current_user.id) if is_admin() and request.args.get('user_id') else current_user.id
     user = db.users.find_one({'_id': user_id})
     if user.get('setup_complete', False):
-        return redirect(url_for('dashboard_blueprint.index'))
+        return redirect(get_post_login_redirect(user.get('role', 'personal')))
     form = PersonalSetupForm()
     if form.validate_on_submit():
         try:
@@ -603,7 +630,7 @@ def personal_setup_wizard():
             log_audit_action('complete_personal_setup_wizard', {'user_id': user_id, 'updated_by': current_user.id})
             logger.info(f"Personal setup completed for user: {user_id} by {current_user.id}")
             flash(trans('general_personal_setup_success', default='Personal setup completed'), 'success')
-            return redirect(url_for('settings_blueprint.profile', user_id=user_id) if is_admin() else url_for('settings_blueprint.profile'))
+            return redirect(url_for('settings_blueprint.profile', user_id=user_id) if is_admin() else get_post_login_redirect(user.get('role', 'personal')))
         except errors.PyMongoError as e:
             logger.error(f"MongoDB error during personal setup for {user_id}: {str(e)}")
             flash(trans('general_database_error', default='An error occurred while accessing the database. Please try again later.'), 'danger')
@@ -622,7 +649,7 @@ def agent_setup_wizard():
     user_id = request.args.get('user_id', current_user.id) if is_admin() and request.args.get('user_id') else current_user.id
     user = db.users.find_one({'_id': user_id})
     if user.get('setup_complete', False):
-        return redirect(url_for('dashboard_blueprint.index'))
+        return redirect(get_post_login_redirect(user.get('role', 'agent')))
     form = AgentSetupForm()
     if form.validate_on_submit():
         try:
@@ -650,7 +677,7 @@ def agent_setup_wizard():
             log_audit_action('complete_agent_setup_wizard', {'user_id': user_id, 'updated_by': current_user.id})
             logger.info(f"Agent setup completed for user: {user_id} by {current_user.id}")
             flash(trans('agents_setup_success', default='Agent setup completed'), 'success')
-            return redirect(url_for('settings_blueprint.profile', user_id=user_id) if is_admin() else url_for('settings_blueprint.profile'))
+            return redirect(url_for('settings_blueprint.profile', user_id=user_id) if is_admin() else get_post_login_redirect(user.get('role', 'agent')))
         except errors.PyMongoError as e:
             logger.error(f"MongoDB error during agent setup for {user_id}: {str(e)}")
             flash(trans('general_database_error', default='An error occurred while accessing the database. Please try again later.'), 'danger')

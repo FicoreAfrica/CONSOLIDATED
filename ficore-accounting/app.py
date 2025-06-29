@@ -16,7 +16,7 @@ from functools import wraps
 from mailersend_email import init_email_config
 from scheduler_setup import init_scheduler
 from models import create_user, get_user_by_email, get_user, get_financial_health, get_budgets, get_bills, get_net_worth, get_emergency_funds, get_learning_progress, get_quiz_results, to_dict_financial_health, to_dict_budget, to_dict_bill, to_dict_net_worth, to_dict_emergency_fund, to_dict_learning_progress, to_dict_quiz_result, initialize_database
-from utils import trans_function, is_valid_email, get_mongo_db, close_mongo_db, get_limiter, get_mail, requires_role, check_coin_balance
+from utils import trans_function, is_valid_email, get_mongo_db, close_mongo_db, get_limiter, get_mail, requires_role, check_coin_balance, is_admin
 from session_utils import create_anonymous_session
 
 # Import the new translation system
@@ -62,8 +62,8 @@ def admin_required(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
         if not current_user.is_authenticated:
-            return redirect(url_for('users_bp.login'))
-        if current_user.role != 'admin':
+            return redirect(url_for('users_blueprint.login'))
+        if not is_admin():
             flash(trans('general_no_permission', default='You do not have permission to access this page.'), 'danger')
             return redirect(url_for('index'))
         return f(*args, **kwargs)
@@ -74,7 +74,7 @@ def custom_login_required(f):
     def decorated_function(*args, **kwargs):
         if current_user.is_authenticated or session.get('is_anonymous', False):
             return f(*args, **kwargs)
-        return redirect(url_for('users_bp.login', next=request.url))
+        return redirect(url_for('users_blueprint.login', next=request.url))
     return decorated_function
 
 def ensure_session_id(f):
@@ -260,7 +260,7 @@ def create_app():
     
     # Configure Flask-Login
     login_manager.init_app(app)
-    login_manager.login_view = 'users_bp.login'
+    login_manager.login_view = 'users_blueprint.login'
     login_manager.login_message = trans('general_login_required', default='Please log in to access this page.')
     login_manager.login_message_category = 'info'
     
@@ -297,6 +297,53 @@ def create_app():
     with app.app_context():
         initialize_database(app)
         db = get_mongo_db()
+        
+        # Initialize personal finance collections if not already present
+        personal_finance_collections = [
+            'budgets', 'bills', 'emergency_funds', 'financial_health_scores', 
+            'net_worth_data', 'quiz_responses', 'learning_materials'
+        ]
+        
+        for collection_name in personal_finance_collections:
+            if collection_name not in db.list_collection_names():
+                db.create_collection(collection_name)
+                logger.info(f"Created personal finance collection: {collection_name}")
+        
+        # Create indexes for personal finance collections
+        try:
+            # Bills collection indexes
+            db.bills.create_index([('user_id', 1), ('due_date', 1)])
+            db.bills.create_index([('session_id', 1), ('due_date', 1)])
+            db.bills.create_index([('status', 1)])
+            
+            # Budgets collection indexes
+            db.budgets.create_index([('user_id', 1), ('created_at', -1)])
+            db.budgets.create_index([('session_id', 1), ('created_at', -1)])
+            
+            # Emergency funds collection indexes
+            db.emergency_funds.create_index([('user_id', 1), ('created_at', -1)])
+            db.emergency_funds.create_index([('session_id', 1), ('created_at', -1)])
+            
+            # Financial health collection indexes
+            db.financial_health_scores.create_index([('user_id', 1), ('created_at', -1)])
+            db.financial_health_scores.create_index([('session_id', 1), ('created_at', -1)])
+            
+            # Net worth collection indexes
+            db.net_worth_data.create_index([('user_id', 1), ('created_at', -1)])
+            db.net_worth_data.create_index([('session_id', 1), ('created_at', -1)])
+            
+            # Quiz responses collection indexes
+            db.quiz_responses.create_index([('user_id', 1), ('created_at', -1)])
+            db.quiz_responses.create_index([('session_id', 1), ('created_at', -1)])
+            
+            # Learning materials collection indexes
+            db.learning_materials.create_index([('user_id', 1), ('course_id', 1)])
+            db.learning_materials.create_index([('session_id', 1), ('course_id', 1)])
+            
+            logger.info("Created indexes for personal finance collections")
+        except Exception as e:
+            logger.warning(f"Some indexes may already exist: {str(e)}")
+        
         # Initialize taxation collections if not already present
         if 'tax_rates' not in db.list_collection_names():
             db.create_collection('tax_rates')
@@ -362,7 +409,7 @@ def create_app():
     from personal.net_worth import net_worth_bp
     from personal.quiz import quiz_bp
     
-    # Register existing accounting blueprints
+    # Register existing accounting blueprints with consistent naming
     app.register_blueprint(users_bp, url_prefix='/users')
     logger.info("Registered users blueprint")
     
@@ -413,14 +460,14 @@ def create_app():
     except Exception as e:
         logger.warning(f"Could not import admin blueprint: {str(e)}")
     
-    # Register personal finance blueprints
-    app.register_blueprint(bill_bp, url_prefix='/personal/bill')
-    app.register_blueprint(budget_bp, url_prefix='/personal/budget')
-    app.register_blueprint(emergency_fund_bp, url_prefix='/personal/emergency_fund')
-    app.register_blueprint(financial_health_bp, url_prefix='/personal/financial_health')
-    app.register_blueprint(learning_hub_bp, url_prefix='/personal/learning_hub')
-    app.register_blueprint(net_worth_bp, url_prefix='/personal/net_worth')
-    app.register_blueprint(quiz_bp, url_prefix='/personal/quiz')
+    # Register personal finance blueprints with consistent URL structure
+    app.register_blueprint(bill_bp)  # Uses /BILL prefix from blueprint
+    app.register_blueprint(budget_bp)  # Uses /BUDGET prefix from blueprint
+    app.register_blueprint(emergency_fund_bp)  # Uses /EMERGENCYFUND prefix from blueprint
+    app.register_blueprint(financial_health_bp)  # Uses /HEALTHSCORE prefix from blueprint
+    app.register_blueprint(learning_hub_bp)  # Uses /LEARNINGHUB prefix from blueprint
+    app.register_blueprint(net_worth_bp)  # Uses /NETWORTH prefix from blueprint
+    app.register_blueprint(quiz_bp)  # Uses /QUIZ prefix from blueprint
     logger.info("Registered all personal finance blueprints")
     
     # Jinja2 globals and filters
@@ -612,7 +659,10 @@ def create_app():
             elif current_user.role == 'trader':
                 return redirect(url_for('dashboard_bp.index'))
             elif current_user.role == 'admin':
-                return redirect(url_for('admin_bp.dashboard'))
+                try:
+                    return redirect(url_for('admin_bp.dashboard'))
+                except:
+                    return redirect(url_for('dashboard_bp.index'))
             elif current_user.role == 'personal':
                 return redirect(url_for('general_dashboard'))
             else:
@@ -1187,10 +1237,10 @@ def create_app():
                 user = db.users.find_one({'_id': current_user.id})
                 if user and not user.get('setup_complete', False):
                     allowed_endpoints = [
-                        'users_bp.personal_setup_wizard',
-                        'users_bp.setup_wizard',
-                        'users_bp.agent_setup_wizard',
-                        'users_bp.logout',
+                        'users_blueprint.personal_setup_wizard',
+                        'users_blueprint.setup_wizard',
+                        'users_blueprint.agent_setup_wizard',
+                        'users_blueprint.logout',
                         'settings_bp.profile',
                         'coins_bp.purchase',
                         'coins_bp.get_balance',
@@ -1199,8 +1249,10 @@ def create_app():
                     if request.endpoint not in allowed_endpoints:
                         flash(trans('general_setup_required', default='Please complete your profile setup'), 'warning')
                         if current_user.role == 'agent':
-                            return redirect(url_for('users_bp.agent_setup_wizard'))
-                        return redirect(url_for('users_bp.personal_setup_wizard'))
+                            return redirect(url_for('users_blueprint.agent_setup_wizard'))
+                        elif current_user.role == 'personal':
+                            return redirect(url_for('users_blueprint.personal_setup_wizard'))
+                        return redirect(url_for('users_blueprint.setup_wizard'))
         except Exception as e:
             logger.error(f"Error in before_request: {str(e)}", exc_info=True)
     

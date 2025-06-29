@@ -11,7 +11,7 @@ import json
 from models import log_tool_usage
 from extensions import mongo
 from session_utils import create_anonymous_session
-from app import custom_login_required
+from utils import requires_role, is_admin
 
 net_worth_bp = Blueprint(
     'net_worth',
@@ -19,6 +19,17 @@ net_worth_bp = Blueprint(
     template_folder='templates/NETWORTH',
     url_prefix='/NETWORTH'
 )
+
+def custom_login_required(f):
+    """Custom login decorator that allows both authenticated users and anonymous sessions."""
+    from functools import wraps
+    
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if current_user.is_authenticated or session.get('is_anonymous', False):
+            return f(*args, **kwargs)
+        return redirect(url_for('users_blueprint.login', next=request.url))
+    return decorated_function
 
 class NetWorthForm(FlaskForm):
     first_name = StringField(trans('general_first_name', default='First Name'))
@@ -92,6 +103,7 @@ class NetWorthForm(FlaskForm):
 
 @net_worth_bp.route('/main', methods=['GET', 'POST'])
 @custom_login_required
+@requires_role(['personal', 'admin'])
 def main():
     """Main net worth interface with tabbed layout."""
     if 'sid' not in session:
@@ -242,7 +254,8 @@ def main():
             insights=insights,
             tips=tips,
             t=trans,
-            lang=lang
+            lang=lang,
+            tool_title=trans('net_worth_title', default='Net Worth Calculator', lang=lang)
         )
 
     except Exception as e:
@@ -261,7 +274,8 @@ def main():
                 trans("net_worth_tip_diversify_investments", lang=lang)
             ],
             t=trans,
-            lang=lang
+            lang=lang,
+            tool_title=trans('net_worth_title', default='Net Worth Calculator', lang=lang)
         ), 500
 
 @net_worth_bp.route('/unsubscribe/<email>')
