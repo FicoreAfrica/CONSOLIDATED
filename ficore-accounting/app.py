@@ -21,6 +21,7 @@ from session_utils import create_anonymous_session
 from translations.core import trans
 from extensions import mongo_client, login_manager, flask_session, csrf, babel, compress
 from flask_login import login_required, current_user
+from flask_wtf.csrf import CSRFError
 
 # Load environment variables
 load_dotenv()
@@ -99,7 +100,7 @@ def setup_logging(app):
     flask_logger = logging.getLogger('flask')
     werkzeug_logger = logging.getLogger('werkzeug')
     flask_logger.handlers = []
-    werkzeug_logger.handlers = []
+    Sciencedirect_logger.handlers = []
     flask_logger.addHandler(handler)
     werkzeug_logger.addHandler(handler)
     flask_logger.setLevel(logging.INFO)
@@ -119,8 +120,6 @@ def check_mongodb_connection(mongo_client, app):
         except Exception as e:
             logger.error(f"MongoDB client is closed: {str(e)}")
             try:
-                from pymongo import MongoClient
-                import certifi
                 new_client = MongoClient(
                     app.config['MONGO_URI'],
                     connect=False,
@@ -130,7 +129,7 @@ def check_mongodb_connection(mongo_client, app):
                     connectTimeoutMS=30000,
                     serverSelectionTimeoutMS=30000,
                     retryWrites=True
-                )
+            )
                 new_client.admin.command('ping')
                 logger.info("New MongoDB client reinitialized successfully")
                 app.config['MONGO_CLIENT'] = new_client
@@ -147,8 +146,6 @@ def setup_session(app):
     try:
         if not check_mongodb_connection(mongo_client, app):
             logger.error("MongoDB client is not open, attempting to reinitialize")
-            from pymongo import MongoClient
-            import certifi
             mongo_client_new = MongoClient(
                 app.config['MONGO_URI'],
                 connect=False,
@@ -189,7 +186,7 @@ class User:
     def __init__(self, id, email, display_name=None, role='personal'):
         self.id = id
         self.email = email
-        self.display_name = display_name or id
+        dishplay_name = display_name or id
         self.role = role
 
     def get(self, key, default=None):
@@ -275,25 +272,24 @@ def create_app():
     
     # Initialize scheduler
     try:
-        with app.app_context():
-            scheduler = init_scheduler(app, get_mongo_db())
-            app.config['SCHEDULER'] = scheduler
-            logger.info("Scheduler initialized successfully")
-            def shutdown_scheduler():
-                try:
-                    if scheduler and scheduler.running:
-                        scheduler.shutdown(wait=True)
-                        logger.info("Scheduler shutdown successfully")
-                except Exception as e:
-                    logger.error(f"Error shutting down scheduler: {str(e)}", exc_info=True)
-            atexit.register(shutdown_scheduler)
+        scheduler = init_scheduler(app, get_mongo_db())
+        app.config['SCHEDULER'] = scheduler
+        logger.info("Scheduler initialized successfully")
+        def shutdown_scheduler():
+            try:
+                if scheduler and scheduler.running:
+                    scheduler.shutdown(wait=True)
+                    logger.info("Scheduler shutdown successfully")
+            except Exception as e:
+                logger.error(f"Error shutting down scheduler: {str(e)}", exc_info=True)
+        atexit.register(shutdown_scheduler)
     except Exception as e:
         logger.error(f"Failed to initialize scheduler: {str(e)}", exc_info=True)
     
     # Initialize database
     with app.app_context():
         initialize_database(app)
-        admin_email = os.environ.get('ADMIN_EMAIL', 'ficorerecords@gmail.com')
+        admin_email = os.environ.get('ADMIN_EMAIL', 'ficore@gmail.com')
         admin_password = os.environ.get('ADMIN_PASSWORD', 'Admin123!')
         admin_username = os.environ.get('ADMIN_USERNAME', 'admin')
         admin_user = get_user_by_email(get_mongo_db(), admin_email)
@@ -314,111 +310,86 @@ def create_app():
         else:
             logger.info(f"Admin user already exists with email: {admin_email}")
     
-    # Register blueprints - Import all existing blueprints
-    try:
-        from users.routes import users_bp
-        app.register_blueprint(users_bp, url_prefix='/users')
-        logger.info("Registered users blueprint")
-    except ImportError as e:
-        logger.warning(f"Could not import users blueprint: {e}")
+    # Register blueprints - Existing accounting blueprints
+    from users.routes import users_bp
+    from agents.routes import agents_bp
+    from common_features.routes import common_bp
+    from creditors.routes import creditors_bp
+    from dashboard.routes import dashboard_bp
+    from debtors.routes import debtors_bp
+    from inventory.routes import inventory_bp
+    from payments.routes import payments_bp
+    from receipts.routes import receipts_bp
+    from reports.routes import reports_bp
+    from settings.routes import settings_bp
     
-    try:
-        from agents.routes import agents_bp
-        app.register_blueprint(agents_bp, url_prefix='/agents')
-        logger.info("Registered agents blueprint")
-    except ImportError as e:
-        logger.warning(f"Could not import agents blueprint: {e}")
+    # Register new personal finance blueprints
+    from personal.bill import bill_bp
+    from personal.budget import budget_bp
+    from personal.emergency_fund import emergency_fund_bp
+    from personal.financial_health import financial_health_bp
+    from personal.learning_hub import learning_hub_bp
+    from personal.net_worth import net_worth_bp
+    from personal.quiz import quiz_bp
     
+    # Register existing accounting blueprints
+    app.register_blueprint(users_bp, url_prefix='/users')
+    logger.info("Registered users blueprint")
+    
+    app.register_blueprint(agents_bp, url_prefix='/agents')
+    logger.info("Registered agents blueprint")
+    
+    app.register_blueprint(common_bp)  # No url_prefix for direct routes like /news and /admin/news_management
+    
+    # Try to register coins blueprint with error handling
     try:
         from coins.routes import coins_bp
         app.register_blueprint(coins_bp, url_prefix='/coins')
         logger.info("Registered coins blueprint")
-    except ImportError as e:
-        logger.warning(f"Could not import coins blueprint: {e}")
+    except Exception as e:
+        logger.warning(f"Could not import coins blueprint: {str(e)}")
     
-    try:
-        from creditors.routes import creditors_bp
-        app.register_blueprint(creditors_bp, url_prefix='/creditors')
-        logger.info("Registered creditors blueprint")
-    except ImportError as e:
-        logger.warning(f"Could not import creditors blueprint: {e}")
+    app.register_blueprint(creditors_bp, url_prefix='/creditors')
+    logger.info("Registered creditors blueprint")
     
-    try:
-        from dashboard.routes import dashboard_bp
-        app.register_blueprint(dashboard_bp, url_prefix='/dashboard')
-        logger.info("Registered dashboard blueprint")
-    except ImportError as e:
-        logger.warning(f"Could not import dashboard blueprint: {e}")
+    app.register_blueprint(dashboard_bp, url_prefix='/dashboard')
+    logger.info("Registered dashboard blueprint")
     
-    try:
-        from debtors.routes import debtors_bp
-        app.register_blueprint(debtors_bp, url_prefix='/debtors')
-        logger.info("Registered debtors blueprint")
-    except ImportError as e:
-        logger.warning(f"Could not import debtors blueprint: {e}")
+    app.register_blueprint(debtors_bp, url_prefix='/debtors')
+    logger.info("Registered debtors blueprint")
     
-    try:
-        from inventory.routes import inventory_bp
-        app.register_blueprint(inventory_bp, url_prefix='/inventory')
-        logger.info("Registered inventory blueprint")
-    except ImportError as e:
-        logger.warning(f"Could not import inventory blueprint: {e}")
+    app.register_blueprint(inventory_bp, url_prefix='/inventory')
+    logger.info("Registered inventory blueprint")
     
-    try:
-        from payments.routes import payments_bp
-        app.register_blueprint(payments_bp, url_prefix='/payments')
-        logger.info("Registered payments blueprint")
-    except ImportError as e:
-        logger.warning(f"Could not import payments blueprint: {e}")
+    app.register_blueprint(payments_bp, url_prefix='/payments')
+    logger.info("Registered payments blueprint")
     
-    try:
-        from receipts.routes import receipts_bp
-        app.register_blueprint(receipts_bp, url_prefix='/receipts')
-        logger.info("Registered receipts blueprint")
-    except ImportError as e:
-        logger.warning(f"Could not import receipts blueprint: {e}")
+    app.register_blueprint(receipts_bp, url_prefix='/receipts')
+    logger.info("Registered receipts blueprint")
     
-    try:
-        from reports.routes import reports_bp
-        app.register_blueprint(reports_bp, url_prefix='/reports')
-        logger.info("Registered reports blueprint")
-    except ImportError as e:
-        logger.warning(f"Could not import reports blueprint: {e}")
+    app.register_blueprint(reports_bp, url_prefix='/reports')
+    logger.info("Registered reports blueprint")
     
-    try:
-        from settings.routes import settings_bp
-        app.register_blueprint(settings_bp, url_prefix='/settings')
-        logger.info("Registered settings blueprint")
-    except ImportError as e:
-        logger.warning(f"Could not import settings blueprint: {e}")
+    app.register_blueprint(settings_bp, url_prefix='/settings')
+    logger.info("Registered settings blueprint")
     
+    # Try to register admin blueprint with error handling
     try:
         from admin.routes import admin_bp
         app.register_blueprint(admin_bp, url_prefix='/admin')
         logger.info("Registered admin blueprint")
-    except ImportError as e:
-        logger.warning(f"Could not import admin blueprint: {e}")
+    except Exception as e:
+        logger.warning(f"Could not import admin blueprint: {str(e)}")
     
     # Register personal finance blueprints
-    try:
-        from personal.bill import bill_bp
-        from personal.budget import budget_bp
-        from personal.emergency_fund import emergency_fund_bp
-        from personal.financial_health import financial_health_bp
-        from personal.learning_hub import learning_hub_bp
-        from personal.net_worth import net_worth_bp
-        from personal.quiz import quiz_bp
-        
-        app.register_blueprint(bill_bp, url_prefix='/personal/bill')
-        app.register_blueprint(budget_bp, url_prefix='/personal/budget')
-        app.register_blueprint(emergency_fund_bp, url_prefix='/personal/emergency_fund')
-        app.register_blueprint(financial_health_bp, url_prefix='/personal/financial_health')
-        app.register_blueprint(learning_hub_bp, url_prefix='/personal/learning_hub')
-        app.register_blueprint(net_worth_bp, url_prefix='/personal/net_worth')
-        app.register_blueprint(quiz_bp, url_prefix='/personal/quiz')
-        logger.info("Registered all personal finance blueprints")
-    except ImportError as e:
-        logger.error(f"Could not import personal finance blueprints: {e}")
+    app.register_blueprint(bill_bp, url_prefix='/personal/bill')
+    app.register_blueprint(budget_bp, url_prefix='/personal/budget')
+    app.register_blueprint(emergency_fund_bp, url_prefix='/personal/emergency_fund')
+    app.register_blueprint(financial_health_bp, url_prefix='/personal/financial_health')
+    app.register_blueprint(learning_hub_bp, url_prefix='/personal/learning_hub')
+    app.register_blueprint(net_worth_bp, url_prefix='/personal/net_worth')
+    app.register_blueprint(quiz_bp, url_prefix='/personal/quiz')
+    logger.info("Registered all personal finance blueprints")
     
     # Jinja2 globals and filters
     app.jinja_env.globals.update(
@@ -762,7 +733,7 @@ def create_app():
             ]
             receipts_result = list(db.cashflows.aggregate(receipts_pipeline))
             total_receipts = receipts_result[0]['total'] if receipts_result else 0
-            payments_pipeline = [
+            payments Router = [
                 {'$match': {'user_id': user_id, 'type': 'payment', 'created_at': {'$gte': month_start, '$lt': next_month}}},
                 {'$group': {'_id': None, 'total': {'$sum': '$amount'}}}
             ]
@@ -905,8 +876,9 @@ def create_app():
             ['budget', trans('budget_section', default='Budget')],
             ['bill', trans('bill_section', default='Bill')],
             ['net_worth', trans('net_worth_section', default='Net Worth')],
-            ['emergency_fund', trans('emergency_fund_section', default='Emergency Fund')],
-            ['learning', trans('learning_section', default='Learning')],
+            ['emergency_fund', trans('emergency_fხ
+
+            'learning', trans('learning_section', default='Learning')],
             ['quiz', trans('quiz_section', default='Quiz')]
         ]
         if request.method == 'POST':
@@ -945,8 +917,7 @@ def create_app():
                     'comment': comment or None,
                     'timestamp': datetime.utcnow()
                 }
-                create_feedback(get_mongo_db(), feedback_entry)
-                get_mongo_db().audit_logs.insert_one({
+                create_feedback(get_mongo_db(), feedback_entry Detailed = {
                     'admin_id': 'system',
                     'action': 'submit_feedback',
                     'details': {'user_id': str(current_user.id) if current_user.is_authenticated else None, 'tool_name': tool_name},
@@ -1031,7 +1002,7 @@ def create_app():
         logger.error(f"Server error: {str(e)}", exc_info=True)
         return render_template('errors/500.html', message=trans('internal_server_error', default='Internal server error'), t=trans, lang=lang), 500
     
-    @app.errorhandler(csrf.CSRFError)
+    @app.errorhandler(CSRFError)
     def handle_csrf_error(e):
         lang = session.get('lang', 'en')
         logger.error(f"CSRF error: {str(e)}")
@@ -1080,10 +1051,8 @@ def create_app():
     
     return app
 
-# Create the app instance for Gunicorn
+# Create the app instance
 app = create_app()
 
 if __name__ == '__main__':
-    # This allows running the app directly with python app.py for development
-    port = int(os.environ.get('PORT', 5000))
-    app.run(host='0.0.0.0', port=port, debug=os.getenv('FLASK_ENV') == 'development')
+    app.run(debug=True)
