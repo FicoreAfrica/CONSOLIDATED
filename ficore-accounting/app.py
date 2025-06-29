@@ -18,12 +18,10 @@ from scheduler_setup import init_scheduler
 from models import create_user, get_user_by_email, get_user, get_financial_health, get_budgets, get_bills, get_net_worth, get_emergency_funds, get_learning_progress, get_quiz_results, to_dict_financial_health, to_dict_budget, to_dict_bill, to_dict_net_worth, to_dict_emergency_fund, to_dict_learning_progress, to_dict_quiz_result, initialize_database
 from utils import trans_function, is_valid_email, get_mongo_db, close_mongo_db, get_limiter, get_mail, requires_role, check_coin_balance, is_admin, login_manager, flask_session, csrf, babel, compress
 from session_utils import create_anonymous_session
-
-# Import the new translation system
 from translations import trans, get_translations, get_all_translations, get_module_translations
-
 from flask_login import login_required, current_user
 from flask_wtf.csrf import CSRFError
+from jinja2.exceptions import TemplateNotFound
 import time
 from pymongo import MongoClient
 import certifi
@@ -63,7 +61,7 @@ def admin_required(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
         if not current_user.is_authenticated:
-            return redirect(url_for('users_blueprint.login'))
+            return redirect(url_for('users_bp.login'))
         if not is_admin():
             flash(trans('general_no_permission', default='You do not have permission to access this page.'), 'danger')
             return redirect(url_for('index'))
@@ -75,7 +73,7 @@ def custom_login_required(f):
     def decorated_function(*args, **kwargs):
         if current_user.is_authenticated or session.get('is_anonymous', False):
             return f(*args, **kwargs)
-        return redirect(url_for('users_blueprint.login', next=request.url))
+        return redirect(url_for('users_bp.login', next=request.url))
     return decorated_function
 
 def ensure_session_id(f):
@@ -113,41 +111,44 @@ def setup_logging(app):
     logger.info("Logging setup complete with StreamHandler for ficore_app, flask, and werkzeug")
 
 def check_mongodb_connection(app):
-    try:
-        db = get_mongo_db()
-        db.command('ping')
-        logger.info("MongoDB connection verified with ping")
-        return True
-    except Exception as e:
-        logger.error(f"MongoDB connection failed: {str(e)}")
-        return False
+    with app.app_context():
+        try:
+            db = get_mongo_db()
+            db.command('ping')
+            logger.info("MongoDB connection verified with ping")
+            return True
+        except Exception as e:
+            logger.error(f"MongoDB connection failed: {str(e)}")
+            return False
 
 def setup_session(app):
-    try:
-        if not check_mongodb_connection(app):
-            logger.error("MongoDB client is not available, falling back to filesystem session")
+    with app.app_context():
+        try:
+            db = get_mongo_db()
+            if not check_mongodb_connection(app):
+                logger.error("MongoDB client is not available, falling back to filesystem session")
+                app.config['SESSION_TYPE'] = 'filesystem'
+                flask_session.init_app(app)
+                logger.info("Session configured with filesystem fallback")
+                return
+            app.config['SESSION_TYPE'] = 'mongodb'
+            app.config['SESSION_MONGODB'] = db
+            app.config['SESSION_MONGODB_DB'] = 'ficodb'
+            app.config['SESSION_MONGODB_COLLECT'] = 'sessions'
+            app.config['SESSION_PERMANENT'] = True
+            app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(days=30)
+            app.config['SESSION_USE_SIGNER'] = True
+            app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
+            app.config['SESSION_COOKIE_SECURE'] = os.getenv('FLASK_ENV', 'development') == 'production'
+            app.config['SESSION_COOKIE_HTTPONLY'] = True
+            app.config['SESSION_COOKIE_NAME'] = 'ficore_session'
+            flask_session.init_app(app)
+            logger.info(f"Session configured: type={app.config['SESSION_TYPE']}, db={app.config['SESSION_MONGODB_DB']}, collection={app.config['SESSION_MONGODB_COLLECT']}")
+        except Exception as e:
+            logger.error(f"Failed to configure session with MongoDB: {str(e)}", exc_info=True)
             app.config['SESSION_TYPE'] = 'filesystem'
             flask_session.init_app(app)
-            logger.info("Session configured with filesystem fallback")
-            return
-        app.config['SESSION_TYPE'] = 'mongodb'
-        app.config['SESSION_MONGODB'] = get_mongo_db()
-        app.config['SESSION_MONGODB_DB'] = 'ficodb'
-        app.config['SESSION_MONGODB_COLLECT'] = 'sessions'
-        app.config['SESSION_PERMANENT'] = True
-        app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(days=30)
-        app.config['SESSION_USE_SIGNER'] = True
-        app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
-        app.config['SESSION_COOKIE_SECURE'] = os.getenv('FLASK_ENV', 'development') == 'production'
-        app.config['SESSION_COOKIE_HTTPONLY'] = True
-        app.config['SESSION_COOKIE_NAME'] = 'ficore_session'
-        flask_session.init_app(app)
-        logger.info(f"Session configured: type={app.config['SESSION_TYPE']}, db={app.config['SESSION_MONGODB_DB']}, collection={app.config['SESSION_MONGODB_COLLECT']}")
-    except Exception as e:
-        logger.error(f"Failed to configure session with MongoDB: {str(e)}", exc_info=True)
-        app.config['SESSION_TYPE'] = 'filesystem'
-        flask_session.init_app(app)
-        logger.info("Session configured with filesystem fallback due to MongoDB error")
+            logger.info("Session configured with filesystem fallback due to MongoDB error")
 
 class User:
     def __init__(self, id, email, display_name=None, role='personal'):
@@ -157,8 +158,9 @@ class User:
         self.role = role
 
     def get(self, key, default=None):
-        user = get_mongo_db().users.find_one({'_id': self.id})
-        return user.get(key, default) if user else default
+        with current_app.app_context():
+            user = get_mongo_db().users.find_one({'_id': self.id})
+            return user.get(key, default) if user else default
 
     @property
     def is_authenticated(self):
@@ -189,11 +191,15 @@ def create_app():
     if not app.config['MONGO_URI']:
         logger.error("MONGO_URI environment variable is not set")
         raise ValueError("MONGO_URI must be set in environment variables")
+    
+    # Store MongoDB client in app config
     try:
-        # Initial test connection to ensure MongoDB is reachable
-        client = MongoClient(app.config['MONGO_URI'], serverSelectionTimeoutMS=5000, tlsCAFile=os.getenv('MONGO_CA_FILE', None))
-        client.admin.command('ping')
-        client.close()
+        with app.app_context():
+            client = MongoClient(app.config['MONGO_URI'], serverSelectionTimeoutMS=5000, 
+                               tlsCAFile=os.getenv('MONGO_CA_FILE', None))
+            client.admin.command('ping')
+            app.config['MONGO_CLIENT'] = client
+            logger.info("MongoDB client initialized successfully")
     except ConfigurationError as e:
         logger.error(f"Invalid MONGO_URI format: {str(e)}")
         raise
@@ -222,6 +228,25 @@ def create_app():
     limiter = get_limiter(app)
     serializer = URLSafeTimedSerializer(app.config['SECRET_KEY'])
     babel.init_app(app)
+    
+    # Initialize MongoDB and scheduler within app context
+    with app.app_context():
+        db = get_mongo_db()
+        try:
+            scheduler = init_scheduler(app, db)
+            app.config['SCHEDULER'] = scheduler
+            logger.info("Scheduler initialized successfully")
+            def shutdown_scheduler():
+                try:
+                    if scheduler and scheduler.running:
+                        scheduler.shutdown(wait=True)
+                        logger.info("Scheduler shutdown successfully")
+                except Exception as e:
+                    logger.error(f"Error shutting down scheduler: {str(e)}", exc_info=True)
+            atexit.register(shutdown_scheduler)
+        except Exception as e:
+            logger.error(f"Failed to initialize scheduler: {str(e)}", exc_info=True)
+    
     setup_session(app)
     
     # Flask-Babel locale selector
@@ -231,45 +256,30 @@ def create_app():
     
     # Configure Flask-Login
     login_manager.init_app(app)
-    login_manager.login_view = 'users_blueprint.login'
+    login_manager.login_view = 'users_bp.login'
     login_manager.login_message = trans('general_login_required', default='Please log in to access this page.')
     login_manager.login_message_category = 'info'
     
     @login_manager.user_loader
     def load_user(user_id):
         try:
-            user = get_user(get_mongo_db(), user_id)
-            if user is None:
-                logger.warning(f"No user found for ID: {user_id}")
-            else:
-                logger.info(f"User loaded: {user.username if hasattr(user, 'username') else user_id}")
-            return user
+            with app.app_context():
+                user = get_user(get_mongo_db(), user_id)
+                if user is None:
+                    logger.warning(f"No user found for ID: {user_id}")
+                else:
+                    logger.info(f"User loaded: {user.username if hasattr(user, 'username') else user_id}")
+                return user
         except Exception as e:
             logger.error(f"Error loading user {user_id}: {str(e)}", exc_info=True)
             return None
     
-    # Initialize scheduler
-    try:
-        scheduler = init_scheduler(app, get_mongo_db())
-        app.config['SCHEDULER'] = scheduler
-        logger.info("Scheduler initialized successfully")
-        def shutdown_scheduler():
-            try:
-                if scheduler and scheduler.running:
-                    scheduler.shutdown(wait=True)
-                    logger.info("Scheduler shutdown successfully")
-            except Exception as e:
-                logger.error(f"Error shutting down scheduler: {str(e)}", exc_info=True)
-        atexit.register(shutdown_scheduler)
-    except Exception as e:
-        logger.error(f"Failed to initialize scheduler: {str(e)}", exc_info=True)
-    
-    # Initialize database and taxation collections
+    # Initialize database and collections
     with app.app_context():
         try:
-            initialize_database(app)
             db = get_mongo_db()
-            # Initialize personal finance collections if not already present
+            initialize_database(app)
+            # Initialize personal finance collections
             personal_finance_collections = [
                 'budgets', 'bills', 'emergency_funds', 'financial_health_scores', 
                 'net_worth_data', 'quiz_responses', 'learning_materials'
@@ -279,7 +289,7 @@ def create_app():
                     db.create_collection(collection_name)
                     logger.info(f"Created personal finance collection: {collection_name}")
             
-            # Create indexes for personal finance collections
+            # Create indexes
             try:
                 db.bills.create_index([('user_id', 1), ('due_date', 1)])
                 db.bills.create_index([('session_id', 1), ('due_date', 1)])
@@ -300,7 +310,7 @@ def create_app():
             except Exception as e:
                 logger.warning(f"Some indexes may already exist: {str(e)}")
             
-            # Initialize taxation collections if not already present
+            # Initialize taxation collections
             if 'tax_rates' not in db.list_collection_names():
                 db.create_collection('tax_rates')
             if 'payment_locations' not in db.list_collection_names():
@@ -342,7 +352,7 @@ def create_app():
             logger.error(f"Error creating collections or initializing database: {str(e)}")
             raise
     
-    # Register blueprints - Existing accounting blueprints
+    # Register blueprints with correct template folders
     from users.routes import users_bp
     from agents.routes import agents_bp
     from common_features.routes import common_bp
@@ -355,8 +365,6 @@ def create_app():
     from receipts.routes import receipts_bp
     from reports.routes import reports_bp
     from settings.routes import settings_bp
-    
-    # Register new personal finance blueprints
     from personal.bill import bill_bp
     from personal.budget import budget_bp
     from personal.emergency_fund import emergency_fund_bp
@@ -365,50 +373,50 @@ def create_app():
     from personal.net_worth import net_worth_bp
     from personal.quiz import quiz_bp
     
-    app.register_blueprint(users_bp, url_prefix='/users')
-    logger.info("Registered users blueprint")
-    app.register_blueprint(agents_bp, url_prefix='/agents')
-    logger.info("Registered agents blueprint")
-    app.register_blueprint(common_bp)
-    logger.info("Registered common blueprint")
-    app.register_blueprint(taxation_bp)
-    logger.info("Registered taxation blueprint")
+    app.register_blueprint(users_bp, url_prefix='/users', template_folder='templates/users')
+    logger.info("Registered users blueprint with template_folder='templates/users'")
+    app.register_blueprint(agents_bp, url_prefix='/agents', template_folder='templates/agents')
+    logger.info("Registered agents blueprint with template_folder='templates/agents'")
+    app.register_blueprint(common_bp, template_folder='templates/common_features')
+    logger.info("Registered common blueprint with template_folder='templates/common_features'")
+    app.register_blueprint(taxation_bp, template_folder='templates/common_features')
+    logger.info("Registered taxation blueprint with template_folder='templates/common_features'")
     try:
         from coins.routes import coins_bp
-        app.register_blueprint(coins_bp, url_prefix='/coins')
-        logger.info("Registered coins blueprint")
+        app.register_blueprint(coins_bp, url_prefix='/coins', template_folder='templates/coins')
+        logger.info("Registered coins blueprint with template_folder='templates/coins'")
     except Exception as e:
         logger.warning(f"Could not import coins blueprint: {str(e)}")
-    app.register_blueprint(creditors_bp, url_prefix='/creditors')
-    logger.info("Registered creditors blueprint")
-    app.register_blueprint(dashboard_bp, url_prefix='/dashboard')
-    logger.info("Registered dashboard blueprint")
-    app.register_blueprint(debtors_bp, url_prefix='/debtors')
-    logger.info("Registered debtors blueprint")
-    app.register_blueprint(inventory_bp, url_prefix='/inventory')
-    logger.info("Registered inventory blueprint")
-    app.register_blueprint(payments_bp, url_prefix='/payments')
-    logger.info("Registered payments blueprint")
-    app.register_blueprint(receipts_bp, url_prefix='/receipts')
-    logger.info("Registered receipts blueprint")
-    app.register_blueprint(reports_bp, url_prefix='/reports')
-    logger.info("Registered reports blueprint")
-    app.register_blueprint(settings_bp, url_prefix='/settings')
-    logger.info("Registered settings blueprint")
+    app.register_blueprint(creditors_bp, url_prefix='/creditors', template_folder='templates/creditors')
+    logger.info("Registered creditors blueprint with template_folder='templates/creditors'")
+    app.register_blueprint(dashboard_bp, url_prefix='/dashboard', template_folder='templates/dashboard')
+    logger.info("Registered dashboard blueprint with template_folder='templates/dashboard'")
+    app.register_blueprint(debtors_bp, url_prefix='/debtors', template_folder='templates/debtors')
+    logger.info("Registered debtors blueprint with template_folder='templates/debtors'")
+    app.register_blueprint(inventory_bp, url_prefix='/inventory', template_folder='templates/inventory')
+    logger.info("Registered inventory blueprint with template_folder='templates/inventory'")
+    app.register_blueprint(payments_bp, url_prefix='/payments', template_folder='templates/payments')
+    logger.info("Registered payments blueprint with template_folder='templates/payments'")
+    app.register_blueprint(receipts_bp, url_prefix='/receipts', template_folder='templates/receipts')
+    logger.info("Registered receipts blueprint with template_folder='templates/receipts'")
+    app.register_blueprint(reports_bp, url_prefix='/reports', template_folder='templates/reports')
+    logger.info("Registered reports blueprint with template_folder='templates/reports'")
+    app.register_blueprint(settings_bp, url_prefix='/settings', template_folder='templates/settings')
+    logger.info("Registered settings blueprint with template_folder='templates/settings'")
     try:
         from admin.routes import admin_bp
-        app.register_blueprint(admin_bp, url_prefix='/admin')
-        logger.info("Registered admin blueprint")
+        app.register_blueprint(admin_bp, url_prefix='/admin', template_folder='templates/admin')
+        logger.info("Registered admin blueprint with template_folder='templates/admin'")
     except Exception as e:
         logger.warning(f"Could not import admin blueprint: {str(e)}")
-    app.register_blueprint(bill_bp)
-    app.register_blueprint(budget_bp)
-    app.register_blueprint(emergency_fund_bp)
-    app.register_blueprint(financial_health_bp)
-    app.register_blueprint(learning_hub_bp)
-    app.register_blueprint(net_worth_bp)
-    app.register_blueprint(quiz_bp)
-    logger.info("Registered all personal finance blueprints")
+    app.register_blueprint(bill_bp, url_prefix='/personal', template_folder='templates/personal')
+    app.register_blueprint(budget_bp, url_prefix='/personal', template_folder='templates/personal')
+    app.register_blueprint(emergency_fund_bp, url_prefix='/personal', template_folder='templates/personal')
+    app.register_blueprint(financial_health_bp, url_prefix='/personal', template_folder='templates/personal')
+    app.register_blueprint(learning_hub_bp, url_prefix='/personal', template_folder='templates/personal')
+    app.register_blueprint(net_worth_bp, url_prefix='/personal', template_folder='templates/personal')
+    app.register_blueprint(quiz_bp, url_prefix='/personal', template_folder='templates/personal')
+    logger.info("Registered all personal finance blueprints with template_folder='templates/personal'")
     
     # Jinja2 globals and filters
     app.jinja_env.globals.update(
@@ -521,7 +529,7 @@ def create_app():
             'CONSULTANCY_FORM_URL': app.config.get('CONSULTANCY_FORM_URL', '#'),
             'current_lang': lang,
             'current_user': current_user if has_request_context() else None,
-            'csrf_token': csrf.generate_csrf_token,
+            'csrf_token': csrf.generate_csrf if has_request_context() else lambda: '',
             'available_languages': [
                 {'code': 'en', 'name': trans('general_english', lang=lang)},
                 {'code': 'ha', 'name': trans('general_hausa', lang=lang)}
@@ -547,23 +555,21 @@ def create_app():
     # Language switching route
     @app.route('/change-language', methods=['POST'])
     def change_language():
-        """Handle AJAX language switching"""
         try:
             data = request.get_json()
             new_lang = data.get('language', 'en')
             
             if new_lang in ['en', 'ha']:
                 session['lang'] = new_lang
-                
-                # Update user preference if authenticated
-                if current_user.is_authenticated:
-                    try:
-                        get_mongo_db().users.update_one(
-                            {'_id': current_user.id}, 
-                            {'$set': {'language': new_lang}}
-                        )
-                    except Exception as e:
-                        logger.warning(f"Could not update user language preference: {str(e)}")
+                with app.app_context():
+                    if current_user.is_authenticated:
+                        try:
+                            get_mongo_db().users.update_one(
+                                {'_id': current_user.id}, 
+                                {'$set': {'language': new_lang}}
+                            )
+                        except Exception as e:
+                            logger.warning(f"Could not update user language preference: {str(e)}")
                 
                 logger.info(f"Language changed to {new_lang}", 
                            extra={'session_id': session.get('sid', 'no-session-id')})
@@ -597,80 +603,122 @@ def create_app():
             if current_user.role == 'agent':
                 return redirect(url_for('agents_bp.dashboard'))
             elif current_user.role == 'trader':
-                return redirect(url_for('dashboard.index'))
+                return redirect(url_for('dashboard_bp.index'))
             elif current_user.role == 'admin':
                 try:
                     return redirect(url_for('admin_bp.dashboard'))
                 except:
-                    return redirect(url_for('dashboard.index'))
+                    return redirect(url_for('dashboard_bp.index'))
             elif current_user.role == 'personal':
-                return redirect(url_for('dashboard.index'))
+                return redirect(url_for('dashboard_bp.index'))
             else:
-                return render_template('general/home.html', t=trans, lang=lang)
+                try:
+                    return render_template('general/home.html', t=trans, lang=lang)
+                except TemplateNotFound as e:
+                    logger.error(f"Template not found: {str(e)}", exc_info=True)
+                    return render_template('personal/GENERAL/error.html', t=trans, lang=lang, error=str(e)), 404
         try:
             courses = app.config.get('COURSES', [])
             logger.info(f"Retrieved {len(courses)} courses")
             return render_template(
-                'index.html',
+                'personal/GENERAL/index.html',
                 t=trans,
                 courses=courses,
                 lang=lang,
                 sample_courses=courses,
                 title=trans('general_welcome', lang=lang)
             )
+        except TemplateNotFound as e:
+            logger.error(f"Template not found: {str(e)}", exc_info=True)
+            flash(trans('general_error', default='Template not found'), 'danger')
+            return render_template('personal/GENERAL/error.html', t=trans, lang=lang, error=str(e)), 404
         except Exception as e:
             logger.error(f"Error in index route: {str(e)}", exc_info=True)
             flash(trans('general_error', default='An error occurred'), 'danger')
-            return render_template('error.html', t=trans, lang=lang, error=str(e)), 500
+            try:
+                return render_template('errors/500.html', t=trans, lang=lang, error=str(e)), 500
+            except TemplateNotFound as e:
+                logger.error(f"Template not found: {str(e)}", exc_info=True)
+                return render_template('personal/GENERAL/error.html', t=trans, lang=lang, error=str(e)), 500
     
     @app.route('/general_dashboard')
     @ensure_session_id
     def general_dashboard():
-        """Redirect to the unified dashboard based on user role."""
         logger.info(f"Redirecting to unified dashboard for {'authenticated' if current_user.is_authenticated else 'anonymous'} user")
-        return redirect(url_for('dashboard.index'))
+        return redirect(url_for('dashboard_bp.index'))
     
     @app.route('/about')
     def about():
         lang = session.get('lang', 'en')
         logger.info("Serving about page")
-        return render_template('general/about.html', 
-                             t=trans, 
-                             lang=lang,
-                             title=trans('general_about', lang=lang))
+        try:
+            return render_template('general/about.html', 
+                                 t=trans, 
+                                 lang=lang,
+                                 title=trans('general_about', lang=lang))
+        except TemplateNotFound as e:
+            logger.error(f"Template not found: {str(e)}", exc_info=True)
+            return render_template('personal/GENERAL/error.html', 
+                                 t=trans, 
+                                 lang=lang,
+                                 error=str(e),
+                                 title=trans('general_about', lang=lang)), 404
     
     @app.route('/contact')
     def contact():
         lang = session.get('lang', 'en')
-        return render_template('general/contact.html', 
-                             t=trans, 
-                             lang=lang,
-                             title=trans('general_contact', lang=lang))
+        try:
+            return render_template('general/contact.html', 
+                                 t=trans, 
+                                 lang=lang,
+                                 title=trans('general_contact', lang=lang))
+        except TemplateNotFound as e:
+            logger.error(f"Template not found: {str(e)}", exc_info=True)
+            return render_template('personal/GENERAL/error.html', 
+                                 t=trans, 
+                                 lang=lang,
+                                 error=str(e),
+                                 title=trans('general_contact', lang=lang)), 404
     
     @app.route('/privacy')
     def privacy():
         lang = session.get('lang', 'en')
-        return render_template('general/privacy.html', 
-                             t=trans, 
-                             lang=lang,
-                             title=trans('general_privacy', lang=lang))
+        try:
+            return render_template('general/privacy.html', 
+                                 t=trans, 
+                                 lang=lang,
+                                 title=trans('general_privacy', lang=lang))
+        except TemplateNotFound as e:
+            logger.error(f"Template not found: {str(e)}", exc_info=True)
+            return render_template('personal/GENERAL/error.html', 
+                                 t=trans, 
+                                 lang=lang,
+                                 error=str(e),
+                                 title=trans('general_privacy', lang=lang)), 404
     
     @app.route('/terms')
     def terms():
         lang = session.get('lang', 'en')
-        return render_template('general/terms.html', 
-                             t=trans, 
-                             lang=lang,
-                             title=trans('general_terms', lang=lang))
+        try:
+            return render_template('general/terms.html', 
+                                 t=trans, 
+                                 lang=lang,
+                                 title=trans('general_terms', lang=lang))
+        except TemplateNotFound as e:
+            logger.error(f"Template not found: {str(e)}", exc_info=True)
+            return render_template('personal/GENERAL/error.html', 
+                                 t=trans, 
+                                 lang=lang,
+                                 error=str(e),
+                                 title=trans('general_terms', lang=lang)), 404
     
     @app.route('/health')
     def health():
         logger.info("Health check")
         status = {"status": "healthy"}
         try:
-            if not check_mongodb_connection(app):
-                raise RuntimeError("MongoDB connection unavailable")
-            get_mongo_db().command('ping')
+            with app.app_context():
+                get_mongo_db().command('ping')
             return jsonify(status), 200
         except Exception as e:
             logger.error(f"Health check failed: {str(e)}", exc_info=True)
@@ -680,21 +728,17 @@ def create_app():
     
     @app.route('/api/translations/<lang>')
     def get_translations_api(lang):
-        """API endpoint to get all translations for a language"""
         try:
             if lang not in ['en', 'ha']:
                 return jsonify({'error': trans('general_invalid_language')}), 400
             
             all_translations = get_all_translations()
             result = {}
-            
-            # Flatten all translations for the requested language
             for module_name, module_translations in all_translations.items():
                 if lang in module_translations:
                     result.update(module_translations[lang])
             
             return jsonify({'translations': result})
-            
         except Exception as e:
             logger.error(f"API translations error: {str(e)}", 
                         extra={'session_id': session.get('sid', 'no-session-id')})
@@ -702,7 +746,6 @@ def create_app():
     
     @app.route('/api/translate')
     def api_translate():
-        """API endpoint for single translation"""
         try:
             key = request.args.get('key')
             lang = request.args.get('lang', session.get('lang', 'en'))
@@ -712,7 +755,6 @@ def create_app():
             
             translation = trans(key, lang=lang)
             return jsonify({'key': key, 'translation': translation, 'lang': lang})
-            
         except Exception as e:
             logger.error(f"API translate error: {str(e)}", 
                         extra={'session_id': session.get('sid', 'no-session-id')})
@@ -724,8 +766,9 @@ def create_app():
         new_lang = lang if lang in valid_langs else 'en'
         try:
             session['lang'] = new_lang
-            if current_user.is_authenticated:
-                get_mongo_db().users.update_one({'_id': current_user.id}, {'$set': {'language': new_lang}})
+            with app.app_context():
+                if current_user.is_authenticated:
+                    get_mongo_db().users.update_one({'_id': current_user.id}, {'$set': {'language': new_lang}})
             logger.info(f"Language set to {new_lang}")
             flash(trans('general_language_changed', default='Language updated successfully'), 'success')
         except Exception as e:
@@ -758,24 +801,25 @@ def create_app():
     @login_required
     def debt_summary():
         try:
-            db = get_mongo_db()
-            user_id = current_user.id
-            creditors_pipeline = [
-                {'$match': {'user_id': user_id, 'type': 'creditor'}},
-                {'$group': {'_id': None, 'total': {'$sum': '$amount_owed'}}}
-            ]
-            creditors_result = list(db.records.aggregate(creditors_pipeline))
-            total_i_owe = creditors_result[0]['total'] if creditors_result else 0
-            debtors_pipeline = [
-                {'$match': {'user_id': user_id, 'type': 'debtor'}},
-                {'$group': {'_id': None, 'total': {'$sum': '$amount_owed'}}}
-            ]
-            debtors_result = list(db.records.aggregate(debtors_pipeline))
-            total_i_am_owed = debtors_result[0]['total'] if debtors_result else 0
-            return jsonify({
-                'totalIOwe': total_i_owe,
-                'totalIAmOwed': total_i_am_owed
-            })
+            with app.app_context():
+                db = get_mongo_db()
+                user_id = current_user.id
+                creditors_pipeline = [
+                    {'$match': {'user_id': user_id, 'type': 'creditor'}},
+                    {'$group': {'_id': None, 'total': {'$sum': '$amount_owed'}}}
+                ]
+                creditors_result = list(db.records.aggregate(creditors_pipeline))
+                total_i_owe = creditors_result[0]['total'] if creditors_result else 0
+                debtors_pipeline = [
+                    {'$match': {'user_id': user_id, 'type': 'debtor'}},
+                    {'$group': {'_id': None, 'total': {'$sum': '$amount_owed'}}}
+                ]
+                debtors_result = list(db.records.aggregate(debtors_pipeline))
+                total_i_am_owed = debtors_result[0]['total'] if debtors_result else 0
+                return jsonify({
+                    'totalIOwe': total_i_owe,
+                    'totalIAmOwed': total_i_am_owed
+                })
         except Exception as e:
             logger.error(f"Error fetching debt summary: {str(e)}")
             return jsonify({'error': 'Failed to fetch debt summary'}), 500
@@ -784,29 +828,30 @@ def create_app():
     @login_required
     def cashflow_summary():
         try:
-            db = get_mongo_db()
-            user_id = current_user.id
-            now = datetime.utcnow()
-            month_start = datetime(now.year, now.month, 1)
-            next_month = month_start.replace(month=month_start.month + 1) if month_start.month < 12 else month_start.replace(year=month_start.year + 1, month=1)
-            receipts_pipeline = [
-                {'$match': {'user_id': user_id, 'type': 'receipt', 'created_at': {'$gte': month_start, '$lt': next_month}}},
-                {'$group': {'_id': None, 'total': {'$sum': '$amount'}}}
-            ]
-            receipts_result = list(db.cashflows.aggregate(receipts_pipeline))
-            total_receipts = receipts_result[0]['total'] if receipts_result else 0
-            payments_pipeline = [
-                {'$match': {'user_id': user_id, 'type': 'payment', 'created_at': {'$gte': month_start, '$lt': next_month}}},
-                {'$group': {'_id': None, 'total': {'$sum': '$amount'}}}
-            ]
-            payments_result = list(db.cashflows.aggregate(payments_pipeline))
-            total_payments = payments_result[0]['total'] if payments_result else 0
-            net_cashflow = total_receipts - total_payments
-            return jsonify({
-                'netCashflow': net_cashflow,
-                'totalReceipts': total_receipts,
-                'totalPayments': total_payments
-            })
+            with app.app_context():
+                db = get_mongo_db()
+                user_id = current_user.id
+                now = datetime.utcnow()
+                month_start = datetime(now.year, now.month, 1)
+                next_month = month_start.replace(month=month_start.month + 1) if month_start.month < 12 else month_start.replace(year=month_start.year + 1, month=1)
+                receipts_pipeline = [
+                    {'$match': {'user_id': user_id, 'type': 'receipt', 'created_at': {'$gte': month_start, '$lt': next_month}}},
+                    {'$group': {'_id': None, 'total': {'$sum': '$amount'}}}
+                ]
+                receipts_result = list(db.cashflows.aggregate(receipts_pipeline))
+                total_receipts = receipts_result[0]['total'] if receipts_result else 0
+                payments_pipeline = [
+                    {'$match': {'user_id': user_id, 'type': 'payment', 'created_at': {'$gte': month_start, '$lt': next_month}}},
+                    {'$group': {'_id': None, 'total': {'$sum': '$amount'}}}
+                ]
+                payments_result = list(db.cashflows.aggregate(payments_pipeline))
+                total_payments = payments_result[0]['total'] if payments_result else 0
+                net_cashflow = total_receipts - total_payments
+                return jsonify({
+                    'netCashflow': net_cashflow,
+                    'totalReceipts': total_receipts,
+                    'totalPayments': total_payments
+                })
         except Exception as e:
             logger.error(f"Error fetching cashflow summary: {str(e)}")
             return jsonify({'error': 'Failed to fetch cashflow summary'}), 500
@@ -815,25 +860,26 @@ def create_app():
     @login_required
     def inventory_summary():
         try:
-            db = get_mongo_db()
-            user_id = current_user.id
-            pipeline = [
-                {'$match': {'user_id': user_id}},
-                {'$addFields': {
-                    'item_value': {
-                        '$multiply': [
-                            '$qty',
-                            {'$ifNull': ['$buying_price', 0]}
-                        ]
-                    }
-                }},
-                {'$group': {'_id': None, 'totalValue': {'$sum': '$item_value'}}}
-            ]
-            result = list(db.inventory.aggregate(pipeline))
-            total_value = result[0]['totalValue'] if result else 0
-            return jsonify({
-                'totalValue': total_value
-            })
+            with app.app_context():
+                db = get_mongo_db()
+                user_id = current_user.id
+                pipeline = [
+                    {'$match': {'user_id': user_id}},
+                    {'$addFields': {
+                        'item_value': {
+                            '$multiply': [
+                                '$qty',
+                                {'$ifNull': ['$buying_price', 0]}
+                            ]
+                        }
+                    }},
+                    {'$group': {'_id': None, 'totalValue': {'$sum': '$item_value'}}}
+                ]
+                result = list(db.inventory.aggregate(pipeline))
+                total_value = result[0]['totalValue'] if result else 0
+                return jsonify({
+                    'totalValue': total_value
+                })
         except Exception as e:
             logger.error(f"Error fetching inventory summary: {str(e)}")
             return jsonify({'error': 'Failed to fetch inventory summary'}), 500
@@ -842,38 +888,39 @@ def create_app():
     @login_required
     def recent_activity():
         try:
-            db = get_mongo_db()
-            user_id = current_user.id
-            activities = []
-            recent_records = list(db.records.find(
-                {'user_id': user_id}
-            ).sort('created_at', -1).limit(3))
-            for record in recent_records:
-                activity_type = 'debt_added'
-                description = f"Added {record['type']}: {record['name']}"
-                activities.append({
-                    'type': activity_type,
-                    'description': description,
-                    'amount': record['amount_owed'],
-                    'timestamp': record['created_at']
-                })
-            recent_cashflows = list(db.cashflows.find(
-                {'user_id': user_id}
-            ).sort('created_at', -1).limit(3))
-            for cashflow in recent_cashflows:
-                activity_type = 'money_in' if cashflow['type'] == 'receipt' else 'money_out'
-                description = f"{'Received' if cashflow['type'] == 'receipt' else 'Paid'} {cashflow['party_name']}"
-                activities.append({
-                    'type': activity_type,
-                    'description': description,
-                    'amount': cashflow['amount'],
-                    'timestamp': cashflow['created_at']
-                })
-            activities.sort(key=lambda x: x['timestamp'], reverse=True)
-            activities = activities[:5]
-            for activity in activities:
-                activity['timestamp'] = activity['timestamp'].isoformat()
-            return jsonify(activities)
+            with app.app_context():
+                db = get_mongo_db()
+                user_id = current_user.id
+                activities = []
+                recent_records = list(db.records.find(
+                    {'user_id': user_id}
+                ).sort('created_at', -1).limit(3))
+                for record in recent_records:
+                    activity_type = 'debt_added'
+                    description = f"Added {record['type']}: {record['name']}"
+                    activities.append({
+                        'type': activity_type,
+                        'description': description,
+                        'amount': record['amount_owed'],
+                        'timestamp': record['created_at']
+                    })
+                recent_cashflows = list(db.cashflows.find(
+                    {'user_id': user_id}
+                ).sort('created_at', -1).limit(3))
+                for cashflow in recent_cashflows:
+                    activity_type = 'money_in' if cashflow['type'] == 'receipt' else 'money_out'
+                    description = f"{'Received' if cashflow['type'] == 'receipt' else 'Paid'} {cashflow['party_name']}"
+                    activities.append({
+                        'type': activity_type,
+                        'description': description,
+                        'amount': cashflow['amount'],
+                        'timestamp': cashflow['created_at']
+                    })
+                activities.sort(key=lambda x: x['timestamp'], reverse=True)
+                activities = activities[:5]
+                for activity in activities:
+                    activity['timestamp'] = activity['timestamp'].isoformat()
+                return jsonify(activities)
         except Exception as e:
             logger.error(f"Error fetching recent activity: {str(e)}")
             return jsonify({'error': 'Failed to fetch recent activity'}), 500
@@ -882,13 +929,14 @@ def create_app():
     @login_required
     def notification_count():
         try:
-            db = get_mongo_db()
-            user_id = current_user.id
-            count = db.reminder_logs.count_documents({
-                'user_id': user_id,
-                'read_status': False
-            })
-            return jsonify({'count': count})
+            with app.app_context():
+                db = get_mongo_db()
+                user_id = current_user.id
+                count = db.reminder_logs.count_documents({
+                    'user_id': user_id,
+                    'read_status': False
+                })
+                return jsonify({'count': count})
         except Exception as e:
             logger.error(f"Error fetching notification count: {str(e)}")
             return jsonify({'error': 'Failed to fetch notification count'}), 500
@@ -897,25 +945,26 @@ def create_app():
     @login_required
     def notifications():
         try:
-            db = get_mongo_db()
-            user_id = current_user.id
-            notifications = list(db.reminder_logs.find({
-                'user_id': user_id
-            }).sort('sent_at', -1).limit(10))
-            notification_ids = [n['notification_id'] for n in notifications if not n.get('read_status', False)]
-            if notification_ids:
-                db.reminder_logs.update_many(
-                    {'notification_id': {'$in': notification_ids}},
-                    {'$set': {'read_status': True}}
-                )
-            result = [{
-                'id': str(n['notification_id']),
-                'message': n['message'],
-                'type': n['type'],
-                'timestamp': n['sent_at'].isoformat(),
-                'read': n.get('read_status', False)
-            } for n in notifications]
-            return jsonify(result)
+            with app.app_context():
+                db = get_mongo_db()
+                user_id = current_user.id
+                notifications = list(db.reminder_logs.find({
+                    'user_id': user_id
+                }).sort('sent_at', -1).limit(10))
+                notification_ids = [n['notification_id'] for n in notifications if not n.get('read_status', False)]
+                if notification_ids:
+                    db.reminder_logs.update_many(
+                        {'notification_id': {'$in': notification_ids}},
+                        {'$set': {'read_status': True}}
+                    )
+                result = [{
+                    'id': str(n['notification_id']),
+                    'message': n['message'],
+                    'type': n['type'],
+                    'timestamp': n['sent_at'].isoformat(),
+                    'read': n.get('read_status', False)
+                } for n in notifications]
+                return jsonify(result)
         except Exception as e:
             logger.error(f"Error fetching notifications: {str(e)}")
             return jsonify({'error': 'Failed to fetch notifications'}), 500
@@ -952,39 +1001,40 @@ def create_app():
                 if not tool_name or tool_name not in valid_tools:
                     logger.error(f"Invalid feedback tool: {tool_name}")
                     flash(trans('general_invalid_input', default='Please select a valid tool'), 'danger')
-                    return render_template('personal/GENERAL/feedback.html', t=trans, lang=lang, tool_options=tool_options)
+                    return render_template('general/feedback.html', t=trans, lang=lang, tool_options=tool_options)
                 if not rating or not rating.isdigit() or int(rating) < 1 or int(rating) > 5:
                     logger.error(f"Invalid rating: {rating}")
                     flash(trans('general_invalid_input', default='Please provide a rating between 1 and 5'), 'danger')
-                    return render_template('personal/GENERAL/feedback.html', t=trans, lang=lang, tool_options=tool_options)
-                if current_user.is_authenticated:
-                    from coins.routes import get_user_query
-                    query = get_user_query(str(current_user.id))
-                    result = get_mongo_db().users.update_one(query, {'$inc': {'coin_balance': -1}})
-                    if result.matched_count == 0:
-                        raise ValueError(f"No user found for ID {current_user.id}")
-                    get_mongo_db().coin_transactions.insert_one({
-                        'user_id': str(current_user.id),
-                        'amount': -1,
-                        'type': 'spend',
-                        'ref': f"FEEDBACK_{datetime.utcnow().isoformat()}",
-                        'date': datetime.utcnow()
+                    return render_template('general/feedback.html', t=trans, lang=lang, tool_options=tool_options)
+                with app.app_context():
+                    if current_user.is_authenticated:
+                        from coins.routes import get_user_query
+                        query = get_user_query(str(current_user.id))
+                        result = get_mongo_db().users.update_one(query, {'$inc': {'coin_balance': -1}})
+                        if result.matched_count == 0:
+                            raise ValueError(f"No user found for ID {current_user.id}")
+                        get_mongo_db().coin_transactions.insert_one({
+                            'user_id': str(current_user.id),
+                            'amount': -1,
+                            'type': 'spend',
+                            'ref': f"FEEDBACK_{datetime.utcnow().isoformat()}",
+                            'date': datetime.utcnow()
+                        })
+                    feedback_entry = {
+                        'user_id': current_user.id if current_user.is_authenticated else None,
+                        'session_id': session.get('sid', 'no-session-id'),
+                        'tool_name': tool_name,
+                        'rating': int(rating),
+                        'comment': comment or None,
+                        'timestamp': datetime.utcnow()
+                    }
+                    create_feedback(get_mongo_db(), feedback_entry)
+                    get_mongo_db().audit_logs.insert_one({
+                        'admin_id': 'system',
+                        'action': 'submit_feedback',
+                        'details': {'user_id': str(current_user.id) if current_user.is_authenticated else None, 'tool_name': tool_name},
+                        'timestamp': datetime.utcnow()
                     })
-                feedback_entry = {
-                    'user_id': current_user.id if current_user.is_authenticated else None,
-                    'session_id': session.get('sid', 'no-session-id'),
-                    'tool_name': tool_name,
-                    'rating': int(rating),
-                    'comment': comment or None,
-                    'timestamp': datetime.utcnow()
-                }
-                create_feedback(get_mongo_db(), feedback_entry)
-                get_mongo_db().audit_logs.insert_one({
-                    'admin_id': 'system',
-                    'action': 'submit_feedback',
-                    'details': {'user_id': str(current_user.id) if current_user.is_authenticated else None, 'tool_name': tool_name},
-                    'timestamp': datetime.utcnow()
-                })
                 logger.info(f"Feedback submitted: tool={tool_name}, rating={rating}, session={session.get('sid', 'no-session-id')}")
                 flash(trans('general_thank_you', default='Thank you for your feedback!'), 'success')
                 return redirect(url_for('index'))
@@ -994,27 +1044,48 @@ def create_app():
             except Exception as e:
                 logger.error(f"Error processing feedback: {str(e)}", exc_info=True)
                 flash(trans('general_error', default='Error occurred during feedback submission'), 'danger')
-                return render_template('personal/GENERAL/feedback.html', t=trans, lang=lang, tool_options=tool_options), 500
+                try:
+                    return render_template('general/feedback.html', t=trans, lang=lang, tool_options=tool_options), 500
+                except TemplateNotFound as e:
+                    logger.error(f"Template not found: {str(e)}", exc_info=True)
+                    return render_template('personal/GENERAL/error.html', t=trans, lang=lang, error=str(e)), 500
         logger.info("Rendering feedback index template")
-        return render_template('personal/GENERAL/feedback.html', 
-                             t=trans, 
-                             lang=lang, 
-                             tool_options=tool_options,
-                             title=trans('general_feedback', lang=lang))
+        try:
+            return render_template('general/feedback.html', 
+                                 t=trans, 
+                                 lang=lang, 
+                                 tool_options=tool_options,
+                                 title=trans('general_feedback', lang=lang))
+        except TemplateNotFound as e:
+            logger.error(f"Template not found: {str(e)}", exc_info=True)
+            return render_template('personal/GENERAL/error.html', 
+                                 t=trans, 
+                                 lang=lang, 
+                                 error=str(e),
+                                 title=trans('general_feedback', lang=lang)), 404
     
     @app.route('/setup', methods=['GET'])
     @limiter.limit("10 per minute")
     def setup_database_route():
         setup_key = request.args.get('key')
         if setup_key != os.getenv('SETUP_KEY', 'setup-secret'):
-            return render_template('errors/403.html', content=trans('general_access_denied', default='Access denied')), 403
+            try:
+                return render_template('errors/403.html', content=trans('general_access_denied', default='Access denied')), 403
+            except TemplateNotFound as e:
+                logger.error(f"Template not found: {str(e)}", exc_info=True)
+                return render_template('personal/GENERAL/error.html', content=trans('general_access_denied', default='Access denied'), error=str(e)), 403
         try:
-            initialize_database(app)
+            with app.app_context():
+                initialize_database(app)
             flash(trans('general_success', default='Database setup successful'), 'success')
             return redirect(url_for('index'))
         except Exception as e:
             flash(trans('general_error', default='An error occurred during database setup'), 'danger')
-            return render_template('errors/500.html', content=trans('general_error', default='Internal server error')), 500
+            try:
+                return render_template('errors/500.html', content=trans('general_error', default='Internal server error'), error=str(e)), 500
+            except TemplateNotFound as e:
+                logger.error(f"Template not found: {str(e)}", exc_info=True)
+                return render_template('personal/GENERAL/error.html', content=trans('general_error', default='Internal server error'), error=str(e)), 500
     
     @app.route('/static/<path:filename>')
     def static_files(filename):
@@ -1024,11 +1095,11 @@ def create_app():
     
     @app.route('/favicon.ico')
     def favicon():
-        return send_from_directory(app.static_folder, 'favicon.ico')
+        return send_from_directory(app.static_folder, 'icons/favicon.ico')
     
     @app.route('/service-worker.js')
     def service_worker():
-        return app.send_static_file('service-worker.js')
+        return app.send_static_file('js/service-worker.js')
     
     @app.route('/manifest.json')
     def manifest():
@@ -1042,8 +1113,8 @@ def create_app():
             'scope': '/',
             'start_url': '/',
             'icons': [
-                {'src': '/static/icons/icon-192x192.png', 'sizes': '192x192', 'type': 'image/png'},
-                {'src': '/static/icons/icon-512x512.png', 'sizes': '512x512', 'type': 'image/png'}
+                {'src': '/static/icons/android-chrome-192x192.png', 'sizes': '192x192', 'type': 'image/png'},
+                {'src': '/static/icons/android-chrome-512x512.png', 'sizes': '512x512', 'type': 'image/png'}
             ]
         }
     
@@ -1054,31 +1125,58 @@ def create_app():
     @app.errorhandler(403)
     def forbidden(e):
         lang = session.get('lang', 'en')
-        return render_template('errors/403.html', 
-                             message=trans('general_access_denied', default='Forbidden'), 
-                             t=trans, 
-                             lang=lang,
-                             title=trans('general_access_denied', lang=lang)), 403
+        try:
+            return render_template('errors/403.html', 
+                                 message=trans('general_access_denied', default='Forbidden'), 
+                                 t=trans, 
+                                 lang=lang,
+                                 title=trans('general_access_denied', lang=lang)), 403
+        except TemplateNotFound as e:
+            logger.error(f"Template not found: {str(e)}", exc_info=True)
+            return render_template('personal/GENERAL/error.html', 
+                                 message=trans('general_access_denied', default='Forbidden'), 
+                                 t=trans, 
+                                 lang=lang,
+                                 error=str(e),
+                                 title=trans('general_access_denied', lang=lang)), 403
     
     @app.errorhandler(404)
     def page_not_found(e):
         lang = session.get('lang', 'en')
         logger.error(f"Error 404: {str(e)}")
-        return render_template('errors/404.html', 
-                             message=trans('general_page_not_found', default='Page not found'), 
-                             t=trans, 
-                             lang=lang,
-                             title=trans('general_page_not_found', lang=lang)), 404
+        try:
+            return render_template('errors/404.html', 
+                                 message=trans('general_page_not_found', default='Page not found'), 
+                                 t=trans, 
+                                 lang=lang,
+                                 title=trans('general_page_not_found', lang=lang)), 404
+        except TemplateNotFound as e:
+            logger.error(f"Template not found: {str(e)}", exc_info=True)
+            return render_template('personal/GENERAL/error.html', 
+                                 message=trans('general_page_not_found', default='Page not found'), 
+                                 t=trans, 
+                                 lang=lang,
+                                 error=str(e),
+                                 title=trans('general_page_not_found', lang=lang)), 404
     
     @app.errorhandler(500)
     def internal_server_error(e):
         lang = session.get('lang', 'en')
         logger.error(f"Server error: {str(e)}", exc_info=True)
-        return render_template('errors/500.html', 
-                             message=trans('general_error', default='Internal server error'), 
-                             t=trans, 
-                             lang=lang,
-                             title=trans('general_error', lang=lang)), 500
+        try:
+            return render_template('errors/500.html', 
+                                 message=trans('general_error', default='Internal server error'), 
+                                 t=trans, 
+                                 lang=lang,
+                                 title=trans('general_error', lang=lang)), 500
+        except TemplateNotFound as e:
+            logger.error(f"Template not found: {str(e)}", exc_info=True)
+            return render_template('personal/GENERAL/error.html', 
+                                 message=trans('general_error', default='Internal server error'), 
+                                 t=trans, 
+                                 lang=lang,
+                                 error=str(e),
+                                 title=trans('general_error', lang=lang)), 500
     
     @app.errorhandler(CSRFError)
     def handle_csrf_error(e):
@@ -1103,7 +1201,6 @@ def create_app():
                 session['lang'] = request.accept_languages.best_match(['en', 'ha'], 'en')
                 logger.info(f"Set default language to {session['lang']}")
             
-            # Make translation functions available globally
             g.trans = trans
             g.get_translations = get_translations
             g.logger = logger
@@ -1111,26 +1208,27 @@ def create_app():
             if current_user.is_authenticated:
                 if 'session_id' not in session:
                     session['session_id'] = str(uuid.uuid4())
-                db = get_mongo_db()
-                user = db.users.find_one({'_id': current_user.id})
-                if user and not user.get('setup_complete', False):
-                    allowed_endpoints = [
-                        'users_blueprint.personal_setup_wizard',
-                        'users_blueprint.setup_wizard',
-                        'users_blueprint.agent_setup_wizard',
-                        'users_blueprint.logout',
-                        'settings_bp.profile',
-                        'coins_bp.purchase',
-                        'coins_bp.get_balance',
-                        'set_language'
-                    ]
-                    if request.endpoint not in allowed_endpoints:
-                        flash(trans('general_setup_required', default='Please complete your profile setup'), 'warning')
-                        if current_user.role == 'agent':
-                            return redirect(url_for('users_blueprint.agent_setup_wizard'))
-                        elif current_user.role == 'personal':
-                            return redirect(url_for('users_blueprint.personal_setup_wizard'))
-                        return redirect(url_for('users_blueprint.setup_wizard'))
+                with app.app_context():
+                    db = get_mongo_db()
+                    user = db.users.find_one({'_id': current_user.id})
+                    if user and not user.get('setup_complete', False):
+                        allowed_endpoints = [
+                            'users_bp.personal_setup_wizard',
+                            'users_bp.setup_wizard',
+                            'users_bp.agent_setup_wizard',
+                            'users_bp.logout',
+                            'settings_bp.profile',
+                            'coins_bp.purchase',
+                            'coins_bp.get_balance',
+                            'set_language'
+                        ]
+                        if request.endpoint not in allowed_endpoints:
+                            flash(trans('general_setup_required', default='Please complete your profile setup'), 'warning')
+                            if current_user.role == 'agent':
+                                return redirect(url_for('users_bp.agent_setup_wizard'))
+                            elif current_user.role == 'personal':
+                                return redirect(url_for('users_bp.personal_setup_wizard'))
+                            return redirect(url_for('users_bp.setup_wizard'))
         except Exception as e:
             logger.error(f"Error in before_request: {str(e)}", exc_info=True)
 
@@ -1139,19 +1237,23 @@ def create_app():
         if hasattr(g, 'mongo_client'):
             close_mongo_db()
 
-    # Development routes (only in debug mode)
+    # Development routes
     if app.debug:
         @app.route('/dev/translations')
         def dev_translations():
-            """Development route to view all translations"""
             all_translations = get_all_translations()
-            return render_template('dev/translations.html', 
-                                 translations=all_translations,
-                                 title='Translation Debug')
+            try:
+                return render_template('dev/translations.html', 
+                                     translations=all_translations,
+                                     title='Translation Debug')
+            except TemplateNotFound as e:
+                logger.error(f"Template not found: {str(e)}", exc_info=True)
+                return render_template('personal/GENERAL/error.html', 
+                                     error=str(e), 
+                                     title='Translation Debug'), 404
         
         @app.route('/dev/session')
         def dev_session():
-            """Development route to view session data"""
             return jsonify(dict(session))
     
     return app
