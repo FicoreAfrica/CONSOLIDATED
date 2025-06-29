@@ -21,32 +21,22 @@ net_worth_bp = Blueprint(
 )
 
 class NetWorthForm(FlaskForm):
-    first_name = StringField()
-    email = StringField()
-    send_email = BooleanField()
-    cash_savings = FloatField()
-    investments = FloatField()
-    property = FloatField()
-    loans = FloatField()
-    submit = SubmitField()
+    first_name = StringField(trans('general_first_name', default='First Name'))
+    email = StringField(trans('general_email', default='Email'))
+    send_email = BooleanField(trans('general_send_email', default='Send Email'))
+    cash_savings = FloatField(trans('net_worth_cash_savings', default='Cash Savings'))
+    investments = FloatField(trans('net_worth_investments', default='Investments'))
+    property = FloatField(trans('net_worth_property', default='Property'))
+    loans = FloatField(trans('net_worth_loans', default='Loans'))
+    submit = SubmitField(trans('net_worth_submit', default='Submit'))
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         lang = session.get('lang', 'en')
         
-        # Set labels
-        self.first_name.label.text = trans('net_worth_first_name', lang=lang)
-        self.email.label.text = trans('net_worth_email', lang=lang)
-        self.send_email.label.text = trans('net_worth_send_email', lang=lang)
-        self.cash_savings.label.text = trans('net_worth_cash_savings', lang=lang)
-        self.investments.label.text = trans('net_worth_investments', lang=lang)
-        self.property.label.text = trans('net_worth_property', lang=lang)
-        self.loans.label.text = trans('net_worth_loans', lang=lang)
-        self.submit.label.text = trans('net_worth_submit', lang=lang)
-        
         # Set validators
-        self.first_name.validators = [DataRequired(message=trans('net_worth_first_name_required', lang=lang))]
-        self.email.validators = [Optional(), Email(message=trans('net_worth_email_invalid', lang=lang))]
+        self.first_name.validators = [DataRequired(message=trans('general_first_name_required', lang=lang))]
+        self.email.validators = [Optional(), Email(message=trans('general_email_invalid', lang=lang))]
         self.cash_savings.validators = [
             DataRequired(message=trans('net_worth_cash_savings_required', lang=lang)),
             NumberRange(min=0, max=10000000000, message=trans('net_worth_cash_savings_max', lang=lang))
@@ -211,7 +201,7 @@ def main():
                         )
                     except Exception as e:
                         current_app.logger.error(f"Failed to send email: {str(e)}")
-                        flash(trans("net_worth_email_failed", lang=lang), "warning")
+                        flash(trans("general_email_send_failed", lang=lang), "warning")
 
         # Get net worth data for display
         user_records = mongo.db.net_worth_data.find(filter_criteria).sort('created_at', -1)
@@ -251,7 +241,7 @@ def main():
             latest_record=latest_record,
             insights=insights,
             tips=tips,
-            trans=trans,
+            t=trans,
             lang=lang
         )
 
@@ -270,7 +260,7 @@ def main():
                 trans("net_worth_tip_pay_loans_early", lang=lang),
                 trans("net_worth_tip_diversify_investments", lang=lang)
             ],
-            trans=trans,
+            t=trans,
             lang=lang
         ), 500
 

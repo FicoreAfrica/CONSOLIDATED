@@ -1,8 +1,9 @@
-from flask import Blueprint, render_template, redirect, url_for, flash, current_app, request
+from flask import Blueprint, render_template, redirect, url_for, flash, current_app, request, session
 from flask_login import login_required, current_user
 from flask_wtf import FlaskForm
 from wtforms import StringField, FloatField, validators, SubmitField
 from datetime import datetime
+from translations import trans
 from utils import trans_function, requires_role, get_mongo_db, is_admin, get_user_query, get_limiter
 from bson import ObjectId
 import logging
@@ -15,15 +16,15 @@ admin_bp = Blueprint('admin', __name__, template_folder='templates/admin')
 limiter = get_limiter(current_app)
 
 class CreditForm(FlaskForm):
-    user_id = StringField(trans_function('user_id', default='User ID'), [
-        validators.DataRequired(message=trans_function('user_id_required', default='User ID is required')),
-        validators.Length(min=3, max=50, message=trans_function('user_id_length', default='User ID must be between 3 and 50 characters'))
+    user_id = StringField(trans('admin_user_id', default='User ID'), [
+        validators.DataRequired(message=trans('admin_user_id_required', default='User ID is required')),
+        validators.Length(min=3, max=50, message=trans('admin_user_id_length', default='User ID must be between 3 and 50 characters'))
     ], render_kw={'class': 'form-control'})
-    amount = FloatField(trans_function('coin_amount', default='Coin Amount'), [
-        validators.DataRequired(message=trans_function('coin_amount_required', default='Coin amount is required')),
-        validators.NumberRange(min=1, message=trans_function('coin_amount_min', default='Coin amount must be at least 1'))
+    amount = FloatField(trans('admin_coin_amount', default='Coin Amount'), [
+        validators.DataRequired(message=trans('admin_coin_amount_required', default='Coin amount is required')),
+        validators.NumberRange(min=1, message=trans('admin_coin_amount_min', default='Coin amount must be at least 1'))
     ], render_kw={'class': 'form-control'})
-    submit = SubmitField(trans_function('credit_coins', default='Credit Coins'), render_kw={'class': 'btn btn-primary w-100'})
+    submit = SubmitField(trans('admin_credit_coins', default='Credit Coins'), render_kw={'class': 'btn btn-primary w-100'})
 
 def log_audit_action(action, details=None):
     """Log an admin action to audit_logs collection."""
@@ -67,11 +68,13 @@ def dashboard():
                 'coin_transactions': coin_tx_count,
                 'audit_logs': audit_log_count
             },
-            recent_users=recent_users
+            recent_users=recent_users,
+            t=trans,
+            lang=session.get('lang', 'en')
         )
     except Exception as e:
         logger.error(f"Error loading admin dashboard: {str(e)}")
-        flash(trans_function('database_error', default='An error occurred while accessing the database'), 'danger')
+        flash(trans('admin_database_error', default='An error occurred while accessing the database'), 'danger')
         return render_template('500.html', error=str(e)), 500
 
 @admin_bp.route('/users', methods=['GET'])
@@ -87,11 +90,11 @@ def manage_users():
         users = list(db.users.find({} if is_admin() else {'role': {'$ne': 'admin'}}).sort('created_at', -1))
         for user in users:
             user['_id'] = str(user['_id'])
-        return render_template('admin/users.html', users=users)
+        return render_template('admin/users.html', users=users, t=trans, lang=session.get('lang', 'en'))
     except Exception as e:
         logger.error(f"Error fetching users for admin: {str(e)}")
-        flash(trans_function('database_error', default='An error occurred while accessing the database'), 'danger')
-        return render_template('admin/users.html', users=[]), 500
+        flash(trans('admin_database_error', default='An error occurred while accessing the database'), 'danger')
+        return render_template('admin/users.html', users=[], t=trans, lang=session.get('lang', 'en')), 500
 
 @admin_bp.route('/users/suspend/<user_id>', methods=['POST'])
 @login_required
@@ -106,22 +109,22 @@ def suspend_user(user_id):
         user_query = get_user_query(user_id)
         user = db.users.find_one(user_query)
         if not user:
-            flash(trans_function('user_not_found', default='User not found'), 'danger')
+            flash(trans('admin_user_not_found', default='User not found'), 'danger')
             return redirect(url_for('admin_blueprint.manage_users'))
         result = db.users.update_one(
             user_query,
             {'$set': {'suspended': True, 'updated_at': datetime.utcnow()}}
         )
         if result.modified_count == 0:
-            flash(trans_function('user_not_updated', default='User could not be suspended'), 'danger')
+            flash(trans('admin_user_not_updated', default='User could not be suspended'), 'danger')
         else:
-            flash(trans_function('user_suspended', default='User suspended successfully'), 'success')
+            flash(trans('admin_user_suspended', default='User suspended successfully'), 'success')
             logger.info(f"Admin {current_user.id} suspended user {user_id}")
             log_audit_action('suspend_user', {'user_id': user_id})
         return redirect(url_for('admin_blueprint.manage_users'))
     except Exception as e:
         logger.error(f"Error suspending user {user_id}: {str(e)}")
-        flash(trans_function('database_error', default='An error occurred while accessing the database'), 'danger')
+        flash(trans('admin_database_error', default='An error occurred while accessing the database'), 'danger')
         return redirect(url_for('admin_blueprint.manage_users')), 500
 
 @admin_bp.route('/users/delete/<user_id>', methods=['POST'])
@@ -137,7 +140,7 @@ def delete_user(user_id):
         user_query = get_user_query(user_id)
         user = db.users.find_one(user_query)
         if not user:
-            flash(trans_function('user_not_found', default='User not found'), 'danger')
+            flash(trans('admin_user_not_found', default='User not found'), 'danger')
             return redirect(url_for('admin_blueprint.manage_users'))
         db.records.delete_many({'user_id': user_id})
         db.cashflows.delete_many({'user_id': user_id})
@@ -146,15 +149,15 @@ def delete_user(user_id):
         db.audit_logs.delete_many({'details.user_id': user_id})
         result = db.users.delete_one(user_query)
         if result.deleted_count == 0:
-            flash(trans_function('user_not_deleted', default='User could not be deleted'), 'danger')
+            flash(trans('admin_user_not_deleted', default='User could not be deleted'), 'danger')
         else:
-            flash(trans_function('user_deleted', default='User deleted successfully'), 'success')
+            flash(trans('admin_user_deleted', default='User deleted successfully'), 'success')
             logger.info(f"Admin {current_user.id} deleted user {user_id}")
             log_audit_action('delete_user', {'user_id': user_id})
         return redirect(url_for('admin_blueprint.manage_users'))
     except Exception as e:
         logger.error(f"Error deleting user {user_id}: {str(e)}")
-        flash(trans_function('database_error', default='An error occurred while accessing the database'), 'danger')
+        flash(trans('admin_database_error', default='An error occurred while accessing the database'), 'danger')
         return redirect(url_for('admin_blueprint.manage_users')), 500
 
 @admin_bp.route('/data/delete/<collection>/<item_id>', methods=['POST'])
@@ -165,21 +168,21 @@ def delete_item(collection, item_id):
     """Delete an item from a collection."""
     valid_collections = ['records', 'cashflows', 'inventory']
     if collection not in valid_collections:
-        flash(trans_function('invalid_collection', default='Invalid collection selected'), 'danger')
+        flash(trans('admin_invalid_collection', default='Invalid collection selected'), 'danger')
         return redirect(url_for('admin_blueprint.dashboard'))
     try:
         db = get_mongo_db()
         result = db[collection].delete_one({'_id': ObjectId(item_id)})
         if result.deleted_count == 0:
-            flash(trans_function('item_not_found', default='Item not found'), 'danger')
+            flash(trans('admin_item_not_found', default='Item not found'), 'danger')
         else:
-            flash(trans_function('item_deleted', default='Item deleted successfully'), 'success')
+            flash(trans('admin_item_deleted', default='Item deleted successfully'), 'success')
             logger.info(f"Admin {current_user.id} deleted {collection} item {item_id}")
             log_audit_action(f'delete_{collection}_item', {'item_id': item_id, 'collection': collection})
         return redirect(url_for('admin_blueprint.dashboard'))
     except Exception as e:
         logger.error(f"Error deleting {collection} item {item_id}: {str(e)}")
-        flash(trans_function('database_error', default='An error occurred while accessing the database'), 'danger')
+        flash(trans('admin_database_error', default='An error occurred while accessing the database'), 'danger')
         return redirect(url_for('admin_blueprint.dashboard')), 500
 
 @admin_bp.route('/coins/credit', methods=['GET', 'POST'])
@@ -196,8 +199,8 @@ def credit_coins():
             user_query = get_user_query(user_id)
             user = db.users.find_one(user_query)
             if not user:
-                flash(trans_function('user_not_found', default='User not found'), 'danger')
-                return render_template('admin/reset.html', form=form)
+                flash(trans('admin_user_not_found', default='User not found'), 'danger')
+                return render_template('admin/reset.html', form=form, t=trans, lang=session.get('lang', 'en'))
             amount = int(form.amount.data)
             db.users.update_one(
                 user_query,
@@ -211,15 +214,15 @@ def credit_coins():
                 'ref': ref,
                 'date': datetime.utcnow()
             })
-            flash(trans_function('credit_success', default='Coins credited successfully'), 'success')
+            flash(trans('admin_credit_success', default='Coins credited successfully'), 'success')
             logger.info(f"Admin {current_user.id} credited {amount} coins to user {user_id}")
             log_audit_action('credit_coins', {'user_id': user_id, 'amount': amount, 'ref': ref})
             return redirect(url_for('admin_blueprint.dashboard'))
         except Exception as e:
             logger.error(f"Error crediting coins by admin {current_user.id}: {str(e)}")
-            flash(trans_function('database_error', default='An error occurred while accessing the database'), 'danger')
-            return render_template('admin/reset.html', form=form), 500
-    return render_template('admin/reset.html', form=form)
+            flash(trans('admin_database_error', default='An error occurred while accessing the database'), 'danger')
+            return render_template('admin/reset.html', form=form, t=trans, lang=session.get('lang', 'en')), 500
+    return render_template('admin/reset.html', form=form, t=trans, lang=session.get('lang', 'en'))
 
 @admin_bp.route('/audit', methods=['GET'])
 @login_required
@@ -232,8 +235,8 @@ def audit():
         logs = list(db.audit_logs.find().sort('timestamp', -1).limit(100))
         for log in logs:
             log['_id'] = str(log['_id'])
-        return render_template('admin/audit.html', logs=logs)
+        return render_template('admin/audit.html', logs=logs, t=trans, lang=session.get('lang', 'en'))
     except Exception as e:
         logger.error(f"Error fetching audit logs for admin {current_user.id}: {str(e)}")
-        flash(trans_function('database_error', default='An error occurred while accessing the database'), 'danger')
-        return render_template('admin/audit.html', logs=[]), 500
+        flash(trans('admin_database_error', default='An error occurred while accessing the database'), 'danger')
+        return render_template('admin/audit.html', logs=[], t=trans, lang=session.get('lang', 'en')), 500

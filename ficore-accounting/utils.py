@@ -43,9 +43,9 @@ def create_anonymous_session():
         # Set default language if not already set
         if 'lang' not in session:
             session['lang'] = 'en'
-        logger.info(f"Created anonymous session: {session['sid']}")
+        logger.info(f"{trans('general_anonymous_session_created', default='Created anonymous session')}: {session['sid']}")
     except Exception as e:
-        logger.error(f"Error creating anonymous session: {str(e)}", exc_info=True)
+        logger.error(f"{trans('general_anonymous_session_error', default='Error creating anonymous session')}: {str(e)}", exc_info=True)
 
 def trans_function(key, lang=None, **kwargs):
     """
@@ -63,7 +63,7 @@ def trans_function(key, lang=None, **kwargs):
     try:
         return trans(key, lang=lang, **kwargs)
     except Exception as e:
-        logger.error(f"Translation error for key '{key}': {str(e)}", exc_info=True)
+        logger.error(f"{trans('general_translation_error', default='Translation error for key')} '{key}': {str(e)}", exc_info=True)
         return key
 
 def is_valid_email(email):
@@ -101,10 +101,10 @@ def get_mongo_db():
         if mongo_client:
             return mongo_client.ficodb
         
-        logger.error("No MongoDB client available")
+        logger.error(trans('general_no_mongo_client', default='No MongoDB client available'))
         return None
     except Exception as e:
-        logger.error(f"Error getting MongoDB connection: {str(e)}", exc_info=True)
+        logger.error(f"{trans('general_mongo_connection_error', default='Error getting MongoDB connection')}: {str(e)}", exc_info=True)
         return None
 
 def close_mongo_db():
@@ -116,9 +116,9 @@ def close_mongo_db():
             client = current_app.config['MONGO_CLIENT']
             if client:
                 client.close()
-                logger.info("MongoDB connection closed")
+                logger.info(trans('general_mongo_connection_closed', default='MongoDB connection closed'))
     except Exception as e:
-        logger.error(f"Error closing MongoDB connection: {str(e)}", exc_info=True)
+        logger.error(f"{trans('general_mongo_close_error', default='Error closing MongoDB connection')}: {str(e)}", exc_info=True)
 
 def get_limiter(app):
     """
@@ -137,10 +137,10 @@ def get_limiter(app):
             default_limits=["200 per day", "50 per hour"],
             storage_uri="memory://"
         )
-        logger.info("Rate limiter initialized")
+        logger.info(trans('general_rate_limiter_initialized', default='Rate limiter initialized'))
         return limiter
     except Exception as e:
-        logger.error(f"Error initializing rate limiter: {str(e)}", exc_info=True)
+        logger.error(f"{trans('general_rate_limiter_error', default='Error initializing rate limiter')}: {str(e)}", exc_info=True)
         # Return a mock limiter that does nothing
         class MockLimiter:
             def limit(self, *args, **kwargs):
@@ -161,10 +161,10 @@ def get_mail(app):
     """
     try:
         mail = Mail(app)
-        logger.info("Mail service initialized")
+        logger.info(trans('general_mail_service_initialized', default='Mail service initialized'))
         return mail
     except Exception as e:
-        logger.error(f"Error initializing mail service: {str(e)}", exc_info=True)
+        logger.error(f"{trans('general_mail_service_error', default='Error initializing mail service')}: {str(e)}", exc_info=True)
         return None
 
 def requires_role(role):
@@ -172,7 +172,7 @@ def requires_role(role):
     Decorator to require specific user role.
     
     Args:
-        role: Required role (e.g., 'admin', 'agent', 'personal')
+        role: Required role (e.g., 'admin', 'agent', 'personal') or list of roles
     
     Returns:
         Decorator function
@@ -188,7 +188,9 @@ def requires_role(role):
                 flash(trans('general_login_required', default='Please log in to access this page.'), 'warning')
                 return redirect(url_for('users_bp.login'))
             
-            if current_user.role != role:
+            # Handle both single role and list of roles
+            allowed_roles = role if isinstance(role, list) else [role]
+            if current_user.role not in allowed_roles:
                 flash(trans('general_access_denied', default='You do not have permission to access this page.'), 'danger')
                 return redirect(url_for('index'))
             
@@ -196,30 +198,64 @@ def requires_role(role):
         return decorated_function
     return decorator
 
-def check_coin_balance(user_id, required_amount=1):
+def check_coin_balance(required_amount=1, user_id=None):
     """
     Check if user has sufficient coin balance.
     
     Args:
-        user_id: User ID
         required_amount: Required coin amount (default: 1)
+        user_id: User ID (optional, will use current_user if not provided)
     
     Returns:
         bool: True if user has sufficient balance, False otherwise
     """
     try:
+        from flask_login import current_user
+        
+        if user_id is None and current_user.is_authenticated:
+            user_id = current_user.id
+        
+        if not user_id:
+            return False
+        
         db = get_mongo_db()
         if not db:
             return False
         
-        user = db.users.find_one({'_id': user_id})
+        user_query = get_user_query(user_id)
+        user = db.users.find_one(user_query)
         if not user:
             return False
         
         coin_balance = user.get('coin_balance', 0)
         return coin_balance >= required_amount
     except Exception as e:
-        logger.error(f"Error checking coin balance for user {user_id}: {str(e)}", exc_info=True)
+        logger.error(f"{trans('general_coin_balance_check_error', default='Error checking coin balance for user')} {user_id}: {str(e)}", exc_info=True)
+        return False
+
+def get_user_query(user_id):
+    """
+    Get user query for MongoDB operations.
+    
+    Args:
+        user_id: User ID
+    
+    Returns:
+        dict: MongoDB query for user
+    """
+    return {'_id': user_id}
+
+def is_admin():
+    """
+    Check if current user is admin.
+    
+    Returns:
+        bool: True if current user is admin, False otherwise
+    """
+    try:
+        from flask_login import current_user
+        return current_user.is_authenticated and current_user.role == 'admin'
+    except Exception:
         return False
 
 def format_currency(amount, currency='₦', lang=None):
@@ -244,7 +280,7 @@ def format_currency(amount, currency='₦', lang=None):
             return f"{currency}{int(amount):,}"
         return f"{currency}{amount:,.2f}"
     except (TypeError, ValueError) as e:
-        logger.warning(f"Error formatting currency {amount}: {str(e)}")
+        logger.warning(f"{trans('general_currency_format_error', default='Error formatting currency')} {amount}: {str(e)}")
         return f"{currency}0"
 
 def format_date(date_obj, lang=None, format_type='short'):
@@ -288,7 +324,7 @@ def format_date(date_obj, lang=None, format_type='short'):
             else:
                 return date_obj.strftime('%m/%d/%Y')
     except Exception as e:
-        logger.warning(f"Error formatting date {date_obj}: {str(e)}")
+        logger.warning(f"{trans('general_date_format_error', default='Error formatting date')} {date_obj}: {str(e)}")
         return str(date_obj) if date_obj else ''
 
 def sanitize_input(input_string, max_length=None):
@@ -401,9 +437,9 @@ def log_user_action(action, details=None, user_id=None):
         if db:
             db.audit_logs.insert_one(log_entry)
         
-        logger.info(f"User action logged: {action} by user {user_id}")
+        logger.info(f"{trans('general_user_action_logged', default='User action logged')}: {action} by user {user_id}")
     except Exception as e:
-        logger.error(f"Error logging user action: {str(e)}", exc_info=True)
+        logger.error(f"{trans('general_user_action_log_error', default='Error logging user action')}: {str(e)}", exc_info=True)
 
 # Data conversion functions for backward compatibility
 def to_dict_financial_health(record):
@@ -586,6 +622,8 @@ __all__ = [
     'get_mail',
     'requires_role',
     'check_coin_balance',
+    'get_user_query',
+    'is_admin',
     'format_currency',
     'format_date',
     'sanitize_input',

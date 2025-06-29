@@ -9,7 +9,7 @@ from mailersend_email import send_email, EMAIL_CONFIG
 import uuid
 import json
 import os
-from translations import trans as trans_orig
+from translations import trans
 from extensions import mongo
 from werkzeug.utils import secure_filename
 from models import log_tool_usage
@@ -18,7 +18,6 @@ import logging
 from flask import g
 from session_utils import create_anonymous_session
 from app import custom_login_required
-
 
 learning_hub_bp = Blueprint(
     'learning_hub',
@@ -253,31 +252,18 @@ quizzes_data = {
     }
 }
 
-# Modified translation function with fallback
-def trans(key, lang='en', default=None):
-    try:
-        translation = trans_orig(key, lang=lang)
-        return translation if translation else (default or key)
-    except Exception as e:
-        current_app.logger.warning(f"Translation failed for key='{key}' in lang='{lang}': {str(e)}", extra={'session_id': session.get('sid', 'no-session-id')})
-        return default or key
-
 class LearningHubProfileForm(FlaskForm):
-    first_name = StringField(validators=[DataRequired()])
-    email = StringField(validators=[Optional(), Email()])
-    send_email = BooleanField(default=False)
-    submit = SubmitField()
+    first_name = StringField(trans('general_first_name', default='First Name'), validators=[DataRequired()])
+    email = StringField(trans('general_email', default='Email'), validators=[Optional(), Email()])
+    send_email = BooleanField(trans('general_send_email', default='Send Email'), default=False)
+    submit = SubmitField(trans('general_submit', default='Submit'))
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         lang = session.get('lang', 'en')
-        self.first_name.label.text = trans('core_first_name', lang=lang)
-        self.email.label.text = trans('core_email', lang=lang)
-        self.send_email.label.text = trans('core_send_email', lang=lang)
-        self.submit.label.text = trans('core_submit', lang=lang)
-        self.first_name.validators[0].message = trans('core_first_name_required', lang=lang)
+        self.first_name.validators[0].message = trans('general_first_name_required', lang=lang)
         if self.email.validators:
-            self.email.validators[1].message = trans('core_email_invalid', lang=lang)
+            self.email.validators[1].message = trans('general_email_invalid', lang=lang)
 
 def get_progress():
     """Retrieve learning progress from MongoDB with caching."""
@@ -467,7 +453,7 @@ def main():
             quiz_scores_count=total_quiz_scores,
             profile_form=profile_form,
             profile_data=profile_data,
-            trans=trans,
+            t=trans,
             lang=lang
         )
         
@@ -484,7 +470,7 @@ def main():
             quiz_scores_count=0,
             profile_form=LearningHubProfileForm(),
             profile_data={},
-            trans=trans,
+            t=trans,
             lang=lang
         ), 500
 
@@ -494,7 +480,7 @@ def get_course_data(course_id):
     try:
         course = course_lookup(course_id)
         if not course:
-            return jsonify({'success': False, 'message': 'Course not found'})
+            return jsonify({'success': False, 'message': trans('learning_hub_course_not_found', default='Course not found')})
         
         progress = get_progress()
         course_progress = progress.get(course_id, {'lessons_completed': [], 'quiz_scores': {}, 'current_lesson': None})
@@ -506,7 +492,7 @@ def get_course_data(course_id):
         })
     except Exception as e:
         current_app.logger.error(f"Error getting course data: {str(e)}", extra={'session_id': session.get('sid', 'no-session-id')})
-        return jsonify({'success': False, 'message': 'Error loading course'})
+        return jsonify({'success': False, 'message': trans('learning_hub_course_load_error', default='Error loading course')})
 
 @learning_hub_bp.route('/api/lesson')
 def get_lesson_data():
@@ -517,11 +503,11 @@ def get_lesson_data():
         
         course = course_lookup(course_id)
         if not course:
-            return jsonify({'success': False, 'message': 'Course not found'})
+            return jsonify({'success': False, 'message': trans('learning_hub_course_not_found', default='Course not found')})
         
         lesson, module = lesson_lookup(course, lesson_id)
         if not lesson:
-            return jsonify({'success': False, 'message': 'Lesson not found'})
+            return jsonify({'success': False, 'message': trans('learning_hub_lesson_not_found', default='Lesson not found')})
         
         progress = get_progress()
         course_progress = progress.get(course_id, {'lessons_completed': [], 'quiz_scores': {}, 'current_lesson': None})
@@ -548,7 +534,7 @@ def get_lesson_data():
         })
     except Exception as e:
         current_app.logger.error(f"Error getting lesson data: {str(e)}", extra={'session_id': session.get('sid', 'no-session-id')})
-        return jsonify({'success': False, 'message': 'Error loading lesson'})
+        return jsonify({'success': False, 'message': trans('learning_hub_lesson_load_error', default='Error loading lesson')})
 
 @learning_hub_bp.route('/api/quiz')
 def get_quiz_data():
@@ -559,11 +545,11 @@ def get_quiz_data():
         
         course = course_lookup(course_id)
         if not course:
-            return jsonify({'success': False, 'message': 'Course not found'})
+            return jsonify({'success': False, 'message': trans('learning_hub_course_not_found', default='Course not found')})
         
         quiz = quizzes_data.get(quiz_id)
         if not quiz:
-            return jsonify({'success': False, 'message': 'Quiz not found'})
+            return jsonify({'success': False, 'message': trans('learning_hub_quiz_not_found', default='Quiz not found')})
         
         progress = get_progress()
         course_progress = progress.get(course_id, {'lessons_completed': [], 'quiz_scores': {}, 'current_lesson': None})
@@ -576,7 +562,7 @@ def get_quiz_data():
         })
     except Exception as e:
         current_app.logger.error(f"Error getting quiz data: {str(e)}", extra={'session_id': session.get('sid', 'no-session-id')})
-        return jsonify({'success': False, 'message': 'Error loading quiz'})
+        return jsonify({'success': False, 'message': trans('learning_hub_quiz_load_error', default='Error loading quiz')})
 
 @learning_hub_bp.route('/api/lesson/action', methods=['POST'])
 @custom_login_required
@@ -630,14 +616,14 @@ def lesson_action():
                     except Exception as e:
                         current_app.logger.error(f"Failed to send email for lesson {lesson_id}: {str(e)}", extra={'session_id': session.get('sid', 'no-session-id')})
                 
-                return jsonify({'success': True, 'message': 'Lesson marked as complete'})
+                return jsonify({'success': True, 'message': trans('learning_hub_lesson_completed', default='Lesson marked as complete')})
             else:
-                return jsonify({'success': True, 'message': 'Lesson already completed'})
+                return jsonify({'success': True, 'message': trans('learning_hub_lesson_already_completed', default='Lesson already completed')})
         
-        return jsonify({'success': False, 'message': 'Invalid action'})
+        return jsonify({'success': False, 'message': trans('learning_hub_invalid_action', default='Invalid action')})
     except Exception as e:
         current_app.logger.error(f"Error in lesson action: {str(e)}", extra={'session_id': session.get('sid', 'no-session-id')})
-        return jsonify({'success': False, 'message': 'Error processing action'})
+        return jsonify({'success': False, 'message': trans('learning_hub_action_error', default='Error processing action')})
 
 @learning_hub_bp.route('/api/quiz/action', methods=['POST'])
 @custom_login_required
@@ -651,7 +637,7 @@ def quiz_action():
         if action == 'submit_quiz':
             quiz = quizzes_data.get(quiz_id)
             if not quiz:
-                return jsonify({'success': False, 'message': 'Quiz not found'})
+                return jsonify({'success': False, 'message': trans('learning_hub_quiz_not_found', default='Quiz not found')})
             
             # Calculate score
             score = 0
@@ -673,15 +659,15 @@ def quiz_action():
             
             return jsonify({
                 'success': True,
-                'message': 'Quiz submitted successfully',
+                'message': trans('learning_hub_quiz_submitted', default='Quiz submitted successfully'),
                 'score': score,
                 'total': len(quiz['questions'])
             })
         
-        return jsonify({'success': False, 'message': 'Invalid action'})
+        return jsonify({'success': False, 'message': trans('learning_hub_invalid_action', default='Invalid action')})
     except Exception as e:
         current_app.logger.error(f"Error in quiz action: {str(e)}", extra={'session_id': session.get('sid', 'no-session-id')})
-        return jsonify({'success': False, 'message': 'Error processing quiz'})
+        return jsonify({'success': False, 'message': trans('learning_hub_quiz_error', default='Error processing quiz')})
 
 @learning_hub_bp.route('/profile', methods=['GET', 'POST'])
 def profile():

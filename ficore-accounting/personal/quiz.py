@@ -21,17 +21,17 @@ logger = logging.getLogger('ficore_app')
 quiz_bp = Blueprint('quiz', __name__, template_folder='templates/QUIZ', url_prefix='/QUIZ')
 
 class QuizForm(FlaskForm):
-    first_name = StringField(validators=[DataRequired()], render_kw={
-        'placeholder': trans('core_first_name_placeholder', default='e.g., Muhammad, Bashir, Umar'),
-        'title': trans('core_first_name_title', default='Enter your first name to personalize your quiz results')
+    first_name = StringField(trans('general_first_name', default='First Name'), validators=[DataRequired()], render_kw={
+        'placeholder': trans('general_first_name_placeholder', default='e.g., Muhammad, Bashir, Umar'),
+        'title': trans('general_first_name_title', default='Enter your first name to personalize your quiz results')
     })
-    email = StringField(validators=[DataRequired(), Email()], render_kw={
-        'placeholder': trans('core_email_placeholder', default='e.g., muhammad@example.com'),
-        'title': trans('core_email_title', default='Enter your email to receive quiz results')
+    email = StringField(trans('general_email', default='Email'), validators=[DataRequired(), Email()], render_kw={
+        'placeholder': trans('general_email_placeholder', default='e.g., muhammad@example.com'),
+        'title': trans('general_email_title', default='Enter your email to receive quiz results')
     })
-    lang = SelectField(choices=[('en', 'English'), ('ha', 'Hausa')], default='en', validators=[Optional()])
-    send_email = BooleanField(default=False, validators=[Optional()], render_kw={
-        'title': trans('core_send_email_title', default='Check to receive an email with your quiz results')
+    lang = SelectField(trans('general_language', default='Language'), choices=[('en', 'English'), ('ha', 'Hausa')], default='en', validators=[Optional()])
+    send_email = BooleanField(trans('general_send_email', default='Send Email'), default=False, validators=[Optional()], render_kw={
+        'title': trans('general_send_email_title', default='Check to receive an email with your quiz results')
     })
     
     # Quiz questions
@@ -46,21 +46,19 @@ class QuizForm(FlaskForm):
     question_9 = RadioField(validators=[DataRequired()], choices=[('Yes', 'Yes'), ('No', 'No')], id='question_9')
     question_10 = RadioField(validators=[DataRequired()], choices=[('Yes', 'Yes'), ('No', 'No')], id='question_10')
     
-    submit = SubmitField()
+    submit = SubmitField(trans('quiz_submit_quiz', default='Submit Quiz'))
 
     def __init__(self, lang='en', *args, **kwargs):
         super().__init__(*args, **kwargs)
         
-        # Set labels
-        self.first_name.label.text = trans('core_first_name', default='First Name', lang=lang)
-        self.email.label.text = trans('core_email', default='Email', lang=lang)
-        self.lang.label.text = trans('core_language', default='Language', lang=lang)
-        self.send_email.label.text = trans('core_send_email', default='Send Email', lang=lang)
-        self.submit.label.text = trans('quiz_submit_quiz', default='Submit Quiz', lang=lang)
-        
+        # Set validation messages
+        self.first_name.validators[0].message = trans('general_first_name_required', lang=lang)
+        self.email.validators[0].message = trans('general_email_required', lang=lang)
+        self.email.validators[1].message = trans('general_email_invalid', lang=lang)
+
         self.lang.choices = [
-            ('en', trans('core_language_en', default='English', lang=lang)),
-            ('ha', trans('core_language_ha', default='Hausa', lang=lang))
+            ('en', trans('general_english', default='English', lang=lang)),
+            ('ha', trans('general_hausa', default='Hausa', lang=lang))
         ]
 
         # Set up questions
@@ -103,35 +101,35 @@ def calculate_score(answers):
 def assign_personality(score, lang='en'):
     if score >= 21:
         return {
-            'name': 'Planner',
+            'name': trans('quiz_planner', default='Planner', lang=lang),
             'description': trans('quiz_planner_description', default='You plan your finances meticulously.', lang=lang),
             'insights': [trans('quiz_insight_planner_1', default='You have a strong grasp of financial planning.', lang=lang)],
             'tips': [trans('quiz_tip_planner_1', default='Continue setting long-term goals.', lang=lang)]
         }
     elif score >= 13:
         return {
-            'name': 'Saver',
+            'name': trans('quiz_saver', default='Saver', lang=lang),
             'description': trans('quiz_saver_description', default='You prioritize saving consistently.', lang=lang),
             'insights': [trans('quiz_insight_saver_1', default='You excel at saving regularly.', lang=lang)],
             'tips': [trans('quiz_tip_saver_1', default='Consider investing to grow your savings.', lang=lang)]
         }
     elif score >= 7:
         return {
-            'name': 'Balanced',
+            'name': trans('quiz_balanced', default='Balanced', lang=lang),
             'description': trans('quiz_balanced_description', default='You maintain a balanced financial approach.', lang=lang),
             'insights': [trans('quiz_insight_balanced_1', default='You balance saving and spending well.', lang=lang)],
             'tips': [trans('quiz_tip_balanced_1', default='Try a budgeting app to optimize habits.', lang=lang)]
         }
     elif score >= 3:
         return {
-            'name': 'Spender',
+            'name': trans('quiz_spender', default='Spender', lang=lang),
             'description': trans('quiz_spender_description', default='You enjoy spending freely.', lang=lang),
             'insights': [trans('quiz_insight_spender_1', default='Spending is a strength, but can be controlled.', lang=lang)],
             'tips': [trans('quiz_tip_spender_1', default='Track expenses to avoid overspending.', lang=lang)]
         }
     else:
         return {
-            'name': 'Avoider',
+            'name': trans('quiz_avoider', default='Avoider', lang=lang),
             'description': trans('quiz_avoider_description', default='You avoid financial planning.', lang=lang),
             'insights': [trans('quiz_insight_avoider_1', default='Planning feels challenging but is learnable.', lang=lang)],
             'tips': [trans('quiz_tip_avoider_1', default='Start with a simple monthly budget.', lang=lang)]
@@ -254,7 +252,7 @@ def main():
                         )
                     except Exception as e:
                         logger.error(f"Failed to send quiz results email: {str(e)}", extra={'session_id': session['sid']})
-                        flash(trans("email_send_failed", default="Failed to send email.", lang=lang), "warning")
+                        flash(trans("general_email_send_failed", default="Failed to send email.", lang=lang), "warning")
 
         # Get quiz results for display
         quiz_results = list(mongo.db.quiz_responses.find(filter_criteria).sort('created_at', -1))
@@ -296,7 +294,7 @@ def main():
             course_id=course_id,
             lang=lang,
             max_score=30,
-            trans=trans
+            t=trans
         )
 
     except Exception as e:
@@ -312,5 +310,5 @@ def main():
             course_id=course_id,
             lang=lang,
             max_score=30,
-            trans=trans
+            t=trans
         ), 500

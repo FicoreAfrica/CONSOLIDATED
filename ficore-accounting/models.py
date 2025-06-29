@@ -7,6 +7,7 @@ import os
 import logging
 import uuid
 import time
+from translations import trans
 
 logger = logging.getLogger('ficore_app')
 
@@ -66,12 +67,12 @@ def initialize_database(app):
     for attempt in range(max_retries):
         try:
             mongo_client.admin.command('ping')
-            logger.info(f"Attempt {attempt + 1}/{max_retries} - MongoDB connection established")
+            logger.info(f"Attempt {attempt + 1}/{max_retries} - {trans('general_database_connection_established', default='MongoDB connection established')}")
             break
         except (ConnectionError, ServerSelectionTimeoutError) as e:
             logger.error(f"Failed to initialize database (attempt {attempt + 1}/{max_retries}): {e}")
             if attempt == max_retries - 1:
-                raise RuntimeError("MongoDB connection failed after max retries")
+                raise RuntimeError(trans('general_database_connection_failed', default='MongoDB connection failed after max retries'))
             time.sleep(retry_delay)
     
     try:
@@ -139,13 +140,121 @@ def initialize_database(app):
                     {'key': [('role', ASCENDING)]}
                 ]
             },
-            # Additional schemas omitted for brevity; add as needed
+            'records': {
+                'validator': {
+                    '$jsonSchema': {
+                        'bsonType': 'object',
+                        'required': ['user_id', 'type', 'name', 'amount_owed'],
+                        'properties': {
+                            'user_id': {'bsonType': 'string'},
+                            'type': {'enum': ['debtor', 'creditor']},
+                            'name': {'bsonType': 'string'},
+                            'contact': {'bsonType': ['string', 'null']},
+                            'amount_owed': {'bsonType': 'number', 'minimum': 0},
+                            'description': {'bsonType': ['string', 'null']},
+                            'reminder_count': {'bsonType': 'int', 'minimum': 0},
+                            'created_at': {'bsonType': 'date'},
+                            'updated_at': {'bsonType': ['date', 'null']}
+                        }
+                    }
+                },
+                'indexes': [
+                    {'key': [('user_id', ASCENDING), ('type', ASCENDING)]},
+                    {'key': [('created_at', DESCENDING)]}
+                ]
+            },
+            'cashflows': {
+                'validator': {
+                    '$jsonSchema': {
+                        'bsonType': 'object',
+                        'required': ['user_id', 'type', 'party_name', 'amount'],
+                        'properties': {
+                            'user_id': {'bsonType': 'string'},
+                            'type': {'enum': ['receipt', 'payment']},
+                            'party_name': {'bsonType': 'string'},
+                            'amount': {'bsonType': 'number', 'minimum': 0},
+                            'method': {'bsonType': ['string', 'null']},
+                            'category': {'bsonType': ['string', 'null']},
+                            'created_at': {'bsonType': 'date'},
+                            'updated_at': {'bsonType': ['date', 'null']}
+                        }
+                    }
+                },
+                'indexes': [
+                    {'key': [('user_id', ASCENDING), ('type', ASCENDING)]},
+                    {'key': [('created_at', DESCENDING)]}
+                ]
+            },
+            'inventory': {
+                'validator': {
+                    '$jsonSchema': {
+                        'bsonType': 'object',
+                        'required': ['user_id', 'item_name', 'qty', 'unit', 'buying_price', 'selling_price'],
+                        'properties': {
+                            'user_id': {'bsonType': 'string'},
+                            'item_name': {'bsonType': 'string'},
+                            'qty': {'bsonType': 'int', 'minimum': 0},
+                            'unit': {'bsonType': 'string'},
+                            'buying_price': {'bsonType': 'number', 'minimum': 0},
+                            'selling_price': {'bsonType': 'number', 'minimum': 0},
+                            'threshold': {'bsonType': 'int', 'minimum': 0},
+                            'created_at': {'bsonType': 'date'},
+                            'updated_at': {'bsonType': ['date', 'null']}
+                        }
+                    }
+                },
+                'indexes': [
+                    {'key': [('user_id', ASCENDING)]},
+                    {'key': [('item_name', ASCENDING)]}
+                ]
+            },
+            'coin_transactions': {
+                'validator': {
+                    '$jsonSchema': {
+                        'bsonType': 'object',
+                        'required': ['user_id', 'amount', 'type', 'date'],
+                        'properties': {
+                            'user_id': {'bsonType': 'string'},
+                            'amount': {'bsonType': 'int'},
+                            'type': {'enum': ['credit', 'spend', 'purchase', 'admin_credit']},
+                            'ref': {'bsonType': ['string', 'null']},
+                            'date': {'bsonType': 'date'},
+                            'facilitated_by_agent': {'bsonType': ['string', 'null']},
+                            'payment_method': {'bsonType': ['string', 'null']},
+                            'cash_amount': {'bsonType': ['number', 'null']},
+                            'notes': {'bsonType': ['string', 'null']}
+                        }
+                    }
+                },
+                'indexes': [
+                    {'key': [('user_id', ASCENDING)]},
+                    {'key': [('date', DESCENDING)]}
+                ]
+            },
+            'audit_logs': {
+                'validator': {
+                    '$jsonSchema': {
+                        'bsonType': 'object',
+                        'required': ['admin_id', 'action', 'timestamp'],
+                        'properties': {
+                            'admin_id': {'bsonType': 'string'},
+                            'action': {'bsonType': 'string'},
+                            'details': {'bsonType': ['object', 'null']},
+                            'timestamp': {'bsonType': 'date'}
+                        }
+                    }
+                },
+                'indexes': [
+                    {'key': [('admin_id', ASCENDING)]},
+                    {'key': [('timestamp', DESCENDING)]}
+                ]
+            }
         }
         
         for collection_name, config in collection_schemas.items():
             if collection_name not in collections:
                 db_instance.create_collection(collection_name, validator=config.get('validator', {}))
-                logger.info(f"Created collection: {collection_name}")
+                logger.info(f"{trans('general_collection_created', default='Created collection')}: {collection_name}")
             
             existing_indexes = db_instance[collection_name].index_information()
             for index in config.get('indexes', []):
@@ -157,28 +266,28 @@ def initialize_database(app):
                     if tuple(existing_index_info['key']) == index_key_tuple:
                         existing_options = {k: v for k, v in existing_index_info.items() if k not in ['key', 'v', 'ns']}
                         if existing_options == options:
-                            logger.info(f"Index already exists on {collection_name}: {keys} with options {options}")
+                            logger.info(f"{trans('general_index_exists', default='Index already exists on')} {collection_name}: {keys} with options {options}")
                             index_exists = True
                         break
                 if not index_exists:
                     db_instance[collection_name].create_index(keys, **options)
-                    logger.info(f"Created index on {collection_name}: {keys} with options {options}")
+                    logger.info(f"{trans('general_index_created', default='Created index on')} {collection_name}: {keys} with options {options}")
         
         courses_collection = db_instance.courses
         if courses_collection.count_documents({}) == 0:
             for course in SAMPLE_COURSES:
                 courses_collection.insert_one(course)
-            logger.info("Initialized courses in MongoDB")
+            logger.info(trans('general_courses_initialized', default='Initialized courses in MongoDB'))
         app.config['COURSES'] = list(courses_collection.find({}, {'_id': 0}))
         
         tax_rates_collection = db_instance.tax_rates
         if tax_rates_collection.count_documents({}) == 0:
             sample_rates = [
-                {'role': 'personal', 'min_income': 0, 'max_income': 100000, 'rate': 0.1, 'description': '10% tax for income up to 100,000'},
-                {'role': 'trader', 'min_income': 0, 'max_income': 500000, 'rate': 0.15, 'description': '15% tax for turnover up to 500,000'},
+                {'role': 'personal', 'min_income': 0, 'max_income': 100000, 'rate': 0.1, 'description': trans('tax_rate_personal_description', default='10% tax for income up to 100,000')},
+                {'role': 'trader', 'min_income': 0, 'max_income': 500000, 'rate': 0.15, 'description': trans('tax_rate_trader_description', default='15% tax for turnover up to 500,000')},
             ]
             tax_rates_collection.insert_many(sample_rates)
-            logger.info("Initialized tax rates in MongoDB")
+            logger.info(trans('general_tax_rates_initialized', default='Initialized tax rates in MongoDB'))
         
         payment_locations_collection = db_instance.payment_locations
         if payment_locations_collection.count_documents({}) == 0:
@@ -186,10 +295,10 @@ def initialize_database(app):
                 {'name': 'Gombe State IRS Office', 'address': '123 Tax Street, Gombe', 'contact': '+234 123 456 7890', 'coordinates': {'lat': 10.2896, 'lng': 11.1673}},
             ]
             payment_locations_collection.insert_many(sample_locations)
-            logger.info("Initialized payment locations in MongoDB")
+            logger.info(trans('general_payment_locations_initialized', default='Initialized payment locations in MongoDB'))
     
     except Exception as e:
-        logger.error(f"Failed to initialize database: {str(e)}", exc_info=True)
+        logger.error(f"{trans('general_database_initialization_failed', default='Failed to initialize database')}: {str(e)}", exc_info=True)
         raise
 
 class User:
@@ -247,7 +356,7 @@ def create_user(db, user_data):
         }
         
         db.users.insert_one(user_doc)
-        logger.info(f"Created user with ID: {user_id}")
+        logger.info(f"{trans('general_user_created', default='Created user with ID')}: {user_id}")
         
         return User(
             id=user_id,
@@ -262,10 +371,10 @@ def create_user(db, user_data):
             dark_mode=user_doc['dark_mode']
         )
     except DuplicateKeyError as e:
-        logger.error(f"Error creating user: Duplicate key error - {str(e)}")
-        raise ValueError("User with this email or username already exists")
+        logger.error(f"{trans('general_user_creation_error', default='Error creating user')}: {trans('general_duplicate_key_error', default='Duplicate key error')} - {str(e)}")
+        raise ValueError(trans('general_user_exists', default='User with this email or username already exists'))
     except Exception as e:
-        logger.error(f"Error creating user: {str(e)}")
+        logger.error(f"{trans('general_user_creation_error', default='Error creating user')}: {str(e)}")
         raise
 
 def get_user_by_email(db, email):
@@ -286,7 +395,7 @@ def get_user_by_email(db, email):
             )
         return None
     except Exception as e:
-        logger.error(f"Error getting user by email {email}: {str(e)}")
+        logger.error(f"{trans('general_user_fetch_error', default='Error getting user by email')} {email}: {str(e)}")
         raise
 
 def get_user(db, user_id):
@@ -307,95 +416,95 @@ def get_user(db, user_id):
             )
         return None
     except Exception as e:
-        logger.error(f"Error getting user by ID {user_id}: {str(e)}")
+        logger.error(f"{trans('general_user_fetch_error', default='Error getting user by ID')} {user_id}: {str(e)}")
         raise
 
 def get_financial_health(db, filter_kwargs):
     try:
         return list(db.financial_health.find(filter_kwargs).sort('created_at', DESCENDING))
     except Exception as e:
-        logger.error(f"Error getting financial health: {str(e)}")
+        logger.error(f"{trans('general_financial_health_fetch_error', default='Error getting financial health')}: {str(e)}")
         raise
 
 def get_budgets(db, filter_kwargs):
     try:
         return list(db.budgets.find(filter_kwargs).sort('created_at', DESCENDING))
     except Exception as e:
-        logger.error(f"Error getting budgets: {str(e)}")
+        logger.error(f"{trans('general_budgets_fetch_error', default='Error getting budgets')}: {str(e)}")
         raise
 
 def get_bills(db, filter_kwargs):
     try:
         return list(db.bills.find(filter_kwargs).sort('due_date', ASCENDING))
     except Exception as e:
-        logger.error(f"Error getting bills: {str(e)}")
+        logger.error(f"{trans('general_bills_fetch_error', default='Error getting bills')}: {str(e)}")
         raise
 
 def get_net_worth(db, filter_kwargs):
     try:
         return list(db.net_worth.find(filter_kwargs).sort('created_at', DESCENDING))
     except Exception as e:
-        logger.error(f"Error getting net worth: {str(e)}")
+        logger.error(f"{trans('general_net_worth_fetch_error', default='Error getting net worth')}: {str(e)}")
         raise
 
 def get_emergency_funds(db, filter_kwargs):
     try:
         return list(db.emergency_funds.find(filter_kwargs).sort('created_at', DESCENDING))
     except Exception as e:
-        logger.error(f"Error getting emergency funds: {str(e)}")
+        logger.error(f"{trans('general_emergency_funds_fetch_error', default='Error getting emergency funds')}: {str(e)}")
         raise
 
 def get_learning_progress(db, filter_kwargs):
     try:
         return list(db.learning_progress.find(filter_kwargs))
     except Exception as e:
-        logger.error(f"Error getting learning progress: {str(e)}")
+        logger.error(f"{trans('general_learning_progress_fetch_error', default='Error getting learning progress')}: {str(e)}")
         raise
 
 def get_quiz_results(db, filter_kwargs):
     try:
         return list(db.quiz_results.find(filter_kwargs).sort('created_at', DESCENDING))
     except Exception as e:
-        logger.error(f"Error getting quiz results: {str(e)}")
+        logger.error(f"{trans('general_quiz_results_fetch_error', default='Error getting quiz results')}: {str(e)}")
         raise
 
 def get_news_articles(db, filter_kwargs):
     try:
         return list(db.news_articles.find(filter_kwargs).sort('published_at', DESCENDING))
     except Exception as e:
-        logger.error(f"Error getting news articles: {str(e)}")
+        logger.error(f"{trans('general_news_articles_fetch_error', default='Error getting news articles')}: {str(e)}")
         raise
 
 def get_tax_rates(db, filter_kwargs):
     try:
         return list(db.tax_rates.find(filter_kwargs).sort('min_income', ASCENDING))
     except Exception as e:
-        logger.error(f"Error getting tax rates: {str(e)}")
+        logger.error(f"{trans('general_tax_rates_fetch_error', default='Error getting tax rates')}: {str(e)}")
         raise
 
 def get_payment_locations(db, filter_kwargs):
     try:
         return list(db.payment_locations.find(filter_kwargs).sort('name', ASCENDING))
     except Exception as e:
-        logger.error(f"Error getting payment locations: {str(e)}")
+        logger.error(f"{trans('general_payment_locations_fetch_error', default='Error getting payment locations')}: {str(e)}")
         raise
 
 def get_tax_reminders(db, filter_kwargs):
     try:
         return list(db.tax_reminders.find(filter_kwargs).sort('due_date', ASCENDING))
     except Exception as e:
-        logger.error(f"Error getting tax reminders: {str(e)}")
+        logger.error(f"{trans('general_tax_reminders_fetch_error', default='Error getting tax reminders')}: {str(e)}")
         raise
 
 def create_feedback(db, feedback_data):
     try:
         required_fields = ['user_id', 'tool_name', 'rating', 'timestamp']
         if not all(field in feedback_data for field in required_fields):
-            raise ValueError("Missing required feedback fields")
+            raise ValueError(trans('general_missing_feedback_fields', default='Missing required feedback fields'))
         db.feedback.insert_one(feedback_data)
-        logger.info(f"Created feedback record for tool: {feedback_data.get('tool_name')}")
+        logger.info(f"{trans('general_feedback_created', default='Created feedback record for tool')}: {feedback_data.get('tool_name')}")
     except Exception as e:
-        logger.error(f"Error creating feedback: {str(e)}")
+        logger.error(f"{trans('general_feedback_creation_error', default='Error creating feedback')}: {str(e)}")
         raise
 
 def log_tool_usage(db, tool_name, user_id=None, session_id=None, action=None):
@@ -408,56 +517,56 @@ def log_tool_usage(db, tool_name, user_id=None, session_id=None, action=None):
             'timestamp': datetime.utcnow()
         }
         db.tool_usage.insert_one(usage_data)
-        logger.info(f"Logged tool usage: {tool_name} - {action}")
+        logger.info(f"{trans('general_tool_usage_logged', default='Logged tool usage')}: {tool_name} - {action}")
     except Exception as e:
-        logger.error(f"Error logging tool usage: {str(e)}")
+        logger.error(f"{trans('general_tool_usage_log_error', default='Error logging tool usage')}: {str(e)}")
 
 def create_news_article(db, article_data):
     try:
         required_fields = ['title', 'content', 'source_type', 'published_at']
         if not all(field in article_data for field in required_fields):
-            raise ValueError("Missing required news article fields")
+            raise ValueError(trans('general_missing_news_fields', default='Missing required news article fields'))
         article_data.setdefault('is_verified', False)
         article_data.setdefault('is_active', True)
         result = db.news_articles.insert_one(article_data)
-        logger.info(f"Created news article with ID: {result.inserted_id}")
+        logger.info(f"{trans('general_news_article_created', default='Created news article with ID')}: {result.inserted_id}")
         return str(result.inserted_id)
     except Exception as e:
-        logger.error(f"Error creating news article: {str(e)}")
+        logger.error(f"{trans('general_news_article_creation_error', default='Error creating news article')}: {str(e)}")
         raise
 
 def create_tax_rate(db, tax_rate_data):
     try:
         required_fields = ['role', 'min_income', 'max_income', 'rate', 'description']
         if not all(field in tax_rate_data for field in required_fields):
-            raise ValueError("Missing required tax rate fields")
+            raise ValueError(trans('general_missing_tax_rate_fields', default='Missing required tax rate fields'))
         result = db.tax_rates.insert_one(tax_rate_data)
-        logger.info(f"Created tax rate with ID: {result.inserted_id}")
+        logger.info(f"{trans('general_tax_rate_created', default='Created tax rate with ID')}: {result.inserted_id}")
         return str(result.inserted_id)
     except Exception as e:
-        logger.error(f"Error creating tax rate: {str(e)}")
+        logger.error(f"{trans('general_tax_rate_creation_error', default='Error creating tax rate')}: {str(e)}")
         raise
 
 def create_payment_location(db, location_data):
     try:
         required_fields = ['name', 'address', 'contact']
         if not all(field in location_data for field in required_fields):
-            raise ValueError("Missing required payment location fields")
+            raise ValueError(trans('general_missing_location_fields', default='Missing required payment location fields'))
         result = db.payment_locations.insert_one(location_data)
-        logger.info(f"Created payment location with ID: {result.inserted_id}")
+        logger.info(f"{trans('general_payment_location_created', default='Created payment location with ID')}: {result.inserted_id}")
         return str(result.inserted_id)
     except Exception as e:
-        logger.error(f"Error creating payment location: {str(e)}")
+        logger.error(f"{trans('general_payment_location_creation_error', default='Error creating payment location')}: {str(e)}")
         raise
 
 def create_tax_reminder(db, reminder_data):
     try:
         required_fields = ['user_id', 'tax_type', 'due_date', 'amount', 'status', 'created_at']
         if not all(field in reminder_data for field in required_fields):
-            raise ValueError("Missing required tax reminder fields")
+            raise ValueError(trans('general_missing_reminder_fields', default='Missing required tax reminder fields'))
         result = db.tax_reminders.insert_one(reminder_data)
-        logger.info(f"Created tax reminder with ID: {result.inserted_id}")
+        logger.info(f"{trans('general_tax_reminder_created', default='Created tax reminder with ID')}: {result.inserted_id}")
         return str(result.inserted_id)
     except Exception as e:
-        logger.error(f"Error creating tax reminder: {str(e)}")
+        logger.error(f"{trans('general_tax_reminder_creation_error', default='Error creating tax reminder')}: {str(e)}")
         raise

@@ -1,5 +1,6 @@
-from flask import Blueprint, render_template, redirect, url_for, flash
+from flask import Blueprint, render_template, redirect, url_for, flash, session
 from flask_login import login_required, current_user
+from translations import trans
 from utils import trans_function, requires_role, format_currency, format_date, get_mongo_db, is_admin
 from bson import ObjectId
 from datetime import datetime
@@ -39,9 +40,11 @@ def index():
             recent_receipts=recent_receipts,
             low_stock_items=low_stock_items,
             format_currency=format_currency,
-            format_date=format_date
+            format_date=format_date,
+            t=trans,
+            lang=session.get('lang', 'en')
         )
     except Exception as e:
         logger.error(f"Error fetching dashboard data for user {current_user.id}: {str(e)}")
-        flash(trans_function('something_went_wrong', default='An error occurred while loading the dashboard'), 'danger')
+        flash(trans('dashboard_load_error', default='An error occurred while loading the dashboard'), 'danger')
         return redirect(url_for('index'))

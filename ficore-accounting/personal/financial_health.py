@@ -24,34 +24,23 @@ def get_mongo_collection():
     return mongo.db['financial_health_scores']
 
 class FinancialHealthForm(FlaskForm):
-    first_name = StringField()
-    email = StringField()
-    user_type = SelectField()
-    send_email = BooleanField()
-    income = FloatField()
-    expenses = FloatField()
-    debt = FloatField()
-    interest_rate = FloatField()
-    submit = SubmitField()
+    first_name = StringField(trans('general_first_name', default='First Name'))
+    email = StringField(trans('general_email', default='Email'))
+    user_type = SelectField(trans('financial_health_user_type', default='User Type'))
+    send_email = BooleanField(trans('general_send_email', default='Send Email'))
+    income = FloatField(trans('financial_health_monthly_income', default='Monthly Income'))
+    expenses = FloatField(trans('financial_health_monthly_expenses', default='Monthly Expenses'))
+    debt = FloatField(trans('financial_health_total_debt', default='Total Debt'))
+    interest_rate = FloatField(trans('financial_health_average_interest_rate', default='Average Interest Rate'))
+    submit = SubmitField(trans('financial_health_submit', default='Submit'))
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         lang = session.get('lang', 'en')
         
-        # Set labels
-        self.first_name.label.text = trans('financial_health_first_name', lang=lang)
-        self.email.label.text = trans('financial_health_email', lang=lang)
-        self.user_type.label.text = trans('financial_health_user_type', lang=lang)
-        self.send_email.label.text = trans('financial_health_send_email', lang=lang)
-        self.income.label.text = trans('financial_health_monthly_income', lang=lang)
-        self.expenses.label.text = trans('financial_health_monthly_expenses', lang=lang)
-        self.debt.label.text = trans('financial_health_total_debt', lang=lang)
-        self.interest_rate.label.text = trans('financial_health_average_interest_rate', lang=lang)
-        self.submit.label.text = trans('financial_health_submit', lang=lang)
-        
         # Set validators
-        self.first_name.validators = [DataRequired(message=trans('financial_health_first_name_required', lang=lang))]
-        self.email.validators = [Optional(), Email(message=trans('financial_health_email_invalid', lang=lang))]
+        self.first_name.validators = [DataRequired(message=trans('general_first_name_required', lang=lang))]
+        self.email.validators = [Optional(), Email(message=trans('general_email_invalid', lang=lang))]
         self.user_type.choices = [
             ('individual', trans('financial_health_user_type_individual', lang=lang)),
             ('business', trans('financial_health_user_type_business', lang=lang))
@@ -219,7 +208,7 @@ def main():
 
                 collection.insert_one(record_data)
                 current_app.logger.info(f"Financial health data saved to MongoDB with ID {record_data['_id']} for session {session['sid']}")
-                flash(trans("financial_health_health_completed_success", lang=lang), "success")
+                flash(trans("financial_health_completed_success", lang=lang), "success")
 
                 # Send email if requested
                 if form.send_email.data and form.email.data:
@@ -252,7 +241,7 @@ def main():
                         )
                     except Exception as e:
                         current_app.logger.error(f"Failed to send email: {str(e)}")
-                        flash(trans("financial_health_email_failed", lang=lang), "warning")
+                        flash(trans("general_email_send_failed", lang=lang), "warning")
 
         # Get financial health data for display
         collection = get_mongo_collection()
@@ -316,7 +305,7 @@ def main():
             rank=rank,
             total_users=total_users,
             average_score=average_score,
-            trans=trans,
+            t=trans,
             lang=lang
         )
 
@@ -338,6 +327,6 @@ def main():
             rank=0,
             total_users=0,
             average_score=0,
-            trans=trans,
+            t=trans,
             lang=lang
         ), 500

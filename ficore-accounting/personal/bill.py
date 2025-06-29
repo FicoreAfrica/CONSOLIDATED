@@ -41,16 +41,16 @@ def calculate_next_due_date(due_date, frequency):
         return due_date
 
 class BillForm(FlaskForm):
-    first_name = StringField('First Name')
-    email = StringField('Email')
-    bill_name = StringField('Bill Name')
-    amount = FloatField('Amount', filters=[strip_commas])
-    due_date = StringField('Due Date (YYYY-MM-DD)')
-    frequency = SelectField('Frequency', coerce=str)
-    category = SelectField('Category', coerce=str)
-    status = SelectField('Status', coerce=str)
-    send_email = BooleanField('Send Email Reminders')
-    reminder_days = IntegerField('Reminder Days', default=7)
+    first_name = StringField(trans('general_first_name', default='First Name'))
+    email = StringField(trans('general_email', default='Email'))
+    bill_name = StringField(trans('bill_bill_name', default='Bill Name'))
+    amount = FloatField(trans('bill_amount', default='Amount'), filters=[strip_commas])
+    due_date = StringField(trans('bill_due_date', default='Due Date (YYYY-MM-DD)'))
+    frequency = SelectField(trans('bill_frequency', default='Frequency'), coerce=str)
+    category = SelectField(trans('general_category', default='Category'), coerce=str)
+    status = SelectField(trans('bill_status', default='Status'), coerce=str)
+    send_email = BooleanField(trans('general_send_email', default='Send Email Reminders'))
+    reminder_days = IntegerField(trans('bill_reminder_days', default='Reminder Days'), default=7)
     csrf_token = HiddenField()
 
     def __init__(self, *args, **kwargs):
@@ -58,8 +58,8 @@ class BillForm(FlaskForm):
         lang = session.get('lang', 'en')
         
         # Set up validators
-        self.first_name.validators = [DataRequired(message=trans('core_first_name_required', lang))]
-        self.email.validators = [DataRequired(message=trans('core_email_required', lang)), Email()]
+        self.first_name.validators = [DataRequired(message=trans('general_first_name_required', lang))]
+        self.email.validators = [DataRequired(message=trans('general_email_required', lang)), Email()]
         self.bill_name.validators = [DataRequired(message=trans('bill_bill_name_required', lang))]
         self.amount.validators = [DataRequired(message=trans('bill_amount_required', lang)), NumberRange(min=0, max=10000000000)]
         self.due_date.validators = [DataRequired(message=trans('bill_due_date_required', lang))]
@@ -89,7 +89,7 @@ class BillForm(FlaskForm):
             ('airtime', trans('bill_category_airtime', lang)),
             ('school_fees', trans('bill_category_school_fees', lang)),
             ('savings_investments', trans('bill_category_savings_investments', lang)),
-            ('other', trans('bill_category_other', lang))
+            ('other', trans('general_other', lang))
         ]
         self.status.choices = [
             ('unpaid', trans('bill_status_unpaid', lang)),
@@ -208,7 +208,7 @@ def main():
                         current_app.logger.info(f"Email sent to {form.email.data}")
                     except Exception as e:
                         current_app.logger.error(f"Failed to send email: {str(e)}")
-                        flash(trans('email_send_failed', lang), 'warning')
+                        flash(trans('general_email_send_failed', lang), 'warning')
 
             elif action == 'update_bill':
                 bill_id = request.form.get('bill_id')
@@ -229,7 +229,7 @@ def main():
             elif action == 'delete_bill':
                 bill_id = request.form.get('bill_id')
                 bills_collection.delete_one({'_id': ObjectId(bill_id), **filter_kwargs})
-                flash(trans('bill_bill_deleted_success', lang), 'success')
+                flash(trans('bill_deleted_success', lang), 'success')
 
             elif action == 'toggle_status':
                 bill_id = request.form.get('bill_id')
@@ -252,7 +252,7 @@ def main():
                         except Exception as e:
                             current_app.logger.error(f"Error creating recurring bill: {str(e)}")
                     
-                    flash(trans('bill_bill_status_toggled_success', lang), 'success')
+                    flash(trans('bill_status_toggled_success', lang), 'success')
 
         # Get bills data for display
         bills = bills_collection.find(filter_kwargs)
@@ -319,7 +319,7 @@ def main():
             due_month=due_month,
             upcoming_bills=upcoming_bills,
             tips=tips,
-            trans=trans,
+            t=trans,
             lang=lang
         )
 
@@ -344,7 +344,7 @@ def main():
             due_month=[],
             upcoming_bills=[],
             tips=tips,
-            trans=trans,
+            t=trans,
             lang=lang
         )
 

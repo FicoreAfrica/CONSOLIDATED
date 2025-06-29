@@ -1,5 +1,6 @@
-from flask import Blueprint, render_template, redirect, url_for, flash, request, jsonify, Response
+from flask import Blueprint, render_template, redirect, url_for, flash, request, jsonify, Response, session
 from flask_login import login_required, current_user
+from translations import trans
 from utils import trans_function, requires_role, check_coin_balance, format_currency, format_date, get_mongo_db, is_admin, get_user_query
 from bson import ObjectId
 from datetime import datetime, timedelta
@@ -16,11 +17,11 @@ import urllib.parse
 logger = logging.getLogger(__name__)
 
 class CreditorForm(FlaskForm):
-    name = StringField('Creditor Name', validators=[DataRequired()])
-    contact = StringField('Contact', validators=[Optional()])
-    amount_owed = FloatField('Amount Owed', validators=[DataRequired()])
-    description = TextAreaField('Description', validators=[Optional()])
-    submit = SubmitField('Add Creditor')
+    name = StringField(trans('creditors_creditor_name', default='Creditor Name'), validators=[DataRequired()])
+    contact = StringField(trans('general_contact', default='Contact'), validators=[Optional()])
+    amount_owed = FloatField(trans('creditors_amount_owed', default='Amount Owed'), validators=[DataRequired()])
+    description = TextAreaField(trans('general_description', default='Description'), validators=[Optional()])
+    submit = SubmitField(trans('creditors_add_creditor', default='Add Creditor'))
 
 creditors_bp = Blueprint('creditors', __name__, url_prefix='/creditors')
 
@@ -33,10 +34,10 @@ def index():
         db = get_mongo_db()
         query = {'type': 'creditor'} if is_admin() else {'user_id': str(current_user.id), 'type': 'creditor'}
         creditors = list(db.records.find(query).sort('created_at', -1))
-        return render_template('creditors/index.html', creditors=creditors, format_currency=format_currency, format_date=format_date)
+        return render_template('creditors/index.html', creditors=creditors, format_currency=format_currency, format_date=format_date, t=trans, lang=session.get('lang', 'en'))
     except Exception as e:
         logger.error(f"Error fetching creditors for user {current_user.id}: {str(e)}")
-        flash(trans_function('something_went_wrong', default='An error occurred'), 'danger')
+        flash(trans('creditors_fetch_error', default='An error occurred'), 'danger')
         return redirect(url_for('dashboard_blueprint.index'))
 
 @creditors_bp.route('/view/<id>')
@@ -49,7 +50,7 @@ def view(id):
         query = {'_id': ObjectId(id), 'type': 'creditor'} if is_admin() else {'_id': ObjectId(id), 'user_id': str(current_user.id), 'type': 'creditor'}
         creditor = db.records.find_one(query)
         if not creditor:
-            return jsonify({'error': trans_function('record_not_found', default='Record not found')}), 404
+            return jsonify({'error': trans('creditors_record_not_found', default='Record not found')}), 404
         
         creditor['_id'] = str(creditor['_id'])
         creditor['created_at'] = creditor['created_at'].isoformat() if creditor.get('created_at') else None
@@ -58,7 +59,7 @@ def view(id):
         return jsonify(creditor)
     except Exception as e:
         logger.error(f"Error fetching creditor {id} for user {current_user.id}: {str(e)}")
-        return jsonify({'error': trans_function('something_went_wrong', default='An error occurred')}), 500
+        return jsonify({'error': trans('creditors_fetch_error', default='An error occurred')}), 500
 
 @creditors_bp.route('/view_page/<id>')
 @login_required
@@ -70,12 +71,12 @@ def view_page(id):
         query = {'_id': ObjectId(id), 'type': 'creditor'} if is_admin() else {'_id': ObjectId(id), 'user_id': str(current_user.id), 'type': 'creditor'}
         creditor = db.records.find_one(query)
         if not creditor:
-            flash(trans_function('record_not_found', default='Record not found'), 'danger')
+            flash(trans('creditors_record_not_found', default='Record not found'), 'danger')
             return redirect(url_for('creditors_blueprint.index'))
-        return render_template('creditors/view.html', creditor=creditor, format_currency=format_currency, format_date=format_date)
+        return render_template('creditors/view.html', creditor=creditor, format_currency=format_currency, format_date=format_date, t=trans, lang=session.get('lang', 'en'))
     except Exception as e:
         logger.error(f"Error rendering creditor view page {id} for user {current_user.id}: {str(e)}")
-        flash(trans_function('something_went_wrong', default='An error occurred'), 'danger')
+        flash(trans('creditors_view_error', default='An error occurred'), 'danger')
         return redirect(url_for('creditors_blueprint.index'))
 
 @creditors_bp.route('/share/<id>')
@@ -88,11 +89,11 @@ def share(id):
         query = {'_id': ObjectId(id), 'type': 'creditor'} if is_admin() else {'_id': ObjectId(id), 'user_id': str(current_user.id), 'type': 'creditor'}
         creditor = db.records.find_one(query)
         if not creditor:
-            return jsonify({'success': False, 'message': trans_function('record_not_found', default='Record not found')}), 404
+            return jsonify({'success': False, 'message': trans('creditors_record_not_found', default='Record not found')}), 404
         if not creditor.get('contact'):
-            return jsonify({'success': False, 'message': trans_function('no_contact', default='No contact provided for sharing')}), 400
+            return jsonify({'success': False, 'message': trans('creditors_no_contact', default='No contact provided for sharing')}), 400
         if not is_admin() and not check_coin_balance(1):
-            return jsonify({'success': False, 'message': trans_function('insufficient_coins', default='Insufficient coins to share IOU')}), 400
+            return jsonify({'success': False, 'message': trans('creditors_insufficient_coins', default='Insufficient coins to share IOU')}), 400
         
         contact = re.sub(r'\D', '', creditor['contact'])
         if contact.startswith('0'):
@@ -117,7 +118,7 @@ def share(id):
         return jsonify({'success': True, 'whatsapp_link': whatsapp_link})
     except Exception as e:
         logger.error(f"Error sharing IOU for creditor {id}: {str(e)}")
-        return jsonify({'success': False, 'message': trans_function('something_went_wrong', default='An error occurred')}), 500
+        return jsonify({'success': False, 'message': trans('creditors_share_error', default='An error occurred')}), 500
 
 @creditors_bp.route('/send_reminder', methods=['POST'])
 @login_required
@@ -133,18 +134,18 @@ def send_reminder():
         snooze_days = data.get('snooze_days', 0)
         
         if not debt_id or (not recipient and not snooze_days):
-            return jsonify({'success': False, 'message': trans_function('missing_required_fields', default='Missing required fields')}), 400
+            return jsonify({'success': False, 'message': trans('creditors_missing_fields', default='Missing required fields')}), 400
         
         db = get_mongo_db()
         query = {'_id': ObjectId(debt_id), 'type': 'creditor'} if is_admin() else {'_id': ObjectId(debt_id), 'user_id': str(current_user.id), 'type': 'creditor'}
         creditor = db.records.find_one(query)
         
         if not creditor:
-            return jsonify({'success': False, 'message': trans_function('record_not_found', default='Record not found')}), 404
+            return jsonify({'success': False, 'message': trans('creditors_record_not_found', default='Record not found')}), 404
         
         coin_cost = 2 if recipient else 1
         if not is_admin() and not check_coin_balance(coin_cost):
-            return jsonify({'success': False, 'message': trans_function('insufficient_coins', default='Insufficient coins to send reminder')}), 400
+            return jsonify({'success': False, 'message': trans('creditors_insufficient_coins', default='Insufficient coins to send reminder')}), 400
         
         update_data = {'$inc': {'reminder_count': 1}}
         if snooze_days:
@@ -183,13 +184,13 @@ def send_reminder():
                 'api_response': api_response if recipient else {'status': f'Snoozed for {snooze_days} days'}
             })
             
-            return jsonify({'success': True, 'message': trans_function('reminder_sent' if recipient else 'snooze_set', default='Reminder sent successfully' if recipient else 'Snooze set successfully')})
+            return jsonify({'success': True, 'message': trans('creditors_reminder_sent' if recipient else 'creditors_snooze_set', default='Reminder sent successfully' if recipient else 'Snooze set successfully')})
         else:
-            return jsonify({'success': False, 'message': trans_function('reminder_failed', default='Failed to send reminder'), 'details': api_response}), 500
+            return jsonify({'success': False, 'message': trans('creditors_reminder_failed', default='Failed to send reminder'), 'details': api_response}), 500
             
     except Exception as e:
         logger.error(f"Error sending reminder: {str(e)}")
-        return jsonify({'success': False, 'message': trans_function('something_went_wrong', default='An error occurred')}), 500
+        return jsonify({'success': False, 'message': trans('creditors_reminder_error', default='An error occurred')}), 500
 
 @creditors_bp.route('/generate_iou/<id>')
 @login_required
@@ -206,11 +207,11 @@ def generate_iou(id):
         creditor = db.records.find_one(query)
         
         if not creditor:
-            flash(trans_function('record_not_found', default='Record not found'), 'danger')
+            flash(trans('creditors_record_not_found', default='Record not found'), 'danger')
             return redirect(url_for('creditors_blueprint.index'))
         
         if not is_admin() and not check_coin_balance(1):
-            flash(trans_function('insufficient_coins', default='Insufficient coins to generate IOU'), 'danger')
+            flash(trans('creditors_insufficient_coins', default='Insufficient coins to generate IOU'), 'danger')
             return redirect(url_for('coins_blueprint.purchase'))
         
         buffer = io.BytesIO()
@@ -262,7 +263,7 @@ def generate_iou(id):
         
     except Exception as e:
         logger.error(f"Error generating IOU for creditor {id}: {str(e)}")
-        flash(trans_function('something_went_wrong', default='An error occurred'), 'danger')
+        flash(trans('creditors_iou_generation_error', default='An error occurred'), 'danger')
         return redirect(url_for('creditors_blueprint.index'))
 
 @creditors_bp.route('/add', methods=['GET', 'POST'])
@@ -272,7 +273,7 @@ def add():
     """Add a new creditor record."""
     form = CreditorForm()
     if not is_admin() and not check_coin_balance(1):
-        flash(trans_function('insufficient_coins', default='Insufficient coins to create a creditor. Purchase more coins.'), 'danger')
+        flash(trans('creditors_insufficient_coins', default='Insufficient coins to create a creditor. Purchase more coins.'), 'danger')
         return redirect(url_for('coins_blueprint.purchase'))
     if form.validate_on_submit():
         try:
@@ -301,12 +302,12 @@ def add():
                     'date': datetime.utcnow(),
                     'ref': f"Creditor creation: {record['name']}"
                 })
-            flash(trans_function('create_creditor_success', default='Creditor created successfully'), 'success')
+            flash(trans('creditors_create_success', default='Creditor created successfully'), 'success')
             return redirect(url_for('creditors_blueprint.index'))
         except Exception as e:
             logger.error(f"Error creating creditor for user {current_user.id}: {str(e)}")
-            flash(trans_function('something_went_wrong', default='An error occurred'), 'danger')
-    return render_template('creditors/add.html', form=form)
+            flash(trans('creditors_create_error', default='An error occurred'), 'danger')
+    return render_template('creditors/add.html', form=form, t=trans, lang=session.get('lang', 'en'))
 
 @creditors_bp.route('/edit/<id>', methods=['GET', 'POST'])
 @login_required
@@ -318,7 +319,7 @@ def edit(id):
         query = {'_id': ObjectId(id), 'type': 'creditor'} if is_admin() else {'_id': ObjectId(id), 'user_id': str(current_user.id), 'type': 'creditor'}
         creditor = db.records.find_one(query)
         if not creditor:
-            flash(trans_function('record_not_found', default='Record not found'), 'danger')
+            flash(trans('creditors_record_not_found', default='Record not found'), 'danger')
             return redirect(url_for('creditors_blueprint.index'))
         form = CreditorForm(data={
             'name': creditor['name'],
@@ -339,15 +340,15 @@ def edit(id):
                     {'_id': ObjectId(id)},
                     {'$set': updated_record}
                 )
-                flash(trans_function('edit_creditor_success', default='Creditor updated successfully'), 'success')
+                flash(trans('creditors_edit_success', default='Creditor updated successfully'), 'success')
                 return redirect(url_for('creditors_blueprint.index'))
             except Exception as e:
                 logger.error(f"Error updating creditor {id} for user {current_user.id}: {str(e)}")
-                flash(trans_function('something_went_wrong', default='An error occurred'), 'danger')
-        return render_template('creditors/edit.html', form=form, creditor=creditor)
+                flash(trans('creditors_edit_error', default='An error occurred'), 'danger')
+        return render_template('creditors/edit.html', form=form, creditor=creditor, t=trans, lang=session.get('lang', 'en'))
     except Exception as e:
         logger.error(f"Error fetching creditor {id} for user {current_user.id}: {str(e)}")
-        flash(trans_function('record_not_found', default='Record not found'), 'danger')
+        flash(trans('creditors_record_not_found', default='Record not found'), 'danger')
         return redirect(url_for('creditors_blueprint.index'))
 
 @creditors_bp.route('/delete/<id>', methods=['POST'])
@@ -360,12 +361,12 @@ def delete(id):
         query = {'_id': ObjectId(id), 'type': 'creditor'} if is_admin() else {'_id': ObjectId(id), 'user_id': str(current_user.id), 'type': 'creditor'}
         result = db.records.delete_one(query)
         if result.deleted_count:
-            flash(trans_function('delete_creditor_success', default='Creditor deleted successfully'), 'success')
+            flash(trans('creditors_delete_success', default='Creditor deleted successfully'), 'success')
         else:
-            flash(trans_function('record_not_found', default='Record not found'), 'danger')
+            flash(trans('creditors_record_not_found', default='Record not found'), 'danger')
     except Exception as e:
         logger.error(f"Error deleting creditor {id} for user {current_user.id}: {str(e)}")
-        flash(trans_function('something_went_wrong', default='An error occurred'), 'danger')
+        flash(trans('creditors_delete_error', default='An error occurred'), 'danger')
     return redirect(url_for('creditors_blueprint.index'))
 
 def send_sms_reminder(recipient, message):

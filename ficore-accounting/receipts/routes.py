@@ -1,5 +1,6 @@
-from flask import Blueprint, render_template, redirect, url_for, flash, request, Response, jsonify
+from flask import Blueprint, render_template, redirect, url_for, flash, request, Response, jsonify, session
 from flask_login import login_required, current_user
+from translations import trans
 from utils import trans_function, requires_role, check_coin_balance, format_currency, format_date, get_mongo_db, is_admin, get_user_query
 from bson import ObjectId
 from datetime import datetime
@@ -12,16 +13,16 @@ import io
 logger = logging.getLogger(__name__)
 
 class ReceiptForm(FlaskForm):
-    party_name = StringField('Payer Name', validators=[DataRequired()])
-    date = DateField('Date', validators=[DataRequired()])
-    amount = FloatField('Amount', validators=[DataRequired()])
-    method = SelectField('Payment Method', choices=[
-        ('cash', 'Cash'),
-        ('card', 'Card'),
-        ('bank', 'Bank Transfer')
+    party_name = StringField(trans('receipts_payer_name', default='Payer Name'), validators=[DataRequired()])
+    date = DateField(trans('general_date', default='Date'), validators=[DataRequired()])
+    amount = FloatField(trans('receipts_amount', default='Amount'), validators=[DataRequired()])
+    method = SelectField(trans('general_payment_method', default='Payment Method'), choices=[
+        ('cash', trans('general_cash', default='Cash')),
+        ('card', trans('general_card', default='Card')),
+        ('bank', trans('general_bank_transfer', default='Bank Transfer'))
     ], validators=[Optional()])
-    category = StringField('Category', validators=[Optional()])
-    submit = SubmitField('Add Receipt')
+    category = StringField(trans('general_category', default='Category'), validators=[Optional()])
+    submit = SubmitField(trans('receipts_add_receipt', default='Add Receipt'))
 
 receipts_bp = Blueprint('receipts', __name__, url_prefix='/receipts')
 
@@ -36,10 +37,10 @@ def index():
         # TODO: Restore original user_id filter for production
         query = {'type': 'receipt'} if is_admin() else {'user_id': str(current_user.id), 'type': 'receipt'}
         receipts = list(db.cashflows.find(query).sort('created_at', -1))
-        return render_template('receipts/index.html', receipts=receipts, format_currency=format_currency, format_date=format_date)
+        return render_template('receipts/index.html', receipts=receipts, format_currency=format_currency, format_date=format_date, t=trans, lang=session.get('lang', 'en'))
     except Exception as e:
         logger.error(f"Error fetching receipts for user {current_user.id}: {str(e)}")
-        flash(trans_function('something_went_wrong', default='An error occurred'), 'danger')
+        flash(trans('receipts_fetch_error', default='An error occurred'), 'danger')
         return redirect(url_for('dashboard_blueprint.index'))
 
 @receipts_bp.route('/view/<id>')
@@ -52,7 +53,7 @@ def view(id):
         query = {'_id': ObjectId(id), 'type': 'receipt'} if is_admin() else {'_id': ObjectId(id), 'user_id': str(current_user.id), 'type': 'receipt'}
         receipt = db.cashflows.find_one(query)
         if not receipt:
-            return jsonify({'error': trans_function('record_not_found', default='Record not found')}), 404
+            return jsonify({'error': trans('receipts_record_not_found', default='Record not found')}), 404
         
         # Convert ObjectId to string for JSON serialization
         receipt['_id'] = str(receipt['_id'])
@@ -61,7 +62,7 @@ def view(id):
         return jsonify(receipt)
     except Exception as e:
         logger.error(f"Error fetching receipt {id} for user {current_user.id}: {str(e)}")
-        return jsonify({'error': trans_function('something_went_wrong', default='An error occurred')}), 500
+        return jsonify({'error': trans('receipts_fetch_error', default='An error occurred')}), 500
 
 @receipts_bp.route('/generate_pdf/<id>')
 @login_required
@@ -78,12 +79,12 @@ def generate_pdf(id):
         receipt = db.cashflows.find_one(query)
         
         if not receipt:
-            flash(trans_function('record_not_found', default='Record not found'), 'danger')
+            flash(trans('receipts_record_not_found', default='Record not found'), 'danger')
             return redirect(url_for('receipts_blueprint.index'))
         
         # Check coin balance for non-admin users
         if not is_admin() and not check_coin_balance(1):
-            flash(trans_function('insufficient_coins', default='Insufficient coins to generate receipt'), 'danger')
+            flash(trans('receipts_insufficient_coins', default='Insufficient coins to generate receipt'), 'danger')
             return redirect(url_for('coins_blueprint.purchase'))
         
         buffer = io.BytesIO()
@@ -139,7 +140,7 @@ def generate_pdf(id):
         
     except Exception as e:
         logger.error(f"Error generating PDF for receipt {id}: {str(e)}")
-        flash(trans_function('something_went_wrong', default='An error occurred'), 'danger')
+        flash(trans('receipts_pdf_generation_error', default='An error occurred'), 'danger')
         return redirect(url_for('receipts_blueprint.index'))
 
 @receipts_bp.route('/add', methods=['GET', 'POST'])
@@ -151,7 +152,7 @@ def add():
     # TEMPORARY: Bypass coin check for admin during testing
     # TODO: Restore original check_coin_balance(1) for production
     if not is_admin() and not check_coin_balance(1):
-        flash(trans_function('insufficient_coins', default='Insufficient coins to add a receipt. Purchase more coins.'), 'danger')
+        flash(trans('receipts_insufficient_coins', default='Insufficient coins to add a receipt. Purchase more coins.'), 'danger')
         return redirect(url_for('coins_blueprint.purchase'))
     if form.validate_on_submit():
         try:
@@ -184,12 +185,12 @@ def add():
                     'date': datetime.utcnow(),
                     'ref': f"Receipt creation: {cashflow['party_name']}"
                 })
-            flash(trans_function('add_receipt_success', default='Receipt added successfully'), 'success')
+            flash(trans('receipts_add_success', default='Receipt added successfully'), 'success')
             return redirect(url_for('receipts_blueprint.index'))
         except Exception as e:
             logger.error(f"Error adding receipt for user {current_user.id}: {str(e)}")
-            flash(trans_function('something_went_wrong', default='An error occurred'), 'danger')
-    return render_template('receipts/add.html', form=form)
+            flash(trans('receipts_add_error', default='An error occurred'), 'danger')
+    return render_template('receipts/add.html', form=form, t=trans, lang=session.get('lang', 'en'))
 
 @receipts_bp.route('/edit/<id>', methods=['GET', 'POST'])
 @login_required
@@ -203,7 +204,7 @@ def edit(id):
         query = {'_id': ObjectId(id), 'type': 'receipt'} if is_admin() else {'_id': ObjectId(id), 'user_id': str(current_user.id), 'type': 'receipt'}
         receipt = db.cashflows.find_one(query)
         if not receipt:
-            flash(trans_function('cashflow_not_found', default='Cashflow not found'), 'danger')
+            flash(trans('receipts_record_not_found', default='Cashflow not found'), 'danger')
             return redirect(url_for('receipts_blueprint.index'))
         form = ReceiptForm(data={
             'party_name': receipt['party_name'],
@@ -228,15 +229,15 @@ def edit(id):
                     {'_id': ObjectId(id)},
                     {'$set': updated_cashflow}
                 )
-                flash(trans_function('edit_receipt_success', default='Receipt updated successfully'), 'success')
+                flash(trans('receipts_edit_success', default='Receipt updated successfully'), 'success')
                 return redirect(url_for('receipts_blueprint.index'))
             except Exception as e:
                 logger.error(f"Error updating receipt {id} for user {current_user.id}: {str(e)}")
-                flash(trans_function('something_went_wrong', default='An error occurred'), 'danger')
-        return render_template('receipts/edit.html', form=form, receipt=receipt)
+                flash(trans('receipts_edit_error', default='An error occurred'), 'danger')
+        return render_template('receipts/edit.html', form=form, receipt=receipt, t=trans, lang=session.get('lang', 'en'))
     except Exception as e:
         logger.error(f"Error fetching receipt {id} for user {current_user.id}: {str(e)}")
-        flash(trans_function('cashflow_not_found', default='Cashflow not found'), 'danger')
+        flash(trans('receipts_record_not_found', default='Cashflow not found'), 'danger')
         return redirect(url_for('receipts_blueprint.index'))
 
 @receipts_bp.route('/delete/<id>', methods=['POST'])
@@ -251,10 +252,10 @@ def delete(id):
         query = {'_id': ObjectId(id), 'type': 'receipt'} if is_admin() else {'_id': ObjectId(id), 'user_id': str(current_user.id), 'type': 'receipt'}
         result = db.cashflows.delete_one(query)
         if result.deleted_count:
-            flash(trans_function('delete_receipt_success', default='Receipt deleted successfully'), 'success')
+            flash(trans('receipts_delete_success', default='Receipt deleted successfully'), 'success')
         else:
-            flash(trans_function('cashflow_not_found', default='Cashflow not found'), 'danger')
+            flash(trans('receipts_record_not_found', default='Cashflow not found'), 'danger')
     except Exception as e:
         logger.error(f"Error deleting receipt {id} for user {current_user.id}: {str(e)}")
-        flash(trans_function('something_went_wrong', default='An error occurred'), 'danger')
+        flash(trans('receipts_delete_error', default='An error occurred'), 'danger')
     return redirect(url_for('receipts_blueprint.index'))

@@ -28,40 +28,26 @@ def strip_commas(value):
     return value
 
 class BudgetForm(FlaskForm):
-    first_name = StringField()
-    email = StringField()
-    send_email = BooleanField()
-    income = FloatField()
-    housing = FloatField()
-    food = FloatField()
-    transport = FloatField()
-    dependents = FloatField()
-    miscellaneous = FloatField()
-    others = FloatField()
-    savings_goal = FloatField()
-    submit = SubmitField()
+    first_name = StringField(trans('general_first_name', default='First Name'))
+    email = StringField(trans('general_email', default='Email'))
+    send_email = BooleanField(trans('general_send_email', default='Send Email'))
+    income = FloatField(trans('budget_monthly_income', default='Monthly Income'))
+    housing = FloatField(trans('budget_housing_rent', default='Housing/Rent'))
+    food = FloatField(trans('budget_food', default='Food'))
+    transport = FloatField(trans('budget_transport', default='Transport'))
+    dependents = FloatField(trans('budget_dependents_support', default='Dependents Support'))
+    miscellaneous = FloatField(trans('budget_miscellaneous', default='Miscellaneous'))
+    others = FloatField(trans('budget_others', default='Others'))
+    savings_goal = FloatField(trans('budget_savings_goal', default='Savings Goal'))
+    submit = SubmitField(trans('budget_submit', default='Submit'))
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         lang = session.get('lang', 'en')
         
-        # Set labels
-        self.first_name.label.text = trans('budget_first_name', lang)
-        self.email.label.text = trans('budget_email', lang)
-        self.send_email.label.text = trans('budget_send_email', lang)
-        self.income.label.text = trans('budget_monthly_income', lang)
-        self.housing.label.text = trans('budget_housing_rent', lang)
-        self.food.label.text = trans('budget_food', lang)
-        self.transport.label.text = trans('budget_transport', lang)
-        self.dependents.label.text = trans('budget_dependents_support', lang)
-        self.miscellaneous.label.text = trans('budget_miscellaneous', lang)
-        self.others.label.text = trans('budget_others', lang)
-        self.savings_goal.label.text = trans('budget_savings_goal', lang)
-        self.submit.label.text = trans('budget_submit', lang)
-        
         # Set validators
-        self.first_name.validators = [DataRequired(message=trans('budget_first_name_required', lang))]
-        self.email.validators = [Optional(), Email(message=trans('budget_email_invalid', lang))]
+        self.first_name.validators = [DataRequired(message=trans('general_first_name_required', lang))]
+        self.email.validators = [Optional(), Email(message=trans('general_email_invalid', lang))]
         self.income.validators = [
             DataRequired(message=trans('budget_income_required', lang)),
             NumberRange(min=0, max=10000000000, message=trans('budget_income_max', lang))
@@ -84,7 +70,7 @@ class BudgetForm(FlaskForm):
             email_pattern = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
             if not re.match(email_pattern, field.data):
                 current_app.logger.warning(f"Invalid email format for session {session.get('sid', 'no-session-id')}: {field.data}")
-                raise ValidationError(trans('budget_email_invalid', session.get('lang', 'en')))
+                raise ValidationError(trans('general_email_invalid', session.get('lang', 'en')))
 
     def validate(self, extra_validators=None):
         """Custom validation for all float fields."""
@@ -178,7 +164,7 @@ def main():
                 try:
                     mongo.db.budgets.insert_one(budget_data)
                     current_app.logger.info(f"Budget saved successfully to MongoDB for session {session['sid']}")
-                    flash(trans("budget_budget_completed_success", lang), "success")
+                    flash(trans("budget_completed_success", lang), "success")
                 except Exception as e:
                     current_app.logger.error(f"Failed to save budget to MongoDB for session {session['sid']}: {str(e)}")
                     flash(trans("budget_storage_error", lang), "danger")
@@ -215,20 +201,20 @@ def main():
                         )
                     except Exception as e:
                         current_app.logger.error(f"Failed to send email: {str(e)}")
-                        flash(trans("email_send_failed", lang=lang), "warning")
+                        flash(trans("general_email_send_failed", lang=lang), "warning")
 
             elif action == 'delete':
                 budget_id = request.form.get('budget_id')
                 try:
                     result = mongo.db.budgets.delete_one({'_id': budget_id, **filter_criteria})
                     if result.deleted_count > 0:
-                        flash(trans("budget_budget_deleted_success", lang), "success")
+                        flash(trans("budget_deleted_success", lang), "success")
                         current_app.logger.info(f"Deleted budget ID {budget_id} for session {session['sid']}")
                     else:
-                        flash(trans("budget_budget_not_found", lang), "danger")
+                        flash(trans("budget_not_found", lang), "danger")
                 except Exception as e:
                     current_app.logger.error(f"Failed to delete budget ID {budget_id} for session {session['sid']}: {str(e)}")
-                    flash(trans("budget_budget_delete_failed", lang), "danger")
+                    flash(trans("budget_delete_failed", lang), "danger")
 
         # Get budgets data for display
         budgets = list(mongo.db.budgets.find(filter_criteria).sort('created_at', -1))
@@ -308,7 +294,7 @@ def main():
             categories=categories,
             tips=tips,
             insights=insights,
-            trans=trans,
+            t=trans,
             lang=lang
         )
 
@@ -340,6 +326,6 @@ def main():
                 trans("budget_tip_plan_dependents", lang)
             ],
             insights=[],
-            trans=trans,
+            t=trans,
             lang=lang
         )

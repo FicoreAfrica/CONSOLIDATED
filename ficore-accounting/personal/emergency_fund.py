@@ -41,55 +41,39 @@ class CommaSeparatedIntegerField(IntegerField):
                 raise ValueError(self.gettext('Not a number'))
 
 class EmergencyFundForm(FlaskForm):
-    first_name = StringField(validators=[DataRequired()])
-    email = StringField(validators=[Optional(), Email()])
-    email_opt_in = BooleanField(default=False)
-    monthly_expenses = CommaSeparatedFloatField(validators=[DataRequired(), NumberRange(min=0, max=10000000000)])
-    monthly_income = CommaSeparatedFloatField(validators=[Optional(), NumberRange(min=0, max=10000000000)])
-    current_savings = CommaSeparatedFloatField(validators=[Optional(), NumberRange(min=0, max=10000000000)])
-    risk_tolerance_level = SelectField(validators=[DataRequired()], choices=[
-        ('low', 'Low'), ('medium', 'Medium'), ('high', 'High')
+    first_name = StringField(trans('general_first_name', default='First Name'), validators=[DataRequired()])
+    email = StringField(trans('general_email', default='Email'), validators=[Optional(), Email()])
+    email_opt_in = BooleanField(trans('general_send_email', default='Send Email'), default=False)
+    monthly_expenses = CommaSeparatedFloatField(trans('emergency_fund_monthly_expenses', default='Monthly Expenses'), validators=[DataRequired(), NumberRange(min=0, max=10000000000)])
+    monthly_income = CommaSeparatedFloatField(trans('emergency_fund_monthly_income', default='Monthly Income'), validators=[Optional(), NumberRange(min=0, max=10000000000)])
+    current_savings = CommaSeparatedFloatField(trans('emergency_fund_current_savings', default='Current Savings'), validators=[Optional(), NumberRange(min=0, max=10000000000)])
+    risk_tolerance_level = SelectField(trans('emergency_fund_risk_tolerance_level', default='Risk Tolerance Level'), validators=[DataRequired()], choices=[
+        ('low', trans('emergency_fund_risk_tolerance_level_low', default='Low')), 
+        ('medium', trans('emergency_fund_risk_tolerance_level_medium', default='Medium')), 
+        ('high', trans('emergency_fund_risk_tolerance_level_high', default='High'))
     ])
-    dependents = CommaSeparatedIntegerField(validators=[Optional(), NumberRange(min=0, max=100)])
-    timeline = SelectField(validators=[DataRequired()], choices=[
-        ('6', '6 Months'), ('12', '12 Months'), ('18', '18 Months')
+    dependents = CommaSeparatedIntegerField(trans('emergency_fund_dependents', default='Dependents'), validators=[Optional(), NumberRange(min=0, max=100)])
+    timeline = SelectField(trans('emergency_fund_timeline', default='Timeline'), validators=[DataRequired()], choices=[
+        ('6', trans('emergency_fund_6_months', default='6 Months')), 
+        ('12', trans('emergency_fund_12_months', default='12 Months')), 
+        ('18', trans('emergency_fund_18_months', default='18 Months'))
     ])
-    submit = SubmitField()
+    submit = SubmitField(trans('emergency_fund_calculate_button', default='Calculate'))
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         lang = session.get('lang', 'en')
         
-        # Set labels and messages
-        self.first_name.label.text = trans('emergency_fund_first_name', lang=lang)
-        self.first_name.validators[0].message = trans('required_first_name', lang=lang, default='Please enter your first name.')
-        self.email.label.text = trans('emergency_fund_email', lang=lang)
-        self.email.validators[1].message = trans('emergency_fund_email_invalid', lang=lang, default='Please enter a valid email address.')
-        self.email_opt_in.label.text = trans('emergency_fund_send_email', lang=lang)
-        self.monthly_expenses.label.text = trans('emergency_fund_monthly_expenses', lang=lang)
-        self.monthly_expenses.validators[0].message = trans('required_monthly_expenses', lang=lang, default='Please enter your monthly expenses.')
+        # Set validation messages
+        self.first_name.validators[0].message = trans('general_first_name_required', lang=lang, default='Please enter your first name.')
+        self.email.validators[1].message = trans('general_email_invalid', lang=lang, default='Please enter a valid email address.')
+        self.monthly_expenses.validators[0].message = trans('emergency_fund_monthly_expenses_required', lang=lang, default='Please enter your monthly expenses.')
         self.monthly_expenses.validators[1].message = trans('emergency_fund_monthly_exceed', lang=lang, default='Amount exceeds maximum limit.')
-        self.monthly_income.label.text = trans('emergency_fund_monthly_income', lang=lang)
         self.monthly_income.validators[1].message = trans('emergency_fund_monthly_exceed', lang=lang, default='Amount exceeds maximum limit.')
-        self.current_savings.label.text = trans('emergency_fund_current_savings', lang=lang)
         self.current_savings.validators[1].message = trans('emergency_fund_savings_max', lang=lang, default='Amount exceeds maximum limit.')
-        self.risk_tolerance_level.label.text = trans('emergency_fund_risk_tolerance_level', lang=lang)
-        self.risk_tolerance_level.validators[0].message = trans('required_risk_tolerance', lang=lang, default='Please select your risk tolerance.')
-        self.risk_tolerance_level.choices = [
-            ('low', trans('emergency_fund_risk_tolerance_level_low', lang=lang)),
-            ('medium', trans('emergency_fund_risk_tolerance_level_medium', lang=lang)),
-            ('high', trans('emergency_fund_risk_tolerance_level_high', lang=lang))
-        ]
-        self.dependents.label.text = trans('emergency_fund_dependents', lang=lang)
+        self.risk_tolerance_level.validators[0].message = trans('emergency_fund_risk_tolerance_required', lang=lang, default='Please select your risk tolerance.')
         self.dependents.validators[1].message = trans('emergency_fund_dependents_max', lang=lang, default='Number of dependents exceeds maximum.')
-        self.timeline.label.text = trans('emergency_fund_timeline', lang=lang)
-        self.timeline.validators[0].message = trans('required_timeline', lang=lang, default='Please select a timeline.')
-        self.timeline.choices = [
-            ('6', trans('emergency_fund_6_months', lang=lang)),
-            ('12', trans('emergency_fund_12_months', lang=lang)),
-            ('18', trans('emergency_fund_18_months', default='18 Months', lang=lang))
-        ]
-        self.submit.label.text = trans('emergency_fund_calculate_button', lang=lang)
+        self.timeline.validators[0].message = trans('emergency_fund_timeline_required', lang=lang, default='Please select a timeline.')
 
 @emergency_fund_bp.route('/main', methods=['GET', 'POST'])
 @custom_login_required
@@ -224,7 +208,7 @@ def main():
                         )
                     except Exception as e:
                         current_app.logger.error(f"Failed to send email: {str(e)}")
-                        flash(trans("email_send_failed", lang=lang), "danger")
+                        flash(trans("general_email_send_failed", lang=lang), "danger")
 
         # Get emergency fund data for display
         user_data = mongo.db.emergency_funds.find(filter_kwargs).sort('created_at', -1)
@@ -279,7 +263,7 @@ def main():
                 trans('emergency_fund_tip_track_expenses', lang=lang),
                 trans('budget_tip_monthly_savings', lang=lang)
             ],
-            trans=trans,
+            t=trans,
             lang=lang
         )
 
@@ -299,7 +283,7 @@ def main():
                 trans('emergency_fund_tip_track_expenses', lang=lang),
                 trans('budget_tip_monthly_savings', lang=lang)
             ],
-            trans=trans,
+            t=trans,
             lang=lang
         ), 500
 

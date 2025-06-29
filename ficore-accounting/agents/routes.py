@@ -2,6 +2,7 @@ from flask import Blueprint, render_template, redirect, url_for, flash, request,
 from flask_login import login_required, current_user
 from flask_wtf import FlaskForm
 from wtforms import StringField, SelectField, FloatField, TextAreaField, SubmitField, validators
+from translations import trans
 from utils import trans_function, requires_role, get_mongo_db, format_currency, format_date
 from bson import ObjectId
 from datetime import datetime
@@ -14,44 +15,44 @@ logger = logging.getLogger(__name__)
 agents_bp = Blueprint('agents', __name__, url_prefix='/agents')
 
 class RegisterTraderForm(FlaskForm):
-    username = StringField(trans_function('username', default='Username'), [
-        validators.DataRequired(message=trans_function('username_required', default='Username is required')),
-        validators.Length(min=3, max=50, message=trans_function('username_length', default='Username must be between 3 and 50 characters'))
+    username = StringField(trans('general_username', default='Username'), [
+        validators.DataRequired(message=trans('general_username_required', default='Username is required')),
+        validators.Length(min=3, max=50, message=trans('general_username_length', default='Username must be between 3 and 50 characters'))
     ], render_kw={'class': 'form-control'})
-    email = StringField(trans_function('email', default='Email'), [
-        validators.DataRequired(message=trans_function('email_required', default='Email is required')),
-        validators.Email(message=trans_function('email_invalid', default='Invalid email address'))
+    email = StringField(trans('general_email', default='Email'), [
+        validators.DataRequired(message=trans('general_email_required', default='Email is required')),
+        validators.Email(message=trans('general_email_invalid', default='Invalid email address'))
     ], render_kw={'class': 'form-control'})
-    business_name = StringField(trans_function('business_name', default='Business Name'), [
-        validators.DataRequired(message=trans_function('business_name_required', default='Business name is required'))
+    business_name = StringField(trans('general_business_name', default='Business Name'), [
+        validators.DataRequired(message=trans('general_business_name_required', default='Business name is required'))
     ], render_kw={'class': 'form-control'})
-    phone_number = StringField(trans_function('phone_number', default='Phone Number'), [
-        validators.DataRequired(message=trans_function('phone_number_required', default='Phone number is required'))
+    phone_number = StringField(trans('general_phone_number', default='Phone Number'), [
+        validators.DataRequired(message=trans('general_phone_number_required', default='Phone number is required'))
     ], render_kw={'class': 'form-control'})
-    industry = SelectField(trans_function('industry', default='Industry'), choices=[
-        ('retail', trans_function('retail', default='Retail')),
-        ('services', trans_function('services', default='Services')),
-        ('manufacturing', trans_function('manufacturing', default='Manufacturing')),
-        ('agriculture', trans_function('agriculture', default='Agriculture')),
-        ('other', trans_function('other', default='Other'))
+    industry = SelectField(trans('general_industry', default='Industry'), choices=[
+        ('retail', trans('general_retail', default='Retail')),
+        ('services', trans('general_services', default='Services')),
+        ('manufacturing', trans('general_manufacturing', default='Manufacturing')),
+        ('agriculture', trans('general_agriculture', default='Agriculture')),
+        ('other', trans('general_other', default='Other'))
     ], validators=[validators.DataRequired()], render_kw={'class': 'form-select'})
-    submit = SubmitField(trans_function('register_trader', default='Register Trader'), render_kw={'class': 'btn btn-primary w-100'})
+    submit = SubmitField(trans('agents_register_trader', default='Register Trader'), render_kw={'class': 'btn btn-primary w-100'})
 
 class TokenManagementForm(FlaskForm):
-    trader_username = StringField(trans_function('trader_username', default='Trader Username'), [
-        validators.DataRequired(message=trans_function('trader_username_required', default='Trader username is required'))
+    trader_username = StringField(trans('agents_trader_username', default='Trader Username'), [
+        validators.DataRequired(message=trans('agents_trader_username_required', default='Trader username is required'))
     ], render_kw={'class': 'form-control'})
-    token_amount = FloatField(trans_function('token_amount', default='Token Amount (₦)'), [
-        validators.DataRequired(message=trans_function('token_amount_required', default='Token amount is required')),
-        validators.NumberRange(min=100, message=trans_function('minimum_token_amount', default='Minimum token amount is ₦100'))
+    token_amount = FloatField(trans('agents_token_amount', default='Token Amount (₦)'), [
+        validators.DataRequired(message=trans('agents_token_amount_required', default='Token amount is required')),
+        validators.NumberRange(min=100, message=trans('agents_minimum_token_amount', default='Minimum token amount is ₦100'))
     ], render_kw={'class': 'form-control'})
-    payment_method = SelectField(trans_function('payment_method', default='Payment Method'), choices=[
-        ('cash', trans_function('cash', default='Cash')),
-        ('bank_transfer', trans_function('bank_transfer', default='Bank Transfer')),
-        ('mobile_money', trans_function('mobile_money', default='Mobile Money'))
+    payment_method = SelectField(trans('general_payment_method', default='Payment Method'), choices=[
+        ('cash', trans('general_cash', default='Cash')),
+        ('bank_transfer', trans('general_bank_transfer', default='Bank Transfer')),
+        ('mobile_money', trans('general_mobile_money', default='Mobile Money'))
     ], validators=[validators.DataRequired()], render_kw={'class': 'form-select'})
-    notes = TextAreaField(trans_function('notes', default='Notes'), render_kw={'class': 'form-control', 'rows': 3})
-    submit = SubmitField(trans_function('process_tokens', default='Process Tokens'), render_kw={'class': 'btn btn-success w-100'})
+    notes = TextAreaField(trans('general_notes', default='Notes'), render_kw={'class': 'form-control', 'rows': 3})
+    submit = SubmitField(trans('agents_process_tokens', default='Process Tokens'), render_kw={'class': 'btn btn-success w-100'})
 
 @agents_bp.route('/dashboard')
 @login_required
@@ -100,10 +101,12 @@ def dashboard():
                              recent_activities=recent_activities,
                              assisted_traders=assisted_traders,
                              format_currency=format_currency,
-                             format_date=format_date)
+                             format_date=format_date,
+                             t=trans,
+                             lang=session.get('lang', 'en'))
     except Exception as e:
         logger.error(f"Error loading agent dashboard for {current_user.id}: {str(e)}")
-        flash(trans_function('something_went_wrong', default='An error occurred'), 'danger')
+        flash(trans('agents_dashboard_error', default='An error occurred'), 'danger')
         return redirect(url_for('index'))
 
 @agents_bp.route('/register_trader', methods=['GET', 'POST'])
@@ -120,12 +123,12 @@ def register_trader():
             
             # Check if username or email already exists
             if db.users.find_one({'_id': username}):
-                flash(trans_function('username_exists', default='Username already exists'), 'danger')
-                return render_template('agents/register_trader.html', form=form)
+                flash(trans('general_username_exists', default='Username already exists'), 'danger')
+                return render_template('agents/register_trader.html', form=form, t=trans, lang=session.get('lang', 'en'))
             
             if db.users.find_one({'email': email}):
-                flash(trans_function('email_exists', default='Email already exists'), 'danger')
-                return render_template('agents/register_trader.html', form=form)
+                flash(trans('general_email_exists', default='Email already exists'), 'danger')
+                return render_template('agents/register_trader.html', form=form, t=trans, lang=session.get('lang', 'en'))
             
             # Generate temporary password
             temp_password = str(uuid.uuid4())[:8]
@@ -172,15 +175,15 @@ def register_trader():
                 'date': datetime.utcnow()
             })
             
-            flash(trans_function('trader_registered_success', default=f'Trader registered successfully. Temporary password: {temp_password}'), 'success')
+            flash(trans('agents_trader_registered_success', default=f'Trader registered successfully. Temporary password: {temp_password}'), 'success')
             logger.info(f"Agent {current_user.id} registered trader {username}")
             return redirect(url_for('agents_bp.dashboard'))
             
         except Exception as e:
             logger.error(f"Error registering trader by agent {current_user.id}: {str(e)}")
-            flash(trans_function('something_went_wrong', default='An error occurred'), 'danger')
+            flash(trans('agents_registration_error', default='An error occurred'), 'danger')
     
-    return render_template('agents/register_trader.html', form=form)
+    return render_template('agents/register_trader.html', form=form, t=trans, lang=session.get('lang', 'en'))
 
 @agents_bp.route('/manage_tokens', methods=['GET', 'POST'])
 @login_required
@@ -197,8 +200,8 @@ def manage_tokens():
             # Verify trader exists
             trader = db.users.find_one({'_id': trader_username, 'role': 'trader'})
             if not trader:
-                flash(trans_function('trader_not_found', default='Trader not found'), 'danger')
-                return render_template('agents/manage_tokens.html', form=form)
+                flash(trans('agents_trader_not_found', default='Trader not found'), 'danger')
+                return render_template('agents/manage_tokens.html', form=form, t=trans, lang=session.get('lang', 'en'))
             
             # Calculate coins (₦50 = 1 coin)
             coins = int(amount / 50)
@@ -236,15 +239,15 @@ def manage_tokens():
                 'timestamp': datetime.utcnow()
             })
             
-            flash(trans_function('tokens_processed_success', default=f'Successfully credited {coins} coins to {trader_username}'), 'success')
+            flash(trans('agents_tokens_processed_success', default=f'Successfully credited {coins} coins to {trader_username}'), 'success')
             logger.info(f"Agent {current_user.id} facilitated {coins} coins for trader {trader_username}")
             return redirect(url_for('agents_bp.manage_tokens'))
             
         except Exception as e:
             logger.error(f"Error processing tokens by agent {current_user.id}: {str(e)}")
-            flash(trans_function('something_went_wrong', default='An error occurred'), 'danger')
+            flash(trans('agents_token_processing_error', default='An error occurred'), 'danger')
     
-    return render_template('agents/manage_tokens.html', form=form)
+    return render_template('agents/manage_tokens.html', form=form, t=trans, lang=session.get('lang', 'en'))
 
 @agents_bp.route('/assist_trader_records/<trader_id>')
 @login_required
@@ -256,7 +259,7 @@ def assist_trader_records(trader_id):
         trader = db.users.find_one({'_id': trader_id, 'role': 'trader'})
         
         if not trader:
-            flash(trans_function('trader_not_found', default='Trader not found'), 'danger')
+            flash(trans('agents_trader_not_found', default='Trader not found'), 'danger')
             return redirect(url_for('agents_bp.dashboard'))
         
         # Mark agent as assisting this trader
@@ -290,11 +293,13 @@ def assist_trader_records(trader_id):
                              recent_creditors=recent_creditors,
                              recent_cashflows=recent_cashflows,
                              format_currency=format_currency,
-                             format_date=format_date)
+                             format_date=format_date,
+                             t=trans,
+                             lang=session.get('lang', 'en'))
         
     except Exception as e:
         logger.error(f"Error accessing trader records for agent {current_user.id}: {str(e)}")
-        flash(trans_function('something_went_wrong', default='An error occurred'), 'danger')
+        flash(trans('agents_records_access_error', default='An error occurred'), 'danger')
         return redirect(url_for('agents_bp.dashboard'))
 
 @agents_bp.route('/generate_trader_report/<trader_id>')
@@ -307,7 +312,7 @@ def generate_trader_report(trader_id):
         trader = db.users.find_one({'_id': trader_id, 'role': 'trader'})
         
         if not trader:
-            flash(trans_function('trader_not_found', default='Trader not found'), 'danger')
+            flash(trans('agents_trader_not_found', default='Trader not found'), 'danger')
             return redirect(url_for('agents_bp.dashboard'))
         
         # Calculate financial summary
@@ -358,11 +363,13 @@ def generate_trader_report(trader_id):
                              total_payments=total_payments_amount,
                              net_position=total_debtors_amount - total_creditors_amount,
                              net_cashflow=total_receipts_amount - total_payments_amount,
-                             format_currency=format_currency)
+                             format_currency=format_currency,
+                             t=trans,
+                             lang=session.get('lang', 'en'))
         
     except Exception as e:
         logger.error(f"Error generating trader report for agent {current_user.id}: {str(e)}")
-        flash(trans_function('something_went_wrong', default='An error occurred'), 'danger')
+        flash(trans('agents_report_generation_error', default='An error occurred'), 'danger')
         return redirect(url_for('agents_bp.dashboard'))
 
 @agents_bp.route('/my_activity')
@@ -400,11 +407,13 @@ def my_activity():
                              total_tokens_amount=total_tokens_amount,
                              activities=activities,
                              format_currency=format_currency,
-                             format_date=format_date)
+                             format_date=format_date,
+                             t=trans,
+                             lang=session.get('lang', 'en'))
         
     except Exception as e:
         logger.error(f"Error loading agent activity for {current_user.id}: {str(e)}")
-        flash(trans_function('something_went_wrong', default='An error occurred'), 'danger')
+        flash(trans('agents_activity_load_error', default='An error occurred'), 'danger')
         return redirect(url_for('agents_bp.dashboard'))
 
 @agents_bp.route('/api/search_traders')
