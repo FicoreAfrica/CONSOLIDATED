@@ -6,6 +6,9 @@ COMMON_FEATURES_TRANSLATIONS = {
     'en': {
         # News Management
         'news_article_not_found': 'Article not found',
+        # Common Features
+        'tax_amount': 'Tax Amount',
+        'tax_calculate': 'Calculate Tax',
         'news_title_content_required': 'Title and content are required',
         'news_added_success': 'News article added successfully',
         'news_updated_success': 'News article updated successfully',
@@ -230,7 +233,9 @@ COMMON_FEATURES_TRANSLATIONS = {
         'system_status': 'Matsayin Tsarin',
         'system_healthy': 'Tsarin yana da lafiya',
         'system_issues': 'Tsarin yana da matsaloli',
-        
+        # Common Features
+        'tax_amount': 'Adadin Haraji',
+        'tax_calculate': 'Ƙididdige Haraji',
         # API & Integration
         'api_key': 'Mabuɗin API',
         'api_secret': 'Sirrin API',
