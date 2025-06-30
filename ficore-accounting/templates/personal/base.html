@@ -238,7 +238,7 @@
             </div>
             <div class="footer-buttons mt-3">
                 <a href="mailto:support@ficoreafrica.com" class="text-white"><i class="fas fa-envelope"></i> {{ t('general_contact_us', default='Contact Us') | e }}</a>
-                <a href="{{ url_for('general.feedback') | e }}" class="text-white"><i class="fas fa-comment"></i> {{ t('general_provide_feedback', default='Provide Feedback') | e }}</a>
+                <a href="{{ url_for('feedback') | e }}" class="text-white"><i class="fas fa-comment"></i> {{ t('general_provide_feedback', default='Provide Feedback') | e }}</a>
                 {% if current_user.is_authenticated %}
                 <a href="{{ url_for('users_blueprint.logout') | e }}" class="text-white"><i class="fas fa-sign-out-alt"></i> {{ t('general_logout', default='Logout') | e }}</a>
                 {% else %}
