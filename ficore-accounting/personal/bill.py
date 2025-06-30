@@ -3,7 +3,7 @@ from flask_wtf import FlaskForm
 from flask_wtf.csrf import CSRFProtect, CSRFError
 from wtforms import StringField, FloatField, SelectField, BooleanField, IntegerField
 from wtforms.validators import DataRequired, NumberRange, Email, Optional
-from flask_login import current_user
+from flask_login import current_user, login_required  # Added login_required
 from mailersend_email import send_email, EMAIL_CONFIG
 from datetime import datetime, date, timedelta
 import uuid
@@ -436,6 +436,43 @@ def main():
             lang=lang,
             tool_title=trans('bill_title', default='Bill Manager', lang=lang)
         ), 500
+
+# NEW: Added summary endpoint for homepage financial summary
+@bill_bp.route('/summary')
+@login_required
+def summary():
+    """Return summary of upcoming bills for the current user."""
+    try:
+        filter_kwargs = {'user_id': current_user.id}
+        bills_collection = get_mongo_db().bills
+        today = date.today()
+        
+        # Aggregate total amount of upcoming bills (not paid, due in the future)
+        pipeline = [
+            {
+                '$match': {
+                    **filter_kwargs,
+                    'status': {'$ne': 'paid'},
+                    'due_date': {'$gte': today.isoformat()}
+                }
+            },
+            {
+                '$group': {
+                    '_id': None,
+                    'totalUpcomingBills': {'$sum': '$amount'}
+                }
+            }
+        ]
+        result = list(bills_collection.aggregate(pipeline))
+        total_upcoming_bills = result[0]['totalUpcomingBills'] if result else 0.0
+        
+        current_app.logger.info(f"Fetched bill summary for user {current_user.id}: {total_upcoming_bills}", 
+                              extra={'session_id': session.get('sid', 'unknown')})
+        return jsonify({'totalUpcomingBills': total_upcoming_bills})
+    except Exception as e:
+        current_app.logger.error(f"Error in bill.summary: {str(e)}", 
+                                extra={'session_id': session.get('sid', 'unknown')})
+        return jsonify({'totalUpcomingBills': 0.0}), 500
 
 @bill_bp.route('/unsubscribe/<email>')
 @custom_login_required
