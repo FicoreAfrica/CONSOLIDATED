@@ -14,7 +14,7 @@
         {% if messages %}
             {% for category, message in messages %}
                 <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
-                    {{ message }}
+                    {{ t(message, default=message) }}
                     <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="{{ t('general_close', default='Close') }}"></button>
                 </div>
             {% endfor %}
@@ -39,7 +39,7 @@
     <div class="tab-content" id="quizTabContent">
         <!-- Take Quiz Tab -->
         <div class="tab-pane fade show active" id="take-quiz" role="tabpanel" aria-labelledby="take-quiz-tab">
-            <form method="POST" action="{{ url_for('quiz.main') }}" id="quizForm" class="validate-form">
+            <form method="POST" action="{{ url_for('quiz.main', course_id=course_id) }}" id="quizForm" class="validate-form">
                 {{ form.csrf_token }}
                 <input type="hidden" name="action" value="submit_quiz">
 
@@ -61,7 +61,7 @@
                                 <div class="mb-3">
                                     <label class="form-label">{{ t('general_email', default='Email') }}</label>
                                     {{ form.email(class="form-control", placeholder=t('general_email_placeholder', default='e.g., ahmad@example.com')) }}
-                                    <div class="invalid-feedback">{{ t('general_email_required', default='Valid email is required') }}</div>
+                                    <div class="invalid-feedback">{{ t('general_email_required', default='Valid email is required for notifications') }}</div>
                                 </div>
                             </div>
                         </div>
@@ -87,31 +87,32 @@
                     <div class="card-header">
                         <h5><i class="fas fa-question-circle"></i> {{ t('quiz_questions', default='Quiz Questions') }}</h5>
                         <div class="progress mt-2">
-                            <div class="progress-bar" role="progressbar" style="width: 0%" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100" id="quizProgress">0%</div>
+                            <div class="progress-bar" role="progressbar" style="width: 0%" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100" id="quizProgress" aria-label="{{ t('quiz_progress_bar', default='Quiz completion progress') }}">{{ t('quiz_progress_percentage', default='0%') }}</div>
                         </div>
                     </div>
                     <div class="card-body">
                         {% for question in questions %}
                             <div class="question-block border-bottom pb-3 mb-3" data-question="{{ loop.index }}">
                                 <div class="mb-2">
-                                    <label class="form-label fw-bold">
+                                    <label class="form-label fw-bold" for="{{ question.id }}_1">
                                         <span class="question-number">{{ loop.index }}.</span>
                                         <span class="question-icon">{{ question.icon }}</span>
                                         {{ t(question.text_key, default=question.text) }}
                                         <span class="question-status"></span>
                                     </label>
+                                    {% if question.tooltip %}
+                                        <small class="form-text text-muted" id="tooltip-{{ question.id }}">{{ t(question.tooltip, default='') }}</small>
+                                    {% endif %}
                                 </div>
                                 <div class="button-container">
                                     {% for choice_value, choice_label in form[question.id].choices %}
-                                        <input type="radio" class="d-none" name="{{ question.id }}" id="{{ question.id }}_{{ loop.index }}" value="{{ choice_value }}">
+                                        <input type="radio" class="d-none" name="{{ question.id }}" id="{{ question.id }}_{{ loop.index }}" value="{{ choice_value }}" aria-describedby="tooltip-{{ question.id }}" aria-required="true">
                                         <button type="button" class="btn-quiz-answer {{ 'yes' if choice_value == 'Yes' else 'no' }}" data-input-id="{{ question.id }}_{{ loop.index }}">
                                             {{ t('quiz_' + choice_value.lower(), default=choice_label) }}
                                         </button>
                                     {% endfor %}
+                                    <div class="invalid-feedback">{{ t('quiz_question_required', default='Please answer this question') }}</div>
                                 </div>
-                                {% if question.tooltip %}
-                                    <small class="form-text text-muted">{{ t(question.tooltip, default='') }}</small>
-                                {% endif %}
                             </div>
                         {% endfor %}
                     </div>
@@ -147,9 +148,28 @@
                         <div class="card bg-info text-white">
                             <div class="card-body text-center">
                                 <h6>{{ t('general_created_at', default='Completed') }}</h6>
-                                <h6>{{ latest_record.created_at.strftime('%Y-%m-%d') if latest_record.created_at else t('general_not_available', default='Not Available') }}</h6>
+                                <h6>{{ latest_record.created_at | format_datetime | default(t('general_not_available', default='Not Available')) }}</h6>
                             </div>
                         </div>
+                    </div>
+                </div>
+
+                <!-- Comparison Metrics -->
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5><i class="fas fa-users"></i> {{ t('quiz_comparison', default='Comparison') }}</h5>
+                    </div>
+                    <div class="card-body">
+                        <ul class="list-group list-group-flush">
+                            <li class="list-group-item d-flex justify-content-between">
+                                <span>{{ t('quiz_rank', default='Your Rank') }}</span>
+                                <strong>{{ rank }} / {{ total_users }}</strong>
+                            </li>
+                            <li class="list-group-item d-flex justify-content-between">
+                                <span>{{ t('quiz_average_score', default='Average Score') }}</span>
+                                <strong>{{ average_score | round(1) }} / {{ max_score }}</strong>
+                            </li>
+                        </ul>
                     </div>
                 </div>
 
@@ -172,7 +192,7 @@
                 </div>
 
                 <!-- Insights -->
-                {% if insights %}
+                {% if insights or cross_tool_insights %}
                     <div class="card mb-4">
                         <div class="card-header">
                             <h6><i class="fas fa-lightbulb"></i> {{ t('quiz_insights', default='Insights') }}</h6>
@@ -181,6 +201,9 @@
                             <ul class="list-unstyled">
                                 {% for insight in insights %}
                                     <li><i class="fas fa-check-circle text-success"></i> {{ insight }}</li>
+                                {% endfor %}
+                                {% for insight in cross_tool_insights %}
+                                    <li><i class="fas fa-link text-primary"></i> {{ insight }}</li>
                                 {% endfor %}
                             </ul>
                         </div>
@@ -249,9 +272,8 @@ document.addEventListener('DOMContentLoaded', function() {
     function updateProgress() {
         const percentage = (answeredQuestions / questions.length) * 100;
         progressBar.style.width = percentage + '%';
-        progressBar.textContent = Math.round(percentage) + '%';
+        progressBar.textContent = `{{ t('quiz_progress_percentage', default='{percentage}%') }}`.replace('{percentage}', Math.round(percentage));
         progressBar.setAttribute('aria-valuenow', percentage);
-        
         submitButton.disabled = answeredQuestions < questions.length;
     }
 
@@ -259,12 +281,14 @@ document.addEventListener('DOMContentLoaded', function() {
         const buttons = question.querySelectorAll('.btn-quiz-answer');
         const radios = question.querySelectorAll('input[type="radio"]');
         const statusSpan = question.querySelector('.question-status');
+        const feedback = question.querySelector('.invalid-feedback');
         let isAnswered = false;
 
         buttons.forEach(button => {
             button.addEventListener('click', function() {
-                // Remove active class from all buttons in this question
+                // Remove active class and feedback from all buttons in this question
                 buttons.forEach(btn => btn.classList.remove('active'));
+                feedback.style.display = 'none';
                 // Add active class to clicked button
                 this.classList.add('active');
                 
@@ -297,6 +321,24 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
             }
         });
+    });
+
+    // Form submission validation
+    document.getElementById('quizForm').addEventListener('submit', function(event) {
+        let allAnswered = true;
+        questions.forEach(question => {
+            const radios = question.querySelectorAll('input[type="radio"]');
+            const feedback = question.querySelector('.invalid-feedback');
+            const isChecked = Array.from(radios).some(radio => radio.checked);
+            if (!isChecked) {
+                feedback.style.display = 'block';
+                allAnswered = false;
+            }
+        });
+        if (!allAnswered) {
+            event.preventDefault();
+            alert('{{ t('quiz_all_questions_required', default='Please answer all questions before submitting') }}');
+        }
     });
 
     // Initial progress update
