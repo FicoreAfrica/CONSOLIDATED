@@ -365,7 +365,7 @@
         // Load notification count
         async function loadNotificationCount() {
             try {
-                const response = await fetch('{{ url_for("personal.notification_count") | e }}');
+                const response = await fetch('{{ url_for("notification_count") | e }}');
                 const data = await response.json();
                 const badge = document.getElementById('notificationBadge');
                 if (data.count > 0) {
