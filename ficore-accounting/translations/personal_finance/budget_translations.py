@@ -81,5 +81,14 @@ BUDGET_TRANSLATIONS = {
         'budget_review_monthly': 'Duba kasafin kuɗin ka kowane wata',
         'budget_emergency_fund': 'Gina asusun ceto na gaggawa',
         'budget_reduce_unnecessary_expenses': 'Rage kashe kuɗin da ba dole ba',
+        'monthly_income': 'Kudin Shiga na Wata',
+        'housing_rent': 'Gida/Haya',
+        'food': 'Abinci',
+        'transport': 'Sufuri',
+        'dependents_support': 'Tallafin Masu Dogara',
+        'miscellaneous': 'Sauran',
+        'others': 'Wasu',
+        'savings_goal': 'Manufar Tattara Kuɗi',
+        'submit': 'Sallama',
     }
 }
