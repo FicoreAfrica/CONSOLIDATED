@@ -194,14 +194,14 @@
         <div class="mb-4">
             <h3>{{ t('general_quick_actions', default='Quick Actions') }}</h3>
             <div class="d-flex flex-wrap gap-2">
-                <a href="{{ url_for('creditors_blueprint.add') }}" class="btn btn-primary">{{ t('creditors_create_what_you_owe', default='Create What You Owe') }}</a>
-                <a href="{{ url_for('debtors_blueprint.add') }}" class="btn btn-primary">{{ t('debtors_create_what_they_owe_you', default='Create What They Owe You') }}</a>
-                <a href="{{ url_for('payments_blueprint.add') }}" class="btn btn-primary">{{ t('payments_add_money_out', default='Add Money Out') }}</a>
-                <a href="{{ url_for('receipts_blueprint.add') }}" class="btn btn-primary">{{ t('receipts_add_money_in', default='Add Money In') }}</a>
-                <a href="{{ url_for('inventory_blueprint.add') }}" class="btn btn-primary">{{ t('inventory_add_goods_stock', default='Add Goods & Stock') }}</a>
-                <a href="{{ url_for('coins_blueprint.purchase') }}" class="btn btn-success">{{ t('coins_purchase_coins', default='Purchase Coins') }}</a>
+                <a href="{{ url_for('creditors.add') }}" class="btn btn-primary">{{ t('creditors_create_what_you_owe', default='Create What You Owe') }}</a>
+                <a href="{{ url_for('debtors.add') }}" class="btn btn-primary">{{ t('debtors_create_what_they_owe_you', default='Create What They Owe You') }}</a>
+                <a href="{{ url_for('payments.add') }}" class="btn btn-primary">{{ t('payments_add_money_out', default='Add Money Out') }}</a>
+                <a href="{{ url_for('receipts.add') }}" class="btn btn-primary">{{ t('receipts_add_money_in', default='Add Money In') }}</a>
+                <a href="{{ url_for('inventory.add') }}" class="btn btn-primary">{{ t('inventory_add_goods_stock', default='Add Goods & Stock') }}</a>
+                <a href="{{ url_for('coins.purchase') }}" class="btn btn-success">{{ t('coins_purchase_coins', default='Purchase Coins') }}</a>
                 {% if current_user.role == 'admin' %}
-                    <a href="{{ url_for('admin_blueprint.dashboard') }}" class="btn btn-warning">{{ t('admin_dashboard', default='Admin Dashboard') }}</a>
+                    <a href="{{ url_for('admin.dashboard') }}" class="btn btn-warning">{{ t('admin_dashboard', default='Admin Dashboard') }}</a>
                 {% endif %}
             </div>
         </div>
@@ -228,7 +228,7 @@
                                             <td>{{ creditor.amount_owed | format_currency }}</td>
                                             <td>
                                                 <div class="responsive-btn-group" role="group">
-                                                    <a href="{{ url_for('creditors_blueprint.view_page', id=creditor._id) }}"
+                                                    <a href="{{ url_for('creditors.view_page', id=creditor._id) }}"
                                                        class="btn btn-info btn-sm"
                                                        data-bs-toggle="tooltip"
                                                        title="{{ t('general_view_details', default='View Details') }}">
@@ -260,11 +260,11 @@
                                                         {{ t('general_share', default='Share') }}
                                                     </button>
                                                     {% endif %}
-                                                    <a href="{{ url_for('creditors_blueprint.edit', id=creditor._id) }}" class="btn btn-primary btn-sm"
+                                                    <a href="{{ url_for('creditors.edit', id=creditor._id) }}" class="btn btn-primary btn-sm"
                                                        data-bs-toggle="tooltip" title="{{ t('general_edit', default='Edit') }}">
                                                         {{ t('general_edit', default='Edit') }}
                                                     </a>
-                                                    <form action="{{ url_for('creditors_blueprint.delete', id=creditor._id) }}" method="POST" style="display:inline;">
+                                                    <form action="{{ url_for('creditors.delete', id=creditor._id) }}" method="POST" style="display:inline;">
                                                         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                                                         <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('{{ t('general_confirm_delete', default='Are you sure?') }}')"
                                                                 data-bs-toggle="tooltip"
@@ -306,7 +306,7 @@
                                             <td>{{ debtor.amount_owed | format_currency }}</td>
                                             <td>
                                                 <div class="responsive-btn-group" role="group">
-                                                    <a href="{{ url_for('debtors_blueprint.view_page', id=debtor._id) }}"
+                                                    <a href="{{ url_for('debtors.view_page', id=debtor._id) }}"
                                                        class="btn btn-info btn-sm"
                                                        data-bs-toggle="tooltip"
                                                        title="{{ t('general_view_details', default='View Details') }}">
@@ -338,11 +338,11 @@
                                                         {{ t('general_share', default='Share') }}
                                                     </button>
                                                     {% endif %}
-                                                    <a href="{{ url_for('debtors_blueprint.edit', id=debtor._id) }}" class="btn btn-primary btn-sm"
+                                                    <a href="{{ url_for('debtors.edit', id=debtor._id) }}" class="btn btn-primary btn-sm"
                                                        data-bs-toggle="tooltip" title="{{ t('general_edit', default='Edit') }}">
                                                         {{ t('general_edit', default='Edit') }}
                                                     </a>
-                                                    <form action="{{ url_for('debtors_blueprint.delete', id=debtor._id) }}" method="POST" style="display:inline;">
+                                                    <form action="{{ url_for('debtors.delete', id=debtor._id) }}" method="POST" style="display:inline;">
                                                         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                                                         <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('{{ t('general_confirm_delete', default='Are you sure?') }}')"
                                                                 data-bs-toggle="tooltip"
@@ -384,19 +384,19 @@
                                             <td>{{ payment.amount | format_currency }}</td>
                                             <td>
                                                 <div class="responsive-btn-group" role="group">
-                                                    <a href="{{ url_for('payments_blueprint.view', id=payment._id) }}"
+                                                    <a href="{{ url_for('payments.view', id=payment._id) }}"
                                                        class="btn btn-info btn-sm"
                                                        data-bs-toggle="tooltip"
                                                        title="{{ t('general_view_details', default='View Details') }}">
                                                         {{ t('general_view', default='View') }}
                                                     </a>
-                                                    <a href="{{ url_for('payments_blueprint.edit', id=payment._id) }}"
+                                                    <a href="{{ url_for('payments.edit', id=payment._id) }}"
                                                        class="btn btn-primary btn-sm"
                                                        data-bs-toggle="tooltip"
                                                        title="{{ t('general_edit', default='Edit') }}">
                                                         {{ t('general_edit', default='Edit') }}
                                                     </a>
-                                                    <form action="{{ url_for('payments_blueprint.delete', id=payment._id) }}" method="POST" style="display:inline;">
+                                                    <form action="{{ url_for('payments.delete', id=payment._id) }}" method="POST" style="display:inline;">
                                                         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                                                         <button type="submit" class="btn btn-danger btn-sm"
                                                                 onclick="return confirm('{{ t('general_confirm_delete', default='Are you sure?') }}')"
@@ -439,19 +439,19 @@
                                             <td>{{ receipt.amount | format_currency }}</td>
                                             <td>
                                                 <div class="responsive-btn-group" role="group">
-                                                    <a href="{{ url_for('receipts_blueprint.view', id=receipt._id) }}"
+                                                    <a href="{{ url_for('receipts.view', id=receipt._id) }}"
                                                        class="btn btn-info btn-sm"
                                                        data-bs-toggle="tooltip"
                                                        title="{{ t('general_view_details', default='View Details') }}">
                                                         {{ t('general_view', default='View') }}
                                                     </a>
-                                                    <a href="{{ url_for('receipts_blueprint.edit', id=receipt._id) }}"
+                                                    <a href="{{ url_for('receipts.edit', id=receipt._id) }}"
                                                        class="btn btn-primary btn-sm"
                                                        data-bs-toggle="tooltip"
                                                        title="{{ t('general_edit', default='Edit') }}">
                                                         {{ t('general_edit', default='Edit') }}
                                                     </a>
-                                                    <form action="{{ url_for('receipts_blueprint.delete', id=receipt._id) }}" method="POST" style="display:inline;">
+                                                    <form action="{{ url_for('receipts.delete', id=receipt._id) }}" method="POST" style="display:inline;">
                                                         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                                                         <button type="submit" class="btn btn-danger btn-sm"
                                                                 onclick="return confirm('{{ t('general_confirm_delete', default='Are you sure?') }}')"
@@ -494,19 +494,19 @@
                                             <td>{{ item.quantity }}</td>
                                             <td>
                                                 <div class="responsive-btn-group" role="group">
-                                                    <a href="{{ url_for('inventory_blueprint.view_page', id=item._id) }}"
+                                                    <a href="{{ url_for('inventory.view_page', id=item._id) }}"
                                                        class="btn btn-info btn-sm"
                                                        data-bs-toggle="tooltip"
                                                        title="{{ t('general_view_details', default='View Details') }}">
                                                         {{ t('general_view', default='View') }}
                                                     </a>
-                                                    <a href="{{ url_for('inventory_blueprint.edit', id=item._id) }}"
+                                                    <a href="{{ url_for('inventory.edit', id=item._id) }}"
                                                        class="btn btn-primary btn-sm"
                                                        data-bs-toggle="tooltip"
                                                        title="{{ t('general_edit', default='Edit') }}">
                                                         {{ t('general_edit', default='Edit') }}
                                                     </a>
-                                                    <form action="{{ url_for('inventory_blueprint.delete', id=item._id) }}" method="POST" style="display:inline;">
+                                                    <form action="{{ url_for('inventory.delete', id=item._id) }}" method="POST" style="display:inline;">
                                                         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                                                         <button type="submit" class="btn btn-danger btn-sm"
                                                                 onclick="return confirm('{{ t('general_confirm_delete', default='Are you sure?') }}')"
@@ -533,7 +533,7 @@
         <div class="text-center py-5">
             <h3>{{ t('dashboard_welcome_to_ficore', default='Welcome to FiCore') }}</h3>
             <p class="text-muted">{{ t('dashboard_please_login', default='Please log in to view your dashboard.') }}</p>
-            <a href="{{ url_for('users_blueprint.login') }}" class="btn btn-primary">{{ t('general_login', default='Log In') }}</a>
+            <a href="{{ url_for('users.login') }}" class="btn btn-primary">{{ t('general_login', default='Log In') }}</a>
         </div>
     {% endif %}
 </div>
