@@ -6,7 +6,7 @@
         <h1>{{ t('coins_purchase_coins', default='Purchase Coins') }}</h1>
         <small class="subtext">{{ t('coins_wallet_subtext', default='Tsabobin Cikin App') }}</small>
     </div>
-    <form action="{{ url_for('coins_blueprint.purchase') }}" method="POST" class="row g-3">
+    <form action="{{ url_for('coins.purchase') }}" method="POST" class="row g-3">
         {{ form.hidden_tag() }}
         <div class="col-12">
             <label for="amount" class="form-label">{{ t('coins_amount', default='Coin Amount') }}</label>
