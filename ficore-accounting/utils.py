@@ -200,7 +200,7 @@ def requires_role(role):
             allowed_roles = role if isinstance(role, list) else [role]
             if current_user.role not in allowed_roles:
                 flash(trans('general_access_denied', default='You do not have permission to access this page.'), 'danger')
-                return redirect(url_for('dashboard_bp.index'))
+                return redirect(url_for('dashboard.index'))
             
             return f(*args, **kwargs)
         return decorated_function
