@@ -607,14 +607,14 @@ def create_app():
             if current_user.role == 'agent':
                 return redirect(url_for('agents_bp.dashboard'))
             elif current_user.role == 'trader':
-                return redirect(url_for('dashboard_bp.index'))
+                return redirect(url_for('dashboard.index'))
             elif current_user.role == 'admin':
                 try:
                     return redirect(url_for('admin_bp.dashboard'))
                 except:
-                    return redirect(url_for('dashboard_bp.index'))
+                    return redirect(url_for('dashboard.index'))
             elif current_user.role == 'personal':
-                return redirect(url_for('dashboard_bp.index'))
+                return redirect(url_for('dashboard.index'))
             else:
                 try:
                     return render_template('general/home.html', t=trans, lang=lang)
@@ -649,7 +649,7 @@ def create_app():
     @ensure_session_id
     def general_dashboard():
         logger.info(f'Redirecting to unified dashboard for {"authenticated" if current_user.is_authenticated else "anonymous"} user')
-        return redirect(url_for('dashboard_bp.index'))
+        return redirect(url_for('dashboard.index'))
     
     @app.route('/about')
     def about():
