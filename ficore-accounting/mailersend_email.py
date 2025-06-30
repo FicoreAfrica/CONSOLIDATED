@@ -139,6 +139,16 @@ def send_email(
     providers = ['mailersend', 'gmail']
     last_error = None
 
+    # Determine the subject using trans with fallback to general_ prefix
+    subject_key = config["subject_key"]
+    translated_subject = trans(subject_key, lang=lang)
+    if translated_subject == subject_key:  # Fallback to general_ prefix if original key not found
+        fallback_subject_key = f"general_{subject_key}"
+        translated_subject = trans(fallback_subject_key, lang=lang)
+        if translated_subject == fallback_subject_key:
+            logger.warning(f"Translation not found for '{subject_key}' or '{fallback_subject_key}', using key as subject", extra={'session_id': session_id})
+            translated_subject = subject_key
+
     for provider in providers:
         if (provider == 'mailersend' and not mailersend_enabled) or (provider == 'gmail' and not gmail_enabled):
             logger.info(f"Skipping provider {provider} due to missing credentials", extra={'session_id': session_id})
@@ -183,7 +193,7 @@ def send_email(
                 payload = {
                     "from": {"email": from_email, "name": "FiCore Africa"},
                     "to": [{"email": to_email}],
-                    "subject": subject,
+                    "subject": translated_subject,
                     "html": html_content
                 }
 
@@ -207,7 +217,7 @@ def send_email(
                 smtp_user = os.getenv('GMAIL_EMAIL')
                 smtp_password = os.getenv('GMAIL_PASSWORD')
                 msg = MIMEText(html_content, 'html')
-                msg['Subject'] = subject
+                msg['Subject'] = translated_subject
                 msg['From'] = f"FiCore Africa <{smtp_user}>"
                 msg['To'] = to_email
 
