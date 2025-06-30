@@ -5,7 +5,7 @@
     <!-- Hero Section -->
     <section class="hero text-center my-5">
         <h1><i class="fas fa-wallet"></i> {{ t('general_welcome', default='Welcome to FiCore Africa') }}</h1>
-        <p class="lead">{{ t('general_ficore_desc', default='Your all-in-one platform for personal finance, business management, and financial literacy across Africa.') }}</p>
+        <p class="lead">{{ t('general_ficore_desc', default='Your all-in-one platform for personal finance, business management, financial literacy, and agent services across Africa.') }}</p>
         <div class="d-flex justify-content-center gap-3 mt-4">
             <a href="{{ url_for('users.signup') }}" class="btn btn-primary btn-lg" aria-label="{{ t('general_signup', default='Sign Up') }}">{{ t('general_signup', default='Sign Up') }}</a>
             <a href="{{ url_for('users.login') }}" class="btn btn-outline-secondary btn-lg" aria-label="{{ t('general_login', default='Log In') }}">{{ t('general_login', default='Log In') }}</a>
@@ -15,13 +15,14 @@
     <!-- Role-Based Value Proposition -->
     <section class="roles-section my-5">
         <h2 class="text-center"><i class="fas fa-users"></i> {{ t('general_who_we_serve', default='Who We Serve') }}</h2>
+        <p class="text-center mb-4">{{ t('general_who_we_serve_desc', default='FiCore empowers individuals, businesses, and agents with tools tailored to their needs.') }}</p>
         <div class="row g-4">
             <div class="col-md-4">
                 <div class="card role-card">
                     <div class="card-body text-center">
                         <h3><i class="fas fa-user"></i> {{ t('general_personal', default='Personal Users') }}</h3>
-                        <p>{{ t('general_personal_desc', default='Manage your budget, track bills, and grow your financial literacy with easy-to-use tools.') }}</p>
-                        <a href="{{ url_for('financial_health.main') }}" class="btn btn-outline-primary">{{ t('general_start', default='Start') }}</a>
+                        <p>{{ t('general_personal_desc', default='Track budgets, bills, and financial health to achieve your goals.') }}</p>
+                        <a href="{{ url_for('users.signup', role='personal') }}" class="btn btn-outline-primary">{{ t('general_get_started', default='Get Started') }}</a>
                     </div>
                 </div>
             </div>
@@ -29,8 +30,8 @@
                 <div class="card role-card">
                     <div class="card-body text-center">
                         <h3><i class="fas fa-briefcase"></i> {{ t('general_trader', default='Business Owners') }}</h3>
-                        <p>{{ t('general_trader_desc', default='Track debtors, creditors, inventory, and cashflow to streamline your business.') }}</p>
-                        <a href="{{ url_for('dashboard.index') }}" class="btn btn-outline-primary">{{ t('general_start', default='Start') }}</a>
+                        <p>{{ t('general_trader_desc', default='Manage debtors, creditors, inventory, and cashflow for your business.') }}</p>
+                        <a href="{{ url_for('users.signup', role='trader') }}" class="btn btn-outline-primary">{{ t('general_get_started', default='Get Started') }}</a>
                     </div>
                 </div>
             </div>
@@ -38,8 +39,8 @@
                 <div class="card role-card">
                     <div class="card-body text-center">
                         <h3><i class="fas fa-handshake"></i> {{ t('general_agent', default='Agents') }}</h3>
-                        <p>{{ t('general_agent_desc', default='Support clients with onboarding, financial education, or cash-in/cash-out services.') }}</p>
-                        <a href="{{ url_for('agents.dashboard') }}" class="btn btn-outline-primary">{{ t('general_start', default='Start') }}</a>
+                        <p>{{ t('general_agent_desc', default='Register traders, facilitate token purchases, and support client records.') }}</p>
+                        <a href="{{ url_for('users.signup', role='agent') }}" class="btn btn-outline-primary">{{ t('general_get_started', default='Get Started') }}</a>
                     </div>
                 </div>
             </div>
@@ -48,15 +49,15 @@
 
     <!-- Tools Overview -->
     <section class="tools-section my-5">
-        <h2 class="text-center"><i class="fas fa-tools"></i> {{ t('general_our_tools', default='Our Tools') }}</h2>
-        <p class="text-center mb-4">{{ t('general_tools_desc', default='Explore tools tailored for personal finance, business management, and more.') }}</p>
+        <h2 class="text-center"><i class="fas fa-tools"></i> {{ t('general_our_tools', default='Explore Our Tools') }}</h2>
+        <p class="text-center mb-4">{{ t('general_tools_desc', default='Discover tools for personal finance, business management, and agent services.') }}</p>
         <div class="row g-4">
             <!-- Personal Finance Tools -->
             <div class="col-md-4">
                 <div class="card tool-card">
                     <div class="card-body">
                         <h3><i class="fas fa-heartbeat"></i> {{ t('financial_health_financial_health_score', default='Financial Health Score') }}</h3>
-                        <p>{{ t('financial_health_evaluate_finances', default='Assess your income, expenses, and debt.') }}</p>
+                        <p>{{ t('financial_health_evaluate_finances', default='Assess your income, expenses, and debt for a clear financial picture.') }}</p>
                         <a href="{{ url_for('financial_health.main') }}" class="btn btn-primary">{{ t('general_try_now', default='Try Now') }}</a>
                     </div>
                 </div>
@@ -65,7 +66,7 @@
                 <div class="card tool-card">
                     <div class="card-body">
                         <h3><i class="fas fa-calculator"></i> {{ t('budget_budget_planner', default='Budget Planner') }}</h3>
-                        <p>{{ t('budget_allocate_income', default='Plan your income and expenses effectively.') }}</p>
+                        <p>{{ t('budget_allocate_income', default='Plan and allocate your income across expense categories.') }}</p>
                         <a href="{{ url_for('budget.main') }}" class="btn btn-primary">{{ t('general_try_now', default='Try Now') }}</a>
                     </div>
                 </div>
@@ -75,8 +76,8 @@
                 <div class="card tool-card">
                     <div class="card-body">
                         <h3><i class="fas fa-handshake"></i> {{ t('general_debtors_creditors', default='Debtors & Creditors') }}</h3>
-                        <p>{{ t('general_debtors_creditors_desc', default='Track who owes you and what you owe.') }}</p>
-                        <a href="{{ url_for('debtors.add') }}" class="btn btn-primary">{{ t('general_try_now', default='Try Now') }}</a>
+                        <p>{{ t('general_debtors_creditors_desc', default='Track who owes you and what you owe with ease.') }}</p>
+                        <a href="{{ url_for('users.login', next=url_for('debtors.add')) }}" class="btn btn-primary">{{ t('general_try_now', default='Try Now') }}</a>
                     </div>
                 </div>
             </div>
@@ -84,27 +85,37 @@
                 <div class="card tool-card">
                     <div class="card-body">
                         <h3><i class="fas fa-box"></i> {{ t('inventory_management', default='Inventory Management') }}</h3>
-                        <p>{{ t('inventory_desc', default='Manage your stock and track inventory value.') }}</p>
-                        <a href="{{ url_for('inventory.index') }}" class="btn btn-primary">{{ t('general_try_now', default='Try Now') }}</a>
+                        <p>{{ t('inventory_desc', default='Monitor stock levels and inventory value for your business.') }}</p>
+                        <a href="{{ url_for('users.login', next=url_for('inventory.index')) }}" class="btn btn-primary">{{ t('general_try_now', default='Try Now') }}</a>
                     </div>
                 </div>
             </div>
-            <!-- Learning & Agent Tools -->
+            <!-- Agent Tools -->
+            <div class="col-md-4">
+                <div class="card tool-card">
+                    <div class="card-body">
+                        <h3><i class="fas fa-user-plus"></i> {{ t('agents_register_trader', default='Register Traders') }}</h3>
+                        <p>{{ t('agents_register_trader_desc', default='Onboard new traders and manage their accounts.') }}</p>
+                        <a href="{{ url_for('users.login', next=url_for('agents.register_trader')) }}" class="btn btn-primary">{{ t('general_try_now', default='Try Now') }}</a>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card tool-card">
+                    <div class="card-body">
+                        <h3><i class="fas fa-coins"></i> {{ t('agents_process_tokens', default='Manage Tokens') }}</h3>
+                        <p>{{ t('agents_tokens_desc', default='Facilitate token purchases for traders with multiple payment methods.') }}</p>
+                        <a href="{{ url_for('users.login', next=url_for('agents.manage_tokens')) }}" class="btn btn-primary">{{ t('general_try_now', default='Try Now') }}</a>
+                    </div>
+                </div>
+            </div>
+            <!-- Learning Tools -->
             <div class="col-md-4">
                 <div class="card tool-card">
                     <div class="card-body">
                         <h3><i class="fas fa-graduation-cap"></i> {{ t('learning_hub_courses', default='Learning Hub') }}</h3>
-                        <p>{{ t('learning_hub_dashboard', default='Access courses to boost financial literacy.') }}</p>
+                        <p>{{ t('learning_hub_dashboard', default='Access courses to improve your financial literacy.') }}</p>
                         <a href="{{ url_for('learning_hub.main') }}" class="btn btn-primary">{{ t('general_try_now', default='Try Now') }}</a>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-4">
-                <div class="card tool-card">
-                    <div class="card-body">
-                        <h3><i class="fas fa-user-check"></i> {{ t('agents_user_onboarding', default='Agent Tools') }}</h3>
-                        <p>{{ t('agents_tools_desc', default='Support clients with onboarding and financial services.') }}</p>
-                        <a href="{{ url_for('agents_bp.dashboard') }}" class="btn btn-primary">{{ t('general_try_now', default='Try Now') }}</a>
                     </div>
                 </div>
             </div>
@@ -117,7 +128,7 @@
         <ul class="why-list list-unstyled text-center">
             <li><i class="fas fa-check-circle"></i> {{ t('general_localized', default='Built for Africa with Naira support and regional insights') }}</li>
             <li><i class="fas fa-check-circle"></i> {{ t('general_empowers', default='Empowers individuals, businesses, and agents with tailored tools') }}</li>
-            <li><i class="fas fa-check-circle"></i> {{ t('general_actionable', default='Delivers actionable insights for smarter financial decisions') }}</li>
+            <li><i class="fas fa-check-circle"></i> {{ t('general_actionable', default='Actionable insights for smarter financial decisions') }}</li>
             <li><i class="fas fa-check-circle"></i> {{ t('general_secure', default='Advisory-only platform – we don’t store or access your funds') }}</li>
         </ul>
     </section>
@@ -130,21 +141,21 @@
                 <div class="carousel-item active">
                     <div class="testimonial text-center">
                         <div class="avatar-circle">MU</div>
-                        <p>{{ t('general_impressed_features', default='I explored the features and was impressed... valuable for individuals and businesses!') }}</p>
+                        <p>{{ t('general_impressed_features', default='FiCore’s tools are intuitive and perfect for both personal and business use!') }}</p>
                         <p class="name">Maisarata Uqubatu</p>
                     </div>
                 </div>
                 <div class="carousel-item">
                     <div class="testimonial text-center">
                         <div class="avatar-circle">AA</div>
-                        <p>{{ t('general_ficore_praise', default='FiCore is a game-changer for business tracking!') }}</p>
+                        <p>{{ t('general_ficore_praise', default='Managing my business’s debtors and inventory has never been easier!') }}</p>
                         <p class="name">Abubakar Abdulkadir, {{ t('general_software_engineer', default='Software Engineer') }}</p>
                     </div>
                 </div>
                 <div class="carousel-item">
                     <div class="testimonial text-center">
                         <div class="avatar-circle">ASU</div>
-                        <p>{{ t('general_potential_support', default='FiCore has huge potential for agents and clients alike.') }}</p>
+                        <p>{{ t('general_potential_support', default='As an agent, FiCore makes onboarding traders seamless and efficient.') }}</p>
                         <p class="name">Aminu Sani Usman</p>
                     </div>
                 </div>
@@ -160,10 +171,23 @@
         </div>
     </section>
 
+    <!-- FAQ Section -->
+    <section class="faq-section my-5">
+        <h2 class="text-center"><i class="fas fa-question-circle"></i> {{ t('general_faq', default='Frequently Asked Questions') }}</h2>
+        <div class="faq-item">
+            <h3>{{ t('general_faq_fund_handling', default='Does FiCore store or manage my money?') }}</h3>
+            <p>{{ t('general_faq_fund_handling_answer', default='No. FiCore provides advisory and tracking tools only. Your money stays with you.') }}</p>
+        </div>
+        <div class="faq-item">
+            <h3>{{ t('general_faq_roles', default='What types of users can use FiCore?') }}</h3>
+            <p>{{ t('general_faq_roles_answer', default='FiCore supports personal users, business owners, and agents with tailored tools for each.') }}</p>
+        </div>
+    </section>
+
     <!-- CTA Section -->
     <section class="cta-section my-5 text-center">
         <h3>{{ t('general_ready_to_start', default='Ready to Take Control of Your Finances?') }}</h3>
-        <p>{{ t('general_signup_prompt', default='Sign up today to access tools for personal finance, business management, and more.') }}</p>
+        <p>{{ t('general_signup_prompt', default='Sign up today to access tools for personal finance, business management, and agent services.') }}</p>
         <a href="{{ url_for('users.signup') }}" class="btn btn-primary btn-lg">{{ t('general_get_started', default='Get Started') }}</a>
     </section>
 </div>
