@@ -6,7 +6,7 @@
         <h1>{{ t('coins_upload_receipt', default='Upload Receipt') }}</h1>
         <small class="subtext">{{ t('coins_wallet_subtext', default='Tsabobin Cikin App') }}</small>
     </div>
-    <form action="{{ url_for('coins_blueprint.receipt_upload') }}" method="POST" enctype="multipart/form-data" class="row g-3">
+    <form action="{{ url_for('coins.receipt_upload') }}" method="POST" enctype="multipart/form-data" class="row g-3">
         {{ form.hidden_tag() }}
         <div class="col-12">
             <label for="receipt" class="form-label">{{ t('coins_receipt', default='Receipt') }}</label>
