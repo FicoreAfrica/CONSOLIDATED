@@ -1,5 +1,5 @@
 {% extends 'base.html' %}
-{% block title %}{{ t('general_home', default='Home') }}{% endblock %}
+{% block title %}{{ t('general_business_home', default='Business & Agent Home') }}{% endblock %}
 {% block content %}
 <div class="container">
     {% if current_user.is_authenticated %}
@@ -125,7 +125,6 @@
                     </div>
                     <div class="action-label">{{ t('general_add_new_debtor', default='Add New They Owe') }}</div>
                 </a>
-
                 <a href="{{ url_for('receipts.add') }}" class="action-card">
                     <div class="action-icon">
                         <i class="bi bi-arrow-down-circle"></i>
@@ -144,6 +143,14 @@
                     </div>
                     <div class="action-label">{{ t('general_add_inventory', default='Add Item') }}</div>
                 </a>
+                {% if current_user.role == 'agent' %}
+                <a href="{{ url_for('agents_bp.register_trader') }}" class="action-card">
+                    <div class="action-icon">
+                        <i class="bi bi-person-plus"></i>
+                    </div>
+                    <div class="action-label">{{ t('agents_register_trader', default='Register Trader') }}</div>
+                </a>
+                {% endif %}
             </div>
         </div>
 
@@ -232,6 +239,20 @@
                         <a href="{{ url_for('inventory.index') }}" class="nav-card-link"></a>
                     </div>
                 </div>
+                {% if current_user.role == 'agent' %}
+                <div class="col-6 col-md-4">
+                    <div class="nav-card">
+                        <div class="nav-card-icon">
+                            <i class="bi bi-person-plus"></i>
+                        </div>
+                        <div class="nav-card-content">
+                            <h4>{{ t('agents_register_trader', default='Register Trader') }}</h4>
+                            <p>{{ t('agents_register_trader_desc', default='Onboard new traders and manage their accounts') }}</p>
+                        </div>
+                        <a href="{{ url_for('agents_bp.register_trader') }}" class="nav-card-link"></a>
+                    </div>
+                </div>
+                {% endif %}
                 <div class="col-6 col-md-4">
                     <div class="nav-card">
                         <div class="nav-card-icon">
@@ -272,16 +293,85 @@
         </div>
 
     {% else %}
+        <!-- Public View for Unauthenticated Users -->
         <div class="text-center">
             <div class="page-title">
-                <h1>{{ t('general_welcome', default='Welcome to Ficore Records') }}</h1>
-                <small class="subtext">{{ t('general_welcome_desc', default='Ficore Records helps you manage your debtors, creditors, receipts, and payments with ease. Streamline your financial tracking and gain clearer insights into your business\'s health.') }}</small>
-            </div>
-            <div class="mt-4">
-                <a href="{{ url_for('users.signup') }}" class="btn btn-primary btn-lg mx-2">{{ t('general_signup', default='Sign Up') }}</a>
-                <a href="{{ url_for('users.login') }}" class="btn btn-secondary btn-lg mx-2">{{ t('general_login', default='Log In') }}</a>
+                <h1>{{ t('general_business_home', default='Welcome to Ficore Business & Agent Tools') }}</h1>
+                <small class="subtext">{{ t('general_business_welcome_desc', default='Explore tools designed for business owners and agents to streamline financial management, track debtors, manage inventory, and more.') }}</small>
             </div>
         </div>
+
+        <!-- Business and Agent Tools Overview -->
+        <section class="tools-section my-5">
+            <h2 class="text-center"><i class="fas fa-tools"></i> {{ t('general_our_tools', default='Our Business & Agent Tools') }}</h2>
+            <p class="text-center mb-4">{{ t('general_business_tools_desc', default='Discover powerful tools to manage your business or support traders as an agent.') }}</p>
+            <div class="row g-4">
+                <div class="col-md-4">
+                    <div class="card tool-card">
+                        <div class="card-body">
+                            <h3><i class="bi bi-person-dash"></i> {{ t('general_debtors_creditors', default='Debtors & Creditors') }}</h3>
+                            <p>{{ t('general_debtors_creditors_desc', default='Track who owes you and what you owe with ease.') }}</p>
+                            <a href="{{ url_for('users.signup', role='trader') }}" class="btn btn-primary">{{ t('general_get_started', default='Get Started') }}</a>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card tool-card">
+                        <div class="card-body">
+                            <h3><i class="bi bi-box-seam"></i> {{ t('inventory_management', default='Inventory Management') }}</h3>
+                            <p>{{ t('inventory_desc', default='Monitor stock levels and inventory value for your business.') }}</p>
+                            <a href="{{ url_for('users.signup', role='trader') }}" class="btn btn-primary">{{ t('general_get_started', default='Get Started') }}</a>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card tool-card">
+                        <div class="card-body">
+                            <h3><i class="bi bi-arrow-down-circle"></i> {{ t('general_money_in_out', default='Money In & Out') }}</h3>
+                            <p>{{ t('general_money_in_out_desc', default='Record receipts and payments to track cashflow.') }}</p>
+                            <a href="{{ url_for('users.signup', role='trader') }}" class="btn btn-primary">{{ t('general_get_started', default='Get Started') }}</a>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card tool-card">
+                        <div class="card-body">
+                            <h3><i class="bi bi-person-plus"></i> {{ t('agents_register_trader', default='Register Traders') }}</h3>
+                            <p>{{ t('agents_register_trader_desc', default='Onboard new traders and manage their accounts as an agent.') }}</p>
+                            <a href="{{ url_for('users.signup', role='agent') }}" class="btn btn-primary">{{ t('general_get_started', default='Get Started') }}</a>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card tool-card">
+                        <div class="card-body">
+                            <h3><i class="bi bi-coin"></i> {{ t('coins_your_wallet', default='Your Wallet') }}</h3>
+                            <p>{{ t('coins_wallet_desc', default='Manage coins for transactions and services.') }}</p>
+                            <a href="{{ url_for('users.signup', role='agent') }}" class="btn btn-primary">{{ t('general_get_started', default='Get Started') }}</a>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card tool-card">
+                        <div class="card-body">
+                            <h3><i class="bi bi-calculator"></i> {{ t('general_taxation', default='Taxation') }}</h3>
+                            <p>{{ t('general_taxation_desc', default='Calculate and manage taxes for your business.') }}</p>
+                            <a href="{{ url_for('users.signup', role='trader') }}" class="btn btn-primary">{{ t('general_get_started', default='Get Started') }}</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- CTA Section -->
+        <section class="cta-section my-5 text-center">
+            <h3>{{ t('general_ready_to_start', default='Ready to Take Control of Your Finances?') }}</h3>
+            <p>{{ t('general_business_signup_prompt', default='Sign up as a business owner or agent to access powerful financial management tools.') }}</p>
+            <div class="d-flex justify-content-center gap-3">
+                <a href="{{ url_for('users.signup', role='trader') }}" class="btn btn-primary btn-lg">{{ t('general_signup_business', default='Business Sign Up') }}</a>
+                <a href="{{ url_for('users.signup', role='agent') }}" class="btn btn-primary btn-lg">{{ t('general_signup_agent', default='Agent Sign Up') }}</a>
+            </div>
+        </section>
     {% endif %}
 </div>
 
@@ -405,7 +495,8 @@ document.addEventListener('DOMContentLoaded', function() {
             'money_in': 'bi-arrow-down-circle',
             'money_out': 'bi-arrow-up-circle',
             'inventory_added': 'bi-box',
-            'reminder_sent': 'bi-bell'
+            'reminder_sent': 'bi-bell',
+            'trader_registered': 'bi-person-plus'
         };
         return icons[type] || 'bi-circle';
     }
@@ -417,7 +508,8 @@ document.addEventListener('DOMContentLoaded', function() {
             'money_in': 'text-success',
             'money_out': 'text-danger',
             'inventory_added': 'text-info',
-            'reminder_sent': 'text-warning'
+            'reminder_sent': 'text-warning',
+            'trader_registered': 'text-primary'
         };
         return colors[type] || 'text-muted';
     }
