@@ -1,9 +1,9 @@
-from flask import Blueprint, render_template, request, redirect, url_for, session, flash, current_app
+from flask import Blueprint, render_template, request, redirect, url_for, session, flash, current_app, jsonify
 from flask_wtf import FlaskForm
 from flask_wtf.csrf import CSRFProtect, CSRFError
-from wtforms import StringField, SelectField, BooleanField, SubmitField, RadioField, FloatField
+from wtforms import StringField, SelectField, BooleanField, SubmitField, RadioField
 from wtforms.validators import DataRequired, Email, Optional, ValidationError
-from flask_login import current_user
+from flask_login import current_user, login_required
 from bson import ObjectId
 from datetime import datetime
 from translations import trans
@@ -460,7 +460,7 @@ def unsubscribe(email):
         if current_user.is_authenticated:
             filter_criteria['user_id'] = current_user.id
         else:
-            filter_criteria['session_id'] = session['sid']
+            filter_criteria['session_id': session['sid']
         
         existing_record = get_mongo_db().quiz_responses.find_one(filter_criteria)
         if not existing_record:
