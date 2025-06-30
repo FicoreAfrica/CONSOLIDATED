@@ -1,7 +1,7 @@
 from flask import Blueprint, render_template, request, redirect, url_for, session, flash, current_app
 from flask_wtf import FlaskForm
 from flask_wtf.csrf import CSRFProtect, CSRFError
-from wtforms import StringField, BooleanField, SubmitField
+from wtforms import StringField, BooleanField, SubmitField, FloatField
 from wtforms.validators import DataRequired, NumberRange, Optional, Email, ValidationError
 from flask_login import current_user
 from translations import trans
