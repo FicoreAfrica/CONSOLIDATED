@@ -377,7 +377,7 @@ def create_app():
     from receipts.routes import receipts_bp
     from reports.routes import reports_bp
     from settings.routes import settings_bp
-    from personal.routes import personal_bp  # Import personal blueprint
+    from personal import personal_bp  # Import personal blueprint
     from general.routes import general_bp
     
     app.register_blueprint(users_bp, url_prefix='/users')
