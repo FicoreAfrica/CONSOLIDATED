@@ -118,32 +118,32 @@
             <div class="card-body">
                 <div class="row">
                     <div class="col-md-4 mb-3">
-                        <a href="{{ url_for('reports_blueprint.index') }}?trader_id={{ trader._id }}" class="btn btn-primary w-100">
+                        <a href="{{ url_for('reports.index') }}?trader_id={{ trader._id }}" class="btn btn-primary w-100">
                             <i class="bi bi-file-earmark-text me-2"></i>{{ t('reports_comprehensive_report', default='Comprehensive Report') }}
                         </a>
                     </div>
                     <div class="col-md-4 mb-3">
-                        <a href="{{ url_for('debtors_blueprint.index') }}?trader_id={{ trader._id }}" class="btn btn-success w-100">
+                        <a href="{{ url_for('debtors.index') }}?trader_id={{ trader._id }}" class="btn btn-success w-100">
                             <i class="bi bi-people me-2"></i>{{ t('debtors_report', default='Debtors Report') }}
                         </a>
                     </div>
                     <div class="col-md-4 mb-3">
-                        <a href="{{ url_for('creditors_blueprint.index') }}?trader_id={{ trader._id }}" class="btn btn-warning w-100">
+                        <a href="{{ url_for('creditors.index') }}?trader_id={{ trader._id }}" class="btn btn-warning w-100">
                             <i class="bi bi-person-dash me-2"></i>{{ t('creditors_report', default='Creditors Report') }}
                         </a>
                     </div>
                     <div class="col-md-4 mb-3">
-                        <a href="{{ url_for('receipts_blueprint.index') }}?trader_id={{ trader._id }}" class="btn btn-info w-100">
+                        <a href="{{ url_for('receipts.index') }}?trader_id={{ trader._id }}" class="btn btn-info w-100">
                             <i class="bi bi-arrow-down-circle me-2"></i>{{ t('receipts_report', default='Receipts Report') }}
                         </a>
                     </div>
                     <div class="col-md-4 mb-3">
-                        <a href="{{ url_for('payments_blueprint.index') }}?trader_id={{ trader._id }}" class="btn btn-danger w-100">
+                        <a href="{{ url_for('payments.index') }}?trader_id={{ trader._id }}" class="btn btn-danger w-100">
                             <i class="bi bi-arrow-up-circle me-2"></i>{{ t('payments_report', default='Payments Report') }}
                         </a>
                     </div>
                     <div class="col-md-4 mb-3">
-                        <a href="{{ url_for('inventory_blueprint.index') }}?trader_id={{ trader._id }}" class="btn btn-secondary w-100">
+                        <a href="{{ url_for('inventory.index') }}?trader_id={{ trader._id }}" class="btn btn-secondary w-100">
                             <i class="bi bi-box-seam me-2"></i>{{ t('inventory_report', default='Inventory Report') }}
                         </a>
                     </div>
