@@ -323,4 +323,4 @@ def unsubscribe(email):
     except Exception as e:
         current_app.logger.error(f"Error in emergency_fund.unsubscribe: {str(e)}", exc_info=True)
         flash(trans("emergency_fund_unsubscribe_error", lang=lang), "danger")
-    return redirect(url_for('index'))
+    return redirect(url_for('personal.index'))
