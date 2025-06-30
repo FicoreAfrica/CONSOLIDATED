@@ -37,7 +37,7 @@ def index():
     except Exception as e:
         logger.error(f"Error fetching inventory for user {current_user.id}: {str(e)}")
         flash(trans('inventory_fetch_error', default='An error occurred'), 'danger')
-        return redirect(url_for('dashboard_blueprint.index'))
+        return redirect(url_for('dashboard.index'))
 
 @inventory_bp.route('/low_stock')
 @login_required
@@ -56,7 +56,7 @@ def low_stock():
     except Exception as e:
         logger.error(f"Error fetching low stock items for user {current_user.id}: {str(e)}")
         flash(trans('inventory_low_stock_error', default='An error occurred'), 'danger')
-        return redirect(url_for('inventory_blueprint.index'))
+        return redirect(url_for('inventory.index'))
 
 @inventory_bp.route('/add', methods=['GET', 'POST'])
 @login_required
@@ -68,7 +68,7 @@ def add():
     # TODO: Restore original check_coin_balance(1) for production
     if not is_admin() and not check_coin_balance(1):
         flash(trans('inventory_insufficient_coins', default='Insufficient coins to add an item. Purchase more coins.'), 'danger')
-        return redirect(url_for('coins_blueprint.purchase'))
+        return redirect(url_for('coins.purchase'))
     if form.validate_on_submit():
         try:
             db = get_mongo_db()
@@ -99,7 +99,7 @@ def add():
                     'ref': f"Inventory item creation: {item['item_name']}"
                 })
             flash(trans('inventory_add_success', default='Inventory item added successfully'), 'success')
-            return redirect(url_for('inventory_blueprint.index'))
+            return redirect(url_for('inventory.index'))
         except Exception as e:
             logger.error(f"Error adding inventory item for user {current_user.id}: {str(e)}")
             flash(trans('inventory_add_error', default='An error occurred'), 'danger')
@@ -118,7 +118,7 @@ def edit(id):
         item = db.inventory.find_one(query)
         if not item:
             flash(trans('inventory_item_not_found', default='Item not found'), 'danger')
-            return redirect(url_for('inventory_blueprint.index'))
+            return redirect(url_for('inventory.index'))
         form = InventoryForm(data={
             'item_name': item['item_name'],
             'qty': item['qty'],
@@ -143,7 +143,7 @@ def edit(id):
                     {'$set': updated_item}
                 )
                 flash(trans('inventory_edit_success', default='Inventory item updated successfully'), 'success')
-                return redirect(url_for('inventory_blueprint.index'))
+                return redirect(url_for('inventory.index'))
             except Exception as e:
                 logger.error(f"Error updating inventory item {id} for user {current_user.id}: {str(e)}")
                 flash(trans('inventory_edit_error', default='An error occurred'), 'danger')
@@ -151,7 +151,7 @@ def edit(id):
     except Exception as e:
         logger.error(f"Error fetching inventory item {id} for user {current_user.id}: {str(e)}")
         flash(trans('inventory_item_not_found', default='Item not found'), 'danger')
-        return redirect(url_for('inventory_blueprint.index'))
+        return redirect(url_for('inventory.index'))
 
 @inventory_bp.route('/delete/<id>', methods=['POST'])
 @login_required
@@ -171,4 +171,4 @@ def delete(id):
     except Exception as e:
         logger.error(f"Error deleting inventory item {id} for user {current_user.id}: {str(e)}")
         flash(trans('inventory_delete_error', default='An error occurred'), 'danger')
-    return redirect(url_for('inventory_blueprint.index'))
+    return redirect(url_for('inventory.index'))
