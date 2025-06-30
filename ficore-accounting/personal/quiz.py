@@ -460,7 +460,7 @@ def unsubscribe(email):
         if current_user.is_authenticated:
             filter_criteria['user_id'] = current_user.id
         else:
-            filter_criteria['session_id': session['sid']
+            filter_criteria['session_id': session['sid']]
         
         existing_record = get_mongo_db().quiz_responses.find_one(filter_criteria)
         if not existing_record:
