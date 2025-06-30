@@ -6,7 +6,7 @@
         <h1>{{ t('receipts_add_title', default='Add Money In') }}</h1>
         <small class="subtext">{{ t('receipts_subtitle', default='Kuɗin Da Aka Biyaka') }}</small>
     </div>
-    <form action="{{ url_for('receipts_blueprint.add') }}" method="POST" enctype="multipart/form-data" class="row g-3">
+    <form action="{{ url_for('receipts.add') }}" method="POST" enctype="multipart/form-data" class="row g-3">
         {{ form.hidden_tag() }}
         <input type="hidden" name="type" value="receipt">
         <div class="col-12">
