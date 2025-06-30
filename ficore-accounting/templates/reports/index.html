@@ -7,8 +7,8 @@
         <small class="subtext">{{ t('reports_subtitle', default='Rahoton Kasuwanci') }}</small>
     </div>
     <div class="d-grid gap-2">
-        <a href="{{ url_for('reports_blueprint.profit_loss') }}" class="btn btn-primary">{{ t('reports_profit_loss', default='Profit/Loss Report') }}</a>
-        <a href="{{ url_for('reports_blueprint.inventory') }}" class="btn btn-primary">{{ t('reports_inventory', default='Inventory Report') }}</a>
+        <a href="{{ url_for('reports.profit_loss') }}" class="btn btn-primary">{{ t('reports_profit_loss', default='Profit/Loss Report') }}</a>
+        <a href="{{ url_for('reports.inventory') }}" class="btn btn-primary">{{ t('reports_inventory', default='Inventory Report') }}</a>
     </div>
 </div>
 {% endblock %}
