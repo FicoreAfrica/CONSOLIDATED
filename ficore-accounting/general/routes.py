@@ -1,6 +1,7 @@
 from flask import Blueprint, render_template
 from translations import trans
 from flask import session
+from flask_login import current_user
 
 general_bp = Blueprint('general_bp', __name__, template_folder='templates/general')
 
