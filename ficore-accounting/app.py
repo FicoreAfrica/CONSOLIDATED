@@ -227,7 +227,7 @@ def create_app():
     mail = get_mail(app)
     limiter = get_limiter(app)
     serializer = URLSafeTimedSerializer(app.config['SECRET_KEY'])
-    babel	before_requestinit_app(app)
+    babel.init_app(app)  # Fixed syntax error: replaced 'babel before_requestinit_app(app)'
     
     # Initialize MongoDB and scheduler within app context
     with app.app_context():
@@ -1028,7 +1028,7 @@ def create_app():
                         'timestamp': datetime.utcnow()
                     }
                     create_feedback(get_mongo_db(), feedback_entry)
-                    get_mongo_db()..oaudit_logs.insert_one({
+                    get_mongo_db().audit_logs.insert_one({
                         'admin_id': 'system',
                         'action': 'submit_feedback',
                         'details': {'user_id': str(current_user.id) if current_user.is_authenticated else None, 'tool_name': tool_name},
