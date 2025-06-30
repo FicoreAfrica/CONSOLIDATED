@@ -9,6 +9,7 @@ PAYMENTS_TRANSLATIONS = {
         'payments_add_payment': 'Add Payment',
         # Payments
         'payments_recipient_name': 'Recipient Name',
+        'payments_insufficient_coins': 'Insufficient coins to add payment',
         'payments_edit_payment': 'Edit Payment',
         'payments_delete_payment': 'Delete Payment',
         'payments_payment_method': 'Payment Method',
@@ -95,6 +96,7 @@ PAYMENTS_TRANSLATIONS = {
         'payments_recipient_name': 'Sunan Mai Karɓa',
         'payments_refund': 'Mayar da Kuɗi',
         'payments_partial_payment': 'Biyan Wani Yanki',
+        'payments_insufficient_coins': 'Ba isassun kuɗaɗe don ƙara biya',
         'payments_overpayment': 'Biyan Fiye da Kima',
         'payments_payment_created': 'An ƙirƙira biyan kuɗi cikin nasara',
         'payments_payment_updated': 'An sabunta biyan kuɗi cikin nasara',
