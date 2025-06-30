@@ -144,7 +144,7 @@ def initialize_database(app):
                     }
                 },
                 'indexes': [
-                    {'key': [('email', ASCENDING)]},
+                    {'key': [('email', ASCENDING)], 'unique': True},
                     {'key': [('reset_token', ASCENDING)], 'sparse': True},
                     {'key': [('role', ASCENDING)]}
                 ]
@@ -272,8 +272,7 @@ def initialize_database(app):
                     }
                 },
                 'indexes': [
-                    {'key': [('_id', ASCENDING)], 'unique': True},
-                    {'key': [('status', ASCENDING)]}
+                    {'key': [('status', ASCENDING)]}  # Removed redundant _id index
                 ]
             }
         }
