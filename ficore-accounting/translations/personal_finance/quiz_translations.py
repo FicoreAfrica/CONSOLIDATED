@@ -11,6 +11,10 @@ QUIZ_TRANSLATIONS = {
         'quiz_enter_personal_information': 'Enter Your Personal Information',
         'quiz_questions_part1': 'Questions Part 1',
         'quiz_questions_part2': 'Questions Part 2',
+        'quiz_question_required': 'Question is required',
+        'quiz_yes': 'Yes',
+        'quiz_no': 'No',
+        'quiz_submit_quiz': 'Submit Quiz',
         'quiz_progress': 'Quiz Progress',
         'quiz_form_errors': 'Please correct the errors in the form.',
         'quiz_choose_an_option': 'Choose an option.',
@@ -175,6 +179,10 @@ QUIZ_TRANSLATIONS = {
         'yes': 'E',
         'no': 'A’a',
         'submit_quiz': 'Sallama Tambayoyin',
+        'quiz_question_required': 'Ana buƙatar tambaya',
+        'quiz_yes': 'Eh',
+        'quiz_no': 'A’a',
+        'quiz_submit_quiz': 'Mika Tambayoyin',
         
         # Tips
         'quiz_tip_planner_1': 'Ci gaba da saita manufofin kuɗi na dogon lokaci.',
