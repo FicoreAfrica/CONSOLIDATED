@@ -1,9 +1,9 @@
-from flask import Blueprint, render_template, request, redirect, url_for, session, flash, current_app
+from flask import Blueprint, render_template, request, redirect, url_for, session, flash, current_app, jsonify
 from flask_wtf import FlaskForm
 from flask_wtf.csrf import CSRFProtect, CSRFError
 from wtforms import StringField, BooleanField, SubmitField, FloatField
 from wtforms.validators import DataRequired, NumberRange, Optional, Email, ValidationError
-from flask_login import current_user
+from flask_login import current_user, login_required  # Added login_required
 from translations import trans
 from mailersend_email import send_email, EMAIL_CONFIG
 from datetime import datetime
@@ -350,6 +350,33 @@ def main():
             lang=lang,
             tool_title=trans('net_worth_title', default='Net Worth Calculator', lang=lang)
         ), 500
+
+# NEW: Added summary endpoint for homepage financial summary
+@net_worth_bp.route('/summary')
+@login_required
+def summary():
+    """Return the latest net worth for the current user."""
+    try:
+        filter_criteria = {'user_id': current_user.id}
+        net_worth_collection = get_mongo_db().net_worth_data
+        
+        # Get the latest net worth record
+        latest_record = net_worth_collection.find(filter_criteria).sort('created_at', -1).limit(1)
+        latest_record = list(latest_record)
+        
+        if not latest_record:
+            current_app.logger.info(f"No net worth record found for user {current_user.id}", 
+                                  extra={'session_id': session.get('sid', 'unknown')})
+            return jsonify({'netWorth': 0.0})
+        
+        net_worth = latest_record[0].get('net_worth', 0.0)
+        current_app.logger.info(f"Fetched net worth summary for user {current_user.id}: {net_worth}", 
+                              extra={'session_id': session.get('sid', 'unknown')})
+        return jsonify({'netWorth': net_worth})
+    except Exception as e:
+        current_app.logger.error(f"Error in net_worth.summary: {str(e)}", 
+                                extra={'session_id': session.get('sid', 'unknown')})
+        return jsonify({'netWorth': 0.0}), 500
 
 @net_worth_bp.route('/unsubscribe/<email>')
 @custom_login_required
