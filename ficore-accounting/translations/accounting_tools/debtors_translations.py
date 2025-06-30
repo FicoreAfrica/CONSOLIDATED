@@ -12,6 +12,10 @@ DEBTORS_TRANSLATIONS = {
         'debtors_amount_owed': 'Amount Owed',
         'debtors_delete_debtor': 'Delete Debtor',
         'debtors_debtor_name': 'Debtor Name',
+        'debtors_create_what_they_owe_you': 'Create What They Owe You',
+        'debtors_what_they_owe_you': 'What They Owe You',
+        'debtors_what_they_owe_you_subtext': 'Track debts owed to you',
+        'debtors_no_what_they_owe_you': 'No debts owed to you',
         'debtors_company': 'Company',
         'debtors_contact_person': 'Contact Person',
         'debtors_phone': 'Phone',
@@ -102,6 +106,11 @@ DEBTORS_TRANSLATIONS = {
         'debtors_create_invoice': 'Ƙirƙira Lissafin Kuɗi',
         'debtors_no_debtors': 'Ba a sami masu bin bashi ba',
         'debtors_search_debtors': 'Nemo masu bin bashi...',
+        'debtors_create_what_they_owe_you': 'Ƙirƙiri Abin da Suke Binka',
+        'debtors_what_they_owe_you': 'Abin da Suke Binka',
+        'debtors_what_they_owe_you_subtext': 'Bi diddigin basusukan da ake bin ka',
+        'debtors_no_what_they_owe_you': 'Babu basusuka da ake bin ka',
+
         # Debtors
         'debtors_amount_owed': 'Adadin Bashi',
     }
