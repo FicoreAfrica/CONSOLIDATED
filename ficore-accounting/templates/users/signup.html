@@ -16,7 +16,7 @@
                     </div>
                 {% endif %}
             {% endwith %}
-            <form class="validate-form needs-validation" method="POST" action="{{ url_for('users_blueprint.signup') }}" novalidate aria-labelledby="signup-form-title">
+            <form class="validate-form needs-validation" method="POST" action="{{ url_for('users.signup') }}" novalidate aria-labelledby="signup-form-title">
                 {{ form.hidden_tag() }}
                 <div class="form-group mb-3">
                     <label class="form-label" for="username">{{ t('general_username', default='Username') }}</label>
@@ -80,7 +80,7 @@
                     <button type="submit" class="btn btn-primary" aria-label="{{ t('general_create_account', default='Sign Up') | escape }}">{{ t('general_create_account', default='Sign Up') | escape }}</button>
                 </div>
                 <div class="text-center mt-3">
-                    <a href="{{ url_for('users_blueprint.login') }}" aria-label="{{ t('general_already_have_account', default='Already have an account? Sign In') | escape }}">{{ t('general_already_have_account', default='Already have an account? Sign In') | escape }}</a>
+                    <a href="{{ url_for('users.login') }}" aria-label="{{ t('general_already_have_account', default='Already have an account? Sign In') | escape }}">{{ t('general_already_have_account', default='Already have an account? Sign In') | escape }}</a>
                 </div>
             </form>
         </div>
