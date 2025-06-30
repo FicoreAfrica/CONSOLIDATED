@@ -3,7 +3,7 @@ from flask_wtf import FlaskForm
 from flask_wtf.csrf import CSRFProtect, CSRFError
 from wtforms import StringField, FloatField, BooleanField, SubmitField
 from wtforms.validators import DataRequired, NumberRange, Email, ValidationError
-from flask_login import current_user
+from flask_login import current_user, login_required  # Added login_required
 from mailersend_email import send_email, EMAIL_CONFIG
 from datetime import datetime
 import re
@@ -351,6 +351,33 @@ def main():
             lang=lang,
             tool_title=trans('budget_title', default='Budget Planner', lang=lang)
         ), 500
+
+# NEW: Added summary endpoint for homepage financial summary
+@budget_bp.route('/summary')
+@login_required
+def summary():
+    """Return summary of the latest budget for the current user."""
+    try:
+        filter_criteria = {'user_id': current_user.id}
+        budgets_collection = get_mongo_db().budgets
+        
+        # Get the latest budget
+        latest_budget = budgets_collection.find(filter_criteria).sort('created_at', -1).limit(1)
+        latest_budget = list(latest_budget)
+        
+        if not latest_budget:
+            current_app.logger.info(f"No budget found for user {current_user.id}", 
+                                  extra={'session_id': session.get('sid', 'unknown')})
+            return jsonify({'totalBudget': 0.0})
+        
+        total_budget = latest_budget[0].get('income', 0.0)  # Using income as total budget
+        current_app.logger.info(f"Fetched budget summary for user {current_user.id}: {total_budget}", 
+                              extra={'session_id': session.get('sid', 'unknown')})
+        return jsonify({'totalBudget': total_budget})
+    except Exception as e:
+        current_app.logger.error(f"Error in budget.summary: {str(e)}", 
+                                extra={'session_id': session.get('sid', 'unknown')})
+        return jsonify({'totalBudget': 0.0}), 500
 
 @budget_bp.errorhandler(CSRFError)
 def handle_csrf_error(e):
