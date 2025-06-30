@@ -15,7 +15,7 @@ from utils import requires_role, is_admin, get_mongo_db
 financial_health_bp = Blueprint(
     'financial_health',
     __name__,
-    template_folder='templates/HEALTHSCORE',
+    template_folder='templates/personal/HEALTHSCORE',
     url_prefix='/HEALTHSCORE'
 )
 
