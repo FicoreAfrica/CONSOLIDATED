@@ -25,7 +25,7 @@ def custom_login_required(f):
     def decorated_function(*args, **kwargs):
         if current_user.is_authenticated or session.get('is_anonymous', False):
             return f(*args, **kwargs)
-        return redirect(url_for('users_blueprint.login', next=request.url))
+        return redirect(url_for('users.login', next=request.url))
     return decorated_function
 
 class QuizForm(FlaskForm):
