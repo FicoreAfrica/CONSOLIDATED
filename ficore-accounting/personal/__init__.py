@@ -34,7 +34,7 @@ def check_access():
     """Ensure only personal users and admins can access personal finance tools"""
     if not check_personal_access():
         flash(trans('general_access_denied', default='Access denied. Personal finance tools are only available to personal users.'), 'danger')
-        return redirect(url_for('dashboard_bp.index'))
+        return redirect(url_for('dashboard.index'))
 
 @personal_bp.route('/notification_count')
 @login_required
@@ -106,7 +106,7 @@ def index():
 @personal_bp.route('/general_dashboard')
 def general_dashboard():
     """Redirect to the unified dashboard"""
-    return redirect(url_for('dashboard_bp.index'))
+    return redirect(url_for('dashboard.index'))
 
 # Set language blueprint
 set_language_bp = Blueprint('set_language', __name__)
