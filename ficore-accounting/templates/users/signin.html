@@ -16,7 +16,7 @@
                     </div>
                 {% endif %}
             {% endwith %}
-            <form class="validate-form needs-validation" method="POST" action="{{ url_for('users_blueprint.login') }}" novalidate>
+            <form class="validate-form needs-validation" method="POST" action="{{ url_for('users.login') }}" novalidate>
                 {{ form.hidden_tag() }}
                 <div class="form-group mb-3">
                     <label class="form-label" for="username">{{ t('general_username', default='Username') }}</label>
@@ -47,9 +47,9 @@
                     <button type="submit" class="btn btn-primary">{{ t('general_login', default='Sign In') }}</button>
                 </div>
                 <div class="text-center mt-3">
-                    <a href="{{ url_for('users_blueprint.forgot_password') }}">{{ t('general_forgot_password', default='Forgot Password?') }}</a>
+                    <a href="{{ url_for('users.forgot_password') }}">{{ t('general_forgot_password', default='Forgot Password?') }}</a>
                     <br>
-                    <a href="{{ url_for('users_blueprint.signup') }}">{{ t('general_create_account', default='Create an Account') }}</a>
+                    <a href="{{ url_for('users.signup') }}">{{ t('general_create_account', default='Create an Account') }}</a>
                 </div>
             </form>
         </div>
