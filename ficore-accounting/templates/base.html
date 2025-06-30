@@ -29,7 +29,7 @@
     {% if current_user.is_authenticated %}
     <nav class="navbar navbar-expand-lg navbar-dark bg-dark" role="navigation">
         <div class="container-fluid">
-            <a class="navbar-brand" href="{{ url_for('personal.index') | e }}" aria-label="{{ t('general_ficore_africa', default='Ficore Africa') | e }}">
+            <a class="navbar-brand" href="{{ url_for('index') | e }}" aria-label="{{ t('general_ficore_africa', default='Ficore Africa') | e }}">
                 <img src="{{ url_for('static_personal', filename='img/ficore_logo.png') | e }}" alt="{{ t('general_ficore_africa_logo', default='Ficore Africa Logo') | e }}" class="logo" style="border-radius: 50%; object-fit: contain; width: 80px; height: 80px;" onerror="this.src='{{ url_for('static_personal', filename='img/fallback-logo.png') | e }}';">
                 {{ t('general_ficore_africa', default='Ficore Africa') | e }}
             </a>
@@ -39,7 +39,7 @@
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav me-auto">
                     <li class="nav-item">
-                        <a class="nav-link {% if request.endpoint == 'personal.index' %}active{% endif %}" href="{{ url_for('personal.index') | e }}" data-bs-toggle="tooltip" data-bs-title="{{ t('general_home_tooltip', default='Go to homepage') | e }}" aria-current="{% if request.endpoint == 'personal.index' %}page{% endif %}">{{ t('general_home', default='Home') | e }}</a>
+                        <a class="nav-link {% if request.endpoint == 'index' %}active{% endif %}" href="{{ url_for('index') | e }}" data-bs-toggle="tooltip" data-bs-title="{{ t('general_home_tooltip', default='Go to homepage') | e }}" aria-current="{% if request.endpoint == 'index' %}page{% endif %}">{{ t('general_home', default='Home') | e }}</a>
                     </li>
                     <li class="nav-item">
                         <a class="nav-link {% if request.endpoint == 'about' %}active{% endif %}" href="{{ url_for('about') | e }}" data-bs-toggle="tooltip" data-bs-title="{{ t('general_about_tooltip', default='Learn more about Ficore') | e }}" aria-current="{% if request.endpoint == 'about' %}page{% endif %}">{{ t('general_about', default='About') | e }}</a>
@@ -54,7 +54,7 @@
                         <ul class="dropdown-menu" aria-labelledby="toolsDropdown">
                             <li><a class="dropdown-item" href="{{ url_for('financial_health.main') | e }}">{{ t('financial_health_financial_health_score', default='Financial Health Score') | e }}</a></li>
                             <li><a class="dropdown-item" href="{{ url_for('quiz.main') | e }}">{{ t('quiz_personality_quiz', default='Personality Quiz') | e }}</a></li>
-                            <li><a class="dropdown-item" href="{{ url_for('personal.general_dashboard') | e }}">{{ t('general_general_dashboard', default='General Dashboard') | e }}</a></li>
+                            <li><a class="dropdown-item" href="{{ url_for('dashboard_bp.index') | e }}">{{ t('general_general_dashboard', default='General Dashboard') | e }}</a></li>
                             <li><a class="dropdown-item" href="{{ url_for('budget.main') | e }}">{{ t('budget_budget_planner', default='Budget Planner') | e }}</a></li>
                             <li><a class="dropdown-item" href="{{ url_for('bill.main') | e }}">{{ t('bill_bill_planner', default='Bill Planner') | e }}</a></li>
                             <li><a class="dropdown-item" href="{{ url_for('emergency_fund.main') | e }}">{{ t('emergency_fund_calculator', default='Emergency Fund Planner') | e }}</a></li>
@@ -128,8 +128,8 @@
                             {{ session.get('lang', 'en').upper() | e }}
                         </a>
                         <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="languageDropdown">
-                            <li><a class="dropdown-item" href="{{ url_for('personal.set_language', lang='en') | e }}">{{ t('general_english', default='English') | e }}</a></li>
-                            <li><a class="dropdown-item" href="{{ url_for('personal.set_language', lang='ha') | e }}">{{ t('general_hausa', default='Hausa') | e }}</a></li>
+                            <li><a class="dropdown-item" href="{{ url_for('set_language', lang='en') | e }}">{{ t('general_english', default='English') | e }}</a></li>
+                            <li><a class="dropdown-item" href="{{ url_for('set_language', lang='ha') | e }}">{{ t('general_hausa', default='Hausa') | e }}</a></li>
                         </ul>
                     </li>
                     <li class="nav-item">
@@ -172,11 +172,11 @@
     {% if current_user.is_authenticated and current_user.role in ['trader', 'personal'] %}
     <nav class="bottom-navigation" role="navigation">
         <div class="nav-container">
-            <a href="{{ url_for('personal.index') | e }}" class="nav-item {% if request.endpoint == 'personal.index' %}active{% endif %}" aria-current="{% if request.endpoint == 'personal.index' %}page{% endif %}">
+            <a href="{{ url_for('index') | e }}" class="nav-item {% if request.endpoint == 'index' %}active{% endif %}" aria-current="{% if request.endpoint == 'index' %}page{% endif %}">
                 <i class="bi bi-house"></i>
                 <span>{{ t('general_home', default='Home') | e }}</span>
             </a>
-            <a href="{{ url_for('personal.general_dashboard') | e }}" class="nav-item {% if request.endpoint == 'personal.general_dashboard' %}active{% endif %}" aria-current="{% if request.endpoint == 'personal.general_dashboard' %}page{% endif %}">
+            <a href="{{ url_for('dashboard_bp.index') | e }}" class="nav-item {% if request.endpoint == 'personal.general_dashboard' %}active{% endif %}" aria-current="{% if request.endpoint == 'personal.general_dashboard' %}page{% endif %}">
                 <i class="bi bi-list-ul"></i>
                 <span>{{ t('general_general_dashboard', default='Dashboard') | e }}</span>
             </a>
