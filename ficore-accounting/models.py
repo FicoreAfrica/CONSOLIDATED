@@ -43,6 +43,16 @@ SAMPLE_COURSES = [
     }
 ]
 
+# Sample agent data
+SAMPLE_AGENTS = [
+    {
+        '_id': 'AG123456',
+        'status': 'active',
+        'created_at': datetime.utcnow(),
+        'updated_at': datetime.utcnow()
+    }
+]
+
 def get_db(mongo_uri=None):
     """
     Get MongoDB database connection using the global client from utils.py.
@@ -247,6 +257,24 @@ def initialize_database(app):
                     {'key': [('admin_id', ASCENDING)]},
                     {'key': [('timestamp', DESCENDING)]}
                 ]
+            },
+            'agents': {
+                'validator': {
+                    '$jsonSchema': {
+                        'bsonType': 'object',
+                        'required': ['_id', 'status', 'created_at'],
+                        'properties': {
+                            '_id': {'bsonType': 'string', 'pattern': r'^[A-Z0-9]{8}$'},
+                            'status': {'enum': ['active', 'inactive']},
+                            'created_at': {'bsonType': 'date'},
+                            'updated_at': {'bsonType': ['date', 'null']}
+                        }
+                    }
+                },
+                'indexes': [
+                    {'key': [('_id', ASCENDING)], 'unique': True},
+                    {'key': [('status', ASCENDING)]}
+                ]
             }
         }
         
@@ -295,6 +323,12 @@ def initialize_database(app):
             ]
             payment_locations_collection.insert_many(sample_locations)
             logger.info(trans('general_payment_locations_initialized', default='Initialized payment locations in MongoDB'))
+        
+        agents_collection = db_instance.agents
+        if agents_collection.count_documents({}) == 0:
+            for agent in SAMPLE_AGENTS:
+                agents_collection.insert_one(agent)
+            logger.info(trans('general_agents_initialized', default='Initialized agents in MongoDB'))
     
     except Exception as e:
         logger.error(f"{trans('general_database_initialization_failed', default='Failed to initialize database')}: {str(e)}", exc_info=True)
@@ -418,6 +452,56 @@ def get_user(db, user_id):
         logger.error(f"{trans('general_user_fetch_error', default='Error getting user by ID')} {user_id}: {str(e)}")
         raise
 
+def get_agent(db, agent_id):
+    """
+    Retrieve an agent by ID from the agents collection.
+    
+    Args:
+        db: MongoDB database instance
+        agent_id: The agent ID to retrieve
+    
+    Returns:
+        dict: Agent document or None if not found
+    """
+    try:
+        agent_doc = db.agents.find_one({'_id': agent_id.upper()})
+        if agent_doc:
+            return {
+                '_id': agent_doc['_id'],
+                'status': agent_doc['status'],
+                'created_at': agent_doc['created_at'],
+                'updated_at': agent_doc.get('updated_at')
+            }
+        return None
+    except Exception as e:
+        logger.error(f"{trans('agents_fetch_error', default='Error getting agent by ID')} {agent_id}: {str(e)}")
+        raise
+
+def update_agent(db, agent_id, status):
+    """
+    Update an agent's status in the agents collection.
+    
+    Args:
+        db: MongoDB database instance
+        agent_id: The agent ID to update
+        status: The new status ('active' or 'inactive')
+    
+    Returns:
+        bool: True if updated, False if not found or no changes made
+    """
+    try:
+        result = db.agents.update_one(
+            {'_id': agent_id.upper()},
+            {'$set': {'status': status, 'updated_at': datetime.utcnow()}}
+        )
+        if result.modified_count > 0:
+            logger.info(f"{trans('agents_status_updated', default='Updated agent status for ID')}: {agent_id} to {status}")
+            return True
+        return False
+    except Exception as e:
+        logger.error(f"{trans('agents_update_error', default='Error updating agent status for ID')} {agent_id}: {str(e)}")
+        raise
+
 def get_financial_health(db, filter_kwargs):
     try:
         return list(db.financial_health_scores.find(filter_kwargs).sort('created_at', DESCENDING))
@@ -519,6 +603,7 @@ def log_tool_usage(db, tool_name, user_id=None, session_id=None, action=None):
         logger.info(f"{trans('general_tool_usage_logged', default='Logged tool usage')}: {tool_name} - {action}")
     except Exception as e:
         logger.error(f"{trans('general_tool_usage_log_error', default='Error logging tool usage')}: {str(e)}")
+        raise
 
 def create_news_article(db, article_data):
     try:
