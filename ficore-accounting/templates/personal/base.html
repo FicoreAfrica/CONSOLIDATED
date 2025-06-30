@@ -42,7 +42,7 @@
                         <a class="nav-link {% if request.endpoint == 'personal.index' %}active{% endif %}" href="{{ url_for('personal.index') | e }}" data-bs-toggle="tooltip" data-bs-title="{{ t('general_home_tooltip', default='Go to homepage') | e }}" aria-current="{% if request.endpoint == 'personal.index' %}page{% endif %}">{{ t('general_home', default='Home') | e }}</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link {% if request.endpoint == 'general.about' %}active{% endif %}" href="{{ url_for('general.about') | e }}" data-bs-toggle="tooltip" data-bs-title="{{ t('general_about_tooltip', default='Learn more about Ficore') | e }}" aria-current="{% if request.endpoint == 'general.about' %}page{% endif %}">{{ t('general_about', default='About') | e }}</a>
+                        <a class="nav-link {% if request.endpoint == 'about' %}active{% endif %}" href="{{ url_for('about') | e }}" data-bs-toggle="tooltip" data-bs-title="{{ t('general_about_tooltip', default='Learn more about Ficore') | e }}" aria-current="{% if request.endpoint == 'about' %}page{% endif %}">{{ t('general_about', default='About') | e }}</a>
                     </li>
                     <li class="nav-item">
                         <a class="nav-link {% if request.endpoint == 'general.contact' %}active{% endif %}" href="{{ url_for('general.contact') | e }}" data-bs-toggle="tooltip" data-bs-title="{{ t('general_contact_tooltip', default='Get in touch') | e }}" aria-current="{% if request.endpoint == 'general.contact' %}page{% endif %}">{{ t('general_contact', default='Contact') | e }}</a>
