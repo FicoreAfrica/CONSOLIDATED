@@ -12,6 +12,7 @@ CREDITORS_TRANSLATIONS = {
         'creditors_edit_creditor': 'Edit Creditor',
         'creditors_delete_creditor': 'Delete Creditor',
         'creditors_create_what_you_owe': 'Create What You Owe',
+        'creditors_insufficient_coins': 'Insufficient coins to add creditor',
         'creditors_what_you_owe': 'What You Owe',
         'creditors_what_you_owe_subtext': 'Track your debts and obligations',
         'creditors_no_what_you_owe': 'No debts recorded',
@@ -88,6 +89,7 @@ CREDITORS_TRANSLATIONS = {
         'creditors_aging_report': 'Rahoton Tsufa',
         'creditors_create_what_you_owe': 'Ƙirƙiri Abin da Kake Bashi',
         'creditors_what_you_owe': 'Abin da Kake Bashi',
+        'creditors_insufficient_coins': 'Ba isassun kuɗaɗe don ƙara mai bashi',
         'creditors_what_you_owe_subtext': 'Bi diddigin basusukanka',
         'creditors_no_what_you_owe': 'Babu basusuka da aka rubuta',
         # Creditors
