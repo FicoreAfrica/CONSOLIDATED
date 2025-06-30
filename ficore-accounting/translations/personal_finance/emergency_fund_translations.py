@@ -9,6 +9,8 @@ EMERGENCY_FUND_TRANSLATIONS = {
         'emergency_fund_dashboard': 'Emergency Fund Dashboard',
         'emergency_fund_summary': 'Your emergency fund summary',
         'emergency_fund_your_emergency_fund': 'Your Emergency Fund',
+        'risk_tolerance_required': 'Risk tolerance is required',
+        'timeline_required': 'Timeline is required',
         'emergency_fund_fund_summary': 'Fund Summary',
         'emergency_fund_step1_title': 'Your Information',
         'emergency_fund_step2_title': 'Your Income & Expenses',
@@ -265,5 +267,7 @@ EMERGENCY_FUND_TRANSLATIONS = {
         'emergency_fund_start_emergency_fund': 'Fara Asusun Gaggawa',
         'emergency_fund_goal': 'Tsara kudi don biyan bukatun gaggawa kamar asara ko rashin lafiya',
         'emergency_fund_start_emergency_fund': 'Tsara Kudin Gaggawa',
+        'risk_tolerance_required': 'Ana buƙatar juriyar haɗari',
+        'timeline_required': 'Ana buƙatar lokaci',
     }
 }
