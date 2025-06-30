@@ -46,7 +46,7 @@
             </button>
             <small class="text-muted text-center mt-2">{{ t('settings_explore_agent_description', default='Access your agent dashboard to help users and manage your activities!') }}</small>
         {% elif user.role == 'admin' %}
-            <button class="btn btn-primary btn-lg explore-tools-btn" onclick="location.href='{{ url_for('admin_blueprint.dashboard') }}'">
+            <button class="btn btn-primary btn-lg explore-tools-btn" onclick="location.href='{{ url_for('admin.dashboard') }}'">
                 <i class="bi bi-gear me-2"></i> {{ t('settings_explore_admin_tools', default='Explore Admin Dashboard') }}
             </button>
             <small class="text-muted text-center mt-2">{{ t('settings_explore_admin_description', default='Access administrative tools to manage users, system settings, and analytics!') }}</small>
@@ -62,7 +62,7 @@
     <section class="profile-section mb-4">
         <h2>{{ t('settings_personal_data', default='Personal Data') }}</h2>
         <div class="card card-body">
-            <form method="POST" action="{{ url_for('settings_blueprint.profile') }}">
+            <form method="POST" action="{{ url_for('settings.profile') }}">
                 {{ form.csrf_token }}
 
                 <div class="form-group mb-3">
@@ -228,7 +228,7 @@
     <section class="profile-section mb-4">
         <h2>{{ t('settings_app_settings', default='App Settings') }}</h2>
         <div class="card card-body">
-            <a href="{{ url_for('settings_blueprint.language') }}" class="list-item">
+            <a href="{{ url_for('settings.language') }}" class="list-item">
                 <i class="bi bi-translate icon-left"></i> {{ t('settings_language', default='Language') }}
                 <i class="bi bi-chevron-right icon-right"></i>
             </a>
@@ -302,7 +302,7 @@
     </section>
 
     <div class="d-grid mb-4">
-        <button class="btn btn-danger" onclick="location.href='{{ url_for('users_blueprint.logout') }}'">
+        <button class="btn btn-danger" onclick="location.href='{{ url_for('users.logout') }}'">
             <i class="bi bi-box-arrow-right me-2"></i> {{ t('general_logout', default='Log out') }}
         </button>
     </div>
