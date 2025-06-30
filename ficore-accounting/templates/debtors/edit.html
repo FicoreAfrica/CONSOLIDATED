@@ -6,7 +6,7 @@
         <h1>{{ t('debtors_edit_title', default='Edit What They Owe You') }}</h1>
         <small class="subtext">{{ t('debtors_subtitle', default='Kuɗin da Kake Bin Wasu') }}</small>
     </div>
-    <form action="{{ url_for('debtors_blueprint.edit', id=debtor._id) }}" method="POST" class="row g-3">
+    <form action="{{ url_for('debtors.edit', id=debtor._id) }}" method="POST" class="row g-3">
         {{ form.hidden_tag() }}
         <div class="col-12">
             <label for="name" class="form-label">{{ t('general_name', default='Name') }}</label>
