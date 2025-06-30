@@ -1091,6 +1091,12 @@ def create_app():
         response = send_from_directory('static', filename)
         response.headers['Cache-Control'] = 'public, max-age=31536000'
         return response
+
+    @app.route('/static_personal/<path:filename>')
+    def static_personal(filename):
+        response = send_from_directory('static_personal', filename)
+        response.headers['Cache-Control'] = 'public, max-age=31536000'
+        return response
     
     @app.route('/favicon.ico')
     def favicon():
