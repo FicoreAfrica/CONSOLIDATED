@@ -50,10 +50,6 @@ try:
     from .general_tools.general_translations import GENERAL_TRANSLATIONS
     from .general_tools.common_features_translations import COMMON_FEATURES_TRANSLATIONS
     
-    # Legacy imports for backward compatibility
-    from .translations_dashboard import DASHBOARD_TRANSLATIONS
-    from .translations_mailersend import MAILERSEND_TRANSLATIONS
-        
 except ImportError as e:
     logger.error(f"Failed to import translation module: {str(e)}", exc_info=True)
     raise
@@ -83,10 +79,6 @@ translation_modules = {
     # General Tools
     'general': GENERAL_TRANSLATIONS,
     'common_features': COMMON_FEATURES_TRANSLATIONS,
-    
-    # Legacy modules
-    'dashboard': DASHBOARD_TRANSLATIONS,
-    'mailersend': MAILERSEND_TRANSLATIONS,
 }
 
 # Map key prefixes to module names
@@ -125,10 +117,6 @@ KEY_PREFIX_TO_MODULE = {
     'maintenance_': 'common_features',
     'api_': 'common_features',
     'webhook_': 'common_features',
-    
-    # Legacy prefixes
-    'dashboard_': 'dashboard',
-    'mailersend_': 'mailersend',
 }
 
 # Quiz-specific keys without prefixes
