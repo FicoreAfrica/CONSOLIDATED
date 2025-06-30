@@ -5,6 +5,15 @@ Budget management translations for personal finance tools
 BUDGET_TRANSLATIONS = {
     'en': {
         'budget_budget_planner': 'Budget Planner',
+        'monthly_income': 'Monthly Income',
+        'housing_rent': 'Housing/Rent',
+        'food': 'Food',
+        'transport': 'Transport',
+        'dependents_support': 'Dependents Support',
+        'miscellaneous': 'Miscellaneous',
+        'others': 'Others',
+        'savings_goal': 'Savings Goal',
+        'submit': 'Submit',
         'budget_create_budget': 'Create Budget',
         'budget_monthly_budget': 'Monthly Budget',
         'budget_income': 'Income',
