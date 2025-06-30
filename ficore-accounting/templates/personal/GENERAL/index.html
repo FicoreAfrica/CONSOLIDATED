@@ -520,9 +520,9 @@
             <h3>{{ t('general_ready_to_start', default='Ready to Take Control of Your Finances?') }}</h3>
             <p>{{ t('general_signup_prompt', default='Sign up today to access tools for personal finance, business management, or agent services.') }}</p>
             <div class="d-flex justify-content-center gap-3">
-                <a href="{{ url_for('users_bp.signup', role='personal') }}" class="btn btn-primary btn-lg">{{ t('general_signup_personal', default='Personal Sign Up') }}</a>
-                <a href="{{ url_for('users_bp.signup', role='trader') }}" class="btn btn-primary btn-lg">{{ t('general_signup_business', default='Business Sign Up') }}</a>
-                <a href="{{ url_for('users_bp.signup', role='agent') }}" class="btn btn-primary btn-lg">{{ t('general_signup_agent', default='Agent Sign Up') }}</a>
+                <a href="{{ url_for('users.signup', role='personal') }}" class="btn btn-primary btn-lg">{{ t('general_signup_personal', default='Personal Sign Up') }}</a>
+                <a href="{{ url_for('users.signup', role='trader') }}" class="btn btn-primary btn-lg">{{ t('general_signup_business', default='Business Sign Up') }}</a>
+                <a href="{{ url_for('users.signup', role='agent') }}" class="btn btn-primary btn-lg">{{ t('general_signup_agent', default='Agent Sign Up') }}</a>
             </div>
         </section>
     {% endif %}
