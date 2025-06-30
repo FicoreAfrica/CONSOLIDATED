@@ -7,6 +7,8 @@ PAYMENTS_TRANSLATIONS = {
         'payments_dashboard': 'Payments Dashboard',
         'payments_list': 'Payments List',
         'payments_add_payment': 'Add Payment',
+        # Payments
+        'payments_recipient_name': 'Recipient Name',
         'payments_edit_payment': 'Edit Payment',
         'payments_delete_payment': 'Delete Payment',
         'payments_payment_method': 'Payment Method',
@@ -81,6 +83,8 @@ PAYMENTS_TRANSLATIONS = {
         'payments_payment_gateway': 'Hanyar Biya',
         'payments_receipt': 'Rasit',
         'payments_invoice': 'Lissafin Kuɗi',
+         # Payments
+        'payments_recipient_name': 'Sunan Mai Karɓa',
         'payments_refund': 'Mayar da Kuɗi',
         'payments_partial_payment': 'Biyan Wani Yanki',
         'payments_overpayment': 'Biyan Fiye da Kima',
