@@ -87,6 +87,9 @@ REPORTS_TRANSLATIONS = {
         'reports_summary': 'Taƙaitawa',
         'reports_detailed': 'Dalla-dalla',
         'reports_comparison': 'Kwatanta',
+        # Reports
+        'reports_start_date': 'Ranar Farawa',
+        'reports_end_date': 'Ranar Ƙarewa',
         'reports_trend_analysis': 'Nazarin Yanayi',
         'reports_no_data': 'Babu bayanai don lokacin da aka zaɓa',
         'reports_report_generated': 'An samar da rahoto cikin nasara',
