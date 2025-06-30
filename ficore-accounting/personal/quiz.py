@@ -1,23 +1,22 @@
 from flask import Blueprint, render_template, request, redirect, url_for, session, flash, current_app
 from flask_wtf import FlaskForm
+from flask_wtf.csrf import CSRFProtect, CSRFError
 from wtforms import StringField, SelectField, BooleanField, SubmitField, RadioField
 from wtforms.validators import DataRequired, Email, Optional
 from flask_login import current_user
 from uuid import uuid4
 from datetime import datetime
 import json
-import logging
 from translations import trans
 from mailersend_email import send_email, EMAIL_CONFIG
 from models import log_tool_usage
 from session_utils import create_anonymous_session
 from utils import requires_role, is_admin, get_mongo_db
 
-# Configure logging
-logger = logging.getLogger('ficore_app')
+quiz_bp = Blueprint('quiz', __name__, template_folder='templates/personal/QUIZ', url_prefix='/QUIZ')
 
-# Define the quiz blueprint
-quiz_bp = Blueprint('quiz', __name__, template_folder='templates/QUIZ', url_prefix='/QUIZ')
+# Initialize CSRF protection
+csrf = CSRFProtect()
 
 def custom_login_required(f):
     """Custom login decorator that allows both authenticated users and anonymous sessions."""
@@ -173,7 +172,7 @@ def main():
     """Main quiz interface with tabbed layout."""
     if 'sid' not in session:
         create_anonymous_session()
-        logger.debug(f"New anonymous session created with sid: {session['sid']}", extra={'session_id': session['sid']})
+        current_app.logger.debug(f"New anonymous session created with sid: {session['sid']}", extra={'session_id': session['sid']})
     lang = session.get('lang', 'en')
     course_id = request.args.get('course_id', 'financial_quiz')
     
@@ -231,9 +230,9 @@ def main():
                     'tips': personality['tips']
                 }
                 
-                logger.debug(f"Saving quiz result with created_at: {created_at}, type: {type(created_at)}", extra={'session_id': session['sid']})
+                current_app.logger.debug(f"Saving quiz result with created_at: {created_at}, type: {type(created_at)}", extra={'session_id': session['sid']})
                 get_mongo_db().quiz_responses.insert_one(quiz_result)
-                logger.info(f"Successfully saved quiz result {quiz_result['_id']} for session {session['sid']}", extra={'session_id': session['sid']})
+                current_app.logger.info(f"Successfully saved quiz result {quiz_result['_id']} for session {session['sid']}", extra={'session_id': session['sid']})
                 flash(trans('quiz_completed_successfully', default='Quiz completed successfully!'), 'success')
                 
                 # Send email if user opted in
@@ -257,12 +256,13 @@ def main():
                                 "insights": quiz_result['insights'],
                                 "tips": quiz_result['tips'],
                                 "created_at": datetime.fromisoformat(created_at),
-                                "cta_url": url_for('quiz.main', course_id=course_id, _external=True)
+                                "cta_url": url_for('quiz.main', course_id=course_id, _external=True),
+                                "unsubscribe_url": url_for('quiz.unsubscribe', email=form.email.data, _external=True)
                             },
                             lang=lang
                         )
                     except Exception as e:
-                        logger.error(f"Failed to send quiz results email: {str(e)}", extra={'session_id': session['sid']})
+                        current_app.logger.error(f"Failed to send quiz results email: {str(e)}", extra={'session_id': session['sid']})
                         flash(trans("general_email_send_failed", default="Failed to send email.", lang=lang), "warning")
 
         # Get quiz results for display
@@ -278,7 +278,7 @@ def main():
             try:
                 latest_record['created_at'] = datetime.fromisoformat(latest_record['created_at'])
             except (TypeError, ValueError) as e:
-                logger.error(f"Failed to parse created_at '{latest_record['created_at']}' in results: {str(e)}", extra={'session_id': session['sid']})
+                current_app.logger.error(f"Failed to parse created_at '{latest_record['created_at']}' in results: {str(e)}", extra={'session_id': session['sid']})
                 latest_record['created_at'] = None
 
         # Preprocessed questions for template
@@ -296,7 +296,7 @@ def main():
         ]
 
         return render_template(
-            'QUIZ/quiz_main.html',
+            'personal/QUIZ/quiz_main.html',
             form=form,
             questions=questions,
             latest_record=latest_record,
@@ -310,10 +310,10 @@ def main():
         )
 
     except Exception as e:
-        logger.error(f"Error in quiz.main: {str(e)}", extra={'session_id': session['sid']})
+        current_app.logger.error(f"Error in quiz.main: {str(e)}", extra={'session_id': session.get('sid', 'unknown')})
         flash(trans('quiz_error_results', default='An error occurred while loading quiz. Please try again.', lang=lang), 'danger')
         return render_template(
-            'QUIZ/quiz_main.html',
+            'personal/QUIZ/quiz_main.html',
             form=form,
             questions=[],
             latest_record={},
@@ -325,3 +325,57 @@ def main():
             t=trans,
             tool_title=trans('quiz_title', default='Financial Quiz', lang=lang)
         ), 500
+
+@quiz_bp.route('/unsubscribe/<email>')
+@custom_login_required
+def unsubscribe(email):
+    """Unsubscribe user from quiz emails using MongoDB."""
+    if 'sid' not in session:
+        create_anonymous_session()
+        current_app.logger.debug(f"New anonymous session created with sid: {session['sid']}", extra={'session_id': session['sid']})
+    lang = session.get('lang', 'en')
+    try:
+        log_tool_usage(
+            tool_name='quiz',
+            user_id=current_user.id if current_user.is_authenticated else None,
+            session_id=session['sid'],
+            action='unsubscribe',
+            mongo=get_mongo_db()
+        )
+        filter_criteria = {'email': email}
+        if current_user.is_authenticated:
+            filter_criteria['user_id'] = current_user.id
+        else:
+            filter_criteria['session_id'] = session['sid']
+        
+        existing_record = get_mongo_db().quiz_responses.find_one(filter_criteria)
+        if not existing_record:
+            current_app.logger.warning(f"No matching record found for email {email} to unsubscribe", extra={'session_id': session['sid']})
+            flash(trans("quiz_unsubscribe_failed", default="No matching email found or already unsubscribed", lang=lang), "danger")
+            return redirect(url_for('personal.index'))
+
+        result = get_mongo_db().quiz_responses.update_many(
+            filter_criteria,
+            {'$set': {'send_email': False}}
+        )
+        if result.modified_count > 0:
+            current_app.logger.info(f"Successfully unsubscribed email {email}", extra={'session_id': session['sid']})
+            flash(trans("quiz_unsubscribed_success", default="Successfully unsubscribed from emails", lang=lang), "success")
+        else:
+            current_app.logger.warning(f"No records updated for email {email} during unsubscribe", extra={'session_id': session['sid']})
+            flash(trans("quiz_unsubscribe_failed", default="Failed to unsubscribe. Email not found or already unsubscribed.", lang=lang), "danger")
+        session.permanent = True
+        session.modified = True
+        return redirect(url_for('personal.index'))
+    except Exception as e:
+        current_app.logger.error(f"Error in quiz.unsubscribe: {str(e)}", extra={'session_id': session.get('sid', 'unknown')})
+        flash(trans("quiz_unsubscribe_error", default="Error processing unsubscribe request", lang=lang), "danger")
+        return redirect(url_for('personal.index'))
+
+@quiz_bp.errorhandler(CSRFError)
+def handle_csrf_error(e):
+    """Handle CSRF errors with user-friendly message."""
+    lang = session.get('lang', 'en')
+    current_app.logger.error(f"CSRF error on {request.path}: {e.description}", extra={'session_id': session.get('sid', 'unknown')})
+    flash(trans("quiz_csrf_error", default="Form submission failed due to a missing security token. Please refresh and try again.", lang=lang), "danger")
+    return redirect(url_for('quiz.main')), 400
