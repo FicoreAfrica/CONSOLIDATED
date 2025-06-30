@@ -50,6 +50,10 @@ QUIZ_TRANSLATIONS = {
         'quiz_review_spending_label': 'Do you review your spending habits regularly?',
         'quiz_multiple_income_label': 'Do you have multiple sources of income?',
         'quiz_retirement_plan_label': 'Do you have a retirement savings plan?',
+        'question_required': 'Question is required',
+        'yes': 'Yes',
+        'no': 'No',
+        'submit_quiz': 'Submit Quiz',
         
         # Question tooltips (updated with conversational tone and Nigerian references)
         'quiz_track_expenses_tooltip': 'Keeping an eye on your kudi (money) helps you see where it flows — like checking your Opay or PiggyVest transactions.',
@@ -167,6 +171,10 @@ QUIZ_TRANSLATIONS = {
         'quiz_insight_balanced_1': 'Kana daidaita ajiya da kashewa sosai.',
         'quiz_insight_spender_1': 'Kashewa shine ƙarfinka, amma za a iya sarrafa shi.',
         'quiz_insight_avoider_1': 'Tsara kuɗi yana da ƙalubale amma ana iya koya.',
+        'question_required': 'Ana buƙatar tambaya',
+        'yes': 'E',
+        'no': 'A’a',
+        'submit_quiz': 'Sallama Tambayoyin',
         
         # Tips
         'quiz_tip_planner_1': 'Ci gaba da saita manufofin kuɗi na dogon lokaci.',
