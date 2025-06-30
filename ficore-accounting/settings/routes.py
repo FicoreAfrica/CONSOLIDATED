@@ -95,7 +95,7 @@ def index():
     except Exception as e:
         logger.error(f"Error loading settings for user {current_user.id}: {str(e)}")
         flash(trans('general_something_went_wrong', default='An error occurred'), 'danger')
-        return redirect(url_for('dashboard_blueprint.index'))
+        return redirect(url_for('dashboard.index'))
 
 @settings_bp.route('/profile', methods=['GET', 'POST'])
 @login_required
@@ -109,7 +109,7 @@ def profile():
         
         if not user:
             flash(trans('general_user_not_found', default='User not found'), 'danger')
-            return redirect(url_for('dashboard_blueprint.index'))
+            return redirect(url_for('dashboard.index'))
         
         form = ProfileForm()
         
@@ -179,7 +179,7 @@ def profile():
                 
                 flash(trans('general_profile_updated', default='Profile updated successfully'), 'success')
                 logger.info(f"Profile updated for user: {user_id}")
-                return redirect(url_for('settings_blueprint.profile'))
+                return redirect(url_for('settings.profile'))
                 
             except Exception as e:
                 logger.error(f"Error updating profile for user {user_id}: {str(e)}")
@@ -207,7 +207,7 @@ def profile():
     except Exception as e:
         logger.error(f"Error in profile settings for user {current_user.id}: {str(e)}")
         flash(trans('general_something_went_wrong', default='An error occurred'), 'danger')
-        return redirect(url_for('settings_blueprint.index'))
+        return redirect(url_for('settings.index'))
 
 @settings_bp.route('/notifications', methods=['GET', 'POST'])
 @login_required
@@ -233,7 +233,7 @@ def notifications():
                 }
                 db.users.update_one(user_query, {'$set': update_data})
                 flash(trans('general_notifications_updated', default='Notification preferences updated successfully'), 'success')
-                return redirect(url_for('settings_blueprint.index'))
+                return redirect(url_for('settings.index'))
             except Exception as e:
                 logger.error(f"Error updating notifications for user {current_user.id}: {str(e)}")
                 flash(trans('general_something_went_wrong', default='An error occurred'), 'danger')
@@ -241,7 +241,7 @@ def notifications():
     except Exception as e:
         logger.error(f"Error in notification settings for user {current_user.id}: {str(e)}")
         flash(trans('general_something_went_wrong', default='An error occurred'), 'danger')
-        return redirect(url_for('settings_blueprint.index'))
+        return redirect(url_for('settings.index'))
 
 @settings_bp.route('/language', methods=['GET', 'POST'])
 @login_required
@@ -263,7 +263,7 @@ def language():
                     {'$set': {'language': form.language.data, 'updated_at': datetime.utcnow()}}
                 )
                 flash(trans('general_language_updated', default='Language updated successfully'), 'success')
-                return redirect(url_for('settings_blueprint.index'))
+                return redirect(url_for('settings.index'))
             except Exception as e:
                 logger.error(f"Error updating language for user {current_user.id}: {str(e)}")
                 flash(trans('general_something_went_wrong', default='An error occurred'), 'danger')
@@ -271,7 +271,7 @@ def language():
     except Exception as e:
         logger.error(f"Error in language settings for user {current_user.id}: {str(e)}")
         flash(trans('general_something_went_wrong', default='An error occurred'), 'danger')
-        return redirect(url_for('settings_blueprint.index'))
+        return redirect(url_for('settings.index'))
 
 @settings_bp.route('/api/update-user-setting', methods=['POST'])
 @login_required
