@@ -8,6 +8,8 @@ DEBTORS_TRANSLATIONS = {
         'debtors_list': 'Debtors List',
         'debtors_add_debtor': 'Add Debtor',
         'debtors_edit_debtor': 'Edit Debtor',
+        # Debtors
+        'debtors_amount_owed': 'Amount Owed',
         'debtors_delete_debtor': 'Delete Debtor',
         'debtors_debtor_name': 'Debtor Name',
         'debtors_company': 'Company',
@@ -100,5 +102,7 @@ DEBTORS_TRANSLATIONS = {
         'debtors_create_invoice': 'Ƙirƙira Lissafin Kuɗi',
         'debtors_no_debtors': 'Ba a sami masu bin bashi ba',
         'debtors_search_debtors': 'Nemo masu bin bashi...',
+        # Debtors
+        'debtors_amount_owed': 'Adadin Bashi',
     }
 }
