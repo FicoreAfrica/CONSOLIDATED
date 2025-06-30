@@ -3,14 +3,24 @@
 {% block content %}
 <div class="container">
     {% if current_user.is_authenticated %}
-        <!-- Authenticated User Section (unchanged from previous version) -->
+        <!-- Authenticated User Section -->
         <div class="top-header d-flex justify-content-between align-items-center mb-4">
             <div class="welcome-section">
                 <h2 class="welcome-text mb-0">{{ t('general_hello_user', default='Hello') }}, {{ current_user.display_name | default(current_user.id) | e }}!</h2>
                 <small class="text-muted">{{ t('general_welcome_back', default='Welcome back to Ficore Africa') }}</small>
             </div>
             <div class="header-actions d-flex align-items-center gap-3">
-                <!-- Profile, language, and dark mode toggles in personal/base.html navbar -->
+                <!-- Language Switcher -->
+                <div class="dropdown">
+                    <button class="btn btn-outline-secondary btn-sm dropdown-toggle" type="button" id="languageDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                        {{ t('general_language', default='Language') }}: {{ current_lang | default('en') | upper }}
+                    </button>
+                    <ul class="dropdown-menu" aria-labelledby="languageDropdown">
+                        <li><a class="dropdown-item" href="{{ url_for('set_language', lang='en') }}">{{ t('general_english', default='English') }}</a></li>
+                        <li><a class="dropdown-item" href="{{ url_for('set_language', lang='ha') }}">{{ t('general_hausa', default='Hausa') }}</a></li>
+                    </ul>
+                </div>
+                <!-- Profile and dark mode toggles assumed in personal/base.html -->
             </div>
         </div>
 
@@ -54,7 +64,7 @@
                 </div>
             </div>
             <div class="text-center">
-                <a href="{{ url_for('personal.general_dashboard') }}" class="btn btn-outline-primary btn-sm">
+                <a href="{{ url_for('dashboard.index') }}" class="btn btn-outline-primary btn-sm">
                     {{ t('general_view_detailed_summary', default='View Detailed Summary') }}
                     <i class="bi bi-arrow-right ms-1"></i>
                 </a>
@@ -128,11 +138,32 @@
             </div>
         </div>
 
+        <!-- Notifications -->
+        <div class="notifications mb-4">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h3 class="section-title mb-0">{{ t('general_notifications', default='Notifications') }}</h3>
+                <a href="{{ url_for('personal.notifications') }}" class="btn btn-link btn-sm p-0">
+                    {{ t('general_view_all', default='View All') }}
+                </a>
+            </div>
+            <div class="notification-list" id="notificationList">
+                <div class="notification-item">
+                    <div class="notification-icon">
+                        <i class="bi bi-bell text-muted"></i>
+                    </div>
+                    <div class="notification-content">
+                        <div class="notification-description">{{ t('general_loading_notifications', default='Loading notifications...') }}</div>
+                        <div class="notification-time text-muted">{{ t('general_just_now', default='Just now') }}</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <!-- Recent Activity -->
         <div class="recent-activity mb-4">
             <div class="d-flex justify-content-between align-items-center mb-3">
                 <h3 class="section-title mb-0">{{ t('general_recent_activity', default='Recent Activity') }}</h3>
-                <a href="{{ url_for('personal.general_dashboard') }}" class="btn btn-link btn-sm p-0">
+                <a href="{{ url_for('dashboard.index') }}" class="btn btn-link btn-sm p-0">
                     {{ t('general_view_all', default='View All') }}
                 </a>
             </div>
@@ -285,8 +316,8 @@
             <h1><i class="fas fa-wallet"></i> {{ t('general_welcome', default='Welcome to FiCore Africa') }}</h1>
             <p class="lead">{{ t('general_ficore_desc', default='Your all-in-one platform for personal finance, business management, financial literacy, and agent services across Africa.') }}</p>
             <div class="d-flex justify-content-center gap-3 mt-4">
-                <a href="{{ url_for('users.signup') }}" class="btn btn-primary btn-lg" aria-label="{{ t('general_signup', default='Sign Up') }}">{{ t('general_signup', default='Sign Up') }}</a>
-                <a href="{{ url_for('users.login') }}" class="btn btn-outline-secondary btn-lg" aria-label="{{ t('general_login', default='Log In') }}">{{ t('general_login', default='Log In') }}</a>
+                <a href="{{ url_for('users_bp.signup') }}" class="btn btn-primary btn-lg" aria-label="{{ t('general_signup', default='Sign Up') }}">{{ t('general_signup', default='Sign Up') }}</a>
+                <a href="{{ url_for('users_bp.login') }}" class="btn btn-outline-secondary btn-lg" aria-label="{{ t('general_login', default='Log In') }}">{{ t('general_login', default='Log In') }}</a>
             </div>
         </section>
 
@@ -300,7 +331,7 @@
                         <div class="card-body text-center">
                             <h3><i class="fas fa-user"></i> {{ t('general_personal', default='Personal Users') }}</h3>
                             <p>{{ t('general_personal_desc', default='Track budgets, bills, and financial health to achieve your goals.') }}</p>
-                            <a href="{{ url_for('users.signup', role='personal') }}" class="btn btn-outline-primary">{{ t('general_get_started', default='Get Started') }}</a>
+                            <a href="{{ url_for('users_bp.signup', role='personal') }}" class="btn btn-outline-primary">{{ t('general_get_started', default='Get Started') }}</a>
                         </div>
                     </div>
                 </div>
@@ -402,7 +433,7 @@
                         <div class="card-body">
                             <h3><i class="bi bi-calculator"></i> {{ t('general_your_taxation_tool', default='Your Taxation Tool') }}</h3>
                             <p>{{ t('general_taxation_desc', default='Calculate and manage your taxes with ease.') }}</p>
-                            <a href="{{ url_for('users.login', next=url_for('taxation_bp.calculate_tax')) }}" class="btn btn-primary">{{ t('general_try_now', default='Try Now') }}</a>
+                            <a href="{{ url_for('users_bp.login', next=url_for('taxation_bp.calculate_tax')) }}" class="btn btn-primary">{{ t('general_try_now', default='Try Now') }}</a>
                         </div>
                     </div>
                 </div>
@@ -489,9 +520,9 @@
             <h3>{{ t('general_ready_to_start', default='Ready to Take Control of Your Finances?') }}</h3>
             <p>{{ t('general_signup_prompt', default='Sign up today to access tools for personal finance, business management, or agent services.') }}</p>
             <div class="d-flex justify-content-center gap-3">
-                <a href="{{ url_for('users.signup', role='personal') }}" class="btn btn-primary btn-lg">{{ t('general_signup_personal', default='Personal Sign Up') }}</a>
-                <a href="{{ url_for('users.signup', role='trader') }}" class="btn btn-primary btn-lg">{{ t('general_signup_business', default='Business Sign Up') }}</a>
-                <a href="{{ url_for('users.signup', role='agent') }}" class="btn btn-primary btn-lg">{{ t('general_signup_agent', default='Agent Sign Up') }}</a>
+                <a href="{{ url_for('users_bp.signup', role='personal') }}" class="btn btn-primary btn-lg">{{ t('general_signup_personal', default='Personal Sign Up') }}</a>
+                <a href="{{ url_for('users_bp.signup', role='trader') }}" class="btn btn-primary btn-lg">{{ t('general_signup_business', default='Business Sign Up') }}</a>
+                <a href="{{ url_for('users_bp.signup', role='agent') }}" class="btn btn-primary btn-lg">{{ t('general_signup_agent', default='Agent Sign Up') }}</a>
             </div>
         </section>
     {% endif %}
@@ -517,12 +548,15 @@ document.addEventListener('DOMContentLoaded', function() {
         hours_ago: '{{ t("general_hours_ago", default="h ago") }}',
         days_ago: '{{ t("general_days_ago", default="d ago") }}',
         no_recent_activity: '{{ t("general_no_recent_activity", default="No recent activity") }}',
-        start_by_adding: '{{ t("general_start_by_adding", default="Start by adding a budget or bill") }}'
+        start_by_adding: '{{ t("general_start_by_adding", default="Start by adding a budget or bill") }}',
+        no_notifications: '{{ t("general_no_notifications", default="No notifications") }}',
+        check_back_later: '{{ t("general_check_back_later", default="Check back later for updates") }}'
     };
 
-    // Load financial data and recent activity
+    // Load financial data, recent activity, and notifications
     loadFinancialSummary();
     loadRecentActivity();
+    loadNotifications();
 
     function loadFinancialSummary() {
         Promise.all([
@@ -561,6 +595,59 @@ document.addEventListener('DOMContentLoaded', function() {
         document.getElementById('emergencyFund').dataset.originalText = '₦' + formatCurrency(emergencyFund);
     }
 
+    function loadNotifications() {
+        // Fetch notification count
+        fetch('{{ url_for("personal.notification_count") }}')
+            .then(response => response.json())
+            .then(data => {
+                const count = data.count || 0;
+                const badge = document.createElement('span');
+                badge.className = 'badge bg-primary ms-2';
+                badge.textContent = count;
+                if (count > 0) {
+                    document.querySelector('.notifications .section-title').appendChild(badge);
+                }
+            })
+            .catch(error => {
+                console.error('Error loading notification count:', error);
+            });
+
+        // Fetch notification list
+        fetch('{{ url_for("personal.notifications") }}')
+            .then(response => response.json())
+            .then(notifications => {
+                const notificationList = document.getElementById('notificationList');
+                if (notifications && notifications.length > 0) {
+                    notificationList.innerHTML = notifications.map(notification => `
+                        <div class="notification-item">
+                            <div class="notification-icon">
+                                <i class="bi bi-bell ${notification.read ? 'text-muted' : 'text-primary'}"></i>
+                            </div>
+                            <div class="notification-content">
+                                <div class="notification-description">${notification.message}</div>
+                                <div class="notification-time text-muted">${formatTimeAgo(notification.timestamp)}</div>
+                            </div>
+                        </div>
+                    `).join('');
+                } else {
+                    notificationList.innerHTML = `
+                        <div class="notification-item">
+                            <div class="notification-icon">
+                                <i class="bi bi-bell text-muted"></i>
+                            </div>
+                            <div class="notification-content">
+                                <div class="notification-description">${translations.no_notifications}</div>
+                                <div class="notification-time text-muted">${translations.check_back_later}</div>
+                            </div>
+                        </div>
+                    `;
+                }
+            })
+            .catch(error => {
+                console.error('Error loading notifications:', error);
+            });
+    }
+
     function loadRecentActivity() {
         fetch('{{ url_for("personal.recent_activity") }}')
             .then(response => response.json())
@@ -576,7 +663,7 @@ document.addEventListener('DOMContentLoaded', function() {
                                 <div class="activity-description">${activity.description}</div>
                                 <div class="activity-time text-muted">${formatTimeAgo(activity.timestamp)}</div>
                             </div>
-                            ${activity.amount ? `<div class="activity-amount">${formatCurrency(activity.amount)}</div>` : ''}
+                            ${activity.details && activity.details.amount ? `<div class="activity-amount">${formatCurrency(activity.details.amount)}</div>` : ''}
                         </div>
                     `).join('');
                 } else {
@@ -600,26 +687,24 @@ document.addEventListener('DOMContentLoaded', function() {
 
     function getActivityIcon(type) {
         const icons = {
-            'budget_added': 'bi-calculator',
-            'bill_added': 'bi-receipt',
-            'net_worth_updated': 'bi-balance-scale',
-            'financial_health_updated': 'bi-heartbeat',
-            'emergency_fund_updated': 'bi-shield-check',
-            'quiz_completed': 'bi-question-circle',
-            'course_completed': 'bi-book'
+            'bill': 'bi-receipt',
+            'budget': 'bi-calculator',
+            'net_worth': 'bi-balance-scale',
+            'financial_health': 'bi-heartbeat',
+            'emergency_fund': 'bi-shield-check',
+            'quiz': 'bi-question-circle'
         };
         return icons[type] || 'bi-circle';
     }
 
     function getActivityColor(type) {
         const colors = {
-            'budget_added': 'text-primary',
-            'bill_added': 'text-warning',
-            'net_worth_updated': 'text-success',
-            'financial_health_updated': 'text-info',
-            'emergency_fund_updated': 'text-success',
-            'quiz_completed': 'text-primary',
-            'course_completed': 'text-info'
+            'bill': 'text-warning',
+            'budget': 'text-primary',
+            'net_worth': 'text-success',
+            'financial_health': 'text-info',
+            'emergency_fund': 'text-success',
+            'quiz': 'text-primary'
         };
         return colors[type] || 'text-muted';
     }
