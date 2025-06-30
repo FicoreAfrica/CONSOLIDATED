@@ -9,7 +9,7 @@
                 <small class="text-muted">{{ t('general_welcome_back', default='Welcome back to Ficore Records') }}</small>
             </div>
             <div class="header-actions d-flex align-items-center gap-3">
-                <a href="{{ url_for('settings_blueprint.profile') }}" class="profile-icon">
+                <a href="{{ url_for('settings.profile') }}" class="profile-icon">
                     <i class="bi bi-person-circle"></i>
                 </a>
                 <div class="header-toggles d-flex align-items-center gap-2">
@@ -71,7 +71,7 @@
             </div>
 
             <div class="text-center">
-                <a href="{{ url_for('dashboard_blueprint.index') }}" class="btn btn-outline-primary btn-sm">
+                <a href="{{ url_for('dashboard.index') }}" class="btn btn-outline-primary btn-sm">
                     {{ t('general_view_detailed_summary', default='View Detailed Summary') }}
                     <i class="bi bi-arrow-right ms-1"></i>
                 </a>
@@ -113,32 +113,32 @@
         <div class="quick-actions mb-4">
             <h3 class="section-title">{{ t('general_quick_actions', default='Quick Actions') }}</h3>
             <div class="actions-grid">
-                <a href="{{ url_for('creditors_blueprint.add') }}" class="action-card cta-creditor-card">
+                <a href="{{ url_for('creditors.add') }}" class="action-card cta-creditor-card">
                     <div class="action-icon">
                         <i class="bi bi-person-dash"></i>
                     </div>
                     <div class="action-label">{{ t('general_add_new_creditor', default='Add New I Owe') }}</div>
                 </a>
-                <a href="{{ url_for('debtors_blueprint.add') }}" class="action-card cta-debtor-card">
+                <a href="{{ url_for('debtors.add') }}" class="action-card cta-debtor-card">
                     <div class="action-icon">
                         <i class="bi bi-person-plus"></i>
                     </div>
                     <div class="action-label">{{ t('general_add_new_debtor', default='Add New They Owe') }}</div>
                 </a>
 
-                <a href="{{ url_for('receipts_blueprint.add') }}" class="action-card">
+                <a href="{{ url_for('receipts.add') }}" class="action-card">
                     <div class="action-icon">
                         <i class="bi bi-arrow-down-circle"></i>
                     </div>
                     <div class="action-label">{{ t('general_money_in', default='Money In') }}</div>
                 </a>
-                <a href="{{ url_for('payments_blueprint.add') }}" class="action-card">
+                <a href="{{ url_for('payments.add') }}" class="action-card">
                     <div class="action-icon">
                         <i class="bi bi-arrow-up-circle"></i>
                     </div>
                     <div class="action-label">{{ t('general_money_out', default='Money Out') }}</div>
                 </a>
-                <a href="{{ url_for('inventory_blueprint.add') }}" class="action-card">
+                <a href="{{ url_for('inventory.add') }}" class="action-card">
                     <div class="action-icon">
                         <i class="bi bi-box"></i>
                     </div>
@@ -150,7 +150,7 @@
         <div class="recent-activity mb-4">
             <div class="d-flex justify-content-between align-items-center mb-3">
                 <h3 class="section-title mb-0">{{ t('general_recent_activity', default='Recent Activity') }}</h3>
-                <a href="{{ url_for('dashboard_blueprint.index') }}" class="btn btn-link btn-sm p-0">
+                <a href="{{ url_for('dashboard.index') }}" class="btn btn-link btn-sm p-0">
                     {{ t('general_view_all', default='View All') }}
                 </a>
             </div>
@@ -180,7 +180,7 @@
                                 <h4>{{ t('admin_dashboard', default='Admin Dashboard') }}</h4>
                                 <p>{{ t('admin_dashboard_desc', default='Manage users and settings') }}</p>
                             </div>
-                            <a href="{{ url_for('admin_blueprint.dashboard') }}" class="nav-card-link"></a>
+                            <a href="{{ url_for('admin.dashboard') }}" class="nav-card-link"></a>
                         </div>
                     </div>
                 {% endif %}
@@ -193,7 +193,7 @@
                             <h4>{{ t('reports_title', default='Reports') }}</h4>
                             <p>{{ t('reports_desc', default='Business insights') }}</p>
                         </div>
-                        <a href="{{ url_for('reports_blueprint.index') }}" class="nav-card-link"></a>
+                        <a href="{{ url_for('reports.index') }}" class="nav-card-link"></a>
                     </div>
                 </div>
                 <div class="col-6 col-md-4">
@@ -205,7 +205,7 @@
                             <h4>{{ t('coins_your_wallet', default='Your Wallet') }}</h4>
                             <p>{{ t('coins_wallet_desc', default='Manage coins') }}</p>
                         </div>
-                        <a href="{{ url_for('coins_blueprint.history') }}" class="nav-card-link"></a>
+                        <a href="{{ url_for('coins.history') }}" class="nav-card-link"></a>
                     </div>
                 </div>
                 <div class="col-6 col-md-4">
@@ -217,7 +217,7 @@
                             <h4>{{ t('dashboard_cashflow_analysis', default='Cashflow') }}</h4>
                             <p>{{ t('dashboard_cashflow_desc', default='Track money flow') }}</p>
                         </div>
-                        <a href="{{ url_for('dashboard_blueprint.index') }}" class="nav-card-link"></a>
+                        <a href="{{ url_for('dashboard.index') }}" class="nav-card-link"></a>
                     </div>
                 </div>
                 <div class="col-6 col-md-4">
@@ -229,7 +229,7 @@
                             <h4>{{ t('inventory_management', default='Inventory') }}</h4>
                             <p>{{ t('inventory_desc', default='Stock management') }}</p>
                         </div>
-                        <a href="{{ url_for('inventory_blueprint.index') }}" class="nav-card-link"></a>
+                        <a href="{{ url_for('inventory.index') }}" class="nav-card-link"></a>
                     </div>
                 </div>
                 <div class="col-6 col-md-4">
@@ -278,8 +278,8 @@
                 <small class="subtext">{{ t('general_welcome_desc', default='Ficore Records helps you manage your debtors, creditors, receipts, and payments with ease. Streamline your financial tracking and gain clearer insights into your business\'s health.') }}</small>
             </div>
             <div class="mt-4">
-                <a href="{{ url_for('users_blueprint.signup') }}" class="btn btn-primary btn-lg mx-2">{{ t('general_signup', default='Sign Up') }}</a>
-                <a href="{{ url_for('users_blueprint.login') }}" class="btn btn-secondary btn-lg mx-2">{{ t('general_login', default='Log In') }}</a>
+                <a href="{{ url_for('users.signup') }}" class="btn btn-primary btn-lg mx-2">{{ t('general_signup', default='Sign Up') }}</a>
+                <a href="{{ url_for('users.login') }}" class="btn btn-secondary btn-lg mx-2">{{ t('general_login', default='Log In') }}</a>
             </div>
         </div>
     {% endif %}
