@@ -41,7 +41,7 @@ def index():
     except Exception as e:
         logger.error(f"Error fetching receipts for user {current_user.id}: {str(e)}")
         flash(trans('receipts_fetch_error', default='An error occurred'), 'danger')
-        return redirect(url_for('dashboard_blueprint.index'))
+        return redirect(url_for('dashboard.index'))
 
 @receipts_bp.route('/view/<id>')
 @login_required
@@ -80,12 +80,12 @@ def generate_pdf(id):
         
         if not receipt:
             flash(trans('receipts_record_not_found', default='Record not found'), 'danger')
-            return redirect(url_for('receipts_blueprint.index'))
+            return redirect(url_for('receipts.index'))
         
         # Check coin balance for non-admin users
         if not is_admin() and not check_coin_balance(1):
             flash(trans('receipts_insufficient_coins', default='Insufficient coins to generate receipt'), 'danger')
-            return redirect(url_for('coins_blueprint.purchase'))
+            return redirect(url_for('coins.purchase'))
         
         buffer = io.BytesIO()
         p = canvas.Canvas(buffer, pagesize=letter)
@@ -141,7 +141,7 @@ def generate_pdf(id):
     except Exception as e:
         logger.error(f"Error generating PDF for receipt {id}: {str(e)}")
         flash(trans('receipts_pdf_generation_error', default='An error occurred'), 'danger')
-        return redirect(url_for('receipts_blueprint.index'))
+        return redirect(url_for('receipts.index'))
 
 @receipts_bp.route('/add', methods=['GET', 'POST'])
 @login_required
@@ -153,7 +153,7 @@ def add():
     # TODO: Restore original check_coin_balance(1) for production
     if not is_admin() and not check_coin_balance(1):
         flash(trans('receipts_insufficient_coins', default='Insufficient coins to add a receipt. Purchase more coins.'), 'danger')
-        return redirect(url_for('coins_blueprint.purchase'))
+        return redirect(url_for('coins.purchase'))
     if form.validate_on_submit():
         try:
             db = get_mongo_db()
@@ -186,7 +186,7 @@ def add():
                     'ref': f"Receipt creation: {cashflow['party_name']}"
                 })
             flash(trans('receipts_add_success', default='Receipt added successfully'), 'success')
-            return redirect(url_for('receipts_blueprint.index'))
+            return redirect(url_for('receipts.index'))
         except Exception as e:
             logger.error(f"Error adding receipt for user {current_user.id}: {str(e)}")
             flash(trans('receipts_add_error', default='An error occurred'), 'danger')
@@ -205,7 +205,7 @@ def edit(id):
         receipt = db.cashflows.find_one(query)
         if not receipt:
             flash(trans('receipts_record_not_found', default='Cashflow not found'), 'danger')
-            return redirect(url_for('receipts_blueprint.index'))
+            return redirect(url_for('receipts.index'))
         form = ReceiptForm(data={
             'party_name': receipt['party_name'],
             'date': receipt['created_at'],  # This is already a datetime.datetime object from MongoDB
@@ -230,7 +230,7 @@ def edit(id):
                     {'$set': updated_cashflow}
                 )
                 flash(trans('receipts_edit_success', default='Receipt updated successfully'), 'success')
-                return redirect(url_for('receipts_blueprint.index'))
+                return redirect(url_for('receipts.index'))
             except Exception as e:
                 logger.error(f"Error updating receipt {id} for user {current_user.id}: {str(e)}")
                 flash(trans('receipts_edit_error', default='An error occurred'), 'danger')
@@ -238,7 +238,7 @@ def edit(id):
     except Exception as e:
         logger.error(f"Error fetching receipt {id} for user {current_user.id}: {str(e)}")
         flash(trans('receipts_record_not_found', default='Cashflow not found'), 'danger')
-        return redirect(url_for('receipts_blueprint.index'))
+        return redirect(url_for('receipts.index'))
 
 @receipts_bp.route('/delete/<id>', methods=['POST'])
 @login_required
@@ -258,4 +258,4 @@ def delete(id):
     except Exception as e:
         logger.error(f"Error deleting receipt {id} for user {current_user.id}: {str(e)}")
         flash(trans('receipts_delete_error', default='An error occurred'), 'danger')
-    return redirect(url_for('receipts_blueprint.index'))
+    return redirect(url_for('receipts.index'))
