@@ -71,8 +71,8 @@
     /* Journey Specific Colors/Gradients */
     --journey-strip-bg: #ffffff; /* Example: white */
     --journey-line-bg: #e0e0e0; /* Example: light grey for inactive line */
-    --journey-line-gradient-horizontal: linear-gradient(to right, var(--accent-blue), var(--accent-purple)); /* Example from your original */
-    --journey-line-gradient-vertical: linear-gradient(to bottom, var(--accent-blue), var(--accent-purple)); /* Example, can be same as horizontal */
+    --journey-line-gradient-horizontal: linear-gradient(to right, #0288D1, #2E7D32); /* Updated to match navbar */
+    --journey-line-gradient-vertical: linear-gradient(to bottom, #0288D1, #2E7D32); /* Updated to match navbar */
 
     --journey-step-hover-bg: #f5f9ff; /* Light hover background */
     --journey-step-active-bg: #e6f0ff; /* A slightly stronger background for active */
@@ -405,9 +405,27 @@ body {
     background: var(--header-message-gradient);
     color: white;
     text-align: center;
-    padding: 0.5rem;
-    font-size: 0.85rem;
+    padding: 1.5rem 1rem;
+    font-size: 0.9rem;
     animation: fadeInOut 6s ease-in-out infinite;
+    width: 100%;
+    box-sizing: border-box;
+    z-index: 900;
+    margin: 0;
+}
+
+@media (max-width: 576px) {
+    .header-message {
+        padding: 1rem 0.5rem;
+        font-size: 0.85rem;
+    }
+}
+
+@media (max-width: 360px) {
+    .header-message {
+        padding: 0.75rem 0.5rem;
+        font-size: 0.8rem;
+    }
 }
 
 @keyframes fadeInOut {
@@ -415,6 +433,68 @@ body {
     20% { opacity: 1; }
     80% { opacity: 1; }
     100% { opacity: 0; }
+}
+
+/* Hero Section */
+.hero {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    padding: 4rem 1rem;
+    background: var(--hero-gradient);
+    color: white;
+    text-align: center;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.hero h1 {
+    font-size: clamp(2rem, 5vw, 3rem);
+    margin-bottom: 1rem;
+}
+
+.hero p.lead {
+    font-size: clamp(1rem, 3vw, 1.2rem);
+    max-width: 800px;
+    margin: 0 auto 1.5rem;
+}
+
+@media (min-width: 768px) {
+    .hero {
+        padding: 4rem 2rem;
+    }
+    .hero h1 {
+        font-size: clamp(2.5rem, 5vw, 3.5rem);
+    }
+    .hero p.lead {
+        font-size: clamp(1.1rem, 3vw, 1.3rem);
+    }
+}
+
+@media (max-width: 576px) {
+    .hero {
+        padding: 2rem 0.5rem;
+    }
+    .hero h1 {
+        font-size: clamp(1.5rem, 4vw, 2rem);
+    }
+    .hero p.lead {
+        font-size: clamp(0.9rem, 2.5vw, 1rem);
+    }
+}
+
+@media (max-width: 360px) {
+    .hero {
+        padding: 1.5rem 0.5rem;
+    }
+    .hero h1 {
+        font-size: clamp(1.2rem, 3.5vw, 1.8rem);
+    }
+    .hero p.lead {
+        font-size: clamp(0.8rem, 2vw, 0.9rem);
+    }
 }
 
 /* Buttons */
@@ -632,33 +712,6 @@ body {
 .btn-quiz-answer:focus {
     outline: 2px solid #007bff;
     outline-offset: 2px;
-}
-
-/* Header Message */
-.header-message {
-    width: 100%;
-    background: var(--header-message-gradient);
-    padding: 10px 15px;
-    color: white;
-    text-align: center;
-    font-size: 0.85rem;
-    animation: fadeInOut 6s ease-in-out infinite;
-    z-index: 900;
-    margin: 0;
-    box-sizing: border-box;
-}
-
-@media (min-width: 768px) {
-    .header-message {
-        padding: 1rem 2rem;
-    }
-}
-
-@keyframes fadeInOut {
-    0% { opacity: 0; }
-    20% { opacity: 1; }
-    80% { opacity: 1; }
-    100% { opacity: 0; }
 }
 
 /* Consent Banner */
@@ -1292,10 +1345,6 @@ section {
         min-width: 80px;
     }
 
-    .hero h2 {
-        font-size: clamp(1rem, 3.5rem, 1.4rem);
-    }
-
     .card-title {
         font-size: 1rem;
     }
@@ -1314,13 +1363,6 @@ section {
         width: 2rem;
         height: 2rem;
         font-size: 0.9rem;
-    }
-
-    #modeToggle {
-        padding: 8px 16px;
-        font-size: 0.8rem;
-        margin-top: 8px;
-        margin-bottom: 12px;
     }
 
     .course-grid, .dashboard-grid {
@@ -1446,24 +1488,8 @@ section {
         padding: 1rem 2rem;
     }
 
-    .hero {
-        padding: 2rem;
-    }
-
     .hero-content {
         max-width: 900px;
-    }
-
-    .hero h2 {
-        font-size: clamp(2rem, 5vw, 2.5rem);
-    }
-
-    .hero p {
-        font-size: 1.1rem;
-    }
-
-    .hero-subtext {
-        font-size: 1rem;
     }
 
     .course-grid, .dashboard-grid {
@@ -1667,14 +1693,6 @@ section {
         max-width: 1100px;
     }
 
-    .hero h2 {
-        font-size: clamp(2.5rem, 5vw, 3rem);
-    }
-
-    .hero p {
-        font-size: 1.2rem;
-    }
-
     .course-grid, .dashboard-grid {
         grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
         gap: 2.5rem;
@@ -1728,12 +1746,5 @@ section {
 @media (max-width: 576px) {
     .role-card, .tool-card {
         margin-bottom: 1rem;
-    }
-    .hero h1 {
-        font-size: 1.5rem;
-    }
-    .btn-lg {
-        font-size: 1rem;
-        padding: 0.5rem 1rem;
     }
 }
