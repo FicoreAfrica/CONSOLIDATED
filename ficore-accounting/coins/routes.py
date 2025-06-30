@@ -108,7 +108,7 @@ def purchase():
             credit_coins(str(current_user.id), amount, payment_ref, 'purchase')
             flash(trans('coins_purchase_success', default='Coins purchased successfully'), 'success')
             logger.info(f"User {current_user.id} purchased {amount} coins via {payment_method}")
-            return redirect(url_for('coins_blueprint.history'))
+            return redirect(url_for('coins.history'))
         except ValueError as e:
             logger.error(f"User not found for coin purchase: {str(e)}")
             flash(trans('general_user_not_found', default='User not found'), 'danger')
@@ -164,7 +164,7 @@ def receipt_upload():
             trans('coins_insufficient_coins', default='Insufficient coins to upload receipt. Purchase more coins.'),
             'danger'
         )
-        return redirect(url_for('coins_blueprint.purchase'))
+        return redirect(url_for('coins.purchase'))
     if form.validate_on_submit():
         try:
             db = get_mongo_db()
@@ -214,7 +214,7 @@ def receipt_upload():
             
             flash(trans('coins_receipt_uploaded', default='Receipt uploaded successfully'), 'success')
             logger.info(f"User {current_user.id} uploaded receipt {file_id}")
-            return redirect(url_for('coins_blueprint.history'))
+            return redirect(url_for('coins.history'))
         except ValueError as e:
             logger.error(f"User not found for receipt upload: {str(e)}")
             flash(trans('general_user_not_found', default='User not found'), 'danger')
