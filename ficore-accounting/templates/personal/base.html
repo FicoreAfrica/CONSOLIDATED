@@ -305,7 +305,7 @@
             if (consentBtn) {
                 consentBtn.addEventListener('click', function() {
                     const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
-                    fetch('{{ url_for("personal.acknowledge_consent") | e }}', {
+                    fetch('{{ url_for("acknowledge_consent") | e }}', {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json',
