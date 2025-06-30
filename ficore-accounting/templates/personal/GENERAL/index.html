@@ -50,7 +50,7 @@
     <!-- Tools Overview -->
     <section class="tools-section my-5">
         <h2 class="text-center"><i class="fas fa-tools"></i> {{ t('general_our_tools', default='Explore Our Tools') }}</h2>
-        <p class="text-center mb-4">{{ t('general_tools_desc', default='Discover tools for personal finance, business management, and agent services.') }}</p>
+        <p class="text-center mb-4">{{ t('general_tools_desc', default='Discover tools for personal finance, business management, agent services, and more.') }}</p>
         <div class="row g-4">
             <!-- Personal Finance Tools -->
             <div class="col-md-4">
@@ -116,6 +116,25 @@
                         <h3><i class="fas fa-graduation-cap"></i> {{ t('learning_hub_courses', default='Learning Hub') }}</h3>
                         <p>{{ t('learning_hub_dashboard', default='Access courses to improve your financial literacy.') }}</p>
                         <a href="{{ url_for('learning_hub.main') }}" class="btn btn-primary">{{ t('general_try_now', default='Try Now') }}</a>
+                    </div>
+                </div>
+            </div>
+            <!-- Taxation and News -->
+            <div class="col-md-4">
+                <div class="card tool-card">
+                    <div class="card-body">
+                        <h3><i class="fas fa-calculator"></i> {{ t('general_your_taxation_tool', default='Your Taxation Tool') }}</h3>
+                        <p>{{ t('general_taxation_desc', default='Calculate and manage your taxes with ease.') }}</p>
+                        <a href="{{ url_for('users.login', next=url_for('taxation_bp.calculate_tax')) }}" class="btn btn-primary">{{ t('general_try_now', default='Try Now') }}</a>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card tool-card">
+                    <div class="card-body">
+                        <h3><i class="fas fa-newspaper"></i> {{ t('general_finance_news', default='Finance News Highlights') }}</h3>
+                        <p>{{ t('general_news_desc', default='Stay updated with the latest financial news and insights.') }}</p>
+                        <a href="{{ url_for('users.login', next=url_for('common_bp.news_list')) }}" class="btn btn-primary">{{ t('general_try_now', default='Try Now') }}</a>
                     </div>
                 </div>
             </div>
