@@ -6,6 +6,9 @@ REPORTS_TRANSLATIONS = {
     'en': {
         'reports_dashboard': 'Reports Dashboard',
         'reports_financial_reports': 'Financial Reports',
+        # Reports
+        'reports_start_date': 'Start Date',
+        'reports_end_date': 'End Date',
         'reports_profit_loss': 'Profit & Loss',
         'reports_balance_sheet': 'Balance Sheet',
         'reports_cash_flow': 'Cash Flow Statement',
