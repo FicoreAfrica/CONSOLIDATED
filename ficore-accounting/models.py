@@ -144,7 +144,7 @@ def initialize_database(app):
                     }
                 },
                 'indexes': [
-                    {'key': [('email', ASCENDING)], 'unique': True},
+                    {'key': [('email', ASCENDING)]},
                     {'key': [('reset_token', ASCENDING)], 'sparse': True},
                     {'key': [('role', ASCENDING)]}
                 ]
