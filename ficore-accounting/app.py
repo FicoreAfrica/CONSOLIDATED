@@ -23,9 +23,6 @@ from flask_login import login_required, current_user
 from flask_wtf.csrf import CSRFError
 from jinja2.exceptions import TemplateNotFound
 import time
-from pymongo import MongoClient
-import certifi
-from pymongo.errors import ConfigurationError
 
 # Load environment variables
 load_dotenv()
@@ -86,9 +83,9 @@ def ensure_session_id(f):
                 else:
                     session['sid'] = session.sid
                     session['is_anonymous'] = False
-                    logger.info(f"New session ID generated for authenticated user: {session['sid']}")
+                    logger.info(f'New session ID generated for authenticated user: {session["sid"]}')
         except Exception as e:
-            logger.error(f"Session operation failed: {str(e)}")
+            logger.error(f'Session operation failed: {str(e)}')
         return f(*args, **kwargs)
     return decorated_function
 
@@ -108,17 +105,17 @@ def setup_logging(app):
     flask_logger.setLevel(logging.INFO)
     werkzeug_logger.setLevel(logging.INFO)
     
-    logger.info("Logging setup complete with StreamHandler for ficore_app, flask, and werkzeug")
+    logger.info('Logging setup complete with StreamHandler for ficore_app, flask, and werkzeug')
 
 def check_mongodb_connection(app):
     with app.app_context():
         try:
             db = get_mongo_db()
             db.command('ping')
-            logger.info("MongoDB connection verified with ping")
+            logger.info('MongoDB connection verified with ping')
             return True
         except Exception as e:
-            logger.error(f"MongoDB connection failed: {str(e)}")
+            logger.error(f'MongoDB connection failed: {str(e)}')
             return False
 
 def setup_session(app):
@@ -126,13 +123,13 @@ def setup_session(app):
         try:
             db = get_mongo_db()
             if not check_mongodb_connection(app):
-                logger.error("MongoDB client is not available, falling back to filesystem session")
+                logger.error('MongoDB client is not available, falling back to filesystem session')
                 app.config['SESSION_TYPE'] = 'filesystem'
                 flask_session.init_app(app)
-                logger.info("Session configured with filesystem fallback")
+                logger.info('Session configured with filesystem fallback')
                 return
             app.config['SESSION_TYPE'] = 'mongodb'
-            app.config['SESSION_MONGODB'] = app.config['MONGO_CLIENT']  # Use the same client as main database
+            app.config['SESSION_MONGODB'] = db.client
             app.config['SESSION_MONGODB_DB'] = 'ficodb'
             app.config['SESSION_MONGODB_COLLECT'] = 'sessions'
             app.config['SESSION_PERMANENT'] = True
@@ -143,12 +140,12 @@ def setup_session(app):
             app.config['SESSION_COOKIE_HTTPONLY'] = True
             app.config['SESSION_COOKIE_NAME'] = 'ficore_session'
             flask_session.init_app(app)
-            logger.info(f"Session configured: type={app.config['SESSION_TYPE']}, db={app.config['SESSION_MONGODB_DB']}, collection={app.config['SESSION_MONGODB_COLLECT']}")
+            logger.info(f'Session configured: type={app.config["SESSION_TYPE"]}, db={app.config["SESSION_MONGODB_DB"]}, collection={app.config["SESSION_MONGODB_COLLECT"]}')
         except Exception as e:
-            logger.error(f"Failed to configure session with MongoDB: {str(e)}", exc_info=True)
+            logger.error(f'Failed to configure session with MongoDB: {str(e)}', exc_info=True)
             app.config['SESSION_TYPE'] = 'filesystem'
             flask_session.init_app(app)
-            logger.info("Session configured with filesystem fallback due to MongoDB error")
+            logger.info('Session configured with filesystem fallback due to MongoDB error')
 
 class User:
     def __init__(self, id, email, display_name=None, role='personal'):
@@ -184,28 +181,13 @@ def create_app():
     # Load configuration
     app.config['SECRET_KEY'] = os.getenv('SECRET_KEY')
     if not app.config['SECRET_KEY']:
-        logger.error("SECRET_KEY environment variable is not set")
-        raise ValueError("SECRET_KEY must be set in environment variables")
+        logger.error('SECRET_KEY environment variable is not set')
+        raise ValueError('SECRET_KEY must be set in environment variables')
     
     app.config['MONGO_URI'] = os.getenv('MONGO_URI')
     if not app.config['MONGO_URI']:
-        logger.error("MONGO_URI environment variable is not set")
-        raise ValueError("MONGO_URI must be set in environment variables")
-    
-    # Store MongoDB client in app config
-    try:
-        with app.app_context():
-            client = MongoClient(app.config['MONGO_URI'], serverSelectionTimeoutMS=5000, 
-                               tlsCAFile=os.getenv('MONGO_CA_FILE', None))
-            client.admin.command('ping')
-            app.config['MONGO_CLIENT'] = client
-            logger.info("MongoDB client initialized successfully")
-    except ConfigurationError as e:
-        logger.error(f"Invalid MONGO_URI format: {str(e)}")
-        raise
-    except Exception as e:
-        logger.error(f"MongoDB connection test failed: {str(e)}")
-        raise RuntimeError(f"Failed to connect to MongoDB: {str(e)}")
+        logger.error('MONGO_URI environment variable is not set')
+        raise ValueError('MONGO_URI must be set in environment variables')
     
     app.config['GOOGLE_CLIENT_ID'] = os.environ.get('GOOGLE_CLIENT_ID')
     app.config['GOOGLE_CLIENT_SECRET'] = os.environ.get('GOOGLE_CLIENT_SECRET')
@@ -216,9 +198,9 @@ def create_app():
     app.config['BASE_URL'] = os.environ.get('BASE_URL', 'http://localhost:5000')
     
     if not app.config['GOOGLE_CLIENT_ID'] or not app.config['GOOGLE_CLIENT_SECRET']:
-        logger.warning("Google OAuth2 credentials not set")
+        logger.warning('Google OAuth2 credentials not set')
     if not app.config['SMTP_USERNAME'] or not app.config['SMTP_PASSWORD']:
-        logger.warning("SMTP credentials not set")
+        logger.warning('SMTP credentials not set')
     
     # Initialize extensions
     setup_logging(app)
@@ -227,7 +209,7 @@ def create_app():
     mail = get_mail(app)
     limiter = get_limiter(app)
     serializer = URLSafeTimedSerializer(app.config['SECRET_KEY'])
-    babel.init_app(app)  # Fixed syntax error: replaced 'babel before_requestinit_app(app)'
+    babel.init_app(app)
     
     # Initialize MongoDB and scheduler within app context
     with app.app_context():
@@ -235,17 +217,17 @@ def create_app():
         try:
             scheduler = init_scheduler(app, db)
             app.config['SCHEDULER'] = scheduler
-            logger.info("Scheduler initialized successfully")
+            logger.info('Scheduler initialized successfully')
             def shutdown_scheduler():
                 try:
                     if scheduler and scheduler.running:
                         scheduler.shutdown(wait=True)
-                        logger.info("Scheduler shutdown successfully")
+                        logger.info('Scheduler shutdown successfully')
                 except Exception as e:
-                    logger.error(f"Error shutting down scheduler: {str(e)}", exc_info=True)
+                    logger.error(f'Error shutting down scheduler: {str(e)}', exc_info=True)
             atexit.register(shutdown_scheduler)
         except Exception as e:
-            logger.error(f"Failed to initialize scheduler: {str(e)}", exc_info=True)
+            logger.error(f'Failed to initialize scheduler: {str(e)}', exc_info=True)
     
     setup_session(app)
     
@@ -266,12 +248,12 @@ def create_app():
             with app.app_context():
                 user = get_user(get_mongo_db(), user_id)
                 if user is None:
-                    logger.warning(f"No user found for ID: {user_id}")
+                    logger.warning(f'No user found for ID: {user_id}')
                 else:
-                    logger.info(f"User loaded: {user.username if hasattr(user, 'username') else user_id}")
+                    logger.info(f'User loaded: {user.username if hasattr(user, "username") else user_id}')
                 return user
         except Exception as e:
-            logger.error(f"Error loading user {user_id}: {str(e)}", exc_info=True)
+            logger.error(f'Error loading user {user_id}: {str(e)}', exc_info=True)
             return None
     
     # Initialize database and collections
@@ -287,7 +269,7 @@ def create_app():
             for collection_name in personal_finance_collections:
                 if collection_name not in db.list_collection_names():
                     db.create_collection(collection_name)
-                    logger.info(f"Created personal finance collection: {collection_name}")
+                    logger.info(f'Created personal finance collection: {collection_name}')
             
             # Create indexes
             try:
@@ -306,9 +288,9 @@ def create_app():
                 db.quiz_responses.create_index([('session_id', 1), ('created_at', -1)])
                 db.learning_materials.create_index([('user_id', 1), ('course_id', 1)])
                 db.learning_materials.create_index([('session_id', 1), ('course_id', 1)])
-                logger.info("Created indexes for personal finance collections")
+                logger.info('Created indexes for personal finance collections')
             except Exception as e:
-                logger.warning(f"Some indexes may already exist: {str(e)}")
+                logger.warning(f'Some indexes may already exist: {str(e)}')
             
             # Initialize taxation collections
             if 'tax_rates' not in db.list_collection_names():
@@ -345,11 +327,11 @@ def create_app():
                     'display_name': admin_username
                 }
                 create_user(db, user_data)
-                logger.info(f"Admin user created with email: {admin_email}")
+                logger.info(f'Admin user created with email: {admin_email}')
             else:
-                logger.info(f"Admin user already exists with email: {admin_email}")
+                logger.info(f'Admin user already exists with email: {admin_email}')
         except Exception as e:
-            logger.error(f"Error creating collections or initializing database: {str(e)}")
+            logger.error(f'Error creating collections or initializing database: {str(e)}')
             raise
     
     # Register blueprints with correct template folders
@@ -374,41 +356,41 @@ def create_app():
     from personal.quiz import quiz_bp
     
     app.register_blueprint(users_bp, url_prefix='/users', template_folder='templates/users')
-    logger.info("Registered users blueprint with template_folder='templates/users'")
+    logger.info('Registered users blueprint with template_folder="templates/users"')
     app.register_blueprint(agents_bp, url_prefix='/agents', template_folder='templates/agents')
-    logger.info("Registered agents blueprint with template_folder='templates/agents'")
+    logger.info('Registered agents blueprint with template_folder="templates/agents"')
     app.register_blueprint(common_bp, template_folder='templates/common_features')
-    logger.info("Registered common blueprint with template_folder='templates/common_features'")
+    logger.info('Registered common blueprint with template_folder="templates/common_features"')
     app.register_blueprint(taxation_bp, template_folder='templates/common_features')
-    logger.info("Registered taxation blueprint with template_folder='templates/common_features'")
+    logger.info('Registered taxation blueprint with template_folder="templates/common_features"')
     try:
         from coins.routes import coins_bp
         app.register_blueprint(coins_bp, url_prefix='/coins', template_folder='templates/coins')
-        logger.info("Registered coins blueprint with template_folder='templates/coins'")
+        logger.info('Registered coins blueprint with template_folder="templates/coins"')
     except Exception as e:
-        logger.warning(f"Could not import coins blueprint: {str(e)}")
+        logger.warning(f'Could not import coins blueprint: {str(e)}')
     app.register_blueprint(creditors_bp, url_prefix='/creditors', template_folder='templates/creditors')
-    logger.info("Registered creditors blueprint with template_folder='templates/creditors'")
+    logger.info('Registered creditors blueprint with template_folder="templates/creditors"')
     app.register_blueprint(dashboard_bp, url_prefix='/dashboard', template_folder='templates/dashboard')
-    logger.info("Registered dashboard blueprint with template_folder='templates/dashboard'")
+    logger.info('Registered dashboard blueprint with template_folder="templates/dashboard"')
     app.register_blueprint(debtors_bp, url_prefix='/debtors', template_folder='templates/debtors')
-    logger.info("Registered debtors blueprint with template_folder='templates/debtors'")
+    logger.info('Registered debtors blueprint with template_folder="templates/debtors"')
     app.register_blueprint(inventory_bp, url_prefix='/inventory', template_folder='templates/inventory')
-    logger.info("Registered inventory blueprint with template_folder='templates/inventory'")
+    logger.info('Registered inventory blueprint with template_folder="templates/inventory"')
     app.register_blueprint(payments_bp, url_prefix='/payments', template_folder='templates/payments')
-    logger.info("Registered payments blueprint with template_folder='templates/payments'")
+    logger.info('Registered payments blueprint with template_folder="templates/payments"')
     app.register_blueprint(receipts_bp, url_prefix='/receipts', template_folder='templates/receipts')
-    logger.info("Registered receipts blueprint with template_folder='templates/receipts'")
+    logger.info('Registered receipts blueprint with template_folder="templates/receipts"')
     app.register_blueprint(reports_bp, url_prefix='/reports', template_folder='templates/reports')
-    logger.info("Registered reports blueprint with template_folder='templates/reports'")
+    logger.info('Registered reports blueprint with template_folder="templates/reports"')
     app.register_blueprint(settings_bp, url_prefix='/settings', template_folder='templates/settings')
-    logger.info("Registered settings blueprint with template_folder='templates/settings'")
+    logger.info('Registered settings blueprint with template_folder="templates/settings"')
     try:
         from admin.routes import admin_bp
         app.register_blueprint(admin_bp, url_prefix='/admin', template_folder='templates/admin')
-        logger.info("Registered admin blueprint with template_folder='templates/admin'")
+        logger.info('Registered admin blueprint with template_folder="templates/admin"')
     except Exception as e:
-        logger.warning(f"Could not import admin blueprint: {str(e)}")
+        logger.warning(f'Could not import admin blueprint: {str(e)}')
     app.register_blueprint(bill_bp, url_prefix='/personal', template_folder='templates/personal')
     app.register_blueprint(budget_bp, url_prefix='/personal', template_folder='templates/personal')
     app.register_blueprint(emergency_fund_bp, url_prefix='/personal', template_folder='templates/personal')
@@ -416,7 +398,7 @@ def create_app():
     app.register_blueprint(learning_hub_bp, url_prefix='/personal', template_folder='templates/personal')
     app.register_blueprint(net_worth_bp, url_prefix='/personal', template_folder='templates/personal')
     app.register_blueprint(quiz_bp, url_prefix='/personal', template_folder='templates/personal')
-    logger.info("Registered all personal finance blueprints with template_folder='templates/personal'")
+    logger.info('Registered all personal finance blueprints with template_folder="templates/personal"')
     
     # Jinja2 globals and filters
     app.jinja_env.globals.update(
@@ -436,17 +418,17 @@ def create_app():
         try:
             return value
         except Exception as e:
-            logger.error(f"Navigation rendering error: {str(e)}", exc_info=True)
+            logger.error(f'Navigation rendering error: {str(e)}', exc_info=True)
             return ''
     
     @app.template_filter('format_number')
     def format_number(value):
         try:
             if isinstance(value, (int, float)):
-                return f"{float(value):,.2f}"
+                return f'{float(value):,.2f}'
             return str(value)
         except (ValueError, TypeError) as e:
-            logger.warning(f"Error formatting number {value}: {str(e)}")
+            logger.warning(f'Error formatting number {value}: {str(e)}')
             return str(value)
     
     @app.template_filter('format_currency')
@@ -456,10 +438,10 @@ def create_app():
             locale = session.get('lang', 'en')
             symbol = '₦'
             if value.is_integer():
-                return f"{symbol}{int(value):,}"
-            return f"{symbol}{value:,.2f}"
+                return f'{symbol}{int(value):,}'
+            return f'{symbol}{value:,.2f}'
         except (TypeError, ValueError) as e:
-            logger.warning(f"Error formatting currency {value}: {str(e)}")
+            logger.warning(f'Error formatting currency {value}: {str(e)}')
             return str(value)
     
     @app.template_filter('format_datetime')
@@ -476,7 +458,7 @@ def create_app():
                 return parsed.strftime(format_str)
             return str(value)
         except Exception as e:
-            logger.warning(f"Error formatting datetime {value}: {str(e)}")
+            logger.warning(f'Error formatting datetime {value}: {str(e)}')
             return str(value)
     
     @app.template_filter('format_date')
@@ -493,7 +475,7 @@ def create_app():
                 return parsed.strftime(format_str)
             return str(value)
         except Exception as e:
-            logger.warning(f"Error formatting date {value}: {str(e)}")
+            logger.warning(f'Error formatting date {value}: {str(e)}')
             return str(value)
     
     @app.template_filter('trans')
@@ -501,7 +483,7 @@ def create_app():
         lang = session.get('lang', 'en')
         translation = trans(key, lang=lang, **kwargs)
         if translation == key:
-            logger.warning(f"Missing translation for key='{key}' in lang='{lang}'")
+            logger.warning(f'Missing translation for key="{key}" in lang="{lang}"')
             return key
         return translation
     
@@ -539,12 +521,12 @@ def create_app():
     @app.after_request
     def add_security_headers(response):
         response.headers['Content-Security-Policy'] = (
-            "default-src 'self'; "
-            "script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://code.jquery.com; "
-            "style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://fonts.googleapis.com; "
-            "img-src 'self' data:; "
-            "connect-src 'self'; "
-            "font-src 'self' https://cdn.jsdelivr.net https://fonts.gstatic.com;"
+            'default-src \'self\'; '
+            'script-src \'self\' \'unsafe-inline\' https://cdn.jsdelivr.net https://code.jquery.com; '
+            'style-src \'self\' \'unsafe-inline\' https://cdn.jsdelivr.net https://fonts.googleapis.com; '
+            'img-src \'self\' data:; '
+            'connect-src \'self\'; '
+            'font-src \'self\' https://cdn.jsdelivr.net https://fonts.gstatic.com;'
         )
         response.headers['X-Frame-Options'] = 'DENY'
         response.headers['X-Content-Type-Options'] = 'nosniff'
@@ -568,9 +550,9 @@ def create_app():
                                 {'$set': {'language': new_lang}}
                             )
                         except Exception as e:
-                            logger.warning(f"Could not update user language preference: {str(e)}")
+                            logger.warning(f'Could not update user language preference: {str(e)}')
                 
-                logger.info(f"Language changed to {new_lang}", 
+                logger.info(f'Language changed to {new_lang}', 
                            extra={'session_id': session.get('sid', 'no-session-id')})
                 
                 return jsonify({
@@ -584,7 +566,7 @@ def create_app():
                 }), 400
                 
         except Exception as e:
-            logger.error(f"Error changing language: {str(e)}", 
+            logger.error(f'Error changing language: {str(e)}', 
                         extra={'session_id': session.get('sid', 'no-session-id')})
             return jsonify({
                 'success': False, 
@@ -595,7 +577,7 @@ def create_app():
     @app.route('/', methods=['GET', 'HEAD'])
     def index():
         lang = session.get('lang', 'en')
-        logger.info(f"Serving index page, authenticated: {current_user.is_authenticated}, user: {current_user.username if current_user.is_authenticated and hasattr(current_user, 'username') else 'None'}")
+        logger.info(f'Serving index page, authenticated: {current_user.is_authenticated}, user: {current_user.username if current_user.is_authenticated and hasattr(current_user, "username") else "None"}')
         if request.method == 'HEAD':
             return '', 200
         if current_user.is_authenticated:
@@ -614,11 +596,11 @@ def create_app():
                 try:
                     return render_template('general/home.html', t=trans, lang=lang)
                 except TemplateNotFound as e:
-                    logger.error(f"Template not found: {str(e)}", exc_info=True)
+                    logger.error(f'Template not found: {str(e)}', exc_info=True)
                     return render_template('personal/GENERAL/error.html', t=trans, lang=lang, error=str(e)), 404
         try:
             courses = app.config.get('COURSES', [])
-            logger.info(f"Retrieved {len(courses)} courses")
+            logger.info(f'Retrieved {len(courses)} courses')
             return render_template(
                 'personal/GENERAL/index.html',
                 t=trans,
@@ -628,35 +610,35 @@ def create_app():
                 title=trans('general_welcome', lang=lang)
             )
         except TemplateNotFound as e:
-            logger.error(f"Template not found: {str(e)}", exc_info=True)
+            logger.error(f'Template not found: {str(e)}', exc_info=True)
             flash(trans('general_error', default='Template not found'), 'danger')
             return render_template('personal/GENERAL/error.html', t=trans, lang=lang, error=str(e)), 404
         except Exception as e:
-            logger.error(f"Error in index route: {str(e)}", exc_info=True)
+            logger.error(f'Error in index route: {str(e)}', exc_info=True)
             flash(trans('general_error', default='An error occurred'), 'danger')
             try:
                 return render_template('errors/500.html', t=trans, lang=lang, error=str(e)), 500
             except TemplateNotFound as e:
-                logger.error(f"Template not found: {str(e)}", exc_info=True)
+                logger.error(f'Template not found: {str(e)}', exc_info=True)
                 return render_template('personal/GENERAL/error.html', t=trans, lang=lang, error=str(e)), 500
     
     @app.route('/general_dashboard')
     @ensure_session_id
     def general_dashboard():
-        logger.info(f"Redirecting to unified dashboard for {'authenticated' if current_user.is_authenticated else 'anonymous'} user")
+        logger.info(f'Redirecting to unified dashboard for {"authenticated" if current_user.is_authenticated else "anonymous"} user')
         return redirect(url_for('dashboard_bp.index'))
     
     @app.route('/about')
     def about():
         lang = session.get('lang', 'en')
-        logger.info("Serving about page")
+        logger.info('Serving about page')
         try:
             return render_template('general/about.html', 
                                  t=trans, 
                                  lang=lang,
                                  title=trans('general_about', lang=lang))
         except TemplateNotFound as e:
-            logger.error(f"Template not found: {str(e)}", exc_info=True)
+            logger.error(f'Template not found: {str(e)}', exc_info=True)
             return render_template('personal/GENERAL/error.html', 
                                  t=trans, 
                                  lang=lang,
@@ -672,7 +654,7 @@ def create_app():
                                  lang=lang,
                                  title=trans('general_contact', lang=lang))
         except TemplateNotFound as e:
-            logger.error(f"Template not found: {str(e)}", exc_info=True)
+            logger.error(f'Template not found: {str(e)}', exc_info=True)
             return render_template('personal/GENERAL/error.html', 
                                  t=trans, 
                                  lang=lang,
@@ -688,7 +670,7 @@ def create_app():
                                  lang=lang,
                                  title=trans('general_privacy', lang=lang))
         except TemplateNotFound as e:
-            logger.error(f"Template not found: {str(e)}", exc_info=True)
+            logger.error(f'Template not found: {str(e)}', exc_info=True)
             return render_template('personal/GENERAL/error.html', 
                                  t=trans, 
                                  lang=lang,
@@ -704,7 +686,7 @@ def create_app():
                                  lang=lang,
                                  title=trans('general_terms', lang=lang))
         except TemplateNotFound as e:
-            logger.error(f"Template not found: {str(e)}", exc_info=True)
+            logger.error(f'Template not found: {str(e)}', exc_info=True)
             return render_template('personal/GENERAL/error.html', 
                                  t=trans, 
                                  lang=lang,
@@ -713,16 +695,16 @@ def create_app():
     
     @app.route('/health')
     def health():
-        logger.info("Health check")
-        status = {"status": "healthy"}
+        logger.info('Health check')
+        status = {'status': 'healthy'}
         try:
             with app.app_context():
                 get_mongo_db().command('ping')
             return jsonify(status), 200
         except Exception as e:
-            logger.error(f"Health check failed: {str(e)}", exc_info=True)
-            status["status"] = "unhealthy"
-            status["details"] = str(e)
+            logger.error(f'Health check failed: {str(e)}', exc_info=True)
+            status['status'] = 'unhealthy'
+            status['details'] = str(e)
             return jsonify(status), 500
     
     @app.route('/api/translations/<lang>')
@@ -739,7 +721,7 @@ def create_app():
             
             return jsonify({'translations': result})
         except Exception as e:
-            logger.error(f"API translations error: {str(e)}", 
+            logger.error(f'API translations error: {str(e)}', 
                         extra={'session_id': session.get('sid', 'no-session-id')})
             return jsonify({'error': trans('general_error')}), 500
     
@@ -755,7 +737,7 @@ def create_app():
             translation = trans(key, lang=lang)
             return jsonify({'key': key, 'translation': translation, 'lang': lang})
         except Exception as e:
-            logger.error(f"API translate error: {str(e)}", 
+            logger.error(f'API translate error: {str(e)}', 
                         extra={'session_id': session.get('sid', 'no-session-id')})
             return jsonify({'error': trans('general_error')}), 500
     
@@ -768,17 +750,17 @@ def create_app():
             with app.app_context():
                 if current_user.is_authenticated:
                     get_mongo_db().users.update_one({'_id': current_user.id}, {'$set': {'language': new_lang}})
-            logger.info(f"Language set to {new_lang}")
+            logger.info(f'Language set to {new_lang}')
             flash(trans('general_language_changed', default='Language updated successfully'), 'success')
         except Exception as e:
-            logger.error(f"Session operation failed: {str(e)}")
+            logger.error(f'Session operation failed: {str(e)}')
             flash(trans('general_invalid_language', default='Invalid language'), 'danger')
         return redirect(request.referrer or url_for('index'))
     
     @app.route('/acknowledge_consent', methods=['POST'])
     def acknowledge_consent():
         if request.method != 'POST':
-            logger.warning(f"Invalid method {request.method} for consent acknowledgement")
+            logger.warning(f'Invalid method {request.method} for consent acknowledgement')
             return '', 400
         try:
             session['consent_acknowledged'] = {
@@ -787,9 +769,9 @@ def create_app():
                 'ip': request.remote_addr,
                 'user_agent': request.headers.get('User-Agent')
             }
-            logger.info(f"Consent acknowledged for session {session.get('sid', 'no-session-id')} from IP {request.remote_addr}")
+            logger.info(f'Consent acknowledged for session {session.get("sid", "no-session-id")} from IP {request.remote_addr}')
         except Exception as e:
-            logger.error(f"Session operation failed: {str(e)}")
+            logger.error(f'Session operation failed: {str(e)}')
         response = make_response('', 204)
         response.headers['Cache-Control'] = 'no-store'
         response.headers['X-Content-Type-Options'] = 'nosniff'
@@ -820,7 +802,7 @@ def create_app():
                     'totalIAmOwed': total_i_am_owed
                 })
         except Exception as e:
-            logger.error(f"Error fetching debt summary: {str(e)}")
+            logger.error(f'Error fetching debt summary: {str(e)}')
             return jsonify({'error': 'Failed to fetch debt summary'}), 500
     
     @app.route('/api/cashflow-summary')
@@ -852,7 +834,7 @@ def create_app():
                     'totalPayments': total_payments
                 })
         except Exception as e:
-            logger.error(f"Error fetching cashflow summary: {str(e)}")
+            logger.error(f'Error fetching cashflow summary: {str(e)}')
             return jsonify({'error': 'Failed to fetch cashflow summary'}), 500
     
     @app.route('/api/inventory-summary')
@@ -880,7 +862,7 @@ def create_app():
                     'totalValue': total_value
                 })
         except Exception as e:
-            logger.error(f"Error fetching inventory summary: {str(e)}")
+            logger.error(f'Error fetching inventory summary: {str(e)}')
             return jsonify({'error': 'Failed to fetch inventory summary'}), 500
     
     @app.route('/api/recent-activity')
@@ -896,7 +878,7 @@ def create_app():
                 ).sort('created_at', -1).limit(3))
                 for record in recent_records:
                     activity_type = 'debt_added'
-                    description = f"Added {record['type']}: {record['name']}"
+                    description = f'Added {record["type"]}: {record["name"]}'
                     activities.append({
                         'type': activity_type,
                         'description': description,
@@ -908,7 +890,7 @@ def create_app():
                 ).sort('created_at', -1).limit(3))
                 for cashflow in recent_cashflows:
                     activity_type = 'money_in' if cashflow['type'] == 'receipt' else 'money_out'
-                    description = f"{'Received' if cashflow['type'] == 'receipt' else 'Paid'} {cashflow['party_name']}"
+                    description = f'{"Received" if cashflow["type"] == "receipt" else "Paid"} {cashflow["party_name"]}'
                     activities.append({
                         'type': activity_type,
                         'description': description,
@@ -921,7 +903,7 @@ def create_app():
                     activity['timestamp'] = activity['timestamp'].isoformat()
                 return jsonify(activities)
         except Exception as e:
-            logger.error(f"Error fetching recent activity: {str(e)}")
+            logger.error(f'Error fetching recent activity: {str(e)}')
             return jsonify({'error': 'Failed to fetch recent activity'}), 500
     
     @app.route('/api/notifications/count')
@@ -937,7 +919,7 @@ def create_app():
                 })
                 return jsonify({'count': count})
         except Exception as e:
-            logger.error(f"Error fetching notification count: {str(e)}")
+            logger.error(f'Error fetching notification count: {str(e)}')
             return jsonify({'error': 'Failed to fetch notification count'}), 500
     
     @app.route('/api/notifications')
@@ -965,14 +947,14 @@ def create_app():
                 } for n in notifications]
                 return jsonify(result)
         except Exception as e:
-            logger.error(f"Error fetching notifications: {str(e)}")
+            logger.error(f'Error fetching notifications: {str(e)}')
             return jsonify({'error': 'Failed to fetch notifications'}), 500
     
     @app.route('/feedback', methods=['GET', 'POST'])
     @ensure_session_id
     def feedback():
         lang = session.get('lang', 'en')
-        logger.info("Handling feedback")
+        logger.info('Handling feedback')
         tool_options = [
             ['profile', trans('general_profile', default='Profile')],
             ['coins', trans('coins_dashboard', default='Coins')],
@@ -998,11 +980,11 @@ def create_app():
                 comment = request.form.get('comment', '').strip()
                 valid_tools = [option[0] for option in tool_options]
                 if not tool_name or tool_name not in valid_tools:
-                    logger.error(f"Invalid feedback tool: {tool_name}")
+                    logger.error(f'Invalid feedback tool: {tool_name}')
                     flash(trans('general_invalid_input', default='Please select a valid tool'), 'danger')
                     return render_template('general/feedback.html', t=trans, lang=lang, tool_options=tool_options)
                 if not rating or not rating.isdigit() or int(rating) < 1 or int(rating) > 5:
-                    logger.error(f"Invalid rating: {rating}")
+                    logger.error(f'Invalid rating: {rating}')
                     flash(trans('general_invalid_input', default='Please provide a rating between 1 and 5'), 'danger')
                     return render_template('general/feedback.html', t=trans, lang=lang, tool_options=tool_options)
                 with app.app_context():
@@ -1011,12 +993,12 @@ def create_app():
                         query = get_user_query(str(current_user.id))
                         result = get_mongo_db().users.update_one(query, {'$inc': {'coin_balance': -1}})
                         if result.matched_count == 0:
-                            raise ValueError(f"No user found for ID {current_user.id}")
+                            raise ValueError(f'No user found for ID {current_user.id}')
                         get_mongo_db().coin_transactions.insert_one({
                             'user_id': str(current_user.id),
                             'amount': -1,
                             'type': 'spend',
-                            'ref': f"FEEDBACK_{datetime.utcnow().isoformat()}",
+                            'ref': f'FEEDBACK_{datetime.utcnow().isoformat()}',
                             'date': datetime.utcnow()
                         })
                     feedback_entry = {
@@ -1034,21 +1016,21 @@ def create_app():
                         'details': {'user_id': str(current_user.id) if current_user.is_authenticated else None, 'tool_name': tool_name},
                         'timestamp': datetime.utcnow()
                     })
-                logger.info(f"Feedback submitted: tool={tool_name}, rating={rating}, session={session.get('sid', 'no-session-id')}")
+                logger.info(f'Feedback submitted: tool={tool_name}, rating={rating}, session={session.get("sid", "no-session-id")}')
                 flash(trans('general_thank_you', default='Thank you for your feedback!'), 'success')
                 return redirect(url_for('index'))
             except ValueError as e:
-                logger.error(f"User not found: {str(e)}")
+                logger.error(f'User not found: {str(e)}')
                 flash(trans('general_error', default='User not found'), 'danger')
             except Exception as e:
-                logger.error(f"Error processing feedback: {str(e)}", exc_info=True)
+                logger.error(f'Error processing feedback: {str(e)}', exc_info=True)
                 flash(trans('general_error', default='Error occurred during feedback submission'), 'danger')
                 try:
                     return render_template('general/feedback.html', t=trans, lang=lang, tool_options=tool_options), 500
                 except TemplateNotFound as e:
-                    logger.error(f"Template not found: {str(e)}", exc_info=True)
+                    logger.error(f'Template not found: {str(e)}', exc_info=True)
                     return render_template('personal/GENERAL/error.html', t=trans, lang=lang, error=str(e)), 500
-        logger.info("Rendering feedback index template")
+        logger.info('Rendering feedback index template')
         try:
             return render_template('general/feedback.html', 
                                  t=trans, 
@@ -1056,7 +1038,7 @@ def create_app():
                                  tool_options=tool_options,
                                  title=trans('general_feedback', lang=lang))
         except TemplateNotFound as e:
-            logger.error(f"Template not found: {str(e)}", exc_info=True)
+            logger.error(f'Template not found: {str(e)}', exc_info=True)
             return render_template('personal/GENERAL/error.html', 
                                  t=trans, 
                                  lang=lang, 
@@ -1064,14 +1046,14 @@ def create_app():
                                  title=trans('general_feedback', lang=lang)), 404
     
     @app.route('/setup', methods=['GET'])
-    @limiter.limit("10 per minute")
+    @limiter.limit('10 per minute')
     def setup_database_route():
         setup_key = request.args.get('key')
         if setup_key != os.getenv('SETUP_KEY', 'setup-secret'):
             try:
                 return render_template('errors/403.html', content=trans('general_access_denied', default='Access denied')), 403
             except TemplateNotFound as e:
-                logger.error(f"Template not found: {str(e)}", exc_info=True)
+                logger.error(f'Template not found: {str(e)}', exc_info=True)
                 return render_template('personal/GENERAL/error.html', content=trans('general_access_denied', default='Access denied'), error=str(e)), 403
         try:
             with app.app_context():
@@ -1083,7 +1065,7 @@ def create_app():
             try:
                 return render_template('errors/500.html', content=trans('general_error', default='Internal server error'), error=str(e)), 500
             except TemplateNotFound as e:
-                logger.error(f"Template not found: {str(e)}", exc_info=True)
+                logger.error(f'Template not found: {str(e)}', exc_info=True)
                 return render_template('personal/GENERAL/error.html', content=trans('general_error', default='Internal server error'), error=str(e)), 500
     
     @app.route('/static/<path:filename>')
@@ -1125,7 +1107,7 @@ def create_app():
     
     @app.route('/robots.txt')
     def robots_txt():
-        return Response("User-agent: *\nDisallow: /", mimetype='text/plain')
+        return Response('User-agent: *\nDisallow: /', mimetype='text/plain')
     
     @app.errorhandler(403)
     def forbidden(e):
@@ -1137,7 +1119,7 @@ def create_app():
                                  lang=lang,
                                  title=trans('general_access_denied', lang=lang)), 403
         except TemplateNotFound as e:
-            logger.error(f"Template not found: {str(e)}", exc_info=True)
+            logger.error(f'Template not found: {str(e)}', exc_info=True)
             return render_template('personal/GENERAL/error.html', 
                                  message=trans('general_access_denied', default='Forbidden'), 
                                  t=trans, 
@@ -1148,7 +1130,7 @@ def create_app():
     @app.errorhandler(404)
     def page_not_found(e):
         lang = session.get('lang', 'en')
-        logger.error(f"Error 404: {str(e)}")
+        logger.error(f'Error 404: {str(e)}')
         try:
             return render_template('errors/404.html', 
                                  message=trans('general_page_not_found', default='Page not found'), 
@@ -1156,7 +1138,7 @@ def create_app():
                                  lang=lang,
                                  title=trans('general_page_not_found', lang=lang)), 404
         except TemplateNotFound as e:
-            logger.error(f"Template not found: {str(e)}", exc_info=True)
+            logger.error(f'Template not found: {str(e)}', exc_info=True)
             return render_template('personal/GENERAL/error.html', 
                                  message=trans('general_page_not_found', default='Page not found'), 
                                  t=trans, 
@@ -1167,7 +1149,7 @@ def create_app():
     @app.errorhandler(500)
     def internal_server_error(e):
         lang = session.get('lang', 'en')
-        logger.error(f"Server error: {str(e)}", exc_info=True)
+        logger.error(f'Server error: {str(e)}', exc_info=True)
         try:
             return render_template('errors/500.html', 
                                  message=trans('general_error', default='Internal server error'), 
@@ -1175,7 +1157,7 @@ def create_app():
                                  lang=lang,
                                  title=trans('general_error', lang=lang)), 500
         except TemplateNotFound as e:
-            logger.error(f"Template not found: {str(e)}", exc_info=True)
+            logger.error(f'Template not found: {str(e)}', exc_info=True)
             return render_template('personal/GENERAL/error.html', 
                                  message=trans('general_error', default='Internal server error'), 
                                  t=trans, 
@@ -1186,7 +1168,7 @@ def create_app():
     @app.errorhandler(CSRFError)
     def handle_csrf_error(e):
         lang = session.get('lang', 'en')
-        logger.error(f"CSRF error: {str(e)}")
+        logger.error(f'CSRF error: {str(e)}')
         return jsonify({'error': 'CSRF token invalid'}), 400
     
     @app.before_request
@@ -1194,17 +1176,17 @@ def create_app():
         if request.path.startswith('/static/') or request.path in [
             '/manifest.json', '/service-worker.js', '/favicon.ico', '/robots.txt'
         ]:
-            logger.info(f"Skipping session setup for request: {request.path}")
+            logger.info(f'Skipping session setup for request: {request.path}')
             return
-        logger.info(f"Starting before_request for path: {request.path}")
+        logger.info(f'Starting before_request for path: {request.path}')
         try:
             if 'sid' not in session:
                 session['sid'] = session.sid
                 session['is_anonymous'] = not current_user.is_authenticated
-                logger.info(f"Session ID set: {session['sid']}, is_anonymous: {session['is_anonymous']}")
+                logger.info(f'Session ID set: {session["sid"]}, is_anonymous: {session["is_anonymous"]}')
             if 'lang' not in session:
                 session['lang'] = request.accept_languages.best_match(['en', 'ha'], 'en')
-                logger.info(f"Set default language to {session['lang']}")
+                logger.info(f'Set default language to {session["lang"]}')
             
             g.trans = trans
             g.get_translations = get_translations
@@ -1235,11 +1217,11 @@ def create_app():
                                 return redirect(url_for('users_bp.personal_setup_wizard'))
                             return redirect(url_for('users_bp.setup_wizard'))
         except Exception as e:
-            logger.error(f"Error in before_request: {str(e)}", exc_info=True)
+            logger.error(f'Error in before_request: {str(e)}', exc_info=True)
 
     @app.teardown_request
     def teardown_request(exception=None):
-        if hasattr(g, 'mongo_client'):
+        if hasattr(current_app, 'mongo_client'):
             close_mongo_db()
 
     # Development routes
@@ -1252,7 +1234,7 @@ def create_app():
                                      translations=all_translations,
                                      title='Translation Debug')
             except TemplateNotFound as e:
-                logger.error(f"Template not found: {str(e)}", exc_info=True)
+                logger.error(f'Template not found: {str(e)}', exc_info=True)
                 return render_template('personal/GENERAL/error.html', 
                                      error=str(e), 
                                      title='Translation Debug'), 404
