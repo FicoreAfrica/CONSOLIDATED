@@ -8,6 +8,7 @@ AGENTS_TRANSLATIONS = {
         # Agents
         'agents_agent_name_required': 'Agent name is required',
         'agents_agent_id': 'Agent ID',
+        'agent_name_length': 'Agent name must be between 3 and 50 characters',
         'agents_agent_id_required': 'Agent ID is required',
         'agents_agent_id_length': 'Agent ID must be between 3 and 50 characters long',
         'agents_area': 'Area',
@@ -96,6 +97,7 @@ AGENTS_TRANSLATIONS = {
         'agents_confirm_delete': 'Ka tabbata kana son goge wannan wakili?',
         'agents_no_agents': 'Ba a sami wakilan ba',
         'agents_search_agents': 'Nemo wakilan...',
+        'agent_name_length': 'Sunan wakili dole ne ya kasance tsakanin haruffa 3 zuwa 50',
          # Agents
         'agents_agent_name_required': 'Ana buƙatar sunan wakili',
         'agents_agent_id': 'ID na Wakili',
