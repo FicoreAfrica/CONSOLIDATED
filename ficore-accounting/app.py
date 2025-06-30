@@ -377,6 +377,7 @@ def create_app():
     from personal.learning_hub import learning_hub_bp
     from personal.net_worth import net_worth_bp
     from personal.quiz import quiz_bp
+    from general.routes import general_bp  # Added new blueprint for general routes
     
     app.register_blueprint(users_bp, url_prefix='/users', template_folder='templates/users')
     logger.info('Registered users blueprint with template_folder="templates/users"')
@@ -422,6 +423,8 @@ def create_app():
     app.register_blueprint(net_worth_bp, url_prefix='/personal', template_folder='templates/personal')
     app.register_blueprint(quiz_bp, url_prefix='/personal', template_folder='templates/personal')
     logger.info('Registered all personal finance blueprints with template_folder="templates/personal"')
+    app.register_blueprint(general_bp, url_prefix='/general', template_folder='templates/general')
+    logger.info('Registered general blueprint with template_folder="templates/general"')
     
     # Jinja2 globals and filters
     app.jinja_env.globals.update(
@@ -598,6 +601,7 @@ def create_app():
     
     # Routes
     @app.route('/', methods=['GET', 'HEAD'])
+    @ensure_session_id
     def index():
         lang = session.get('lang', 'en')
         logger.info(f'Serving index page, authenticated: {current_user.is_authenticated}, user: {current_user.username if current_user.is_authenticated and hasattr(current_user, "username") else "None"}')
@@ -607,12 +611,12 @@ def create_app():
             if current_user.role == 'agent':
                 return redirect(url_for('agents_bp.dashboard'))
             elif current_user.role == 'trader':
-                return redirect(url_for('dashboard.index'))
+                return redirect(url_for('general_bp.home'))
             elif current_user.role == 'admin':
                 try:
                     return redirect(url_for('admin_bp.dashboard'))
                 except:
-                    return redirect(url_for('dashboard.index'))
+                    return redirect(url_for('general_bp.home'))
             elif current_user.role == 'personal':
                 return redirect(url_for('dashboard.index'))
             else:
@@ -650,6 +654,29 @@ def create_app():
     def general_dashboard():
         logger.info(f'Redirecting to unified dashboard for {"authenticated" if current_user.is_authenticated else "anonymous"} user')
         return redirect(url_for('dashboard.index'))
+    
+    @app.route('/business-agent-home')
+    @ensure_session_id
+    def business_agent_home():
+        lang = session.get('lang', 'en')
+        logger.info(f'Serving business/agent home page, authenticated: {current_user.is_authenticated}')
+        if current_user.is_authenticated:
+            if current_user.role == 'agent':
+                return redirect(url_for('agents_bp.dashboard'))
+            elif current_user.role == 'trader':
+                try:
+                    return render_template('general/home.html', t=trans, lang=lang, title=trans('general_business_home', lang=lang))
+                except TemplateNotFound as e:
+                    logger.error(f'Template not found: {str(e)}', exc_info=True)
+                    return render_template('personal/GENERAL/error.html', t=trans, lang=lang, error=str(e)), 404
+            else:
+                flash(trans('general_no_permission', default='You do not have permission to access this page.'), 'danger')
+                return redirect(url_for('index'))
+        try:
+            return render_template('general/home.html', t=trans, lang=lang, is_public=True, title=trans('general_business_home', lang=lang))
+        except TemplateNotFound as e:
+            logger.error(f'Template not found: {str(e)}', exc_info=True)
+            return render_template('personal/GENERAL/error.html', t=trans, lang=lang, error=str(e)), 404
     
     @app.route('/about')
     def about():
