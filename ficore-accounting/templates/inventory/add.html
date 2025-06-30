@@ -6,7 +6,7 @@
         <h1>{{ t('inventory_add_title', default='Add Goods & Stock') }}</h1>
         <small class="subtext">{{ t('inventory_subtitle', default='Kayanka da Hajojinka') }}</small>
     </div>
-    <form action="{{ url_for('inventory_blueprint.add') }}" method="POST" class="row g-3">
+    <form action="{{ url_for('inventory.add') }}" method="POST" class="row g-3">
         {{ form.hidden_tag() }}
         <div class="col-12">
             <label for="item_name" class="form-label">{{ t('inventory_item_name', default='Item Name') }}</label>
