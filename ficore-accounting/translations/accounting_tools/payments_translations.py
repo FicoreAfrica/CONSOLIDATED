@@ -86,6 +86,10 @@ PAYMENTS_TRANSLATIONS = {
         'payments_gross_amount': 'Babban Adadi',
         'payments_payment_gateway': 'Hanyar Biya',
         'payments_receipt': 'Rasit',
+        'payments_add_money_out': 'Ƙara Kuɗi da Aka Fita',
+        'payments_money_out': 'Kuɗi da Aka Fita',
+        'payments_money_out_subtext': 'Bi diddigin biyan kuɗi na waje',
+        'payments_no_money_out': 'Babu biyan kuɗi na waje da aka rubuta',
         'payments_invoice': 'Lissafin Kuɗi',
          # Payments
         'payments_recipient_name': 'Sunan Mai Karɓa',
