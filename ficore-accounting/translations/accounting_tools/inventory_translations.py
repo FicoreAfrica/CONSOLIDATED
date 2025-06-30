@@ -8,6 +8,10 @@ INVENTORY_TRANSLATIONS = {
         'inventory_list': 'Inventory List',
         'inventory_add_item': 'Add Item',
         # Inventory
+        'inventory_add_goods_stock': 'Add Goods to Stock',
+        'inventory_goods_stock': 'Goods Stock',
+        'inventory_goods_stock_subtext': 'Manage your inventory',
+        'inventory_no_inventory': 'No inventory recorded',
         'inventory_unit': 'Unit',
         'inventory_buying_price': 'Buying Price',
         'inventory_selling_price': 'Selling Price',
@@ -85,6 +89,10 @@ INVENTORY_TRANSLATIONS = {
         'inventory_total_items': 'Jimillar Abubuwa',
         'inventory_total_value_stock': 'Jimillar Ƙimar Ajiya',
         'inventory_low_stock_alerts': 'Sanarwar Ƙarancin Ajiya',
+        'inventory_add_goods_stock': 'Ƙara Kaya zuwa Jari',
+        'inventory_goods_stock': 'Jarin Kaya',
+        'inventory_goods_stock_subtext': 'Sarrafa jarinka',
+        'inventory_no_inventory': 'Babu jari da aka rubuta',
         # Inventory
         'inventory_unit': 'Naúri',
         'inventory_buying_price': 'Farashin Saye',
