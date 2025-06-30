@@ -102,36 +102,43 @@ def is_valid_email(email):
 def get_mongo_db():
     '''
     Get MongoDB database connection.
+    Creates a single client per application context and reuses it.
     
     Returns:
         Database object
     '''
     try:
-        if has_request_context() and not hasattr(current_app, 'mongo_client'):
+        # Check if client exists in application context
+        if not hasattr(g, 'mongo_client'):
             mongo_uri = current_app.config.get('MONGO_URI')
             if not mongo_uri:
                 logger.error(trans('general_no_mongo_client', default='No MongoDB client available: MONGO_URI not set'))
                 raise RuntimeError('No MongoDB client available: MONGO_URI not set')
-            current_app.mongo_client = MongoClient(
+            
+            # Create new client and store in g
+            g.mongo_client = MongoClient(
                 mongo_uri,
                 serverSelectionTimeoutMS=5000,
                 tlsCAFile=current_app.config.get('MONGO_CA_FILE', None)
             )
-            current_app.mongo_client.admin.command('ping')
+            # Verify connection
+            g.mongo_client.admin.command('ping')
             logger.info(trans('general_mongo_connection_established', default='MongoDB connection established'))
-        return current_app.mongo_client[current_app.config.get('MONGODB_DB', 'ficodb')]
+        
+        return g.mongo_client[current_app.config.get('MONGODB_DB', 'ficodb')]
     except Exception as e:
         logger.error(f"{trans('general_mongo_connection_error', default='Error getting MongoDB connection')}: {str(e)}", exc_info=True)
         raise
 
 def close_mongo_db():
     '''
-    Close MongoDB connection.
+    Close MongoDB connection at application context teardown.
+    Should be called in app.teardown_appcontext.
     '''
     try:
-        if has_request_context() and hasattr(current_app, 'mongo_client'):
-            current_app.mongo_client.close()
-            del current_app.mongo_client
+        if hasattr(g, 'mongo_client'):
+            g.mongo_client.close()
+            del g.mongo_client
             logger.info(trans('general_mongo_connection_closed', default='MongoDB connection closed'))
     except Exception as e:
         logger.error(f"{trans('general_mongo_close_error', default='Error closing MongoDB connection')}: {str(e)}", exc_info=True)
