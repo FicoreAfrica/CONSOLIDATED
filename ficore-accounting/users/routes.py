@@ -22,6 +22,7 @@ users_bp = Blueprint('users', __name__, template_folder='templates/users')
 USERNAME_REGEX = re.compile(r'^[a-zA-Z0-9_]{3,50}$')
 PASSWORD_REGEX = re.compile(r'.{6,}')
 PHONE_REGEX = re.compile(r'^\+?\d{10,15}$')
+AGENT_ID_REGEX = re.compile(r'^[A-Z0-9]{8}$')  # Agent ID: 8 alphanumeric characters
 
 # Initialize limiter
 limiter = get_limiter(current_app)
@@ -67,6 +68,10 @@ class SignupForm(FlaskForm):
         ('trader', trans('general_trader', default='Trader')),
         ('agent', trans('general_agent', default='Agent'))
     ], validators=[validators.DataRequired(message=trans('general_role_required', default='Role is required'))], render_kw={'class': 'form-select'})
+    agent_id = StringField(trans('agents_agent_id', default='Agent ID'), [
+        validators.Optional(),
+        validators.Regexp(AGENT_ID_REGEX, message=trans('agents_agent_id_format', default='Agent ID must be 8 alphanumeric characters'))
+    ], render_kw={'class': 'form-control'})
     language = SelectField(trans('general_language', default='Language'), choices=[
         ('en', trans('general_english', default='English')),
         ('ha', trans('general_hausa', default='Hausa'))
@@ -88,10 +93,10 @@ class ResetPasswordForm(FlaskForm):
     ], render_kw={'class': 'form-control'})
     confirm_password = PasswordField(trans('general_confirm_password', default='Confirm Password'), [
         validators.DataRequired(message=trans('general_confirm_password_required', default='Confirm password is required')),
-        validators.EqualTo('password', message=trans('general_passwords_must_match', default='Passwords must match')),
+        validators.EqualTo('password', message=trans('general_passwords_must_match', default='Passwords must match'))
     ], render_kw={'class': 'form-control'})
     submit = SubmitField(trans('general_reset_password', default='Reset Password'), render_kw={'class': 'btn btn-primary w-100'})
-    
+
 class BusinessSetupForm(FlaskForm):
     business_name = StringField(trans('general_business_name', default='Business Name'),
                                validators=[validators.DataRequired(message=trans('general_business_name_required', default='Business name is required')),
@@ -225,6 +230,22 @@ def log_audit_action(action, details=None):
         })
     except Exception as e:
         logger.error(f"Error logging audit action: {str(e)}")
+
+def validate_agent_id(agent_id):
+    """Validate agent ID against the agents collection."""
+    try:
+        db = get_mongo_db()
+        agent = db.agents.find_one({'_id': agent_id, 'status': 'active'})
+        if not agent:
+            return False
+        # Check if agent_id is already associated with a user
+        user = db.users.find_one({'agent_details.agent_id': agent_id})
+        if user:
+            return False
+        return True
+    except Exception as e:
+        logger.error(f"Error validating agent ID {agent_id}: {str(e)}")
+        return False
 
 def get_setup_wizard_route(role):
     """Get the appropriate setup wizard route based on user role."""
@@ -398,10 +419,22 @@ def signup():
             username = form.username.data.strip().lower()
             email = form.email.data.strip().lower()
             role = form.role.data
+            agent_id = form.agent_id.data.strip() if form.agent_id.data else None
             language = form.language.data
-            logger.debug(f"Signup attempt: {username}, {email}")
+            logger.debug(f"Signup attempt: {username}, {email}, role={role}, agent_id={agent_id}")
             logger.info(f"Signup attempt: username={username}, email={email}, role={role}, language={language}")
             db = get_mongo_db()
+
+            # Validate agent ID if role is 'agent'
+            if role == 'agent':
+                if not agent_id:
+                    form.agent_id.errors.append(trans('agents_agent_id_required', default='Agent ID is required for Agent role'))
+                    logger.warning(f"Signup failed for {username}: Agent ID is required")
+                    return render_template('users/signup.html', form=form, t=trans, lang=session.get('lang', 'en'))
+                if not validate_agent_id(agent_id):
+                    form.agent_id.errors.append(trans('agents_agent_id_invalid', default='Invalid or already used Agent ID'))
+                    logger.warning(f"Signup failed for {username}: Invalid or already used Agent ID {agent_id}")
+                    return render_template('users/signup.html', form=form, t=trans, lang=session.get('lang', 'en'))
 
             if db.users.find_one({'_id': username}):
                 flash(trans('general_username_exists', default='Username already exists'), 'danger')
@@ -426,6 +459,10 @@ def signup():
                 'created_at': datetime.utcnow()
             }
 
+            # Include agent_id in user_data if role is 'agent'
+            if role == 'agent':
+                user_data['agent_details'] = {'agent_id': agent_id}
+
             result = db.users.insert_one(user_data)
             if not result.inserted_id:
                 flash(trans('general_database_error', default='An error occurred while creating your account. Please try again later.'), 'danger')
@@ -443,7 +480,7 @@ def signup():
             db.audit_logs.insert_one({
                 'admin_id': 'system',
                 'action': 'signup',
-                'details': {'user_id': username, 'role': role},
+                'details': {'user_id': username, 'role': role, 'agent_id': agent_id if role == 'agent' else None},
                 'timestamp': datetime.utcnow()
             })
 
