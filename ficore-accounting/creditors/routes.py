@@ -38,7 +38,7 @@ def index():
     except Exception as e:
         logger.error(f"Error fetching creditors for user {current_user.id}: {str(e)}")
         flash(trans('creditors_fetch_error', default='An error occurred'), 'danger')
-        return redirect(url_for('dashboard_blueprint.index'))
+        return redirect(url_for('dashboard.index'))
 
 @creditors_bp.route('/view/<id>')
 @login_required
@@ -72,12 +72,12 @@ def view_page(id):
         creditor = db.records.find_one(query)
         if not creditor:
             flash(trans('creditors_record_not_found', default='Record not found'), 'danger')
-            return redirect(url_for('creditors_blueprint.index'))
+            return redirect(url_for('creditors.index'))
         return render_template('creditors/view.html', creditor=creditor, format_currency=format_currency, format_date=format_date, t=trans, lang=session.get('lang', 'en'))
     except Exception as e:
         logger.error(f"Error rendering creditor view page {id} for user {current_user.id}: {str(e)}")
         flash(trans('creditors_view_error', default='An error occurred'), 'danger')
-        return redirect(url_for('creditors_blueprint.index'))
+        return redirect(url_for('creditors.index'))
 
 @creditors_bp.route('/share/<id>')
 @login_required
@@ -208,11 +208,11 @@ def generate_iou(id):
         
         if not creditor:
             flash(trans('creditors_record_not_found', default='Record not found'), 'danger')
-            return redirect(url_for('creditors_blueprint.index'))
+            return redirect(url_for('creditors.index'))
         
         if not is_admin() and not check_coin_balance(1):
             flash(trans('creditors_insufficient_coins', default='Insufficient coins to generate IOU'), 'danger')
-            return redirect(url_for('coins_blueprint.purchase'))
+            return redirect(url_for('coins.purchase'))
         
         buffer = io.BytesIO()
         p = canvas.Canvas(buffer, pagesize=letter)
@@ -264,7 +264,7 @@ def generate_iou(id):
     except Exception as e:
         logger.error(f"Error generating IOU for creditor {id}: {str(e)}")
         flash(trans('creditors_iou_generation_error', default='An error occurred'), 'danger')
-        return redirect(url_for('creditors_blueprint.index'))
+        return redirect(url_for('creditors.index'))
 
 @creditors_bp.route('/add', methods=['GET', 'POST'])
 @login_required
@@ -274,7 +274,7 @@ def add():
     form = CreditorForm()
     if not is_admin() and not check_coin_balance(1):
         flash(trans('creditors_insufficient_coins', default='Insufficient coins to create a creditor. Purchase more coins.'), 'danger')
-        return redirect(url_for('coins_blueprint.purchase'))
+        return redirect(url_for('coins.purchase'))
     if form.validate_on_submit():
         try:
             db = get_mongo_db()
@@ -303,7 +303,7 @@ def add():
                     'ref': f"Creditor creation: {record['name']}"
                 })
             flash(trans('creditors_create_success', default='Creditor created successfully'), 'success')
-            return redirect(url_for('creditors_blueprint.index'))
+            return redirect(url_for('creditors.index'))
         except Exception as e:
             logger.error(f"Error creating creditor for user {current_user.id}: {str(e)}")
             flash(trans('creditors_create_error', default='An error occurred'), 'danger')
@@ -320,7 +320,7 @@ def edit(id):
         creditor = db.records.find_one(query)
         if not creditor:
             flash(trans('creditors_record_not_found', default='Record not found'), 'danger')
-            return redirect(url_for('creditors_blueprint.index'))
+            return redirect(url_for('creditors.index'))
         form = CreditorForm(data={
             'name': creditor['name'],
             'contact': creditor['contact'],
@@ -341,7 +341,7 @@ def edit(id):
                     {'$set': updated_record}
                 )
                 flash(trans('creditors_edit_success', default='Creditor updated successfully'), 'success')
-                return redirect(url_for('creditors_blueprint.index'))
+                return redirect(url_for('creditors.index'))
             except Exception as e:
                 logger.error(f"Error updating creditor {id} for user {current_user.id}: {str(e)}")
                 flash(trans('creditors_edit_error', default='An error occurred'), 'danger')
@@ -349,7 +349,7 @@ def edit(id):
     except Exception as e:
         logger.error(f"Error fetching creditor {id} for user {current_user.id}: {str(e)}")
         flash(trans('creditors_record_not_found', default='Record not found'), 'danger')
-        return redirect(url_for('creditors_blueprint.index'))
+        return redirect(url_for('creditors.index'))
 
 @creditors_bp.route('/delete/<id>', methods=['POST'])
 @login_required
@@ -367,7 +367,7 @@ def delete(id):
     except Exception as e:
         logger.error(f"Error deleting creditor {id} for user {current_user.id}: {str(e)}")
         flash(trans('creditors_delete_error', default='An error occurred'), 'danger')
-    return redirect(url_for('creditors_blueprint.index'))
+    return redirect(url_for('creditors.index'))
 
 def send_sms_reminder(recipient, message):
     """Send SMS reminder using Africa's Talking API."""
