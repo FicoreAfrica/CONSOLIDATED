@@ -1,12 +1,13 @@
 from flask import Blueprint, render_template, redirect, url_for, flash, current_app, request, session
 from flask_login import login_required, current_user
 from flask_wtf import FlaskForm
-from wtforms import StringField, FloatField, validators, SubmitField
+from wtforms import StringField, FloatField, SelectField, validators, SubmitField
 from datetime import datetime
 from translations import trans
 from utils import trans_function, requires_role, get_mongo_db, is_admin, get_user_query, get_limiter
 from bson import ObjectId
 import logging
+import re
 
 logger = logging.getLogger(__name__)
 
@@ -14,6 +15,8 @@ admin_bp = Blueprint('admin', __name__, template_folder='templates/admin')
 
 # Initialize limiter
 limiter = get_limiter(current_app)
+
+AGENT_ID_REGEX = re.compile(r'^[A-Z0-9]{8}$')  # Agent ID: 8 alphanumeric characters
 
 class CreditForm(FlaskForm):
     user_id = StringField(trans('admin_user_id', default='User ID'), [
@@ -25,6 +28,17 @@ class CreditForm(FlaskForm):
         validators.NumberRange(min=1, message=trans('admin_coin_amount_min', default='Coin amount must be at least 1'))
     ], render_kw={'class': 'form-control'})
     submit = SubmitField(trans('admin_credit_coins', default='Credit Coins'), render_kw={'class': 'btn btn-primary w-100'})
+
+class AgentManagementForm(FlaskForm):
+    agent_id = StringField(trans('agents_agent_id', default='Agent ID'), [
+        validators.DataRequired(message=trans('agents_agent_id_required', default='Agent ID is required')),
+        validators.Regexp(AGENT_ID_REGEX, message=trans('agents_agent_id_format', default='Agent ID must be 8 alphanumeric characters'))
+    ], render_kw={'class': 'form-control'})
+    status = SelectField(trans('agents_status', default='Status'), choices=[
+        ('active', trans('agents_active', default='Active')),
+        ('inactive', trans('agents_inactive', default='Inactive'))
+    ], validators=[validators.DataRequired(message=trans('agents_status_required', default='Status is required'))], render_kw={'class': 'form-select'})
+    submit = SubmitField(trans('agents_manage_submit', default='Add/Update Agent'), render_kw={'class': 'btn btn-primary w-100'})
 
 def log_audit_action(action, details=None):
     """Log an admin action to audit_logs collection."""
@@ -240,3 +254,55 @@ def audit():
         logger.error(f"Error fetching audit logs for admin {current_user.id}: {str(e)}")
         flash(trans('admin_database_error', default='An error occurred while accessing the database'), 'danger')
         return render_template('admin/audit.html', logs=[], t=trans, lang=session.get('lang', 'en')), 500
+
+@admin_bp.route('/manage_agents', methods=['GET', 'POST'])
+@login_required
+@requires_role('admin')
+@limiter.limit("50 per hour")
+def manage_agents():
+    """Manage agent IDs (add or update status)."""
+    form = AgentManagementForm()
+    try:
+        db = get_mongo_db()
+        agents = list(db.agents.find().sort('created_at', -1))
+        for agent in agents:
+            agent['_id'] = str(agent['_id'])
+        
+        if form.validate_on_submit():
+            agent_id = form.agent_id.data.strip().upper()
+            status = form.status.data
+            
+            # Check if agent ID already exists
+            existing_agent = db.agents.find_one({'_id': agent_id})
+            if existing_agent:
+                # Update existing agent status
+                result = db.agents.update_one(
+                    {'_id': agent_id},
+                    {'$set': {'status': status, 'updated_at': datetime.utcnow()}}
+                )
+                if result.modified_count == 0:
+                    flash(trans('agents_not_updated', default='Agent status could not be updated'), 'danger')
+                else:
+                    flash(trans('agents_status_updated', default='Agent status updated successfully'), 'success')
+                    logger.info(f"Admin {current_user.id} updated agent {agent_id} to status {status}")
+                    log_audit_action('update_agent_status', {'agent_id': agent_id, 'status': status})
+            else:
+                # Create new agent ID
+                db.agents.insert_one({
+                    '_id': agent_id,
+                    'status': status,
+                    'created_at': datetime.utcnow(),
+                    'updated_at': datetime.utcnow()
+                })
+                flash(trans('agents_added', default='Agent ID added successfully'), 'success')
+                logger.info(f"Admin {current_user.id} added agent {agent_id} with status {status}")
+                log_audit_action('add_agent', {'agent_id': agent_id, 'status': status})
+            
+            return redirect(url_for('admin.manage_agents'))
+        
+        return render_template('admin/manage_agents.html', form=form, agents=agents, t=trans, lang=session.get('lang', 'en'))
+    
+    except Exception as e:
+        logger.error(f"Error managing agents for admin {current_user.id}: {str(e)}")
+        flash(trans('admin_database_error', default='An error occurred while accessing the database'), 'danger')
+        return render_template('admin/manage_agents.html', form=form, agents=[], t=trans, lang=session.get('lang', 'en')), 500
