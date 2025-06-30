@@ -6,7 +6,7 @@
         <h1>{{ t('payments_add_title', default='Add Money Out') }}</h1>
         <small class="subtext">{{ t('payments_subtitle', default='Kuɗin Da Ka Biya Wasu') }}</small>
     </div>
-    <form action="{{ url_for('payments_blueprint.add') }}" method="POST" enctype="multipart/form-data" class="row g-3">
+    <form action="{{ url_for('payments.add') }}" method="POST" enctype="multipart/form-data" class="row g-3">
         {{ form.hidden_tag() }}
         <input type="hidden" name="type" value="payment">
         <div class="col-12">
