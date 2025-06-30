@@ -16,7 +16,7 @@
         {% if messages %}
             {% for category, message in messages %}
                 <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
-                    {{ t('general_' + message, default=message) }}
+                    {{ t(message, default=message) }}
                     <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="{{ t('general_close', default='Close') }}"></button>
                 </div>
             {% endfor %}
@@ -63,7 +63,7 @@
                                 <div class="mb-3">
                                     <label class="form-label">{{ t('general_email', default='Email') }}</label>
                                     {{ form.email(class="form-control", placeholder=t('general_email_placeholder', default='e.g., ahmad@example.com')) }}
-                                    <div class="invalid-feedback">{{ t('general_email_required', default='Valid email is required') }}</div>
+                                    <div class="invalid-feedback">{{ t('general_email_required', default='Valid email is required for notifications') }}</div>
                                 </div>
                             </div>
                         </div>
@@ -123,7 +123,7 @@
                                 <div class="mb-3">
                                     <label class="form-label">{{ t('financial_health_total_debt', default='Total Debt') }}</label>
                                     {{ form.debt(class="form-control number-input", placeholder=t('financial_health_debt_placeholder', default='e.g., 200,000')) }}
-                                    <div class="invalid-feedback">{{ t('financial_health_debt_must_be_positive', default='Debt must be positive') }}</div>
+                                    <div class="invalid-feedback">{{ t('financial_health_debt_invalid', default='Debt must be a valid number') }}</div>
                                     <div class="form-text">{{ t('financial_health_debt_tooltip', default='Borrowings from banks, friends, colleagues') }}</div>
                                 </div>
                             </div>
@@ -131,7 +131,7 @@
                                 <div class="mb-3">
                                     <label class="form-label">{{ t('financial_health_average_interest_rate', default='Average Interest Rate (%)') }}</label>
                                     {{ form.interest_rate(class="form-control number-input", placeholder=t('financial_health_interest_rate_placeholder', default='e.g., 5')) }}
-                                    <div class="invalid-feedback">{{ t('financial_health_interest_rate_must_be_positive', default='Interest rate must be positive') }}</div>
+                                    <div class="invalid-feedback">{{ t('financial_health_interest_rate_invalid', default='Interest rate must be a valid number') }}</div>
                                     <div class="form-text">{{ t('financial_health_interest_rate_tooltip', default='Average interest rate on debts (% per year)') }}</div>
                                 </div>
                             </div>
@@ -175,6 +175,25 @@
                     </div>
                 </div>
 
+                <!-- Comparison Metrics -->
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5><i class="fas fa-users"></i> {{ t('financial_health_comparison', default='Comparison') }}</h5>
+                    </div>
+                    <div class="card-body">
+                        <ul class="list-group list-group-flush">
+                            <li class="list-group-item d-flex justify-content-between">
+                                <span>{{ t('financial_health_rank', default='Your Rank') }}</span>
+                                <strong>{{ rank }} / {{ total_users }}</strong>
+                            </li>
+                            <li class="list-group-item d-flex justify-content-between">
+                                <span>{{ t('financial_health_average_score', default='Average Score') }}</span>
+                                <strong>{{ average_score | round(1) }}</strong>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+
                 <!-- Score Gauge Chart -->
                 <div class="card mb-4">
                     <div class="card-header">
@@ -206,19 +225,23 @@
                                 <ul class="list-group list-group-flush">
                                     <li class="list-group-item d-flex justify-content-between">
                                         <span>{{ t('financial_health_monthly_income', default='Monthly Income') }}</span>
-                                        <strong>₦{{ latest_record.income | default(0) | format_number }}</strong>
+                                        <strong>₦{{ latest_record.income | default(0) | format_currency }}</strong>
                                     </li>
                                     <li class="list-group-item d-flex justify-content-between">
                                         <span>{{ t('financial_health_monthly_expenses', default='Monthly Expenses') }}</span>
-                                        <strong>₦{{ latest_record.expenses | default(0) | format_number }}</strong>
+                                        <strong>₦{{ latest_record.expenses | default(0) | format_currency }}</strong>
                                     </li>
                                     <li class="list-group-item d-flex justify-content-between">
                                         <span>{{ t('financial_health_total_debt', default='Total Debt') }}</span>
-                                        <strong>₦{{ latest_record.debt | default(0) | format_number }}</strong>
+                                        <strong>₦{{ latest_record.debt | default(0) | format_currency }}</strong>
                                     </li>
                                     <li class="list-group-item d-flex justify-content-between">
                                         <span>{{ t('financial_health_debt_to_income_ratio', default='Debt-to-Income Ratio') }}</span>
                                         <strong>{{ latest_record.debt_to_income | default(0) }}%</strong>
+                                    </li>
+                                    <li class="list-group-item d-flex justify-content-between">
+                                        <span>{{ t('financial_health_created_at', default='Created At') }}</span>
+                                        <strong>{{ latest_record.created_at | default('N/A') | format_datetime }}</strong>
                                     </li>
                                 </ul>
                             </div>
@@ -243,7 +266,7 @@
                 </div>
 
                 <!-- Insights and Tips -->
-                {% if insights %}
+                {% if insights or cross_tool_insights %}
                     <div class="card mt-4">
                         <div class="card-header">
                             <h6><i class="fas fa-lightbulb"></i> {{ t('financial_health_insights', default='Insights') }}</h6>
@@ -252,6 +275,9 @@
                             <ul class="list-unstyled">
                                 {% for insight in insights %}
                                     <li><i class="fas fa-check-circle text-success"></i> {{ insight }}</li>
+                                {% endfor %}
+                                {% for insight in cross_tool_insights %}
+                                    <li><i class="fas fa-link text-primary"></i> {{ insight }}</li>
                                 {% endfor %}
                             </ul>
                         </div>
@@ -307,55 +333,40 @@
 document.addEventListener('DOMContentLoaded', function() {
     // Number formatting
     document.querySelectorAll('.number-input').forEach(input => {
-        const isInterestRate = input.name === 'interest_rate';
-        const formatNumber = (value) => {
-            const cleanValue = value.replace(/[^0-9.]/g, '');
-            if (!cleanValue) return '';
-            const num = parseFloat(cleanValue);
-            if (isNaN(num)) return '';
-            return num.toLocaleString('en-NG', { minimumFractionDigits: 0, maximumFractionDigits: isInterestRate ? 2 : 0 });
-        };
-
-        input.addEventListener('input', (e) => {
-            const cursorPosition = e.target.selectionStart;
-            const oldValue = e.target.value;
-            let cleanValue = e.target.value.replace(/[^0-9.]/g, '');
-            const decimalCount = cleanValue.split('.').length - 1;
-            if (decimalCount > 1) {
-                cleanValue = cleanValue.replace(/\.(?=.*\.)/g, '');
-            }
-            const numValue = parseFloat(cleanValue) || 0;
-            if (!isInterestRate && numValue > 10000000000) {
-                cleanValue = '10000000000';
+        input.addEventListener('input', () => {
+            let value = input.value.replace(/,/g, '');
+            if (!value) return;
+            
+            const isInterestRate = input.name === 'interest_rate';
+            if (!isInterestRate && parseFloat(value) > 10000000000) {
+                value = '10000000000';
                 alert('{{ t('general_input_cannot_exceed_10_billion', default='Input cannot exceed ₦10 billion') }}');
             }
-            const formatted = formatNumber(cleanValue);
-            input.value = formatted;
+            
+            input.value = parseFloat(value).toLocaleString('en-NG', { maximumFractionDigits: isInterestRate ? 2 : 0 });
+        });
+
+        input.addEventListener('paste', (e) => {
+            e.preventDefault();
+            let pasted = (e.clipboardData || window.clipboardData).getData('text');
+            let clean = pasted.replace(/[^0-9.]/g, '');
+            const isInterestRate = input.name === 'interest_rate';
+            input.value = parseFloat(clean).toLocaleString('en-NG', { maximumFractionDigits: isInterestRate ? 2 : 0 });
         });
 
         input.addEventListener('blur', () => {
             if (input.value) {
-                input.value = formatNumber(input.value);
+                const isInterestRate = input.name === 'interest_rate';
+                input.value = parseFloat(input.value.replace(/,/g, '')).toLocaleString('en-NG', { maximumFractionDigits: isInterestRate ? 2 : 0 });
             }
         });
     });
 
     // Form submission
-    document.getElementById('healthScoreForm').addEventListener('submit', (e) => {
-        const inputs = document.querySelectorAll('.number-input');
-        inputs.forEach(input => {
+    document.getElementById('healthScoreForm').addEventListener('submit', function() {
+        document.querySelectorAll('.number-input').forEach(function(input) {
             if (input.value) {
-                const value = input.value.replace(/,/g, '');
-                if (isNaN(parseFloat(value))) {
-                    input.classList.add('is-invalid');
-                } else {
-                    input.classList.remove('is-invalid');
-                    input.value = parseFloat(value).toString();
-                }
-            } else if (input.name !== 'debt' && input.name !== 'interest_rate') {
-                input.classList.add('is-invalid');
-            } else {
-                input.value = '0';
+                input.value = input.value.replace(/,/g, '');
             }
         });
     });
