@@ -16,7 +16,7 @@ from utils import requires_role, is_admin, get_mongo_db
 budget_bp = Blueprint(
     'budget',
     __name__,
-    template_folder='templates',
+    template_folder='templates/personal/BUDGET',
     url_prefix='/budget'
 )
 
