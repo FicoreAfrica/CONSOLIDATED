@@ -11,7 +11,7 @@
         {% if messages %}
             {% for category, message in messages %}
                 <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
-                    {{ t('general_' + message, default=message) }}
+                    {{ t(message, default=message) }}
                     <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="{{ t('general_close', default='Close') }}"></button>
                 </div>
             {% endfor %}
@@ -58,7 +58,7 @@
                                 <div class="mb-3">
                                     <label class="form-label">{{ t('budget_email', default='Email') }}</label>
                                     {{ form.email(class="form-control", placeholder=t('budget_email_placeholder', default='e.g., user@example.com')) }}
-                                    <div class="invalid-feedback">{{ t('budget_email_required', default='Valid email is required') }}</div>
+                                    <div class="invalid-feedback">{{ t('budget_email_required', default='Valid email is required for email notifications') }}</div>
                                 </div>
                             </div>
                         </div>
@@ -230,7 +230,7 @@
                                             <tbody>
                                                 {% for budget_id, budget in budgets.items() %}
                                                     <tr>
-                                                        <td>{{ budget.get('created_at', 'N/A') }}</td>
+                                                        <td>{{ budget.get('created_at', 'N/A') | format_datetime }}</td>
                                                         <td>{{ budget.get('income', 0) | format_currency }}</td>
                                                         <td>{{ budget.get('fixed_expenses', 0) | format_currency }}</td>
                                                         <td class="{% if budget.get('surplus_deficit', 0) >= 0 %}text-success{% else %}text-danger{% endif %}">
