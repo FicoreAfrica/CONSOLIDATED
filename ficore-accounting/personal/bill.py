@@ -17,7 +17,7 @@ from session_utils import create_anonymous_session
 bill_bp = Blueprint(
     'bill',
     __name__,
-    template_folder='templates',
+    template_folder='templates/personal/BILL',
     url_prefix='/bill'
 )
 
