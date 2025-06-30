@@ -15,8 +15,17 @@ import atexit
 from functools import wraps
 from mailersend_email import init_email_config
 from scheduler_setup import init_scheduler
-from models import create_user, get_user_by_email, get_user, get_financial_health, get_budgets, get_bills, get_net_worth, get_emergency_funds, get_learning_progress, get_quiz_results, to_dict_financial_health, to_dict_budget, to_dict_bill, to_dict_net_worth, to_dict_emergency_fund, to_dict_learning_progress, to_dict_quiz_result, initialize_database
-from utils import trans_function, is_valid_email, get_mongo_db, close_mongo_db, get_limiter, get_mail, requires_role, check_coin_balance, is_admin, login_manager, flask_session, csrf, babel, compress
+from models import (
+    create_user, get_user_by_email, get_user, get_financial_health, get_budgets, get_bills,
+    get_net_worth, get_emergency_funds, get_learning_progress, get_quiz_results,
+    to_dict_financial_health, to_dict_budget, to_dict_bill, to_dict_net_worth,
+    to_dict_emergency_fund, to_dict_learning_progress, to_dict_quiz_result, initialize_database
+)
+from utils import (
+    trans_function, is_valid_email, get_mongo_db, close_mongo_db, get_limiter,
+    get_mail, requires_role, check_coin_balance, is_admin, login_manager,
+    flask_session, csrf, babel, compress
+)
 from session_utils import create_anonymous_session
 from translations import trans, get_translations, get_all_translations, get_module_translations
 from flask_login import login_required, current_user
@@ -212,7 +221,6 @@ def create_app():
             client.admin.command('ping')
             current_app.mongo_client = client
             logger.info('MongoDB client initialized successfully')
-            # Register client closure at app shutdown
             def shutdown_mongo_client():
                 try:
                     if hasattr(current_app, 'mongo_client') and current_app.mongo_client:
@@ -234,7 +242,7 @@ def create_app():
     serializer = URLSafeTimedSerializer(app.config['SECRET_KEY'])
     babel.init_app(app)
     
-    # Initialize MongoDB and scheduler within app context
+    # Initialize MongoDB and scheduler
     with app.app_context():
         db = get_mongo_db()
         try:
@@ -284,7 +292,6 @@ def create_app():
         try:
             db = get_mongo_db()
             initialize_database(app)
-            # Initialize personal finance collections
             personal_finance_collections = [
                 'budgets', 'bills', 'emergency_funds', 'financial_health_scores', 
                 'net_worth_data', 'quiz_responses', 'learning_materials'
@@ -357,7 +364,7 @@ def create_app():
             logger.error(f'Error creating collections or initializing database: {str(e)}')
             raise
     
-    # Register blueprints with correct template folders
+    # Register blueprints
     from users.routes import users_bp
     from agents.routes import agents_bp
     from common_features.routes import common_bp
@@ -370,61 +377,49 @@ def create_app():
     from receipts.routes import receipts_bp
     from reports.routes import reports_bp
     from settings.routes import settings_bp
-    from personal.bill import bill_bp
-    from personal.budget import budget_bp
-    from personal.emergency_fund import emergency_fund_bp
-    from personal.financial_health import financial_health_bp
-    from personal.learning_hub import learning_hub_bp
-    from personal.net_worth import net_worth_bp
-    from personal.quiz import quiz_bp
-    from general.routes import general_bp  # Added new blueprint for general routes
+    from personal.routes import personal_bp  # Import personal blueprint
+    from general.routes import general_bp
     
-    app.register_blueprint(users_bp, url_prefix='/users', template_folder='templates/users')
-    logger.info('Registered users blueprint with template_folder="templates/users"')
-    app.register_blueprint(agents_bp, url_prefix='/agents', template_folder='templates/agents')
-    logger.info('Registered agents blueprint with template_folder="templates/agents"')
-    app.register_blueprint(common_bp, template_folder='templates/common_features')
-    logger.info('Registered common blueprint with template_folder="templates/common_features"')
-    app.register_blueprint(taxation_bp, template_folder='templates/common_features')
-    logger.info('Registered taxation blueprint with template_folder="templates/common_features"')
+    app.register_blueprint(users_bp, url_prefix='/users')
+    logger.info('Registered users blueprint')
+    app.register_blueprint(agents_bp, url_prefix='/agents')
+    logger.info('Registered agents blueprint')
+    app.register_blueprint(common_bp)
+    logger.info('Registered common blueprint')
+    app.register_blueprint(taxation_bp)
+    logger.info('Registered taxation blueprint')
     try:
         from coins.routes import coins_bp
-        app.register_blueprint(coins_bp, url_prefix='/coins', template_folder='templates/coins')
-        logger.info('Registered coins blueprint with template_folder="templates/coins"')
+        app.register_blueprint(coins_bp, url_prefix='/coins')
+        logger.info('Registered coins blueprint')
     except Exception as e:
         logger.warning(f'Could not import coins blueprint: {str(e)}')
-    app.register_blueprint(creditors_bp, url_prefix='/creditors', template_folder='templates/creditors')
-    logger.info('Registered creditors blueprint with template_folder="templates/creditors"')
-    app.register_blueprint(dashboard_bp, url_prefix='/dashboard', template_folder='templates/dashboard')
-    logger.info('Registered dashboard blueprint with template_folder="templates/dashboard"')
-    app.register_blueprint(debtors_bp, url_prefix='/debtors', template_folder='templates/debtors')
-    logger.info('Registered debtors blueprint with template_folder="templates/debtors"')
-    app.register_blueprint(inventory_bp, url_prefix='/inventory', template_folder='templates/inventory')
-    logger.info('Registered inventory blueprint with template_folder="templates/inventory"')
-    app.register_blueprint(payments_bp, url_prefix='/payments', template_folder='templates/payments')
-    logger.info('Registered payments blueprint with template_folder="templates/payments"')
-    app.register_blueprint(receipts_bp, url_prefix='/receipts', template_folder='templates/receipts')
-    logger.info('Registered receipts blueprint with template_folder="templates/receipts"')
-    app.register_blueprint(reports_bp, url_prefix='/reports', template_folder='templates/reports')
-    logger.info('Registered reports blueprint with template_folder="templates/reports"')
-    app.register_blueprint(settings_bp, url_prefix='/settings', template_folder='templates/settings')
-    logger.info('Registered settings blueprint with template_folder="templates/settings"')
+    app.register_blueprint(creditors_bp, url_prefix='/creditors')
+    logger.info('Registered creditors blueprint')
+    app.register_blueprint(dashboard_bp, url_prefix='/dashboard')
+    logger.info('Registered dashboard blueprint')
+    app.register_blueprint(debtors_bp, url_prefix='/debtors')
+    logger.info('Registered debtors blueprint')
+    app.register_blueprint(inventory_bp, url_prefix='/inventory')
+    logger.info('Registered inventory blueprint')
+    app.register_blueprint(payments_bp, url_prefix='/payments')
+    logger.info('Registered payments blueprint')
+    app.register_blueprint(receipts_bp, url_prefix='/receipts')
+    logger.info('Registered receipts blueprint')
+    app.register_blueprint(reports_bp, url_prefix='/reports')
+    logger.info('Registered reports blueprint')
+    app.register_blueprint(settings_bp, url_prefix='/settings')
+    logger.info('Registered settings blueprint')
     try:
         from admin.routes import admin_bp
-        app.register_blueprint(admin_bp, url_prefix='/admin', template_folder='templates/admin')
-        logger.info('Registered admin blueprint with template_folder="templates/admin"')
+        app.register_blueprint(admin_bp, url_prefix='/admin')
+        logger.info('Registered admin blueprint')
     except Exception as e:
         logger.warning(f'Could not import admin blueprint: {str(e)}')
-    app.register_blueprint(bill_bp, url_prefix='/personal', template_folder='templates/personal')
-    app.register_blueprint(budget_bp, url_prefix='/personal', template_folder='templates/personal')
-    app.register_blueprint(emergency_fund_bp, url_prefix='/personal', template_folder='templates/personal')
-    app.register_blueprint(financial_health_bp, url_prefix='/personal', template_folder='templates/personal')
-    app.register_blueprint(learning_hub_bp, url_prefix='/personal', template_folder='templates/personal')
-    app.register_blueprint(net_worth_bp, url_prefix='/personal', template_folder='templates/personal')
-    app.register_blueprint(quiz_bp, url_prefix='/personal', template_folder='templates/personal')
-    logger.info('Registered all personal finance blueprints with template_folder="templates/personal"')
-    app.register_blueprint(general_bp, url_prefix='/general', template_folder='templates/general')
-    logger.info('Registered general blueprint with template_folder="templates/general"')
+    app.register_blueprint(personal_bp, url_prefix='/personal')
+    logger.info('Registered personal blueprint with url_prefix="/personal"')
+    app.register_blueprint(general_bp, url_prefix='/general')
+    logger.info('Registered general blueprint')
     
     # Jinja2 globals and filters
     app.jinja_env.globals.update(
@@ -618,7 +613,7 @@ def create_app():
                 except:
                     return redirect(url_for('general_bp.home'))
             elif current_user.role == 'personal':
-                return redirect(url_for('dashboard.index'))
+                return redirect(url_for('personal.index'))  # Redirect to personal finance homepage
             else:
                 try:
                     return render_template('general/home.html', t=trans, lang=lang)
@@ -634,7 +629,8 @@ def create_app():
                 courses=courses,
                 lang=lang,
                 sample_courses=courses,
-                title=trans('general_welcome', lang=lang)
+                title=trans('general_welcome', lang=lang),
+                is_anonymous=session.get('is_anonymous', False)
             )
         except TemplateNotFound as e:
             logger.error(f'Template not found: {str(e)}', exc_info=True)
@@ -827,7 +823,7 @@ def create_app():
         response.headers['X-Content-Type-Options'] = 'nosniff'
         return response
     
-    # Existing accounting API routes
+    # Accounting API routes (for non-personal users)
     @app.route('/api/debt-summary')
     @login_required
     def debt_summary():
@@ -1091,7 +1087,7 @@ def create_app():
             logger.error(f'Template not found: {str(e)}', exc_info=True)
             return render_template('personal/GENERAL/error.html', 
                                  t=trans, 
-                                 lang=lang, 
+                                 lang=lang,
                                  error=str(e),
                                  title=trans('general_feedback', lang=lang)), 404
     
