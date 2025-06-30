@@ -1,11 +1,11 @@
 from flask import Blueprint, request, session, redirect, url_for, render_template, flash, current_app
 from flask_wtf import FlaskForm
+from flask_wtf.csrf import CSRFProtect, CSRFError
 from wtforms import StringField, FloatField, BooleanField, SubmitField
-from wtforms.validators import DataRequired, NumberRange, Optional, Email, ValidationError
+from wtforms.validators import DataRequired, NumberRange, Email, ValidationError
 from flask_login import current_user
 from mailersend_email import send_email, EMAIL_CONFIG
 from datetime import datetime
-import uuid
 import re
 from translations import trans
 from bson import ObjectId
@@ -19,6 +19,9 @@ budget_bp = Blueprint(
     template_folder='templates',
     url_prefix='/budget'
 )
+
+# Initialize CSRF protection
+csrf = CSRFProtect()
 
 def strip_commas(value):
     """Strip commas from string values."""
@@ -41,14 +44,14 @@ class BudgetForm(FlaskForm):
     first_name = StringField(trans('general_first_name', default='First Name'))
     email = StringField(trans('general_email', default='Email'))
     send_email = BooleanField(trans('general_send_email', default='Send Email'))
-    income = FloatField(trans('budget_monthly_income', default='Monthly Income'))
-    housing = FloatField(trans('budget_housing_rent', default='Housing/Rent'))
-    food = FloatField(trans('budget_food', default='Food'))
-    transport = FloatField(trans('budget_transport', default='Transport'))
-    dependents = FloatField(trans('budget_dependents_support', default='Dependents Support'))
-    miscellaneous = FloatField(trans('budget_miscellaneous', default='Miscellaneous'))
-    others = FloatField(trans('budget_others', default='Others'))
-    savings_goal = FloatField(trans('budget_savings_goal', default='Savings Goal'))
+    income = FloatField(trans('budget_monthly_income', default='Monthly Income'), filters=[strip_commas])
+    housing = FloatField(trans('budget_housing_rent', default='Housing/Rent'), filters=[strip_commas])
+    food = FloatField(trans('budget_food', default='Food'), filters=[strip_commas])
+    transport = FloatField(trans('budget_transport', default='Transport'), filters=[strip_commas])
+    dependents = FloatField(trans('budget_dependents_support', default='Dependents Support'), filters=[strip_commas])
+    miscellaneous = FloatField(trans('budget_miscellaneous', default='Miscellaneous'), filters=[strip_commas])
+    others = FloatField(trans('budget_others', default='Others'), filters=[strip_commas])
+    savings_goal = FloatField(trans('budget_savings_goal', default='Savings Goal'), filters=[strip_commas])
     submit = SubmitField(trans('budget_submit', default='Submit'))
 
     def __init__(self, *args, **kwargs):
@@ -57,7 +60,7 @@ class BudgetForm(FlaskForm):
         
         # Set validators
         self.first_name.validators = [DataRequired(message=trans('general_first_name_required', lang))]
-        self.email.validators = [Optional(), Email(message=trans('general_email_invalid', lang))]
+        self.email.validators = []
         self.income.validators = [
             DataRequired(message=trans('budget_income_required', lang)),
             NumberRange(min=0, max=10000000000, message=trans('budget_income_max', lang))
@@ -75,7 +78,10 @@ class BudgetForm(FlaskForm):
         ]
 
     def validate_email(self, field):
-        """Custom email validation to handle empty strings."""
+        """Custom email validation, required only if send_email is checked."""
+        if self.send_email.data and not field.data:
+            current_app.logger.warning(f"Email required for notifications for session {session.get('sid', 'no-session-id')}")
+            raise ValidationError(trans('budget_email_required', session.get('lang', 'en')))
         if field.data:
             email_pattern = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
             if not re.match(email_pattern, field.data):
@@ -87,11 +93,11 @@ class BudgetForm(FlaskForm):
         if not super().validate(extra_validators):
             return False
         
-        # Handle comma-separated numbers
+        # Handle comma-separated numbers (already handled by strip_commas filter)
         for field in [self.income, self.housing, self.food, self.transport, self.dependents, self.miscellaneous, self.others, self.savings_goal]:
             try:
-                if isinstance(field.data, str):
-                    field.data = float(strip_commas(field.data))
+                if field.data is not None:
+                    field.data = float(field.data)
                 current_app.logger.debug(f"Validated {field.name} for session {session.get('sid', 'no-session-id')}: {field.data}")
             except (ValueError, TypeError):
                 current_app.logger.warning(f"Invalid {field.name} value for session {session.get('sid', 'no-session-id')}: {field.data}")
@@ -105,9 +111,10 @@ class BudgetForm(FlaskForm):
 def main():
     """Main budget management interface with tabbed layout."""
     if 'sid' not in session:
-        session['sid'] = str(uuid.uuid4())
-        current_app.logger.info(f"New session ID generated: {session['sid']} {'(anonymous)' if session.get('is_anonymous') else ''}")
+        create_anonymous_session()
+        current_app.logger.debug(f"New anonymous session created with sid: {session['sid']}", extra={'session_id': session['sid']})
     session.permanent = True
+    session.modified = True
     lang = session.get('lang', 'en')
     
     # Initialize form with user data
@@ -154,7 +161,7 @@ def main():
                 surplus_deficit = income - expenses
 
                 budget_data = {
-                    '_id': str(uuid.uuid4()),
+                    '_id': ObjectId(),
                     'user_id': current_user.id if current_user.is_authenticated else None,
                     'session_id': session['sid'],
                     'user_email': form.email.data,
@@ -174,18 +181,18 @@ def main():
 
                 try:
                     get_mongo_db().budgets.insert_one(budget_data)
-                    current_app.logger.info(f"Budget saved successfully to MongoDB for session {session['sid']}")
-                    flash(trans("budget_completed_success", lang), "success")
+                    current_app.logger.info(f"Budget saved successfully to MongoDB for session {session['sid']}", extra={'session_id': session['sid']})
+                    flash(trans("budget_completed_success", default='Budget created successfully!', lang=lang), "success")
                 except Exception as e:
-                    current_app.logger.error(f"Failed to save budget to MongoDB for session {session['sid']}: {str(e)}")
-                    flash(trans("budget_storage_error", lang), "danger")
+                    current_app.logger.error(f"Failed to save budget to MongoDB for session {session['sid']}: {str(e)}", extra={'session_id': session['sid']})
+                    flash(trans("budget_storage_error", default='Error saving budget.', lang=lang), "danger")
                     return redirect(url_for('budget.main'))
 
                 # Send email if requested
                 if form.send_email.data and form.email.data:
                     try:
                         config = EMAIL_CONFIG["budget"]
-                        subject = trans(config["subject_key"], lang=lang)
+                        subject = trans(config["subject_key"], default='Your Budget Summary', lang=lang)
                         template = config["template"]
                         send_email(
                             app=current_app,
@@ -205,31 +212,33 @@ def main():
                                 "others": form.others.data,
                                 "savings_goal": savings_goal,
                                 "surplus_deficit": surplus_deficit,
-                                "created_at": datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
+                                "created_at": budget_data['created_at'].strftime('%Y-%m-%d'),
                                 "cta_url": url_for('budget.main', _external=True)
                             },
                             lang=lang
                         )
+                        current_app.logger.info(f"Email sent to {form.email.data}", extra={'session_id': session['sid']})
                     except Exception as e:
-                        current_app.logger.error(f"Failed to send email: {str(e)}")
-                        flash(trans("general_email_send_failed", lang=lang), "warning")
+                        current_app.logger.error(f"Failed to send email: {str(e)}", extra={'session_id': session['sid']})
+                        flash(trans("general_email_send_failed", default='Failed to send email.', lang=lang), "warning")
 
             elif action == 'delete':
                 budget_id = request.form.get('budget_id')
                 try:
-                    result = get_mongo_db().budgets.delete_one({'_id': budget_id, **filter_criteria})
+                    result = get_mongo_db().budgets.delete_one({'_id': ObjectId(budget_id), **filter_criteria})
                     if result.deleted_count > 0:
-                        flash(trans("budget_deleted_success", lang), "success")
-                        current_app.logger.info(f"Deleted budget ID {budget_id} for session {session['sid']}")
+                        current_app.logger.info(f"Deleted budget ID {budget_id} for session {session['sid']}", extra={'session_id': session['sid']})
+                        flash(trans("budget_deleted_success", default='Budget deleted successfully!', lang=lang), "success")
                     else:
-                        flash(trans("budget_not_found", lang), "danger")
+                        current_app.logger.warning(f"Budget ID {budget_id} not found for session {session['sid']}", extra={'session_id': session['sid']})
+                        flash(trans("budget_not_found", default='Budget not found.', lang=lang), "danger")
                 except Exception as e:
-                    current_app.logger.error(f"Failed to delete budget ID {budget_id} for session {session['sid']}: {str(e)}")
-                    flash(trans("budget_delete_failed", lang), "danger")
+                    current_app.logger.error(f"Failed to delete budget ID {budget_id} for session {session['sid']}: {str(e)}", extra={'session_id': session['sid']})
+                    flash(trans("budget_delete_failed", default='Error deleting budget.', lang=lang), "danger")
 
         # Get budgets data for display
         budgets = list(get_mongo_db().budgets.find(filter_criteria).sort('created_at', -1))
-        current_app.logger.info(f"Read {len(budgets)} records from MongoDB budgets collection [session: {session['sid']}]")
+        current_app.logger.info(f"Read {len(budgets)} records from MongoDB budgets collection [session: {session['sid']}]", extra={'session_id': session['sid']})
 
         budgets_dict = {}
         latest_budget = None
@@ -250,10 +259,10 @@ def main():
                 'dependents': budget.get('dependents', 0.0),
                 'miscellaneous': budget.get('miscellaneous', 0.0),
                 'others': budget.get('others', 0.0),
-                'created_at': budget.get('created_at').strftime('%Y-%m-%dT%H:%M:%S.%fZ') if budget.get('created_at') else ''
+                'created_at': budget.get('created_at').strftime('%Y-%m-%d') if budget.get('created_at') else 'N/A'
             }
             budgets_dict[budget_data['id']] = budget_data
-            if not latest_budget or budget.get('created_at') > datetime.strptime(latest_budget['created_at'], '%Y-%m-%dT%H:%M:%S.%fZ'):
+            if not latest_budget or budget.get('created_at') > datetime.strptime(latest_budget['created_at'], '%Y-%m-%d') if latest_budget['created_at'] != 'N/A' else budget.get('created_at'):
                 latest_budget = budget_data
 
         if not latest_budget:
@@ -268,7 +277,7 @@ def main():
                 'dependents': 0.0,
                 'miscellaneous': 0.0,
                 'others': 0.0,
-                'created_at': ''
+                'created_at': 'N/A'
             }
 
         categories = {
@@ -281,22 +290,22 @@ def main():
         }
 
         tips = [
-            trans("budget_tip_track_expenses", lang),
-            trans("budget_tip_ajo_savings", lang),
-            trans("budget_tip_data_subscriptions", lang),
-            trans("budget_tip_plan_dependents", lang)
+            trans("budget_tip_track_expenses", default='Track your expenses daily to stay within budget.', lang=lang),
+            trans("budget_tip_ajo_savings", default='Contribute to ajo savings for financial discipline.', lang=lang),
+            trans("budget_tip_data_subscriptions", default='Optimize data subscriptions to reduce costs.', lang=lang),
+            trans("budget_tip_plan_dependents", default='Plan for dependents’ expenses in advance.', lang=lang)
         ]
         
         insights = []
         if latest_budget.get('income', 0) > 0:
             if latest_budget.get('surplus_deficit', 0) < 0:
-                insights.append(trans("budget_insight_budget_deficit", lang))
+                insights.append(trans("budget_insight_budget_deficit", default='Your expenses exceed your income. Consider reducing costs.', lang=lang))
             elif latest_budget.get('surplus_deficit', 0) > 0:
-                insights.append(trans("budget_insight_budget_surplus", lang))
+                insights.append(trans("budget_insight_budget_surplus", default='You have a surplus. Consider increasing savings.', lang=lang))
             if latest_budget.get('savings_goal', 0) == 0:
-                insights.append(trans("budget_insight_set_savings_goal", lang))
+                insights.append(trans("budget_insight_set_savings_goal", default='Set a savings goal to build financial security.', lang=lang))
 
-        current_app.logger.info(f"Rendering main for session {session['sid']} {'(anonymous)' if session.get('is_anonymous') else ''}: {len(budgets_dict)} budgets found")
+        current_app.logger.info(f"Rendering main for session {session['sid']} {'(anonymous)' if session.get('is_anonymous') else ''}: {len(budgets_dict)} budgets found", extra={'session_id': session['sid']})
         return render_template(
             'personal/BUDGET/budget_main.html',
             form=form,
@@ -311,8 +320,8 @@ def main():
         )
 
     except Exception as e:
-        current_app.logger.exception(f"Unexpected error in budget.main for session {session['sid']}: {str(e)}")
-        flash(trans("budget_dashboard_load_error", lang), "danger")
+        current_app.logger.error(f"Unexpected error in budget.main for session {session.get('sid', 'unknown')}: {str(e)}", extra={'session_id': session.get('sid', 'unknown')})
+        flash(trans("budget_dashboard_load_error", default='Error loading budget dashboard.', lang=lang), "danger")
         return render_template(
             'personal/BUDGET/budget_main.html',
             form=form,
@@ -328,17 +337,25 @@ def main():
                 'dependents': 0.0,
                 'miscellaneous': 0.0,
                 'others': 0.0,
-                'created_at': ''
+                'created_at': 'N/A'
             },
             categories={},
             tips=[
-                trans("budget_tip_track_expenses", lang),
-                trans("budget_tip_ajo_savings", lang),
-                trans("budget_tip_data_subscriptions", lang),
-                trans("budget_tip_plan_dependents", lang)
+                trans("budget_tip_track_expenses", default='Track your expenses daily to stay within budget.', lang=lang),
+                trans("budget_tip_ajo_savings", default='Contribute to ajo savings for financial discipline.', lang=lang),
+                trans("budget_tip_data_subscriptions", default='Optimize data subscriptions to reduce costs.', lang=lang),
+                trans("budget_tip_plan_dependents", default='Plan for dependents’ expenses in advance.', lang=lang)
             ],
             insights=[],
             t=trans,
             lang=lang,
             tool_title=trans('budget_title', default='Budget Planner', lang=lang)
-        )
+        ), 500
+
+@budget_bp.errorhandler(CSRFError)
+def handle_csrf_error(e):
+    """Handle CSRF errors with user-friendly message."""
+    lang = session.get('lang', 'en')
+    current_app.logger.error(f"CSRF error on {request.path}: {e.description}", extra={'session_id': session.get('sid', 'unknown')})
+    flash(trans('budget_csrf_error', default='Form submission failed due to a missing security token. Please refresh and try again.', lang=lang), 'danger')
+    return redirect(url_for('budget.main')), 400
