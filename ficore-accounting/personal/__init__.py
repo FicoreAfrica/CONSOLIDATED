@@ -110,7 +110,7 @@ def index():
 def general_dashboard():
     """Redirect to the unified dashboard"""
     from flask import redirect, url_for
-    return redirect(url_for('dashboard_bpregistry.index'))
+    return redirect(url_for('dashboard_bp.index'))
 from flask import Blueprint, redirect, url_for, flash
 from translations import trans
 
