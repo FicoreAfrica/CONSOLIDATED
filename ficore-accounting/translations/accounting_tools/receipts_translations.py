@@ -6,6 +6,8 @@ RECEIPTS_TRANSLATIONS = {
     'en': {
         'receipts_dashboard': 'Receipts Dashboard',
         'receipts_list': 'Receipts List',
+        # Receipts
+        'receipts_payer_name': 'Payer Name',
         'receipts_add_receipt': 'Add Receipt',
         'receipts_edit_receipt': 'Edit Receipt',
         'receipts_delete_receipt': 'Delete Receipt',
@@ -90,5 +92,7 @@ RECEIPTS_TRANSLATIONS = {
         'receipts_total_amount': 'Jimillar Adadi',
         'receipts_today_receipts': 'Rasitin Yau',
         'receipts_monthly_receipts': 'Rasitin Wata',
+        # Receipts
+        'receipts_payer_name': 'Sunan Mai Biya',
     }
 }
