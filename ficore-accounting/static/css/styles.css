@@ -1472,3 +1472,22 @@ h2.card-title {
 .dark-mode .btn-close:hover {
     background: rgba(255, 255, 255, 0.1);
 }
+.role-card, .tool-card {
+    transition: transform 0.3s;
+    overflow-wrap: break-word;
+}
+.role-card:hover, .tool-card:hover {
+    transform: scale(1.05);
+}
+@media (max-width: 576px) {
+    .role-card, .tool-card {
+        margin-bottom: 1rem;
+    }
+    .hero h1 {
+        font-size: 1.5rem;
+    }
+    .btn-lg {
+        font-size: 1rem;
+        padding: 0.5rem 1rem;
+    }
+}
