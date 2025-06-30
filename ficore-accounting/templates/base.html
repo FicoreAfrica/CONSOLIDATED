@@ -42,7 +42,7 @@
                         <a class="nav-link {% if request.endpoint == 'personal.index' %}active{% endif %}" href="{{ url_for('personal.index') | e }}" data-bs-toggle="tooltip" data-bs-title="{{ t('general_home_tooltip', default='Go to homepage') | e }}" aria-current="{% if request.endpoint == 'personal.index' %}page{% endif %}">{{ t('general_home', default='Home') | e }}</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link {% if request.endpoint == 'general.about' %}active{% endif %}" href="{{ url_for('general.about') | e }}" data-bs-toggle="tooltip" data-bs-title="{{ t('general_about_tooltip', default='Learn more about Ficore') | e }}" aria-current="{% if request.endpoint == 'general.about' %}page{% endif %}">{{ t('general_about', default='About') | e }}</a>
+                        <a class="nav-link {% if request.endpoint == 'about' %}active{% endif %}" href="{{ url_for('about') | e }}" data-bs-toggle="tooltip" data-bs-title="{{ t('general_about_tooltip', default='Learn more about Ficore') | e }}" aria-current="{% if request.endpoint == 'about' %}page{% endif %}">{{ t('general_about', default='About') | e }}</a>
                     </li>
                     <li class="nav-item">
                         <a class="nav-link {% if request.endpoint == 'general.contact' %}active{% endif %}" href="{{ url_for('general.contact') | e }}" data-bs-toggle="tooltip" data-bs-title="{{ t('general_contact_tooltip', default='Get in touch') | e }}" aria-current="{% if request.endpoint == 'general.contact' %}page{% endif %}">{{ t('general_contact', default='Contact') | e }}</a>
@@ -108,7 +108,7 @@
                             </a>
                             <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="profileDropdown">
                                 <li><a class="dropdown-item" href="{{ url_for('settings_blueprint.profile') | e }}">{{ t('general_profile', default='Profile') | e }}</a></li>
-                                <li><a class="dropdown-item" href="{{ url_for('general.feedback') | e }}">{{ t('general_feedback', default='Send Feedback') | e }}</a></li>
+                                <li><a class="dropdown-item" href="{{ url_for('feedback') | e }}">{{ t('general_feedback', default='Send Feedback') | e }}</a></li>
                                 {% if current_user.get('is_admin', False) %}
                                 <li><a class="dropdown-item" href="{{ url_for('admin_blueprint.dashboard') | e }}">{{ t('admin_admin_panel', default='Admin Panel') | e }}</a></li>
                                 {% endif %}
@@ -238,7 +238,7 @@
             </div>
             <div class="footer-buttons mt-3">
                 <a href="mailto:support@ficoreafrica.com" class="text-white"><i class="fas fa-envelope"></i> {{ t('general_contact_us', default='Contact Us') | e }}</a>
-                <a href="{{ url_for('general.feedback') | e }}" class="text-white"><i class="fas fa-comment"></i> {{ t('general_provide_feedback', default='Provide Feedback') | e }}</a>
+                <a href="{{ url_for('feedback') | e }}" class="text-white"><i class="fas fa-comment"></i> {{ t('general_provide_feedback', default='Provide Feedback') | e }}</a>
                 {% if current_user.is_authenticated %}
                 <a href="{{ url_for('users_blueprint.logout') | e }}" class="text-white"><i class="fas fa-sign-out-alt"></i> {{ t('general_logout', default='Logout') | e }}</a>
                 {% else %}
