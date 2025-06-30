@@ -39,7 +39,7 @@ def index():
     except Exception as e:
         logger.error(f"Error loading reports index for user {current_user.id}: {str(e)}")
         flash(trans('reports_load_error', default='An error occurred'), 'danger')
-        return redirect(url_for('dashboard_blueprint.index'))
+        return redirect(url_for('dashboard.index'))
 
 @reports_bp.route('/profit_loss', methods=['GET', 'POST'])
 @login_required
@@ -51,7 +51,7 @@ def profit_loss():
     # TODO: Restore original check_coin_balance(1) for production
     if not is_admin() and not check_coin_balance(1):
         flash(trans('reports_insufficient_coins', default='Insufficient coins to generate a report. Purchase more coins.'), 'danger')
-        return redirect(url_for('coins_blueprint.purchase'))
+        return redirect(url_for('coins.purchase'))
     cashflows = []
     # TEMPORARY: Allow admin to view all cashflows during testing
     # TODO: Restore original user_id filter {'user_id': str(current_user.id)} for production
@@ -104,7 +104,7 @@ def inventory():
     # TODO: Restore original check_coin_balance(1) for production
     if not is_admin() and not check_coin_balance(1):
         flash(trans('reports_insufficient_coins', default='Insufficient coins to generate a report. Purchase more coins.'), 'danger')
-        return redirect(url_for('coins_blueprint.purchase'))
+        return redirect(url_for('coins.purchase'))
     items = []
     # TEMPORARY: Allow admin to view all inventory items during testing
     # TODO: Restore original user_id filter {'user_id': str(current_user.id)} for production
