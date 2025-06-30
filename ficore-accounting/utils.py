@@ -227,7 +227,7 @@ def check_coin_balance(required_amount=1, user_id=None):
             return False
         
         db = get_mongo_db()
-        if not db:
+        if db is None:
             return False
         
         user_query = get_user_query(user_id)
