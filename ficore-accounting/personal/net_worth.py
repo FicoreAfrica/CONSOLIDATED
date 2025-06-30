@@ -1,5 +1,6 @@
-from flask import Blueprint, request, session, redirect, url_for, render_template, flash, current_app, jsonify
+from flask import Blueprint, render_template, request, redirect, url_for, session, flash, current_app, jsonify
 from flask_wtf import FlaskForm
+from flask_wtf.csrf import CSRFProtect, CSRFError
 from wtforms import StringField, FloatField, BooleanField, SubmitField
 from wtforms.validators import DataRequired, NumberRange, Optional, Email, ValidationError
 from flask_login import current_user
@@ -7,7 +8,6 @@ from translations import trans
 from mailersend_email import send_email, EMAIL_CONFIG
 from datetime import datetime
 import uuid
-import json
 from models import log_tool_usage
 from session_utils import create_anonymous_session
 from utils import requires_role, is_admin, get_mongo_db
@@ -15,9 +15,12 @@ from utils import requires_role, is_admin, get_mongo_db
 net_worth_bp = Blueprint(
     'net_worth',
     __name__,
-    template_folder='templates/NETWORTH',
+    template_folder='templates/personal/NETWORTH',
     url_prefix='/NETWORTH'
 )
+
+# Initialize CSRF protection
+csrf = CSRFProtect()
 
 def custom_login_required(f):
     """Custom login decorator that allows both authenticated users and anonymous sessions."""
@@ -179,8 +182,8 @@ def main():
                 }
                 
                 get_mongo_db().net_worth_data.insert_one(net_worth_record)
-                current_app.logger.info(f"Successfully saved record {net_worth_record['_id']} for session {session['sid']}")
-                flash(trans("net_worth_success", lang=lang), "success")
+                current_app.logger.info(f"Successfully saved record {net_worth_record['_id']} for session {session['sid']}", extra={'session_id': session['sid']})
+                flash(trans("net_worth_success", default="Net worth calculated successfully", lang=lang), "success")
 
                 # Send email if requested
                 if form.send_email.data and form.email.data:
@@ -211,8 +214,8 @@ def main():
                             lang=lang
                         )
                     except Exception as e:
-                        current_app.logger.error(f"Failed to send email: {str(e)}")
-                        flash(trans("general_email_send_failed", lang=lang), "warning")
+                        current_app.logger.error(f"Failed to send email: {str(e)}", extra={'session_id': session['sid']})
+                        flash(trans("general_email_send_failed", default="Failed to send email", lang=lang), "warning")
 
         # Get net worth data for display
         user_records = get_mongo_db().net_worth_data.find(filter_criteria).sort('created_at', -1)
@@ -228,25 +231,25 @@ def main():
 
         insights = []
         tips = [
-            trans("net_worth_tip_track_ajo", lang=lang),
-            trans("net_worth_tip_review_property", lang=lang),
-            trans("net_worth_tip_pay_loans_early", lang=lang),
-            trans("net_worth_tip_diversify_investments", lang=lang)
+            trans("net_worth_tip_track_ajo", default="Track your contributions to ajo or other savings groups.", lang=lang),
+            trans("net_worth_tip_review_property", default="Review property valuations annually.", lang=lang),
+            trans("net_worth_tip_pay_loans_early", default="Pay off high-interest loans early.", lang=lang),
+            trans("net_worth_tip_diversify_investments", default="Diversify investments to reduce risk.", lang=lang)
         ]
 
         if latest_record:
             if latest_record.get('total_liabilities', 0) > latest_record.get('total_assets', 0) * 0.5:
-                insights.append(trans("net_worth_insight_high_loans", lang=lang))
+                insights.append(trans("net_worth_insight_high_loans", default="Your liabilities are high relative to assets.", lang=lang))
             if latest_record.get('cash_savings', 0) < latest_record.get('total_assets', 0) * 0.1:
-                insights.append(trans("net_worth_insight_low_cash", lang=lang))
+                insights.append(trans("net_worth_insight_low_cash", default="Consider increasing cash savings.", lang=lang))
             if latest_record.get('investments', 0) >= latest_record.get('total_assets', 0) * 0.3:
-                insights.append(trans("net_worth_insight_strong_investments", lang=lang))
+                insights.append(trans("net_worth_insight_strong_investments", default="Strong investment portfolio detected.", lang=lang))
             if latest_record.get('net_worth', 0) <= 0:
-                insights.append(trans("net_worth_insight_negative_net_worth", lang=lang))
+                insights.append(trans("net_worth_insight_negative_net_worth", default="Your net worth is negative; focus on reducing liabilities.", lang=lang))
 
-        current_app.logger.info(f"Main rendering with {len(records)} records for session {session['sid']}")
+        current_app.logger.info(f"Rendering net worth main page with {len(records)} records for session {session['sid']}", extra={'session_id': session['sid']})
         return render_template(
-            'NETWORTH/net_worth_main.html',
+            'personal/NETWORTH/net_worth_main.html',
             form=form,
             records=records,
             latest_record=latest_record,
@@ -259,18 +262,18 @@ def main():
 
     except Exception as e:
         current_app.logger.error(f"Error in net_worth.main: {str(e)}", extra={'session_id': session.get('sid', 'unknown')})
-        flash(trans("net_worth_dashboard_load_error", lang=lang), "danger")
+        flash(trans("net_worth_dashboard_load_error", default="Error loading net worth dashboard", lang=lang), "danger")
         return render_template(
-            'NETWORTH/net_worth_main.html',
+            'personal/NETWORTH/net_worth_main.html',
             form=form,
             records=[],
             latest_record={},
             insights=[],
             tips=[
-                trans("net_worth_tip_track_ajo", lang=lang),
-                trans("net_worth_tip_review_property", lang=lang),
-                trans("net_worth_tip_pay_loans_early", lang=lang),
-                trans("net_worth_tip_diversify_investments", lang=lang)
+                trans("net_worth_tip_track_ajo", default="Track your contributions to ajo or other savings groups.", lang=lang),
+                trans("net_worth_tip_review_property", default="Review property valuations annually.", lang=lang),
+                trans("net_worth_tip_pay_loans_early", default="Pay off high-interest loans early.", lang=lang),
+                trans("net_worth_tip_diversify_investments", default="Diversify investments to reduce risk.", lang=lang)
             ],
             t=trans,
             lang=lang,
@@ -293,17 +296,38 @@ def unsubscribe(email):
             action='unsubscribe',
             mongo=get_mongo_db()
         )
+        filter_criteria = {'email': email}
+        if current_user.is_authenticated:
+            filter_criteria['user_id'] = current_user.id
+        else:
+            filter_criteria['session_id'] = session['sid']
+        
+        existing_record = get_mongo_db().net_worth_data.find_one(filter_criteria)
+        if not existing_record:
+            current_app.logger.warning(f"No matching record found for email {email} to unsubscribe", extra={'session_id': session['sid']})
+            flash(trans("net_worth_unsubscribe_failed", default="No matching email found or already unsubscribed", lang=lang), "danger")
+            return redirect(url_for('personal.index'))
+
         result = get_mongo_db().net_worth_data.update_many(
-            {'email': email, 'user_id': current_user.id if current_user.is_authenticated else {'$exists': False}},
+            filter_criteria,
             {'$set': {'send_email': False}}
         )
         if result.modified_count > 0:
-            flash(trans("net_worth_unsubscribed_success", lang=lang), "success")
+            current_app.logger.info(f"Successfully unsubscribed email {email}", extra={'session_id': session['sid']})
+            flash(trans("net_worth_unsubscribed_success", default="Successfully unsubscribed from emails", lang=lang), "success")
         else:
-            flash(trans("net_worth_unsubscribe_failed", lang=lang), "danger")
-            current_app.logger.error(f"Failed to unsubscribe email {email}")
-        return redirect(url_for('index'))
+            current_app.logger.warning(f"No records updated for email {email} during unsubscribe", extra={'session_id': session['sid']})
+            flash(trans("net_worth_unsubscribe_failed", default="Failed to unsubscribe. Email not found or already unsubscribed.", lang=lang), "danger")
+        return redirect(url_for('personal.index'))
     except Exception as e:
-        current_app.logger.exception(f"Error in net_worth.unsubscribe: {str(e)}")
-        flash(trans("net_worth_unsubscribe_error", lang=lang), "danger")
-        return redirect(url_for('index'))
+        current_app.logger.error(f"Error in net_worth.unsubscribe: {str(e)}", extra={'session_id': session.get('sid', 'unknown')})
+        flash(trans("net_worth_unsubscribe_error", default="Error processing unsubscribe request", lang=lang), "danger")
+        return redirect(url_for('personal.index'))
+
+@net_worth_bp.errorhandler(CSRFError)
+def handle_csrf_error(e):
+    """Handle CSRF errors with user-friendly message."""
+    lang = session.get('lang', 'en')
+    current_app.logger.error(f"CSRF error on {request.path}: {e.description}", extra={'session_id': session.get('sid', 'unknown')})
+    flash(trans("net_worth_csrf_error", default="Form submission failed due to a missing security token. Please refresh and try again.", lang=lang), "danger")
+    return redirect(url_for('net_worth.main')), 400
