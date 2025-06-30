@@ -108,7 +108,7 @@
                             </a>
                             <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="profileDropdown">
                                 <li><a class="dropdown-item" href="{{ url_for('settings_blueprint.profile') | e }}">{{ t('general_profile', default='Profile') | e }}</a></li>
-                                <li><a class="dropdown-item" href="{{ url_for('general.feedback') | e }}">{{ t('general_feedback', default='Send Feedback') | e }}</a></li>
+                                <li><a class="dropdown-item" href="{{ url_for('feedback') | e }}">{{ t('general_feedback', default='Send Feedback') | e }}</a></li>
                                 {% if current_user.get('is_admin', False) %}
                                 <li><a class="dropdown-item" href="{{ url_for('admin_blueprint.dashboard') | e }}">{{ t('admin_admin_panel', default='Admin Panel') | e }}</a></li>
                                 {% endif %}
