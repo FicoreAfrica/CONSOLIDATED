@@ -1,9 +1,9 @@
-from flask import Blueprint, request, session, redirect, url_for, render_template, flash, current_app
+from flask import Blueprint, request, session, redirect, url_for, render_template, flash, current_app, jsonify
 from flask_wtf import FlaskForm
 from flask_wtf.csrf import CSRFProtect, CSRFError
 from wtforms import StringField, SelectField, BooleanField, SubmitField, FloatField
 from wtforms.validators import DataRequired, NumberRange, Optional, Email, ValidationError
-from flask_login import current_user
+from flask_login import current_user, login_required  # Added login_required
 from datetime import datetime
 from bson import ObjectId
 from mailersend_email import send_email, EMAIL_CONFIG
@@ -399,6 +399,33 @@ def main():
             lang=lang,
             tool_title=trans('financial_health_title', default='Financial Health Score', lang=lang)
         ), 500
+
+# NEW: Added summary endpoint for homepage financial summary
+@financial_health_bp.route('/summary')
+@login_required
+def summary():
+    """Return the latest financial health score for the current user."""
+    try:
+        filter_criteria = {'user_id': current_user.id}
+        collection = get_mongo_collection()
+        
+        # Get the latest financial health record
+        latest_record = collection.find(filter_criteria).sort('created_at', -1).limit(1)
+        latest_record = list(latest_record)
+        
+        if not latest_record:
+            current_app.logger.info(f"No financial health record found for user {current_user.id}", 
+                                  extra={'session_id': session.get('sid', 'unknown')})
+            return jsonify({'financialHealthScore': 0})
+        
+        score = latest_record[0].get('score', 0)
+        current_app.logger.info(f"Fetched financial health summary for user {current_user.id}: {score}", 
+                              extra={'session_id': session.get('sid', 'unknown')})
+        return jsonify({'financialHealthScore': score})
+    except Exception as e:
+        current_app.logger.error(f"Error in financial_health.summary: {str(e)}", 
+                                extra={'session_id': session.get('sid', 'unknown')})
+        return jsonify({'financialHealthScore': 0}), 500
 
 @financial_health_bp.route('/unsubscribe/<email>')
 def unsubscribe(email):
