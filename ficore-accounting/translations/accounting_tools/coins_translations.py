@@ -6,6 +6,11 @@ COINS_TRANSLATIONS = {
     'en': {
         'coins_dashboard': 'Coins Dashboard',
         'coins_portfolio': 'Portfolio',
+        'coin_amount': 'Coin Amount',
+        'purchase': 'Purchase',
+        'receipt': 'Receipt',
+        'invalid_file_type': 'Invalid file type',
+        'upload_receipt': 'Upload Receipt',
         'coins_wallet': 'Wallet',
         'coins_transactions': 'Transactions',
         'coins_buy': 'Buy',
@@ -76,5 +81,10 @@ COINS_TRANSLATIONS = {
         'coins_top_gainers': 'Mafi Samun Riba',
         'coins_top_losers': 'Mafi Asara',
         'coins_market_trends': 'Yanayin Kasuwa',
+        'coin_amount': 'Adadin Kuɗi',
+        'purchase': 'Saya',
+        'receipt': 'Rasit',
+        'invalid_file_type': 'Nauin fayil ba daidai ba ne',
+        'upload_receipt': 'Loda Rasit',
     }
 }
