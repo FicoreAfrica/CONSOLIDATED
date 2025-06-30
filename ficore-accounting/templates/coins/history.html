@@ -7,8 +7,8 @@
         <small class="subtext">{{ t('coins_wallet_subtext', default='Tsabobin Cikin App') }}</small>
     </div>
     <div class="d-flex gap-2 mb-4">
-        <a href="{{ url_for('coins_blueprint.purchase') }}" class="btn btn-primary">{{ t('coins_purchase_coins', default='Purchase Coins') }}</a>
-        <a href="{{ url_for('coins_blueprint.receipt_upload') }}" class="btn btn-primary">{{ t('coins_upload_receipt', default='Upload Receipt') }}</a>
+        <a href="{{ url_for('coins.purchase') }}" class="btn btn-primary">{{ t('coins_purchase_coins', default='Purchase Coins') }}</a>
+        <a href="{{ url_for('coins.receipt_upload') }}" class="btn btn-primary">{{ t('coins_upload_receipt', default='Upload Receipt') }}</a>
     </div>
     <p class="mb-4">{{ t('coins_balance', default='Coin Balance') }}: <span id="coin-balance">{{ coin_balance }}</span></p>
     {% if transactions %}
