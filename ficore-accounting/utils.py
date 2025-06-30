@@ -18,7 +18,6 @@ from flask_babel import Babel
 from flask_compress import Compress
 
 # Initialize extensions
-mongo_client = None
 login_manager = LoginManager()
 flask_session = Session()
 csrf = CSRFProtect()
@@ -52,7 +51,7 @@ class SessionAdapter(logging.LoggerAdapter):
 logger = SessionAdapter(root_logger, {})
 
 def create_anonymous_session():
-    """Create a guest session for anonymous access."""
+    '''Create a guest session for anonymous access.'''
     try:
         session['sid'] = str(uuid.uuid4())
         session['is_anonymous'] = True
@@ -65,7 +64,7 @@ def create_anonymous_session():
         logger.error(f"{trans('general_anonymous_session_error', default='Error creating anonymous session')}: {str(e)}", exc_info=True)
 
 def trans_function(key, lang=None, **kwargs):
-    """
+    '''
     Translation function wrapper for backward compatibility.
     This function provides the same interface as the old trans_function.
     
@@ -76,7 +75,7 @@ def trans_function(key, lang=None, **kwargs):
     
     Returns:
         Translated string with formatting applied
-    """
+    '''
     try:
         return trans(key, lang=lang, **kwargs)
     except Exception as e:
@@ -84,7 +83,7 @@ def trans_function(key, lang=None, **kwargs):
         return key
 
 def is_valid_email(email):
-    """
+    '''
     Validate email address format.
     
     Args:
@@ -92,7 +91,7 @@ def is_valid_email(email):
     
     Returns:
         bool: True if email is valid, False otherwise
-    """
+    '''
     if not email or not isinstance(email, str):
         return False
     
@@ -101,65 +100,44 @@ def is_valid_email(email):
     return re.match(pattern, email.strip()) is not None
 
 def get_mongo_db():
-    """
+    '''
     Get MongoDB database connection.
     
     Returns:
         Database object
-    """
+    '''
     try:
-        global mongo_client
-        if has_request_context() and hasattr(current_app, 'config') and 'MONGO_CLIENT' in current_app.config:
-            client = current_app.config['MONGO_CLIENT']
-            if client:
-                return client.ficodb
-        
-        # Initialize MongoDB client if not already initialized
-        if mongo_client is None:
+        if has_request_context() and not hasattr(current_app, 'mongo_client'):
             mongo_uri = current_app.config.get('MONGO_URI')
             if not mongo_uri:
                 logger.error(trans('general_no_mongo_client', default='No MongoDB client available: MONGO_URI not set'))
-                raise RuntimeError("No MongoDB client available: MONGO_URI not set")
-            try:
-                mongo_client = MongoClient(
-                    mongo_uri,
-                    serverSelectionTimeoutMS=5000,
-                    tlsCAFile=current_app.config.get('MONGO_CA_FILE', None)
-                )
-                mongo_client.admin.command('ping')
-                logger.info(trans('general_mongo_connection_established', default='MongoDB connection established'))
-            except ConnectionFailure as e:
-                logger.error(f"{trans('general_mongo_connection_error', default='Error connecting to MongoDB')}: {str(e)}")
-                raise RuntimeError(f"No MongoDB client available: {str(e)}")
-            except Exception as e:
-                logger.error(f"{trans('general_mongo_connection_error', default='Error connecting to MongoDB')}: {str(e)}")
-                raise RuntimeError(f"No MongoDB client available: {str(e)}")
-        
-        return mongo_client.ficodb
+                raise RuntimeError('No MongoDB client available: MONGO_URI not set')
+            current_app.mongo_client = MongoClient(
+                mongo_uri,
+                serverSelectionTimeoutMS=5000,
+                tlsCAFile=current_app.config.get('MONGO_CA_FILE', None)
+            )
+            current_app.mongo_client.admin.command('ping')
+            logger.info(trans('general_mongo_connection_established', default='MongoDB connection established'))
+        return current_app.mongo_client[current_app.config.get('MONGODB_DB', 'ficodb')]
     except Exception as e:
         logger.error(f"{trans('general_mongo_connection_error', default='Error getting MongoDB connection')}: {str(e)}", exc_info=True)
         raise
 
 def close_mongo_db():
-    """
+    '''
     Close MongoDB connection.
-    """
+    '''
     try:
-        global mongo_client
-        if has_request_context() and hasattr(current_app, 'config') and 'MONGO_CLIENT' in current_app.config:
-            client = current_app.config['MONGO_CLIENT']
-            if client:
-                client.close()
-                logger.info(trans('general_mongo_connection_closed', default='MongoDB connection closed'))
-        elif mongo_client:
-            mongo_client.close()
-            mongo_client = None
+        if has_request_context() and hasattr(current_app, 'mongo_client'):
+            current_app.mongo_client.close()
+            del current_app.mongo_client
             logger.info(trans('general_mongo_connection_closed', default='MongoDB connection closed'))
     except Exception as e:
         logger.error(f"{trans('general_mongo_close_error', default='Error closing MongoDB connection')}: {str(e)}", exc_info=True)
 
 def get_limiter(app):
-    """
+    '''
     Initialize and return Flask-Limiter instance.
     
     Args:
@@ -167,13 +145,13 @@ def get_limiter(app):
     
     Returns:
         Limiter instance
-    """
+    '''
     try:
         limiter = Limiter(
             key_func=get_remote_address,
             app=app,
-            default_limits=["200 per day", "50 per hour"],
-            storage_uri="memory://"
+            default_limits=['200 per day', '50 per hour'],
+            storage_uri='memory://'
         )
         logger.info(trans('general_rate_limiter_initialized', default='Rate limiter initialized'))
         return limiter
@@ -188,7 +166,7 @@ def get_limiter(app):
         return MockLimiter()
 
 def get_mail(app):
-    """
+    '''
     Initialize and return Flask-Mail instance.
     
     Args:
@@ -196,7 +174,7 @@ def get_mail(app):
     
     Returns:
         Mail instance
-    """
+    '''
     try:
         mail = Mail(app)
         logger.info(trans('general_mail_service_initialized', default='Mail service initialized'))
@@ -206,7 +184,7 @@ def get_mail(app):
         return None
 
 def requires_role(role):
-    """
+    '''
     Decorator to require specific user role.
     
     Args:
@@ -214,7 +192,7 @@ def requires_role(role):
     
     Returns:
         Decorator function
-    """
+    '''
     def decorator(f):
         from functools import wraps
         from flask_login import current_user
@@ -241,7 +219,7 @@ def requires_role(role):
     return decorator
 
 def check_coin_balance(required_amount=1, user_id=None):
-    """
+    '''
     Check if user has sufficient coin balance.
     
     Args:
@@ -250,7 +228,7 @@ def check_coin_balance(required_amount=1, user_id=None):
     
     Returns:
         bool: True if user has sufficient balance, False otherwise
-    """
+    '''
     try:
         from flask_login import current_user
         
@@ -276,7 +254,7 @@ def check_coin_balance(required_amount=1, user_id=None):
         return False
 
 def get_user_query(user_id):
-    """
+    '''
     Get user query for MongoDB operations.
     
     Args:
@@ -284,16 +262,16 @@ def get_user_query(user_id):
     
     Returns:
         dict: MongoDB query for user
-    """
+    '''
     return {'_id': user_id}
 
 def is_admin():
-    """
+    '''
     Check if current user is admin.
     
     Returns:
         bool: True if current user is admin, False otherwise
-    """
+    '''
     try:
         from flask_login import current_user
         return current_user.is_authenticated and (current_user.role == 'admin' or getattr(current_user, 'is_admin', False))
@@ -301,7 +279,7 @@ def is_admin():
         return False
 
 def format_currency(amount, currency='₦', lang=None):
-    """
+    '''
     Format currency amount with proper locale.
     
     Args:
@@ -311,7 +289,7 @@ def format_currency(amount, currency='₦', lang=None):
     
     Returns:
         Formatted currency string
-    """
+    '''
     try:
         if lang is None:
             lang = session.get('lang', 'en') if has_request_context() else 'en'
@@ -326,7 +304,7 @@ def format_currency(amount, currency='₦', lang=None):
         return f"{currency}0"
 
 def format_date(date_obj, lang=None, format_type='short'):
-    """
+    '''
     Format date according to language preference.
     
     Args:
@@ -336,7 +314,7 @@ def format_date(date_obj, lang=None, format_type='short'):
     
     Returns:
         Formatted date string
-    """
+    '''
     try:
         if lang is None:
             lang = session.get('lang', 'en') if has_request_context() else 'en'
@@ -370,7 +348,7 @@ def format_date(date_obj, lang=None, format_type='short'):
         return str(date_obj) if date_obj else ''
 
 def sanitize_input(input_string, max_length=None):
-    """
+    '''
     Sanitize user input to prevent XSS and other attacks.
     
     Args:
@@ -379,7 +357,7 @@ def sanitize_input(input_string, max_length=None):
     
     Returns:
         Sanitized string
-    """
+    '''
     if not input_string:
         return ''
     
@@ -396,7 +374,7 @@ def sanitize_input(input_string, max_length=None):
     return sanitized
 
 def generate_unique_id(prefix=''):
-    """
+    '''
     Generate a unique identifier.
     
     Args:
@@ -404,14 +382,14 @@ def generate_unique_id(prefix=''):
     
     Returns:
         Unique identifier string
-    """
+    '''
     unique_id = str(uuid.uuid4())
     if prefix:
         return f"{prefix}_{unique_id}"
     return unique_id
 
 def validate_required_fields(data, required_fields):
-    """
+    '''
     Validate that all required fields are present and not empty.
     
     Args:
@@ -420,7 +398,7 @@ def validate_required_fields(data, required_fields):
     
     Returns:
         tuple: (is_valid, missing_fields)
-    """
+    '''
     missing_fields = []
     
     for field in required_fields:
@@ -430,12 +408,12 @@ def validate_required_fields(data, required_fields):
     return len(missing_fields) == 0, missing_fields
 
 def get_user_language():
-    """
+    '''
     Get the current user's language preference.
     
     Returns:
         Language code ('en' or 'ha')
-    """
+    '''
     try:
         if has_request_context():
             return session.get('lang', 'en')
@@ -444,14 +422,14 @@ def get_user_language():
         return 'en'
 
 def log_user_action(action, details=None, user_id=None):
-    """
+    '''
     Log user action for audit purposes.
     
     Args:
         action: Action performed
         details: Additional details about the action
         user_id: User ID (optional, will use current_user if not provided)
-    """
+    '''
     try:
         from flask_login import current_user
         
@@ -485,7 +463,7 @@ def log_user_action(action, details=None, user_id=None):
 
 # Data conversion functions for backward compatibility
 def to_dict_financial_health(record):
-    """Convert financial health record to dictionary."""
+    '''Convert financial health record to dictionary.'''
     if not record:
         return {'score': None, 'status': None}
     return {
@@ -499,7 +477,7 @@ def to_dict_financial_health(record):
     }
 
 def to_dict_budget(record):
-    """Convert budget record to dictionary."""
+    '''Convert budget record to dictionary.'''
     if not record:
         return {'surplus_deficit': None, 'savings_goal': None}
     return {
@@ -518,7 +496,7 @@ def to_dict_budget(record):
     }
 
 def to_dict_bill(record):
-    """Convert bill record to dictionary."""
+    '''Convert bill record to dictionary.'''
     if not record:
         return {'amount': None, 'status': None}
     return {
@@ -536,7 +514,7 @@ def to_dict_bill(record):
     }
 
 def to_dict_net_worth(record):
-    """Convert net worth record to dictionary."""
+    '''Convert net worth record to dictionary.'''
     if not record:
         return {'net_worth': None, 'total_assets': None}
     return {
@@ -552,7 +530,7 @@ def to_dict_net_worth(record):
     }
 
 def to_dict_emergency_fund(record):
-    """Convert emergency fund record to dictionary."""
+    '''Convert emergency fund record to dictionary.'''
     if not record:
         return {'target_amount': None, 'savings_gap': None}
     return {
@@ -572,7 +550,7 @@ def to_dict_emergency_fund(record):
     }
 
 def to_dict_learning_progress(record):
-    """Convert learning progress record to dictionary."""
+    '''Convert learning progress record to dictionary.'''
     if not record:
         return {'lessons_completed': [], 'quiz_scores': {}}
     return {
@@ -583,7 +561,7 @@ def to_dict_learning_progress(record):
     }
 
 def to_dict_quiz_result(record):
-    """Convert quiz result record to dictionary."""
+    '''Convert quiz result record to dictionary.'''
     if not record:
         return {'personality': None, 'score': None}
     return {
@@ -596,7 +574,7 @@ def to_dict_quiz_result(record):
     }
 
 def to_dict_news_article(record):
-    """Convert news article record to dictionary."""
+    '''Convert news article record to dictionary.'''
     if not record:
         return {'title': None, 'content': None}
     return {
@@ -612,7 +590,7 @@ def to_dict_news_article(record):
     }
 
 def to_dict_tax_rate(record):
-    """Convert tax rate record to dictionary."""
+    '''Convert tax rate record to dictionary.'''
     if not record:
         return {'rate': None, 'description': None}
     return {
@@ -625,7 +603,7 @@ def to_dict_tax_rate(record):
     }
 
 def to_dict_payment_location(record):
-    """Convert payment location record to dictionary."""
+    '''Convert payment location record to dictionary.'''
     if not record:
         return {'name': None, 'address': None}
     return {
@@ -637,7 +615,7 @@ def to_dict_payment_location(record):
     }
 
 def to_dict_tax_reminder(record):
-    """Convert tax reminder record to dictionary."""
+    '''Convert tax reminder record to dictionary.'''
     if not record:
         return {'tax_type': None, 'amount': None}
     return {
@@ -655,7 +633,7 @@ def to_dict_tax_reminder(record):
 
 # Export all functions for backward compatibility
 __all__ = [
-    'mongo_client', 'login_manager', 'flask_session', 'csrf', 'babel', 'compress',
+    'login_manager', 'flask_session', 'csrf', 'babel', 'compress',
     'create_anonymous_session',
     'trans_function',
     'is_valid_email',
