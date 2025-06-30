@@ -1,6 +1,7 @@
-from flask import Blueprint, jsonify, current_app
+from flask import Blueprint, jsonify, current_app, redirect, url_for, flash, render_template, request, session
 from flask_login import current_user, login_required
-from utils import requires_role, is_admin
+from utils import requires_role, is_admin, get_mongo_db
+from translations import trans
 from datetime import datetime
 
 # Create the personal blueprint
@@ -32,8 +33,6 @@ personal_bp.register_blueprint(quiz_bp)
 def check_access():
     """Ensure only personal users and admins can access personal finance tools"""
     if not check_personal_access():
-        from flask import redirect, url_for, flash
-        from translations import trans
         flash(trans('general_access_denied', default='Access denied. Personal finance tools are only available to personal users.'), 'danger')
         return redirect(url_for('dashboard_bp.index'))
 
@@ -86,8 +85,6 @@ def notifications():
 @personal_bp.route('/index')
 def index():
     """Render the personal index page"""
-    from flask import render_template
-    from translations import trans
     lang = personal_bp.config.get('lang', 'en')
     try:
         return render_template(
@@ -109,11 +106,9 @@ def index():
 @personal_bp.route('/general_dashboard')
 def general_dashboard():
     """Redirect to the unified dashboard"""
-    from flask import redirect, url_for
     return redirect(url_for('dashboard_bp.index'))
-from flask import Blueprint, redirect, url_for, flash
-from translations import trans
 
+# Set language blueprint
 set_language_bp = Blueprint('set_language', __name__)
 
 @set_language_bp.route('/set_language/<lang>')
@@ -133,11 +128,7 @@ def set_language(lang):
         flash(trans('general_invalid_language', default='Invalid language'), 'danger')
     return redirect(request.referrer or url_for('personal.index'))
 
-# Export the blueprint technically.py
-from flask import Blueprint
-from flask_login import login_required, current_user
-from utils import get_mongo_db, trans
-
+# Notifications blueprint
 notifications_bp = Blueprint('notifications', __name__)
 
 @notifications_bp.route('/notification_count')
@@ -175,7 +166,12 @@ def notifications():
             'message': n['message'],
             'type': n['type'],
             'timestamp': n['sent_at'].isoformat(),
-            'read': n.get('read_status',自由
+            'read': n.get('read_status', False)
+        } for n in notifications]
+        return jsonify(result)
+    except Exception as e:
+        current_app.logger.error(f"Error fetching notifications: {str(e)}")
+        return jsonify({'error': 'Failed to fetch notifications'}), 500
 
-# Export the blueprint
+# Export the blueprints
 __all__ = ['personal_bp', 'set_language_bp', 'notifications_bp']
