@@ -382,4 +382,4 @@ def unsubscribe(email):
     except Exception as e:
         current_app.logger.error(f"Error unsubscribing email {email}: {str(e)}")
         flash(trans('bill_unsubscribe_failed', lang), 'danger')
-    return redirect(url_for('index'))
+    return redirect(url_for('personal.index'))
