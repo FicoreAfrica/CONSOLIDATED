@@ -33,7 +33,7 @@ def custom_login_required(f):
         return redirect(url_for('users_blueprint.login', next=request.url))
     return decorated_function
 
-class CommaSeparatedFloatField(wtforms.FloatField):
+class CommaSeparatedFloatField(FloatField):
     def process_formdata(self, valuelist):
         if valuelist:
             try:
