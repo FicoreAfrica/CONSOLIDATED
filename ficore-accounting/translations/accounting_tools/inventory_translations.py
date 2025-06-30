@@ -7,6 +7,11 @@ INVENTORY_TRANSLATIONS = {
         'inventory_dashboard': 'Inventory Dashboard',
         'inventory_list': 'Inventory List',
         'inventory_add_item': 'Add Item',
+        # Inventory
+        'inventory_unit': 'Unit',
+        'inventory_buying_price': 'Buying Price',
+        'inventory_selling_price': 'Selling Price',
+        'inventory_threshold': 'Threshold',
         'inventory_edit_item': 'Edit Item',
         'inventory_delete_item': 'Delete Item',
         'inventory_item_name': 'Item Name',
@@ -80,5 +85,10 @@ INVENTORY_TRANSLATIONS = {
         'inventory_total_items': 'Jimillar Abubuwa',
         'inventory_total_value_stock': 'Jimillar Ƙimar Ajiya',
         'inventory_low_stock_alerts': 'Sanarwar Ƙarancin Ajiya',
+        # Inventory
+        'inventory_unit': 'Naúri',
+        'inventory_buying_price': 'Farashin Saye',
+        'inventory_selling_price': 'Farashin Sayarwa',
+        'inventory_threshold': 'Ƙofa',
     }
 }
