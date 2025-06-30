@@ -23,6 +23,8 @@ from flask_login import login_required, current_user
 from flask_wtf.csrf import CSRFError
 from jinja2.exceptions import TemplateNotFound
 import time
+from pymongo import MongoClient
+import certifi
 
 # Load environment variables
 load_dotenv()
@@ -201,6 +203,18 @@ def create_app():
         logger.warning('Google OAuth2 credentials not set')
     if not app.config['SMTP_USERNAME'] or not app.config['SMTP_PASSWORD']:
         logger.warning('SMTP credentials not set')
+    
+    # Initialize MongoDB client
+    with app.app_context():
+        try:
+            client = MongoClient(app.config['MONGO_URI'], serverSelectionTimeoutMS=5000,
+                                 tlsCAFile=os.getenv('MONGO_CA_FILE', None))
+            client.admin.command('ping')
+            current_app.mongo_client = client
+            logger.info('MongoDB client initialized successfully')
+        except Exception as e:
+            logger.error(f'MongoDB connection test failed: {str(e)}')
+            raise RuntimeError(f'Failed to connect to MongoDB: {str(e)}')
     
     # Initialize extensions
     setup_logging(app)
