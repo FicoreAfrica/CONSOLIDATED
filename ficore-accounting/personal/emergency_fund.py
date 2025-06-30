@@ -1,9 +1,9 @@
-from flask import Blueprint, request, session, redirect, url_for, render_template, flash, current_app
+from flask import Blueprint, request, session, redirect, url_for, render_template, flash, current_app, jsonify
 from flask_wtf import FlaskForm
 from flask_wtf.csrf import CSRFProtect, CSRFError
 from wtforms import StringField, FloatField, IntegerField, SelectField, BooleanField, SubmitField
 from wtforms.validators import DataRequired, Optional, Email, NumberRange, ValidationError
-from flask_login import current_user
+from flask_login import current_user, login_required
 from mailersend_email import send_email, EMAIL_CONFIG
 from datetime import datetime
 from bson import ObjectId
@@ -15,7 +15,7 @@ from utils import requires_role, is_admin, get_mongo_db
 emergency_fund_bp = Blueprint(
     'emergency_fund',
     __name__,
-    template_folder='templates',
+    template_folder='templates/personal/EMERGENCYFUND',
     url_prefix='/emergency_fund'
 )
 
@@ -389,7 +389,35 @@ def main():
             tool_title=trans('emergency_fund_title', default='Emergency Fund Calculator', lang=lang)
         ), 500
 
+@emergency_fund_bp.route('/summary')
+@login_required
+def summary():
+    """Return the latest emergency fund target amount or savings gap for the current user."""
+    try:
+        filter_criteria = {'user_id': current_user.id}
+        collection = get_mongo_db().emergency_funds
+        
+        # Get the latest emergency fund record
+        latest_record = collection.find(filter_criteria).sort('created_at', -1).limit(1)
+        latest_record = list(latest_record)
+        
+        if not latest_record:
+            current_app.logger.info(f"No emergency fund record found for user {current_user.id}", 
+                                  extra={'session_id': session.get('sid', 'unknown')})
+            return jsonify({'targetAmount': 0.0, 'savingsGap': 0.0})
+        
+        target_amount = latest_record[0].get('target_amount', 0.0)
+        savings_gap = latest_record[0].get('savings_gap', 0.0)
+        current_app.logger.info(f"Fetched emergency fund summary for user {current_user.id}: target_amount={target_amount}, savings_gap={savings_gap}", 
+                              extra={'session_id': session.get('sid', 'unknown')})
+        return jsonify({'targetAmount': target_amount, 'savingsGap': savings_gap})
+    except Exception as e:
+        current_app.logger.error(f"Error in emergency_fund.summary: {str(e)}", 
+                                extra={'session_id': session.get('sid', 'unknown')})
+        return jsonify({'targetAmount': 0.0, 'savingsGap': 0.0}), 500
+
 @emergency_fund_bp.route('/unsubscribe/<email>')
+@custom_login_required
 def unsubscribe(email):
     """Unsubscribe user from emergency fund emails."""
     if 'sid' not in session:
