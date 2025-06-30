@@ -267,32 +267,6 @@ GENERAL_TRANSLATIONS = {
         'general_version': 'Version',
         'general_copyright': 'Copyright',
         'general_all_rights_reserved': 'All rights reserved',
-        
-        # Common Features
-        'tax_amount': 'Tax Amount',
-        'tax_calculate': 'Calculate Tax',
-        
-        # Creditors
-        'creditors_amount_owed': 'Amount Owed',
-        
-        # Debtors
-        'debtors_amount_owed': 'Amount Owed',
-        
-        # Inventory
-        'inventory_unit': 'Unit',
-        'inventory_buying_price': 'Buying Price',
-        'inventory_selling_price': 'Selling Price',
-        'inventory_threshold': 'Threshold',
-        
-        # Payments
-        'payments_recipient_name': 'Recipient Name',
-        
-        # Receipts
-        'receipts_payer_name': 'Payer Name',
-        
-        # Reports
-        'reports_start_date': 'Start Date',
-        'reports_end_date': 'End Date',
     },
     'ha': {
         # Authentication & User Management
