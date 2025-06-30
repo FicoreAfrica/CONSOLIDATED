@@ -10,6 +10,11 @@ COINS_TRANSLATIONS = {
         'purchase': 'Purchase',
         'receipt': 'Receipt',
         'invalid_file_type': 'Invalid file type',
+        'coins_coin_amount': 'Coin Amount',
+        'coins_purchase': 'Purchase Coins',
+        'coins_receipt': 'Receipt',
+        'coins_invalid_file_type': 'Invalid file type for receipt',
+        'coins_upload_receipt': 'Upload Receipt',
         'upload_receipt': 'Upload Receipt',
         'coins_wallet': 'Wallet',
         'coins_transactions': 'Transactions',
@@ -86,5 +91,10 @@ COINS_TRANSLATIONS = {
         'receipt': 'Rasit',
         'invalid_file_type': 'Nauin fayil ba daidai ba ne',
         'upload_receipt': 'Loda Rasit',
+        'coins_coin_amount': 'Adadin Kuɗi',
+        'coins_purchase': 'Sayi Kuɗi',
+        'coins_receipt': 'Rasit',
+        'coins_invalid_file_type': 'Nau’in fayil mara inganci don rasit',
+        'coins_upload_receipt': 'Loda Rasit',
     }
 }
