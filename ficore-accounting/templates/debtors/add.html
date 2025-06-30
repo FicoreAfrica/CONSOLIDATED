@@ -6,7 +6,7 @@
         <h1>{{ t('debtors_create_title', default='Create What They Owe You') }}</h1>
         <small class="subtext">{{ t('debtors_subtitle', default='Kuɗin da Kake Bin Wasu') }}</small>
     </div>
-    <form action="{{ url_for('debtors_blueprint.add') }}" method="POST" class="row g-3">
+    <form action="{{ url_for('debtors.add') }}" method="POST" class="row g-3">
         {{ form.hidden_tag() }}
         <input type="hidden" name="type" value="debtor">
         <div class="col-12">
