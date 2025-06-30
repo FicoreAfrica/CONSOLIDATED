@@ -23,7 +23,7 @@
         </div>
         <div class="card-footer">
             <div class="responsive-btn-group" role="group">
-                <a href="{{ url_for('debtors_blueprint.generate_iou', id=debtor._id) }}" 
+                <a href="{{ url_for('debtors.generate_iou', id=debtor._id) }}" 
                    class="btn btn-success btn-sm"
                    data-bs-toggle="tooltip" 
                    title="{{ t('debtors_download_iou', default='Download IOU') }}">
@@ -58,13 +58,13 @@
                     {{ t('debtors_snooze', default='Snooze') }}
                 </button>
                 {% endif %}
-                <a href="{{ url_for('debtors_blueprint.edit', id=debtor._id) }}" 
+                <a href="{{ url_for('debtors.edit', id=debtor._id) }}" 
                    class="btn btn-primary btn-sm"
                    data-bs-toggle="tooltip" 
                    title="{{ t('general_edit', default='Edit') }}">
                     {{ t('general_edit', default='Edit') }}
                 </a>
-                <a href="{{ url_for('debtors_blueprint.index') }}" 
+                <a href="{{ url_for('debtors.index') }}" 
                    class="btn btn-secondary btn-sm"
                    data-bs-toggle="tooltip" 
                    title="{{ t('general_back', default='Back') }}">
