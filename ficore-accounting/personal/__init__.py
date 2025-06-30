@@ -3,6 +3,7 @@ from flask_login import current_user, login_required
 from utils import requires_role, is_admin, get_mongo_db
 from translations import trans
 from datetime import datetime
+from bson import ObjectId
 
 # Create the personal blueprint
 personal_bp = Blueprint('personal', __name__, url_prefix='/personal', template_folder='templates')
@@ -85,7 +86,7 @@ def notifications():
 @personal_bp.route('/index')
 def index():
     """Render the personal index page"""
-    lang = personal_bp.config.get('lang', 'en')
+    lang = session.get('lang', 'en')
     try:
         return render_template(
             'personal/GENERAL/index.html',
@@ -108,6 +109,82 @@ def general_dashboard():
     """Redirect to the unified dashboard"""
     return redirect(url_for('dashboard.index'))
 
+# NEW: Added recent_activity endpoint for homepage
+@personal_bp.route('/recent_activity')
+@login_required
+def recent_activity():
+    """Return recent activity across all personal finance tools for the current user."""
+    try:
+        db = get_mongo_db()
+        user_id = current_user.id
+        activities = []
+
+        # Fetch recent bills
+        bills = db.bills.find({'user_id': user_id}).sort('created_at', -1).limit(5)
+        for bill in bills:
+            activities.append({
+                'type': 'bill',
+                'description': trans('recent_activity_bill_added', default='Added bill: {name}', lang=session.get('lang', 'en'), name=bill['bill_name']),
+                'timestamp': bill['created_at'].isoformat(),
+                'details': {
+                    'amount': bill['amount'],
+                    'due_date': bill['due_date'],
+                    'status': bill['status']
+                }
+            })
+
+        # Fetch recent budgets
+        budgets = db.budgets.find({'user_id': user_id}).sort('created_at', -1).limit(5)
+        for budget in budgets:
+            activities.append({
+                'type': 'budget',
+                'description': trans('recent_activity_budget_created', default='Created budget with income: {amount}', lang=session.get('lang', 'en'), amount=budget['income']),
+                'timestamp': budget['created_at'].isoformat(),
+                'details': {
+                    'income': budget['income'],
+                    'surplus_deficit': budget['surplus_deficit']
+                }
+            })
+
+        # Fetch recent net worth records
+        net_worths = db.net_worth_data.find({'user_id': user_id}).sort('created_at', -1).limit(5)
+        for nw in net_worths:
+            activities.append({
+                'type': 'net_worth',
+                'description': trans('recent_activity_net_worth_calculated', default='Calculated net worth: {amount}', lang=session.get('lang', 'en'), amount=nw['net_worth']),
+                'timestamp': nw['created_at'].isoformat(),
+                'details': {
+                    'net_worth': nw['net_worth'],
+                    'total_assets': nw['total_assets'],
+                    'total_liabilities': nw['total_liabilities']
+                }
+            })
+
+        # Fetch recent financial health scores
+        health_scores = db.financial_health_scores.find({'user_id': user_id}).sort('created_at', -1).limit(5)
+        for hs in health_scores:
+            activities.append({
+                'type': 'financial_health',
+                'description': trans('recent_activity_health_score', default='Calculated financial health score: {score}', lang=session.get('lang', 'en'), score=hs['score']),
+                'timestamp': hs['created_at'].isoformat(),
+                'details': {
+                    'score': hs['score'],
+                    'status': hs['status']
+                }
+            })
+
+        # Sort all activities by timestamp and limit to 10
+        activities.sort(key=lambda x: x['timestamp'], reverse=True)
+        activities = activities[:10]
+
+        current_app.logger.info(f"Fetched {len(activities)} recent activities for user {user_id}", 
+                              extra={'session_id': session.get('sid', 'unknown')})
+        return jsonify(activities)
+    except Exception as e:
+        current_app.logger.error(f"Error in personal.recent_activity: {str(e)}", 
+                                extra={'session_id': session.get('sid', 'unknown')})
+        return jsonify({'error': 'Failed to fetch recent activity'}), 500
+
 # Set language blueprint
 set_language_bp = Blueprint('set_language', __name__)
 
@@ -128,7 +205,7 @@ def set_language(lang):
         flash(trans('general_invalid_language', default='Invalid language'), 'danger')
     return redirect(request.referrer or url_for('personal.index'))
 
-# Notifications blueprint
+# Notifications blueprint (optional, as it’s redundant with personal_bp)
 notifications_bp = Blueprint('notifications', __name__)
 
 @notifications_bp.route('/notification_count')
