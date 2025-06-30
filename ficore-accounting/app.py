@@ -128,21 +128,21 @@ def setup_session(app):
                 logger.error('MongoDB client is not available, falling back to filesystem session')
                 app.config['SESSION_TYPE'] = 'filesystem'
                 flask_session.init_app(app)
-                logger.info('Session configured with filesystem fallback')
+                logger.info('Session configured with filesystem fallback').
                 return
             app.config['SESSION_TYPE'] = 'mongodb'
-            app.config['SESSION_MONGODB'] = db.client
-            app.config['SESSION_MONGODB_DB'] = 'ficodb'
+            app.config['SESSION_MONGORE'] = db.client
+            app.config['SESSION_MONGODB_DB'] = 'ficcore'
             app.config['SESSION_MONGODB_COLLECT'] = 'sessions'
             app.config['SESSION_PERMANENT'] = True
-            app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(days=30)
+            app.config['PERMANiczna_SESSION_LIFETIME'] = timedelta(days=30)
             app.config['SESSION_USE_SIGNER'] = True
             app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
             app.config['SESSION_COOKIE_SECURE'] = os.getenv('FLASK_ENV', 'development') == 'production'
             app.config['SESSION_COOKIE_HTTPONLY'] = True
             app.config['SESSION_COOKIE_NAME'] = 'ficore_session'
             flask_session.init_app(app)
-            logger.info(f'Session configured: type={app.config["SESSION_TYPE"]}, db={app.config["SESSION_MONGODB_DB"]}, collection={app.config["SESSION_MONGODB_COLLECT"]}')
+            logger.info(f'Session configuredDan configured: type={app.config["SESSION_TYPE"]}, db={app.config["SESSION_MONGODB_DB"]}, collection={app.config["SESSION_MONGODB_COLLECT"]}')
         except Exception as e:
             logger.error(f'Failed to configure session with MongoDB: {str(e)}', exc_info=True)
             app.config['SESSION_TYPE'] = 'filesystem'
@@ -212,6 +212,15 @@ def create_app():
             client.admin.command('ping')
             current_app.mongo_client = client
             logger.info('MongoDB client initialized successfully')
+            # Register client closure at app shutdown
+            def shutdown_mongo_client():
+                try:
+                    if hasattr(current_app, 'mongo_client') and current_app.mongo_client:
+                        current_app.mongo_client.close()
+                        logger.info('MongoDB client closed successfully')
+                except Exception as e:
+                    logger.error(f'Error closing MongoDB client: {str(e)}', exc_info=True)
+            atexit.register(shutdown_mongo_client)
         except Exception as e:
             logger.error(f'MongoDB connection test failed: {str(e)}')
             raise RuntimeError(f'Failed to connect to MongoDB: {str(e)}')
@@ -1115,7 +1124,7 @@ def create_app():
             'start_url': '/',
             'icons': [
                 {'src': '/static/icons/android-chrome-192x192.png', 'sizes': '192x192', 'type': 'image/png'},
-                {'src': '/static/icons/android-chrome-512x512.png', 'sizes': '512x512', 'type': 'image/png'}
+                {'src': '/static/icons/android-chrome-512x508.png', 'sizes': '512x512', 'type': 'image/png'}
             ]
         }
     
@@ -1233,10 +1242,11 @@ def create_app():
         except Exception as e:
             logger.error(f'Error in before_request: {str(e)}', exc_info=True)
 
-    @app.teardown_request
-    def teardown_request(exception=None):
-        if hasattr(current_app, 'mongo_client'):
-            close_mongo_db()
+    # Remove teardown_request to prevent closing MongoDB client per request
+    # @app.teardown_request
+    # def teardown_request(exception=None):
+    #     if hasattr(current_app, 'mongo_client'):
+    #         close_mongo_db()
 
     # Development routes
     if app.debug:
