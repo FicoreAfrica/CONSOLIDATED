@@ -58,7 +58,7 @@
                                 <div class="mb-3">
                                     <label class="form-label">{{ t('emergency_fund_email', default='Email') }}</label>
                                     {{ form.email(class="form-control", placeholder=t('emergency_fund_email_placeholder', default='e.g., aisha@example.com')) }}
-                                    <div class="invalid-feedback">{{ t('emergency_fund_email_required', default='Valid email is required') }}</div>
+                                    <div class="invalid-feedback">{{ t('emergency_fund_email_required', default='Valid email is required for notifications') }}</div>
                                 </div>
                             </div>
                         </div>
@@ -201,6 +201,10 @@
                                         <span>{{ t('emergency_fund_timeline', default='Timeline') }}</span>
                                         <strong>{{ latest_record.get('timeline', 0) }} {{ t('general_months', default='months') }}</strong>
                                     </li>
+                                    <li class="list-group-item d-flex justify-content-between">
+                                        <span>{{ t('emergency_fund_created_at', default='Created At') }}</span>
+                                        <strong>{{ latest_record.get('created_at', 'N/A') | format_datetime }}</strong>
+                                    </li>
                                 </ul>
                             </div>
                             <div class="col-md-6">
@@ -215,12 +219,15 @@
                             </div>
                         </div>
 
-                        {% if insights %}
+                        {% if insights or cross_tool_insights %}
                             <div class="mt-4">
                                 <h6>{{ t('emergency_fund_insights', default='Insights') }}</h6>
                                 <ul class="list-unstyled">
                                     {% for insight in insights %}
                                         <li><i class="fas fa-lightbulb text-warning"></i> {{ insight }}</li>
+                                    {% endfor %}
+                                    {% for insight in cross_tool_insights %}
+                                        <li><i class="fas fa-link text-primary"></i> {{ insight }}</li>
                                     {% endfor %}
                                 </ul>
                             </div>
@@ -282,19 +289,19 @@ document.addEventListener('DOMContentLoaded', function() {
                 alert('{{ t('general_input_cannot_exceed_10_billion', default='Input cannot exceed ₦10 billion') }}');
             }
             
-            input.value = parseFloat(value).toLocaleString('en-NG', { maximumFractionDigits: 0 });
+            input.value = parseFloat(value).toLocaleString('en-NG', { maximumFractionDigits: input.id === 'dependents' ? 0 : 2 });
         });
 
         input.addEventListener('paste', (e) => {
             e.preventDefault();
             let pasted = (e.clipboardData || window.clipboardData).getData('text');
             let clean = pasted.replace(/[^0-9.]/g, '');
-            input.value = parseFloat(clean).toLocaleString('en-NG', { maximumFractionDigits: 0 });
+            input.value = parseFloat(clean).toLocaleString('en-NG', { maximumFractionDigits: input.id === 'dependents' ? 0 : 2 });
         });
 
         input.addEventListener('blur', () => {
             if (input.value) {
-                input.value = parseFloat(input.value.replace(/,/g, '')).toLocaleString('en-NG', { maximumFractionDigits: 0 });
+                input.value = parseFloat(input.value.replace(/,/g, '')).toLocaleString('en-NG', { maximumFractionDigits: input.id === 'dependents' ? 0 : 2 });
             }
         });
     });
@@ -315,12 +322,6 @@ document.addEventListener('DOMContentLoaded', function() {
         document.execCommand('copy');
         alert('{{ t('general_profile_link_copied', default='Referral link copied to clipboard!') }}');
     };
-
-    // Initialize tooltips
-    var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
-    tooltipTriggerList.forEach(function(tooltipTriggerEl) {
-        new bootstrap.Tooltip(tooltipTriggerEl);
-    });
 });
 </script>
 {% endblock %}
