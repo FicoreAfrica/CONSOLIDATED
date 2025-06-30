@@ -36,7 +36,7 @@ def custom_login_required(f):
 def get_mongo_collection():
     return get_mongo_db()['financial_health_scores']
 
-class CommaSeparatedFloatField(wtforms.FloatField):
+class CommaSeparatedFloatField(FloatField):
     def process_formdata(self, valuelist):
         if valuelist:
             try:
