@@ -6,7 +6,7 @@
         <h1>{{ t('payments_edit_title', default='Edit Money Out') }}</h1>
         <small class="subtext">{{ t('payments_subtitle', default='Kuɗin Da Ka Biya Wasu') }}</small>
     </div>
-    <form action="{{ url_for('payments_blueprint.edit', id=payment._id) }}" method="POST" class="row g-3">
+    <form action="{{ url_for('payments.edit', id=payment._id) }}" method="POST" class="row g-3">
         {{ form.hidden_tag() }}
         <div class="col-12">
             <label for="party_name" class="form-label">{{ t('payments_party_name', default='Party Name') }}</label>
