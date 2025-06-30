@@ -1,7 +1,3 @@
-"""
-General purpose translations for common UI elements, authentication, and navigation
-"""
-
 GENERAL_TRANSLATIONS = {
     'en': {
         # Authentication & User Management
@@ -25,6 +21,33 @@ GENERAL_TRANSLATIONS = {
         'general_reset_password': 'Reset Password',
         'general_change_password': 'Change Password',
         'general_update_profile': 'Update Profile',
+        'general_username_required': 'Username is required',
+        'general_username_length': 'Username must be between 3 and 20 characters long',
+        'general_username_format': 'Username can only contain letters, numbers, and underscores',
+        'general_password_required': 'Password is required',
+        'general_password_length': 'Password must be at least 8 characters long',
+        'general_otp': 'OTP',
+        'general_otp_required': 'OTP is required',
+        'general_otp_length': 'OTP must be 6 digits long',
+        'general_verify_otp': 'Verify OTP',
+        'general_email_required': 'Email is required',
+        'general_email_invalid': 'Invalid email address',
+        'general_password_format': 'Password must contain at least one uppercase letter, one lowercase letter, one number, and one special character.',
+        'general_role': 'Role',
+        'general_personal': 'Personal',
+        'general_trader': 'Trader',
+        'general_agent': 'Agent',
+        'general_role_required': 'Role is required',
+        'general_language_required': 'Language is required',
+        'general_send_reset_link': 'Send Reset Link',
+        'general_confirm_password_required': 'Confirm password is required',
+        'general_passwords_must_match': 'Passwords must match',
+        'general_business_name': 'Business Name',
+        'general_business_name_required': 'Business name is required',
+        'general_address_required': 'Address is required',
+        'general_industry': 'Industry',
+        'general_retail': 'Retail',
+        'general_services': 'Services',
         
         # Navigation & Common UI
         'general_home': 'Home',
@@ -128,6 +151,11 @@ GENERAL_TRANSLATIONS = {
         'general_thank_you': 'Thank you',
         'general_welcome_back': 'Welcome back',
         'general_goodbye': 'Goodbye',
+        'general_mail_service_initialized': 'Mail service initialized',
+        'general_rate_limiter_initialized': 'Rate limiter initialized',
+        'general_mongo_connection_established': 'MongoDB connection established',
+        'general_database_connection_established': 'Database connection established',
+        'general_index_exists': 'Index exists',
         
         # Language & Localization
         'general_language': 'Language',
@@ -226,6 +254,33 @@ GENERAL_TRANSLATIONS = {
         'general_reset_password': 'Sake Saita Kalmar Sirri',
         'general_change_password': 'Canza Kalmar Sirri',
         'general_update_profile': 'Sabunta Bayani',
+        'general_username_required': 'Ana buƙatar sunan mai amfani',
+        'general_username_length': 'Sunan mai amfani dole ne ya kasance tsakanin haruffa 3 zuwa 20',
+        'general_username_format': 'Sunan mai amfani zai iya ƙunsar haruffa, lambobi, da kuma ƙaramin layi kawai',
+        'general_password_required': 'Ana buƙatar kalmar sirri',
+        'general_password_length': 'Kalmar sirri dole ne ta kasance aƙalla haruffa 8',
+        'general_otp': 'OTP',
+        'general_otp_required': 'Ana buƙatar OTP',
+        'general_otp_length': 'OTP dole ne ya kasance lambobi 6',
+        'general_verify_otp': 'Tabbatar da OTP',
+        'general_email_required': 'Ana buƙatar imel',
+        'general_email_invalid': 'Adireshin imel mara inganci',
+        'general_password_format': 'Kalmar sirri dole ne ta ƙunshi aƙalla babban harafi ɗaya, ƙaramin harafi ɗaya, lamba ɗaya, da kuma alama ta musamman ɗaya.',
+        'general_role': 'Matsayi',
+        'general_personal': 'Na Kai',
+        'general_trader': 'Mai Kasuwanci',
+        'general_agent': 'Wakili',
+        'general_role_required': 'Ana buƙatar matsayi',
+        'general_language_required': 'Ana buƙatar yare',
+        'general_send_reset_link': 'Aika hanyar haɗin sake saiti',
+        'general_confirm_password_required': 'Ana buƙatar tabbatar da kalmar sirri',
+        'general_passwords_must_match': 'Kalmomin sirri dole ne su dace',
+        'general_business_name': 'Sunan Kasuwanci',
+        'general_business_name_required': 'Ana buƙatar sunan kasuwanci',
+        'general_address_required': 'Ana buƙatar adireshin',
+        'general_industry': 'Masana\'antu',
+        'general_retail': 'Dillali',
+        'general_services': 'Ayyuka',
         
         # Navigation & Common UI
         'general_home': 'Gida',
@@ -329,6 +384,11 @@ GENERAL_TRANSLATIONS = {
         'general_thank_you': 'Na Gode',
         'general_welcome_back': 'Maraba da Dawowa',
         'general_goodbye': 'Sai Anjima',
+        'general_mail_service_initialized': 'An fara aikin saƙo',
+        'general_rate_limiter_initialized': 'An fara iyakance sauri',
+        'general_mongo_connection_established': 'An kafa haɗin MongoDB',
+        'general_database_connection_established': 'An kafa haɗin bayanan bayanai',
+        'general_index_exists': 'Index yana wanzu',
         
         # Language & Localization
         'general_language': 'Harshe',
