@@ -45,7 +45,7 @@
                         <a class="nav-link {% if request.endpoint == 'about' %}active{% endif %}" href="{{ url_for('about') | e }}" data-bs-toggle="tooltip" data-bs-title="{{ t('general_about_tooltip', default='Learn more about Ficore') | e }}" aria-current="{% if request.endpoint == 'about' %}page{% endif %}">{{ t('general_about', default='About') | e }}</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link {% if request.endpoint == 'general.contact' %}active{% endif %}" href="{{ url_for('general.contact') | e }}" data-bs-toggle="tooltip" data-bs-title="{{ t('general_contact_tooltip', default='Get in touch') | e }}" aria-current="{% if request.endpoint == 'general.contact' %}page{% endif %}">{{ t('general_contact', default='Contact') | e }}</a>
+                        <a class="nav-link {% if request.endpoint == 'contact' %}active{% endif %}" href="{{ url_for('contact') | e }}" data-bs-toggle="tooltip" data-bs-title="{{ t('general_contact_tooltip', default='Get in touch') | e }}" aria-current="{% if request.endpoint == 'contact' %}page{% endif %}">{{ t('general_contact', default='Contact') | e }}</a>
                     </li>
                     <li class="nav-item dropdown">
                         <a class="nav-link dropdown-toggle" href="#" id="toolsDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false" data-bs-title="{{ t('general_tools_tooltip', default='Financial tools') | e }}" aria-label="{{ t('general_tools', default='Tools') | e }}">
@@ -54,7 +54,7 @@
                         <ul class="dropdown-menu" aria-labelledby="toolsDropdown">
                             <li><a class="dropdown-item" href="{{ url_for('financial_health.main') | e }}">{{ t('financial_health_financial_health_score', default='Financial Health Score') | e }}</a></li>
                             <li><a class="dropdown-item" href="{{ url_for('quiz.main') | e }}">{{ t('quiz_personality_quiz', default='Personality Quiz') | e }}</a></li>
-                            <li><a class="dropdown-item" href="{{ url_for('dashboard_bp.index') | e }}">{{ t('general_general_dashboard', default='General Dashboard') | e }}</a></li>
+                            <li><a class="dropdown-item" href="{{ url_for('dashboard.index') | e }}">{{ t('general_general_dashboard', default='General Dashboard') | e }}</a></li>
                             <li><a class="dropdown-item" href="{{ url_for('budget.main') | e }}">{{ t('budget_budget_planner', default='Budget Planner') | e }}</a></li>
                             <li><a class="dropdown-item" href="{{ url_for('bill.main') | e }}">{{ t('bill_bill_planner', default='Bill Planner') | e }}</a></li>
                             <li><a class="dropdown-item" href="{{ url_for('emergency_fund.main') | e }}">{{ t('emergency_fund_calculator', default='Emergency Fund Planner') | e }}</a></li>
@@ -176,7 +176,7 @@
                 <i class="bi bi-house"></i>
                 <span>{{ t('general_home', default='Home') | e }}</span>
             </a>
-            <a href="{{ url_for('dashboard_bp.index') | e }}" class="nav-item {% if request.endpoint == 'personal.general_dashboard' %}active{% endif %}" aria-current="{% if request.endpoint == 'personal.general_dashboard' %}page{% endif %}">
+            <a href="{{ url_for('dashboard.index') | e }}" class="nav-item {% if request.endpoint == 'personal.general_dashboard' %}active{% endif %}" aria-current="{% if request.endpoint == 'personal.general_dashboard' %}page{% endif %}">
                 <i class="bi bi-list-ul"></i>
                 <span>{{ t('general_general_dashboard', default='Dashboard') | e }}</span>
             </a>
