@@ -85,7 +85,7 @@
                     </li>
                     {% if current_user.get('is_admin', False) %}
                     <li class="nav-item">
-                        <a class="nav-link {% if request.endpoint == 'admin_blueprint.dashboard' %}active{% endif %}" href="{{ url_for('admin_blueprint.dashboard') | e }}" aria-current="{% if request.endpoint == 'admin_blueprint.dashboard' %}page{% endif %}">{{ t('admin_admin_panel', default='Admin Panel') | e }}</a>
+                        <a class="nav-link {% if request.endpoint == 'admin.dashboard' %}active{% endif %}" href="{{ url_for('admin.dashboard') | e }}" aria-current="{% if request.endpoint == 'admin.dashboard' %}page{% endif %}">{{ t('admin_admin_panel', default='Admin Panel') | e }}</a>
                     </li>
                     {% endif %}
                 </ul>
@@ -98,7 +98,7 @@
                             </button>
                         </li>
                         <li class="nav-item">
-                            <a class="profile-icon" href="{{ url_for('settings_blueprint.profile') | e }}" data-bs-toggle="tooltip" data-bs-title="{{ t('general_profile_tooltip', default='Manage your account') | e }}" aria-label="{{ t('general_profile', default='Profile') | e }}">
+                            <a class="profile-icon" href="{{ url_for('settings.profile') | e }}" data-bs-toggle="tooltip" data-bs-title="{{ t('general_profile_tooltip', default='Manage your account') | e }}" aria-label="{{ t('general_profile', default='Profile') | e }}">
                                 <i class="bi bi-person-dash"></i>
                             </a>
                         </li>
@@ -107,20 +107,20 @@
                                 {{ current_user.display_name | default(t('general_profile', default='Profile') | e) | e }}
                             </a>
                             <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="profileDropdown">
-                                <li><a class="dropdown-item" href="{{ url_for('settings_blueprint.profile') | e }}">{{ t('general_profile', default='Profile') | e }}</a></li>
+                                <li><a class="dropdown-item" href="{{ url_for('settings.profile') | e }}">{{ t('general_profile', default='Profile') | e }}</a></li>
                                 <li><a class="dropdown-item" href="{{ url_for('feedback') | e }}">{{ t('general_feedback', default='Send Feedback') | e }}</a></li>
                                 {% if current_user.get('is_admin', False) %}
-                                <li><a class="dropdown-item" href="{{ url_for('admin_blueprint.dashboard') | e }}">{{ t('admin_admin_panel', default='Admin Panel') | e }}</a></li>
+                                <li><a class="dropdown-item" href="{{ url_for('admin.dashboard') | e }}">{{ t('admin_admin_panel', default='Admin Panel') | e }}</a></li>
                                 {% endif %}
-                                <li><a class="dropdown-item" href="{{ url_for('users_blueprint.logout') | e }}">{{ t('general_logout', default='Logout') | e }}</a></li>
+                                <li><a class="dropdown-item" href="{{ url_for('users.logout') | e }}">{{ t('general_logout', default='Logout') | e }}</a></li>
                             </ul>
                         </li>
                     {% else %}
                         <li class="nav-item">
-                            <a class="nav-link {% if request.endpoint == 'users_blueprint.login' %}active{% endif %}" href="{{ url_for('users_blueprint.login') | e }}" data-bs-toggle="tooltip" data-bs-title="{{ t('general_login_tooltip', default='Log in to your account') | e }}" aria-current="{% if request.endpoint == 'users_blueprint.login' %}page{% endif %}">{{ t('general_login', default='Login') | e }}</a>
+                            <a class="nav-link {% if request.endpoint == 'users.login' %}active{% endif %}" href="{{ url_for('users.login') | e }}" data-bs-toggle="tooltip" data-bs-title="{{ t('general_login_tooltip', default='Log in to your account') | e }}" aria-current="{% if request.endpoint == 'users.login' %}page{% endif %}">{{ t('general_login', default='Login') | e }}</a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link {% if request.endpoint == 'users_blueprint.signup' %}active{% endif %}" href="{{ url_for('users_blueprint.signup') | e }}" data-bs-toggle="tooltip" data-bs-title="{{ t('general_signup_tooltip', default='Create a new account') | e }}" aria-current="{% if request.endpoint == 'users_blueprint.signup' %}page{% endif %}">{{ t('general_signup', default='Sign Up') | e }}</a>
+                            <a class="nav-link {% if request.endpoint == 'users.signup' %}active{% endif %}" href="{{ url_for('users.signup') | e }}" data-bs-toggle="tooltip" data-bs-title="{{ t('general_signup_tooltip', default='Create a new account') | e }}" aria-current="{% if request.endpoint == 'users.signup' %}page{% endif %}">{{ t('general_signup', default='Sign Up') | e }}</a>
                         </li>
                     {% endif %}
                     <li class="nav-item dropdown">
@@ -196,7 +196,7 @@
                 <i class="bi bi-calculator"></i>
                 <span>{{ t('general_taxation', default='Taxation') | e }}</span>
             </a>
-            <a href="{{ url_for('settings_blueprint.profile') | e }}" class="nav-item {% if request.endpoint == 'settings_blueprint.profile' %}active{% endif %}" aria-current="{% if request.endpoint == 'settings_blueprint.profile' %}page{% endif %}">
+            <a href="{{ url_for('settings.profile') | e }}" class="nav-item {% if request.endpoint == 'settings.profile' %}active{% endif %}" aria-current="{% if request.endpoint == 'settings.profile' %}page{% endif %}">
                 <i class="bi bi-person"></i>
                 <span>{{ t('general_profile', default='Profile') | e }}</span>
             </a>
@@ -240,9 +240,9 @@
                 <a href="mailto:support@ficoreafrica.com" class="text-white"><i class="fas fa-envelope"></i> {{ t('general_contact_us', default='Contact Us') | e }}</a>
                 <a href="{{ url_for('feedback') | e }}" class="text-white"><i class="fas fa-comment"></i> {{ t('general_provide_feedback', default='Provide Feedback') | e }}</a>
                 {% if current_user.is_authenticated %}
-                <a href="{{ url_for('users_blueprint.logout') | e }}" class="text-white"><i class="fas fa-sign-out-alt"></i> {{ t('general_logout', default='Logout') | e }}</a>
+                <a href="{{ url_for('users.logout') | e }}" class="text-white"><i class="fas fa-sign-out-alt"></i> {{ t('general_logout', default='Logout') | e }}</a>
                 {% else %}
-                <a href="{{ url_for('users_blueprint.login') | e }}" class="text-white"><i class="fas fa-sign-in-alt"></i> {{ t('general_login', default='Login') | e }}</a>
+                <a href="{{ url_for('users.login') | e }}" class="text-white"><i class="fas fa-sign-in-alt"></i> {{ t('general_login', default='Login') | e }}</a>
                 {% endif %}
             </div>
         </div>
