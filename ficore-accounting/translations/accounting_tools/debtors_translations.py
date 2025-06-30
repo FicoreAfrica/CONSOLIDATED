@@ -11,6 +11,7 @@ DEBTORS_TRANSLATIONS = {
         # Debtors
         'debtors_amount_owed': 'Amount Owed',
         'debtors_delete_debtor': 'Delete Debtor',
+        'debtors_insufficient_coins': 'Insufficient coins to add debtor',
         'debtors_debtor_name': 'Debtor Name',
         'debtors_create_what_they_owe_you': 'Create What They Owe You',
         'debtors_what_they_owe_you': 'What They Owe You',
@@ -100,6 +101,7 @@ DEBTORS_TRANSLATIONS = {
         'debtors_over_90_days': 'Sama da Kwanaki 90',
         'debtors_send_reminder': 'Aika Tunatarwa',
         'debtors_reminder_sent': 'An aika tunatarwa cikin nasara',
+        'debtors_insufficient_coins': 'Ba isassun kuɗaɗe don ƙara mai bin bashi',
         'debtors_statement': 'Bayani',
         'debtors_generate_statement': 'Samar da Bayani',
         'debtors_invoice': 'Lissafin Kuɗi',
