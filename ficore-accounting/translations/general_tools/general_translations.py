@@ -293,29 +293,6 @@ GENERAL_TRANSLATIONS = {
         # Reports
         'reports_start_date': 'Start Date',
         'reports_end_date': 'End Date',
-        
-        # Agents
-        'agents_agent_name_required': 'Agent name is required',
-        'agents_agent_id': 'Agent ID',
-        'agents_agent_id_required': 'Agent ID is required',
-        'agents_agent_id_length': 'Agent ID must be between 3 and 50 characters long',
-        'agents_area': 'Area',
-        'agents_area_required': 'Area is required',
-        'agents_area_length': 'Area name must be between 2 and 100 characters long',
-        'agents_role': 'Agent Role',
-        'agents_role_required': 'Agent role is required',
-        'agents_role_length': 'Agent role must be between 2 and 50 characters long',
-        'agents_user_onboarding': 'User Onboarding',
-        'agents_financial_literacy': 'Financial Literacy',
-        'agents_technical_support': 'Technical Support',
-        'agents_cash_point': 'Cash Point',
-        'agents_register_trader': 'Register Trader',
-        'agents_trader_username': 'Trader Username',
-        'agents_trader_username_required': 'Trader username is required',
-        'agents_token_amount': 'Token Amount',
-        'agents_token_amount_required': 'Token amount is required',
-        'agents_minimum_token_amount': 'Minimum Token Amount',
-        'agents_process_tokens': 'Process Tokens',
     },
     'ha': {
         # Authentication & User Management
@@ -584,6 +561,6 @@ GENERAL_TRANSLATIONS = {
         'general_powered_by': 'An Ƙarfafa Ta',
         'general_version': 'Sigar',
         'general_copyright': 'Haƙƙin Mallaka',
-        'general_all_rights_reserved': 'Duk Haƙƙoƙi An Kebe Su'
+        'general_all_rights_reserved': 'Duk Haƙƙoƙi An Kebe Su',
     }
 }
