@@ -119,7 +119,13 @@ LEARNING_HUB_TRANSLATIONS = {
         'learning_hub_continue_course': 'Continue your course.',
         'learning_hub_no_course_progress': 'No progress has been made on courses yet.',
         'learning_hub_my_courses': 'My Courses',
-        'learning_hub_progress': 'Course Progress'
+        'learning_hub_progress': 'Course Progress',
+        'learning_hub_course_title': 'Course Title',
+        'learning_hub_course_id': 'Course ID',
+        'learning_hub_description': 'Course Description',
+        'learning_hub_content_type': 'Content Type',
+        'learning_hub_is_premium': 'Premium Course',
+        'learning_hub_upload_file': 'Upload Course File',
     },
     'ha': {
         # Course Titles & Descriptions
@@ -216,6 +222,12 @@ LEARNING_HUB_TRANSLATIONS = {
         'content_type': 'Nauin Abun Ciki',
         'is_premium': 'Na Musamman',
         'upload_file': 'Loda Fayil',
+        'learning_hub_course_title': 'Taken Darasi',
+        'learning_hub_course_id': 'ID na Darasi',
+        'learning_hub_description': 'Bayanin Darasi',
+        'learning_hub_content_type': 'Nau’in Abun Ciki',
+        'learning_hub_is_premium': 'Darasi na Musamman',
+        'learning_hub_upload_file': 'Loda Fayil ɗin Darasi',
 
         # Additional Course-Related Keys
         'learning_hub_budgeting': 'Kwas ɗin kasafin kuɗi da ake samu don koyo.',
