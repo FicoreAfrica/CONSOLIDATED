@@ -6,6 +6,8 @@ CREDITORS_TRANSLATIONS = {
     'en': {
         'creditors_dashboard': 'Creditors Dashboard',
         'creditors_list': 'Creditors List',
+        # Creditors
+        'creditors_amount_owed': 'Amount Owed',
         'creditors_add_creditor': 'Add Creditor',
         'creditors_edit_creditor': 'Edit Creditor',
         'creditors_delete_creditor': 'Delete Creditor',
@@ -80,6 +82,8 @@ CREDITORS_TRANSLATIONS = {
         'creditors_total_outstanding': 'Jimillar da Ya Rage',
         'creditors_overdue_payments': 'Biyan da Ya Wuce Lokaci',
         'creditors_aging_report': 'Rahoton Tsufa',
+        # Creditors
+        'creditors_amount_owed': 'Adadin Bashi',
         'creditors_30_days': 'Kwanaki 0-30',
         'creditors_60_days': 'Kwanaki 31-60',
         'creditors_90_days': 'Kwanaki 61-90',
