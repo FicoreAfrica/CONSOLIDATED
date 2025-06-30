@@ -1,6 +1,6 @@
 from flask import Blueprint, render_template, session, request, redirect, url_for, flash, current_app, send_from_directory, jsonify
 from flask_wtf import FlaskForm
-from wtforms import StringField, BooleanField, SubmitField, HiddenField, FileField
+from wtforms import StringField, BooleanField, SubmitField, HiddenField, FileField, SelectField
 from wtforms.validators import DataRequired, Email, Optional
 from flask_wtf.csrf import CSRFProtect, CSRFError
 from flask_login import current_user
@@ -40,7 +40,7 @@ def custom_login_required(f):
 csrf = CSRFProtect()
 
 # Define allowed file extensions and upload folder
-ALLOWED_EXTENSIONS = {'mp4', 'pdf', 'txt'}
+ALLOWED_EXTENSIONS = {'mp4', 'pdf', 'txt', 'md'}
 UPLOAD_FOLDER = 'static/uploads'
 
 # Ensure upload folder exists
@@ -72,6 +72,7 @@ courses_data = {
         "description_ha": "Koyon asalin tsarin kudi da shirye-shiryen kudi don sarrafa kudin ku.",
         "title_key": "learning_hub_course_budgeting101_title",
         "desc_key": "learning_hub_course_budgeting101_desc",
+        "is_premium": False,
         "modules": [
             {
                 "id": "module-1",
@@ -83,7 +84,7 @@ courses_data = {
                         "title_key": "learning_hub_lesson_income_sources_title",
                         "title_en": "Income Sources",
                         "content_type": "video",
-                        "content_path": "Uploads/budgeting_101_lesson1.mp4",
+                        "content_path": "uploads/budgeting_101_lesson1.mp4",
                         "content_en": "Understanding different sources of income is crucial for effective budgeting. Learn about salary, business income, investments, and passive income streams.",
                         "quiz_id": "quiz-1-1"
                     },
@@ -123,6 +124,7 @@ courses_data = {
         "description_ha": "Gwada ilimin ku na kudi da jarabawa mai cikakke kuma gano wuraren da za ku inganta.",
         "title_key": "learning_hub_course_financial_quiz_title",
         "desc_key": "learning_hub_course_financial_quiz_desc",
+        "is_premium": False,
         "modules": [
             {
                 "id": "module-1",
@@ -150,6 +152,7 @@ courses_data = {
         "description_ha": "Koyon asalin tattara kudi yadda ya kamata kuma gina makomar kudi mai tsaro.",
         "title_key": "learning_hub_course_savings_basics_title",
         "desc_key": "learning_hub_course_savings_basics_desc",
+        "is_premium": False,
         "modules": [
             {
                 "id": "module-1",
@@ -275,6 +278,26 @@ class LearningHubProfileForm(FlaskForm):
         if self.email.validators:
             self.email.validators[1].message = trans('general_email_invalid', lang=lang)
 
+class UploadForm(FlaskForm):
+    title = StringField(trans('learning_hub_course_title', default='Course Title'), validators=[DataRequired()])
+    course_id = StringField(trans('learning_hub_course_id', default='Course ID'), validators=[DataRequired()])
+    description = StringField(trans('learning_hub_description', default='Description'), validators=[DataRequired()])
+    content_type = SelectField(trans('learning_hub_content_type', default='Content Type'), choices=[
+        ('video', 'Video'), ('text', 'Text'), ('pdf', 'PDF')
+    ], validators=[DataRequired()])
+    is_premium = BooleanField(trans('learning_hub_is_premium', default='Premium Content'), default=False)
+    file = FileField(trans('learning_hub_upload_file', default='Upload File'), validators=[DataRequired()])
+    submit = SubmitField(trans('learning_hub_upload', default='Upload'))
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        lang = session.get('lang', 'en')
+        self.title.validators[0].message = trans('learning_hub_course_title_required', lang=lang)
+        self.course_id.validators[0].message = trans('learning_hub_course_id_required', lang=lang)
+        self.description.validators[0].message = trans('learning_hub_description_required', lang=lang)
+        self.content_type.validators[0].message = trans('learning_hub_content_type_required', lang=lang)
+        self.file.validators[0].message = trans('learning_hub_file_required', lang=lang)
+
 def get_progress():
     """Retrieve learning progress from MongoDB with caching."""
     try:
@@ -347,7 +370,7 @@ def init_storage(app):
                         'title_ha': course['title_ha'],
                         'description_en': course['description_en'],
                         'description_ha': course['description_ha'],
-                        'is_premium': False
+                        'is_premium': course.get('is_premium', False)
                     } for course in courses_data.values()
                 ]
                 if default_courses:
@@ -393,6 +416,7 @@ def calculate_progress_summary():
     progress_summary = []
     total_completed = 0
     total_quiz_scores = 0
+    certificates_earned = 0
     
     for course_id, course in courses_data.items():
         if not course_lookup(course_id):
@@ -415,11 +439,13 @@ def calculate_progress_summary():
         
         total_completed += completed
         total_quiz_scores += len(cp.get('quiz_scores', {}))
+        if completed == lessons_total and lessons_total > 0:
+            certificates_earned += 1
     
-    return progress_summary, total_completed, total_quiz_scores
+    return progress_summary, total_completed, total_quiz_scores, certificates_earned
 
 @learning_hub_bp.route('/')
-@learning_hub_bp.route('/main')
+@learning_hub_bp.route('/main', methods=['GET', 'POST'])
 @custom_login_required
 @requires_role(['personal', 'admin'])
 def main():
@@ -442,7 +468,7 @@ def main():
         
         # Get progress and calculate summary
         progress = get_progress()
-        progress_summary, total_completed, total_quiz_scores = calculate_progress_summary()
+        progress_summary, total_completed, total_quiz_scores, certificates_earned = calculate_progress_summary()
         
         # Get profile data
         profile_data = session.get('learning_hub_profile', {})
@@ -450,20 +476,76 @@ def main():
             profile_data['email'] = profile_data.get('email', current_user.email)
             profile_data['first_name'] = profile_data.get('first_name', current_user.username)
         
-        # Create profile form
+        # Create forms
         profile_form = LearningHubProfileForm(data=profile_data)
+        upload_form = UploadForm()
+        
+        if request.method == 'POST' and request.form.get('action') == 'upload' and is_admin():
+            if upload_form.validate_on_submit():
+                if not allowed_file(upload_form.file.data.filename):
+                    flash(trans('learning_hub_invalid_file_type', default='Invalid file type. Allowed: mp4, pdf, txt, md'), 'danger')
+                else:
+                    filename = secure_filename(upload_form.file.data.filename)
+                    file_path = os.path.join(current_app.config.get('UPLOAD_FOLDER', UPLOAD_FOLDER), filename)
+                    upload_form.file.data.save(file_path)
+                    
+                    # Update courses_data (in-memory; should ideally update MongoDB)
+                    course_id = upload_form.course_id.data
+                    courses_data[course_id] = {
+                        'id': course_id,
+                        'title_en': upload_form.title.data,
+                        'title_ha': upload_form.title.data,  # Placeholder; should support translation
+                        'description_en': upload_form.description.data,
+                        'description_ha': upload_form.description.data,  # Placeholder
+                        'title_key': f"learning_hub_course_{course_id}_title",
+                        'desc_key': f"learning_hub_course_{course_id}_desc",
+                        'is_premium': upload_form.is_premium.data,
+                        'modules': [{
+                            'id': f"{course_id}-module-1",
+                            'title_key': f"learning_hub_module_{course_id}_title",
+                            'title_en': "Module 1",
+                            'lessons': [{
+                                'id': f"{course_id}-module-1-lesson-1",
+                                'title_key': f"learning_hub_lesson_{course_id}_title",
+                                'title_en': "Lesson 1",
+                                'content_type': upload_form.content_type.data,
+                                'content_path': f"uploads/{filename}",
+                                'content_en': "Uploaded content",
+                                'quiz_id': None
+                            }]
+                        }]
+                    }
+                    
+                    # Save to MongoDB
+                    get_mongo_db().learning_materials.insert_one({
+                        'type': 'course',
+                        'id': course_id,
+                        'title_key': f"learning_hub_course_{course_id}_title",
+                        'title_en': upload_form.title.data,
+                        'title_ha': upload_form.title.data,
+                        'description_en': upload_form.description.data,
+                        'description_ha': upload_form.description.data,
+                        'is_premium': upload_form.is_premium.data
+                    })
+                    
+                    flash(trans('learning_hub_upload_success', default='Content uploaded successfully'), 'success')
+                    current_app.logger.info(f"Uploaded course {course_id}", extra={'session_id': session['sid']})
+            else:
+                flash(trans('learning_hub_upload_failed', default='Failed to upload content'), 'danger')
         
         current_app.logger.info(f"Rendering main learning hub page", extra={'session_id': session.get('sid', 'no-session-id')})
         
         return render_template(
-            'learning_hub_main.html',
+            'personal/LEARNINGHUB/learning_hub_main.html',
             courses=courses_data,
             progress=progress,
             progress_summary=progress_summary,
             total_completed=total_completed,
             total_courses=len(courses_data),
             quiz_scores_count=total_quiz_scores,
+            certificates_earned=certificates_earned,
             profile_form=profile_form,
+            upload_form=upload_form,
             profile_data=profile_data,
             t=trans,
             lang=lang,
@@ -474,14 +556,16 @@ def main():
         current_app.logger.error(f"Error rendering main learning hub page: {str(e)}", extra={'session_id': session.get('sid', 'no-session-id')})
         flash(trans("learning_hub_error_loading", default="Error loading learning hub", lang=lang), "danger")
         return render_template(
-            'learning_hub_main.html',
+            'personal/LEARNINGHUB/learning_hub_main.html',
             courses={},
             progress={},
             progress_summary=[],
             total_completed=0,
             total_courses=0,
             quiz_scores_count=0,
+            certificates_earned=0,
             profile_form=LearningHubProfileForm(),
+            upload_form=UploadForm(),
             profile_data={},
             t=trans,
             lang=lang,
@@ -684,6 +768,7 @@ def quiz_action():
         return jsonify({'success': False, 'message': trans('learning_hub_quiz_error', default='Error processing quiz')})
 
 @learning_hub_bp.route('/profile', methods=['GET', 'POST'])
+@custom_login_required
 def profile():
     """Handle user profile form for first name and email."""
     if 'sid' not in session:
@@ -703,20 +788,23 @@ def profile():
         )
         
         if request.method == 'POST':
-            session['learning_hub_profile'] = {
-                'first_name': request.form.get('first_name', ''),
-                'email': request.form.get('email', ''),
-                'send_email': 'send_email' in request.form
-            }
-            session.permanent = True
-            session.modified = True
-            
-            current_app.logger.info(f"Profile saved for user {current_user.id if current_user.is_authenticated else 'anonymous'}", extra={'session_id': session.get('sid', 'no-session-id')})
-            flash(trans('learning_hub_profile_saved', default='Profile saved successfully', lang=lang), 'success')
+            profile_form = LearningHubProfileForm()
+            if profile_form.validate_on_submit():
+                session['learning_hub_profile'] = {
+                    'first_name': profile_form.first_name.data,
+                    'email': profile_form.email.data,
+                    'send_email': profile_form.send_email.data
+                }
+                session.permanent = True
+                session.modified = True
+                
+                current_app.logger.info(f"Profile saved for user {current_user.id if current_user.is_authenticated else 'anonymous'}", extra={'session_id': session.get('sid', 'no-session-id')})
+                flash(trans('learning_hub_profile_saved', default='Profile saved successfully', lang=lang), 'success')
+            else:
+                flash(trans('learning_hub_profile_failed', default='Failed to save profile', lang=lang), 'danger')
             
             return redirect(url_for('learning_hub.main'))
         
-        # For GET requests, redirect to main page
         return redirect(url_for('learning_hub.main'))
         
     except Exception as e:
@@ -834,8 +922,3 @@ def lesson(course_id, lesson_id):
 def quiz(course_id, quiz_id):
     """Redirect to main page and load quiz."""
     return redirect(url_for('learning_hub.main') + f'#quiz-{course_id}-{quiz_id}')
-
-@learning_hub_bp.route('/dashboard')
-def dashboard():
-    """Redirect to main page with dashboard tab."""
-    return redirect(url_for('learning_hub.main') + '#dashboard')
