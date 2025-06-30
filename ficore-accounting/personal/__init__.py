@@ -161,6 +161,33 @@ def recent_activity():
                 }
             })
 
+        # Fetch recent emergency fund plans
+        emergency_funds = db.emergency_funds.find({'user_id': user_id}).sort('created_at', -1).limit(5)
+        for ef in emergency_funds:
+            activities.append({
+                'type': 'emergency_fund',
+                'description': trans('recent_activity_emergency_fund_created', default='Created emergency fund plan with target: {amount}', lang=session.get('lang', 'en'), amount=ef['target_amount']),
+                'timestamp': ef['created_at'].isoformat(),
+                'details': {
+                    'target_amount': ef['target_amount'],
+                    'savings_gap': ef['savings_gap'],
+                    'monthly_savings': ef['monthly_savings']
+                }
+            })
+
+        # Fetch recent quiz results
+        quizzes = db.quiz_responses.find({'user_id': user_id}).sort('created_at', -1).limit(5)
+        for quiz in quizzes:
+            activities.append({
+                'type': 'quiz',
+                'description': trans('recent_activity_quiz_completed', default='Completed financial quiz with score: {score}', lang=session.get('lang', 'en'), score=quiz['score']),
+                'timestamp': quiz['created_at'].isoformat(),
+                'details': {
+                    'score': quiz['score'],
+                    'personality': quiz['personality']
+                }
+            })
+
         # Sort all activities by timestamp and limit to 10
         activities.sort(key=lambda x: x['timestamp'], reverse=True)
         activities = activities[:10]
@@ -172,3 +199,74 @@ def recent_activity():
         current_app.logger.error(f"Error in personal.recent_activity: {str(e)}", 
                                 extra={'session_id': session.get('sid', 'unknown')})
         return jsonify({'error': 'Failed to fetch recent activity'}), 500
+
+# Set language blueprint
+set_language_bp = Blueprint('set_language', __name__)
+
+@set_language_bp.route('/set_language/<lang>')
+def set_language(lang):
+    """Set the user's language preference"""
+    valid_langs = ['en', 'ha']
+    new_lang = lang if lang in valid_langs else 'en'
+    try:
+        session['lang'] = new_lang
+        with current_app.app_context():
+            if current_user.is_authenticated:
+                db = get_mongo_db()
+                db.users.update_one({'_id': current_user.id}, {'$set': {'language': new_lang}})
+        current_app.logger.info(f"Language set to {new_lang}")
+        flash(trans('general_language_changed', default='Language updated successfully'), 'success')
+    except Exception as e:
+        current_app.logger.error(f"Session operation failed: {str(e)}")
+        flash(trans('general_invalid_language', default='Invalid language'), 'danger')
+    return redirect(request.referrer or url_for('personal.index'))
+
+# Notifications blueprint
+notifications_bp = Blueprint('notifications', __name__)
+
+@notifications_bp.route('/notification_count')
+@login_required
+def notification_count():
+    """Return the count of unread notifications for the current user"""
+    try:
+        db = get_mongo_db()
+        user_id = current_user.id
+        count = db.reminder_logs.count_documents({
+            'user_id': user_id,
+            'read_status': False
+        })
+        return jsonify({'count': count})
+    except Exception as e:
+        current_app.logger.error(f"Error fetching notification count: {str(e)}")
+        return jsonify({'error': 'Failed to fetch notification count'}), 500
+
+@notifications_bp.route('/notifications')
+@login_required
+def notifications():
+    """Return the list of recent notifications for the current user"""
+    try:
+        db = get_mongo_db()
+        user_id = current_user.id
+        notifications = list(db.reminder_logs.find({
+            'user_id': user_id
+        }).sort('sent_at', -1).limit(10))
+        notification_ids = [n['notification_id'] for n in notifications if not n.get('read_status', False)]
+        if notification_ids:
+            db.reminder_logs.update_many(
+                {'notification_id': {'$in': notification_ids}},
+                {'$set': {'read_status': True}}
+            )
+        result = [{
+            'id': str(n['notification_id']),
+            'message': n['message'],
+            'type': n['type'],
+            'timestamp': n['sent_at'].isoformat(),
+            'read': n.get('read_status', False)
+        } for n in notifications]
+        return jsonify(result)
+    except Exception as e:
+        current_app.logger.error(f"Error fetching notifications: {str(e)}")
+        return jsonify({'error': 'Failed to fetch notifications'}), 500
+
+# Export the blueprints
+__all__ = ['personal_bp', 'set_language_bp', 'notifications_bp']
