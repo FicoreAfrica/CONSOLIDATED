@@ -383,7 +383,7 @@
         async function loadNotifications() {
             const body = document.getElementById('notificationBody');
             try {
-                const response = await fetch('{{ url_for("personal.notifications") | e }}');
+                const response = await fetch('{{ url_for("notifications") | e }}');
                 const data = await response.json();
                 if (data.error) {
                     body.innerHTML = `<p class="text-danger">${data.error}</p>`;
