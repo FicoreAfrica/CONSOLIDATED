@@ -34,6 +34,11 @@
                 <i class="fas fa-chart-line"></i> {{ t('learning_hub_my_progress', default='My Progress') }}
             </button>
         </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="profile-tab" data-bs-toggle="tab" data-bs-target="#profile" type="button" role="tab" aria-controls="profile" aria-selected="false">
+                <i class="fas fa-user"></i> {{ t('learning_hub_profile', default='Profile') }}
+            </button>
+        </li>
         {% if current_user.is_authenticated and current_user.get('is_admin', False) %}
         <li class="nav-item" role="presentation">
             <button class="nav-link" id="upload-tab" data-bs-toggle="tab" data-bs-target="#upload" type="button" role="tab" aria-controls="upload" aria-selected="false">
@@ -49,7 +54,7 @@
         <div class="tab-pane fade show active" id="courses" role="tabpanel" aria-labelledby="courses-tab">
             {% if courses %}
                 <div class="row">
-                    {% for course in courses %}
+                    {% for course in courses.values() %}
                         <div class="col-md-6 col-lg-4 mb-4">
                             <div class="card h-100 course-card">
                                 <div class="card-header">
@@ -64,42 +69,41 @@
                                     {% endif %}
                                 </div>
                                 <div class="card-body">
-                                    <p class="card-text">{{ t(course.description_key, default=course.description_en) }}</p>
+                                    <p class="card-text">{{ t(course.desc_key, default=course.description_en) }}</p>
                                     
-                                    {% if course.lessons %}
+                                    {% set lessons_total = sum(module.lessons | length for module in course.modules) %}
+                                    {% if lessons_total %}
                                         <div class="mb-3">
                                             <small class="text-muted">
                                                 <i class="fas fa-list"></i>
-                                                {{ course.lessons | length }} {{ t('learning_hub_lessons', default='lessons') }}
+                                                {{ lessons_total }} {{ t('learning_hub_lessons', default='lessons') }}
                                             </small>
                                         </div>
                                         
                                         <!-- Progress bar if user has started -->
-                                        {% if current_user.is_authenticated %}
-                                            {% set user_progress = user_progress_data.get(course.id, {}) %}
-                                            {% if user_progress.get('lessons_completed') %}
-                                                {% set progress_percent = (user_progress.lessons_completed | length / course.lessons | length * 100) | round %}
-                                                <div class="progress mb-3">
-                                                    <div class="progress-bar" role="progressbar" style="width: {{ progress_percent }}%" aria-valuenow="{{ progress_percent }}" aria-valuemin="0" aria-valuemax="100">
-                                                        {{ progress_percent }}%
-                                                    </div>
+                                        {% if progress.get(course.id) %}
+                                            {% set user_progress = progress.get(course.id, {}) %}
+                                            {% set progress_percent = (user_progress.lessons_completed | length / lessons_total * 100) | round %}
+                                            <div class="progress mb-3">
+                                                <div class="progress-bar" role="progressbar" style="width: {{ progress_percent }}%" aria-valuenow="{{ progress_percent }}" aria-valuemin="0" aria-valuemax="100">
+                                                    {{ progress_percent }}%
                                                 </div>
-                                                <small class="text-muted">
-                                                    {{ user_progress.lessons_completed | length }} / {{ course.lessons | length }} {{ t('learning_hub_completed', default='completed') }}
-                                                </small>
-                                            {% endif %}
+                                            </div>
+                                            <small class="text-muted">
+                                                {{ user_progress.lessons_completed | length }} / {{ lessons_total }} {{ t('learning_hub_completed', default='completed') }}
+                                            </small>
                                         {% endif %}
                                     {% endif %}
                                 </div>
                                 <div class="card-footer">
-                                    <a href="{{ url_for('learning_hub.main') }}" class="btn btn-primary">
-                                        {% if current_user.is_authenticated and user_progress_data.get(course.id, {}).get('lessons_completed') %}
+                                    <a href="{{ url_for('learning_hub.get_course_data', course_id=course.id) }}" class="btn btn-primary">
+                                        {% if progress.get(course.id, {}).get('lessons_completed') %}
                                             <i class="fas fa-play"></i> {{ t('learning_hub_continue', default='Continue') }}
                                         {% else %}
                                             <i class="fas fa-play"></i> {{ t('learning_hub_start', default='Start') }}
                                         {% endif %}
                                     </a>
-                                    <a href="{{ url_for('learning_hub.main') }}" class="btn btn-outline-secondary">
+                                    <a href="{{ url_for('learning_hub.get_course_data', course_id=course.id) }}" class="btn btn-outline-secondary">
                                         <i class="fas fa-info-circle"></i> {{ t('learning_hub_details', default='Details') }}
                                     </a>
                                 </div>
@@ -121,13 +125,13 @@
         <!-- Progress Tab -->
         <div class="tab-pane fade" id="progress" role="tabpanel" aria-labelledby="progress-tab">
             {% if current_user.is_authenticated %}
-                {% if user_progress_data %}
+                {% if progress %}
                     <div class="row mb-4">
                         <div class="col-md-4">
                             <div class="card bg-primary text-white">
                                 <div class="card-body text-center">
                                     <h6>{{ t('learning_hub_courses_started', default='Courses Started') }}</h6>
-                                    <h3>{{ user_progress_data | length }}</h3>
+                                    <h3>{{ progress | length }}</h3>
                                 </div>
                             </div>
                         </div>
@@ -135,7 +139,7 @@
                             <div class="card bg-success text-white">
                                 <div class="card-body text-center">
                                     <h6>{{ t('learning_hub_lessons_completed', default='Lessons Completed') }}</h6>
-                                    <h3>{{ total_lessons_completed }}</h3>
+                                    <h3>{{ total_completed }}</h3>
                                 </div>
                             </div>
                         </div>
@@ -155,7 +159,11 @@
                             <h5><i class="fas fa-chart-bar"></i> {{ t('learning_hub_learning_progress', default='Learning Progress') }}</h5>
                         </div>
                         <div class="card-body">
-                            <canvas id="progressChart" style="max-height: 400px;"></canvas>
+                            {% if progress_summary %}
+                                <canvas id="progressChart" style="max-height: 400px;"></canvas>
+                            {% else %}
+                                <p>{{ t('learning_hub_no_progress_data', default='No progress data available') }}</p>
+                            {% endif %}
                         </div>
                     </div>
 
@@ -165,29 +173,26 @@
                             <h5><i class="fas fa-list"></i> {{ t('learning_hub_course_progress', default='Course Progress') }}</h5>
                         </div>
                         <div class="card-body">
-                            {% for course_id, progress in user_progress_data.items() %}
-                                {% set course = courses | selectattr('id', 'equalto', course_id) | first %}
-                                {% if course %}
-                                    <div class="mb-3">
-                                        <div class="d-flex justify-content-between align-items-center mb-2">
-                                            <h6 class="mb-0">{{ t(course.title_key, default=course.title_en) }}</h6>
-                                            <small class="text-muted">
-                                                {{ progress.lessons_completed | length }} / {{ course.lessons | length }} {{ t('learning_hub_lessons', default='lessons') }}
-                                            </small>
-                                        </div>
-                                        {% set progress_percent = (progress.lessons_completed | length / course.lessons | length * 100) | round %}
-                                        <div class="progress">
-                                            <div class="progress-bar" role="progressbar" style="width: {{ progress_percent }}%" aria-valuenow="{{ progress_percent }}" aria-valuemin="0" aria-valuemax="100">
-                                                {{ progress_percent }}%
-                                            </div>
-                                        </div>
-                                        <div class="mt-2">
-                                            <a href="{{ url_for('learning_hub.main') }}" class="btn btn-sm btn-primary">
-                                                <i class="fas fa-play"></i> {{ t('learning_hub_continue', default='Continue') }}
-                                            </a>
+                            {% for summary in progress_summary %}
+                                {% set course = summary.course %}
+                                <div class="mb-3">
+                                    <div class="d-flex justify-content-between align-items-center mb-2">
+                                        <h6 class="mb-0">{{ t(course.title_key, default=course.title_en) }}</h6>
+                                        <small class="text-muted">
+                                            {{ summary.completed }} / {{ summary.total }} {{ t('learning_hub_lessons', default='lessons') }}
+                                        </small>
+                                    </div>
+                                    <div class="progress">
+                                        <div class="progress-bar" role="progressbar" style="width: {{ summary.percent }}%" aria-valuenow="{{ summary.percent }}" aria-valuemin="0" aria-valuemax="100">
+                                            {{ summary.percent }}%
                                         </div>
                                     </div>
-                                {% endif %}
+                                    <div class="mt-2">
+                                        <a href="{{ url_for('learning_hub.get_course_data', course_id=course.id) }}" class="btn btn-sm btn-primary">
+                                            <i class="fas fa-play"></i> {{ t('learning_hub_continue', default='Continue') }}
+                                        </a>
+                                    </div>
+                                </div>
                             {% endfor %}
                         </div>
                     </div>
@@ -217,6 +222,41 @@
             {% endif %}
         </div>
 
+        <!-- Profile Tab -->
+        <div class="tab-pane fade" id="profile" role="tabpanel" aria-labelledby="profile-tab">
+            <div class="card">
+                <div class="card-header">
+                    <h5><i class="fas fa-user"></i> {{ t('learning_hub_profile', default='Profile') }}</h5>
+                </div>
+                <div class="card-body">
+                    <form method="POST" action="{{ url_for('learning_hub.profile') }}" class="validate-form">
+                        {{ profile_form.csrf_token }}
+                        
+                        <div class="mb-3">
+                            <label class="form-label">{{ t('general_first_name', default='First Name') }}</label>
+                            {{ profile_form.first_name(class="form-control", placeholder=t('general_first_name_placeholder', default='Enter your first name')) }}
+                            <div class="invalid-feedback">{{ t('general_first_name_required', default='First name is required') }}</div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label class="form-label">{{ t('general_email', default='Email') }}</label>
+                            {{ profile_form.email(class="form-control", placeholder=t('general_email_placeholder', default='Enter your email')) }}
+                            <div class="invalid-feedback">{{ t('general_email_invalid', default='Invalid email address') }}</div>
+                        </div>
+                        
+                        <div class="mb-3 form-check">
+                            {{ profile_form.send_email(class="form-check-input") }}
+                            <label class="form-check-label">{{ t('general_send_email', default='Send Email') }}</label>
+                        </div>
+                        
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save"></i> {{ t('general_submit', default='Submit') }}
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
         <!-- Upload Content Tab (Admin Only) -->
         {% if current_user.is_authenticated and current_user.get('is_admin', False) %}
         <div class="tab-pane fade" id="upload" role="tabpanel" aria-labelledby="upload-tab">
@@ -227,6 +267,7 @@
                 <div class="card-body">
                     <form method="POST" action="{{ url_for('learning_hub.main') }}" enctype="multipart/form-data" class="validate-form">
                         {{ upload_form.csrf_token }}
+                        <input type="hidden" name="action" value="upload">
                         
                         <div class="row">
                             <div class="col-md-6">
@@ -256,6 +297,7 @@
                                 <div class="mb-3">
                                     <label class="form-label">{{ t('learning_hub_content_type', default='Content Type') }}</label>
                                     {{ upload_form.content_type(class="form-select") }}
+                                    <div class="invalid-feedback">{{ t('learning_hub_content_type_required', default='Content type is required') }}</div>
                                 </div>
                             </div>
                             <div class="col-md-6">
@@ -270,6 +312,7 @@
                             <label class="form-label">{{ t('learning_hub_upload_file', default='Upload File') }}</label>
                             {{ upload_form.file(class="form-control", accept=".pdf,.mp4,.txt,.md") }}
                             <div class="form-text">{{ t('learning_hub_supported_formats', default='Supported formats: PDF, MP4, TXT, MD') }}</div>
+                            <div class="invalid-feedback">{{ t('learning_hub_file_required', default='File is required') }}</div>
                         </div>
 
                         <button type="submit" class="btn btn-primary">
@@ -303,58 +346,57 @@
 {% block extra_scripts %}
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    {% if current_user.is_authenticated and user_progress_data %}
+    {% if current_user.is_authenticated and progress_summary %}
     // Progress Chart
-    const ctx = document.getElementById('progressChart').getContext('2d');
-    const courseNames = [];
-    const progressData = [];
-    
-    {% for course_id, progress in user_progress_data.items() %}
-        {% set course = courses | selectattr('id', 'equalto', course_id) | first %}
-        {% if course %}
-            courseNames.push('{{ t(course.title_key, default=course.title_en) }}');
-            progressData.push({{ (progress.lessons_completed | length / course.lessons | length * 100) | round }});
-        {% endif %}
-    {% endfor %}
-    
-    new Chart(ctx, {
-        type: 'bar',
-        data: {
-            labels: courseNames,
-            datasets: [{
-                label: '{{ t('learning_hub_progress_percentage', default='Progress %') }}',
-                data: progressData,
-                backgroundColor: '#2E7D32',
-                borderColor: '#1B5E20',
-                borderWidth: 1
-            }]
-        },
-        options: {
-            scales: {
-                y: {
-                    beginAtZero: true,
-                    max: 100,
-                    ticks: {
-                        callback: function(value) {
-                            return value + '%';
+    const ctx = document.getElementById('progressChart')?.getContext('2d');
+    if (ctx) {
+        const courseNames = [];
+        const progressData = [];
+        
+        {% for summary in progress_summary %}
+            courseNames.push('{{ t(summary.course.title_key, default=summary.course.title_en) }}');
+            progressData.push({{ summary.percent }});
+        {% endfor %}
+        
+        new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: courseNames,
+                datasets: [{
+                    label: '{{ t('learning_hub_progress_percentage', default='Progress %') }}',
+                    data: progressData,
+                    backgroundColor: '#2E7D32',
+                    borderColor: '#1B5E20',
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        max: 100,
+                        ticks: {
+                            callback: function(value) {
+                                return value + '%';
+                            }
                         }
                     }
-                }
-            },
-            plugins: {
-                legend: { display: false },
-                tooltip: {
-                    callbacks: {
-                        label: function(context) {
-                            return `{{ t('learning_hub_progress', default='Progress') }}: ${context.parsed.y}%`;
+                },
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                return `{{ t('learning_hub_progress', default='Progress') }}: ${context.parsed.y}%`;
+                            }
                         }
                     }
-                }
-            },
-            responsive: true,
-            maintainAspectRatio: false
-        }
-    });
+                },
+                responsive: true,
+                maintainAspectRatio: false
+            }
+        });
+    }
     {% endif %}
 
     // Copy referral link
