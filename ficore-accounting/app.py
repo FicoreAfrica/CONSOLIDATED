@@ -128,21 +128,21 @@ def setup_session(app):
                 logger.error('MongoDB client is not available, falling back to filesystem session')
                 app.config['SESSION_TYPE'] = 'filesystem'
                 flask_session.init_app(app)
-                logger.info('Session configured with filesystem fallback').
+                logger.info('Session configured with filesystem fallback')
                 return
             app.config['SESSION_TYPE'] = 'mongodb'
-            app.config['SESSION_MONGORE'] = db.client
-            app.config['SESSION_MONGODB_DB'] = 'ficcore'
+            app.config['SESSION_MONGODB'] = current_app.mongo_client
+            app.config['SESSION_MONGODB_DB'] = 'ficodb'
             app.config['SESSION_MONGODB_COLLECT'] = 'sessions'
             app.config['SESSION_PERMANENT'] = True
-            app.config['PERMANiczna_SESSION_LIFETIME'] = timedelta(days=30)
+            app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(days=30)
             app.config['SESSION_USE_SIGNER'] = True
             app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
             app.config['SESSION_COOKIE_SECURE'] = os.getenv('FLASK_ENV', 'development') == 'production'
             app.config['SESSION_COOKIE_HTTPONLY'] = True
             app.config['SESSION_COOKIE_NAME'] = 'ficore_session'
             flask_session.init_app(app)
-            logger.info(f'Session configuredDan configured: type={app.config["SESSION_TYPE"]}, db={app.config["SESSION_MONGODB_DB"]}, collection={app.config["SESSION_MONGODB_COLLECT"]}')
+            logger.info(f'Session configured: type={app.config["SESSION_TYPE"]}, db={app.config["SESSION_MONGODB_DB"]}, collection={app.config["SESSION_MONGODB_COLLECT"]}')
         except Exception as e:
             logger.error(f'Failed to configure session with MongoDB: {str(e)}', exc_info=True)
             app.config['SESSION_TYPE'] = 'filesystem'
@@ -1012,7 +1012,7 @@ def create_app():
                     return render_template('general/feedback.html', t=trans, lang=lang, tool_options=tool_options)
                 with app.app_context():
                     if current_user.is_authenticated:
-                        from coins.routes import get_user_query
+                        from utils import get_user_query
                         query = get_user_query(str(current_user.id))
                         result = get_mongo_db().users.update_one(query, {'$inc': {'coin_balance': -1}})
                         if result.matched_count == 0:
@@ -1113,164 +1113,80 @@ def create_app():
     
     @app.route('/manifest.json')
     def manifest():
-        return {
-            'name': 'FiCore',
-            'short_name': 'FiCore',
-            'description': 'Manage your finances with ease',
-            'theme_color': '#007bff',
-            'background_color': '#ffffff',
-            'display': 'standalone',
-            'scope': '/',
-            'start_url': '/',
-            'icons': [
-                {'src': '/static/icons/android-chrome-192x192.png', 'sizes': '192x192', 'type': 'image/png'},
-                {'src': '/static/icons/android-chrome-512x508.png', 'sizes': '512x512', 'type': 'image/png'}
-            ]
+        manifest_data = {
+            "name": "FiCore",
+            "short_name": "FiCore",
+            "description": "Financial management application for personal and business use",
+            "start_url": "/",
+            "display": "standalone",
+            "background_color": "#ffffff",
+            "theme_color": "#007bff",
+            "icons": [
+                {
+                    "src": "/static/icons/icon-192x192.png",
+                    "sizes": "192x192",
+                    "type": "image/png"
+                },
+                {
+                    "src": "/static/icons/icon-512x512.png",
+                    "sizes": "512x512",
+                    "type": "image/png"
+                }
+            ],
+            "lang": session.get('lang', 'en'),
+            "dir": "ltr",
+            "orientation": "portrait",
+            "scope": "/",
+            "related_applications": [],
+            "prefer_related_applications": False
         }
-    
-    @app.route('/robots.txt')
-    def robots_txt():
-        return Response('User-agent: *\nDisallow: /', mimetype='text/plain')
-    
-    @app.errorhandler(403)
-    def forbidden(e):
-        lang = session.get('lang', 'en')
-        try:
-            return render_template('errors/403.html', 
-                                 message=trans('general_access_denied', default='Forbidden'), 
-                                 t=trans, 
-                                 lang=lang,
-                                 title=trans('general_access_denied', lang=lang)), 403
-        except TemplateNotFound as e:
-            logger.error(f'Template not found: {str(e)}', exc_info=True)
-            return render_template('personal/GENERAL/error.html', 
-                                 message=trans('general_access_denied', default='Forbidden'), 
-                                 t=trans, 
-                                 lang=lang,
-                                 error=str(e),
-                                 title=trans('general_access_denied', lang=lang)), 403
-    
-    @app.errorhandler(404)
-    def page_not_found(e):
-        lang = session.get('lang', 'en')
-        logger.error(f'Error 404: {str(e)}')
-        try:
-            return render_template('errors/404.html', 
-                                 message=trans('general_page_not_found', default='Page not found'), 
-                                 t=trans, 
-                                 lang=lang,
-                                 title=trans('general_page_not_found', lang=lang)), 404
-        except TemplateNotFound as e:
-            logger.error(f'Template not found: {str(e)}', exc_info=True)
-            return render_template('personal/GENERAL/error.html', 
-                                 message=trans('general_page_not_found', default='Page not found'), 
-                                 t=trans, 
-                                 lang=lang,
-                                 error=str(e),
-                                 title=trans('general_page_not_found', lang=lang)), 404
-    
-    @app.errorhandler(500)
-    def internal_server_error(e):
-        lang = session.get('lang', 'en')
-        logger.error(f'Server error: {str(e)}', exc_info=True)
-        try:
-            return render_template('errors/500.html', 
-                                 message=trans('general_error', default='Internal server error'), 
-                                 t=trans, 
-                                 lang=lang,
-                                 title=trans('general_error', lang=lang)), 500
-        except TemplateNotFound as e:
-            logger.error(f'Template not found: {str(e)}', exc_info=True)
-            return render_template('personal/GENERAL/error.html', 
-                                 message=trans('general_error', default='Internal server error'), 
-                                 t=trans, 
-                                 lang=lang,
-                                 error=str(e),
-                                 title=trans('general_error', lang=lang)), 500
-    
+        return jsonify(manifest_data)
+
+    # Error handlers
     @app.errorhandler(CSRFError)
     def handle_csrf_error(e):
-        lang = session.get('lang', 'en')
-        logger.error(f'CSRF error: {str(e)}')
-        return jsonify({'error': 'CSRF token invalid'}), 400
-    
-    @app.before_request
-    def before_request():
-        if request.path.startswith('/static/') or request.path in [
-            '/manifest.json', '/service-worker.js', '/favicon.ico', '/robots.txt'
-        ]:
-            logger.info(f'Skipping session setup for request: {request.path}')
-            return
-        logger.info(f'Starting before_request for path: {request.path}')
+        logger.error(f'CSRF error: {str(e)}', extra={'session_id': session.get('sid', 'no-session-id')})
         try:
-            if 'sid' not in session:
-                session['sid'] = session.sid
-                session['is_anonymous'] = not current_user.is_authenticated
-                logger.info(f'Session ID set: {session["sid"]}, is_anonymous: {session["is_anonymous"]}')
-            if 'lang' not in session:
-                session['lang'] = request.accept_languages.best_match(['en', 'ha'], 'en')
-                logger.info(f'Set default language to {session["lang"]}')
-            
-            g.trans = trans
-            g.get_translations = get_translations
-            g.logger = logger
-            
-            if current_user.is_authenticated:
-                if 'session_id' not in session:
-                    session['session_id'] = str(uuid.uuid4())
-                with app.app_context():
-                    db = get_mongo_db()
-                    user = db.users.find_one({'_id': current_user.id})
-                    if user and not user.get('setup_complete', False):
-                        allowed_endpoints = [
-                            'users_bp.personal_setup_wizard',
-                            'users_bp.setup_wizard',
-                            'users_bp.agent_setup_wizard',
-                            'users_bp.logout',
-                            'settings_bp.profile',
-                            'coins_bp.purchase',
-                            'coins_bp.get_balance',
-                            'set_language'
-                        ]
-                        if request.endpoint not in allowed_endpoints:
-                            flash(trans('general_setup_required', default='Please complete your profile setup'), 'warning')
-                            if current_user.role == 'agent':
-                                return redirect(url_for('users_bp.agent_setup_wizard'))
-                            elif current_user.role == 'personal':
-                                return redirect(url_for('users_bp.personal_setup_wizard'))
-                            return redirect(url_for('users_bp.setup_wizard'))
-        except Exception as e:
-            logger.error(f'Error in before_request: {str(e)}', exc_info=True)
+            return render_template('errors/403.html', 
+                                 t=trans, 
+                                 error=trans('general_csrf_error', default='Invalid CSRF token'), 
+                                 lang=session.get('lang', 'en')), 403
+        except TemplateNotFound:
+            return render_template('personal/GENERAL/error.html', 
+                                 t=trans, 
+                                 error=trans('general_csrf_error', default='Invalid CSRF token'), 
+                                 lang=session.get('lang', 'en')), 403
 
-    # Remove teardown_request to prevent closing MongoDB client per request
-    # @app.teardown_request
-    # def teardown_request(exception=None):
-    #     if hasattr(current_app, 'mongo_client'):
-    #         close_mongo_db()
+    @app.errorhandler(404)
+    def page_not_found(e):
+        logger.error(f'Page not found: {request.url}', extra={'session_id': session.get('sid', 'no-session-id')})
+        try:
+            return render_template('errors/404.html', 
+                                 t=trans, 
+                                 lang=session.get('lang', 'en'), 
+                                 error=str(e)), 404
+        except TemplateNotFound:
+            return render_template('personal/GENERAL/error.html', 
+                                 t=trans, 
+                                 lang=session.get('lang', 'en'), 
+                                 error=str(e)), 404
 
-    # Development routes
-    if app.debug:
-        @app.route('/dev/translations')
-        def dev_translations():
-            all_translations = get_all_translations()
-            try:
-                return render_template('dev/translations.html', 
-                                     translations=all_translations,
-                                     title='Translation Debug')
-            except TemplateNotFound as e:
-                logger.error(f'Template not found: {str(e)}', exc_info=True)
-                return render_template('personal/GENERAL/error.html', 
-                                     error=str(e), 
-                                     title='Translation Debug'), 404
-        
-        @app.route('/dev/session')
-        def dev_session():
-            return jsonify(dict(session))
-    
+    @app.errorhandler(500)
+    def internal_server_error(e):
+        logger.error(f'Internal server error: {str(e)}', exc_info=True, extra={'session_id': session.get('sid', 'no-session-id')})
+        try:
+            return render_template('errors/500.html', 
+                                 t=trans, 
+                                 lang=session.get('lang', 'en'), 
+                                 error=str(e)), 500
+        except TemplateNotFound:
+            return render_template('personal/GENERAL/error.html', 
+                                 t=trans, 
+                                 lang=session.get('lang', 'en'), 
+                                 error=str(e)), 500
+
     return app
 
-# Create the app instance
-app = create_app()
-
 if __name__ == '__main__':
-    app.run(debug=True, host='0.0.0.0', port=int(os.getenv('PORT', 5000)))
+    app = create_app()
+    app.run(host='0.0.0.0', port=int(os.environ.get('PORT', 5000)), debug=os.getenv('FLASK_ENV', 'development') == 'development')
