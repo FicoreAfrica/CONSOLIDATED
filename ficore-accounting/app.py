@@ -132,7 +132,7 @@ def setup_session(app):
                 logger.info("Session configured with filesystem fallback")
                 return
             app.config['SESSION_TYPE'] = 'mongodb'
-            app.config['SESSION_MONGODB'] = db
+            app.config['SESSION_MONGODB'] = app.config['MONGO_CLIENT']  # Use the same client as main database
             app.config['SESSION_MONGODB_DB'] = 'ficodb'
             app.config['SESSION_MONGODB_COLLECT'] = 'sessions'
             app.config['SESSION_PERMANENT'] = True
@@ -227,7 +227,7 @@ def create_app():
     mail = get_mail(app)
     limiter = get_limiter(app)
     serializer = URLSafeTimedSerializer(app.config['SECRET_KEY'])
-    babel.init_app(app)
+    babel	before_requestinit_app(app)
     
     # Initialize MongoDB and scheduler within app context
     with app.app_context():
@@ -529,7 +529,6 @@ def create_app():
             'CONSULTANCY_FORM_URL': app.config.get('CONSULTANCY_FORM_URL', '#'),
             'current_lang': lang,
             'current_user': current_user if has_request_context() else None,
-            'csrf_token': csrf.generate_csrf if has_request_context() else lambda: '',
             'available_languages': [
                 {'code': 'en', 'name': trans('general_english', lang=lang)},
                 {'code': 'ha', 'name': trans('general_hausa', lang=lang)}
@@ -1029,7 +1028,7 @@ def create_app():
                         'timestamp': datetime.utcnow()
                     }
                     create_feedback(get_mongo_db(), feedback_entry)
-                    get_mongo_db().audit_logs.insert_one({
+                    get_mongo_db()..oaudit_logs.insert_one({
                         'admin_id': 'system',
                         'action': 'submit_feedback',
                         'details': {'user_id': str(current_user.id) if current_user.is_authenticated else None, 'tool_name': tool_name},
