@@ -50,22 +50,22 @@
             <div class="card-body">
                 <div class="row">
                     <div class="col-md-3 mb-2">
-                        <a href="{{ url_for('debtors_blueprint.add') }}?trader_id={{ trader._id }}" class="btn btn-success w-100">
+                        <a href="{{ url_for('debtors.add') }}?trader_id={{ trader._id }}" class="btn btn-success w-100">
                             <i class="bi bi-person-plus me-2"></i>{{ t('debtors_add_debtor', default='Add Debtor') }}
                         </a>
                     </div>
                     <div class="col-md-3 mb-2">
-                        <a href="{{ url_for('creditors_blueprint.add') }}?trader_id={{ trader._id }}" class="btn btn-warning w-100">
+                        <a href="{{ url_for('creditors.add') }}?trader_id={{ trader._id }}" class="btn btn-warning w-100">
                             <i class="bi bi-person-dash me-2"></i>{{ t('creditors_add_creditor', default='Add Creditor') }}
                         </a>
                     </div>
                     <div class="col-md-3 mb-2">
-                        <a href="{{ url_for('receipts_blueprint.add') }}?trader_id={{ trader._id }}" class="btn btn-info w-100">
+                        <a href="{{ url_for('receipts.add') }}?trader_id={{ trader._id }}" class="btn btn-info w-100">
                             <i class="bi bi-arrow-down-circle me-2"></i>{{ t('receipts_add_receipt', default='Add Receipt') }}
                         </a>
                     </div>
                     <div class="col-md-3 mb-2">
-                        <a href="{{ url_for('payments_blueprint.add') }}?trader_id={{ trader._id }}" class="btn btn-danger w-100">
+                        <a href="{{ url_for('payments.add') }}?trader_id={{ trader._id }}" class="btn btn-danger w-100">
                             <i class="bi bi-arrow-up-circle me-2"></i>{{ t('payments_add_payment', default='Add Payment') }}
                         </a>
                     </div>
