@@ -304,25 +304,25 @@
         <nav class="bottom-nav fixed-bottom bg-light border-top d-flex justify-content-around align-items-center py-2">
             <a href="{{ url_for('index') }}" class="nav-item text-center text-dark" data-bs-toggle="tooltip" data-bs-title="{{ t('general_home', default='Home') | e }}">
                 <i class="bi bi-house-door"></i>
-                <div class="nav-label">{{ t('general_home', default='Home') }} / {{ t('general_hausa_home', default='Gida') }}</div>
+                <div class="nav-label">{{ t('general_home_tab', default='Home') }}</div>
             </a>
             <a href="{{ url_for('debtors.index') }}" class="nav-item text-center text-dark" data-bs-toggle="tooltip" data-bs-title="{{ t('general_debtors_creditors', default='Debtors & Creditors') | e }}">
                 <i class="bi bi-person-dash"></i>
-                <div class="nav-label">{{ t('general_debtors_creditors', default='Debtors') }} / {{ t('general_hausa_debtors', default='Bashi') }}</div>
+                <div class="nav-label">{{ t('general_debtors_tab', default='Debtors') }}</div>
             </a>
             <a href="{{ url_for('inventory.index') }}" class="nav-item text-center text-dark" data-bs-toggle="tooltip" data-bs-title="{{ t('inventory_management', default='Inventory Management') | e }}">
                 <i class="bi bi-box-seam"></i>
-                <div class="nav-label">{{ t('inventory_management', default='Inventory') }} / {{ t('inventory_hausa', default='Kaya') }}</div>
+                <div class="nav-label">{{ t('inventory_management_tab', default='Inventory') }}</div>
             </a>
             {% if current_user.role == 'agent' %}
             <a href="{{ url_for('agents_bp.register_trader') }}" class="nav-item text-center text-dark" data-bs-toggle="tooltip" data-bs-title="{{ t('agents_register_trader', default='Register Trader') | e }}">
                 <i class="bi bi-person-plus"></i>
-                <div class="nav-label">{{ t('agents_register_trader', default='Register') }} / {{ t('agents_hausa_register_trader', default='Rijista') }}</div>
+                <div class="nav-label">{{ t('agents_register_trader', default='Register') }}</div>
             </a>
             {% endif %}
             <a href="{{ url_for('settings.profile') }}" class="nav-item text-center text-dark" data-bs-toggle="tooltip" data-bs-title="{{ t('general_profile', default='Profile') | e }}">
                 <i class="bi bi-person-circle"></i>
-                <div class="nav-label">{{ t('general_profile', default='Profile') }} / {{ t('general_hausa_profile', default='Shafinku') }}</div>
+                <div class="nav-label">{{ t('general_profile_tab', default='Profile') }}</div>
             </a>
         </nav>
 
