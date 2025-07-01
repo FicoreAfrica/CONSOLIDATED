@@ -25,114 +25,10 @@
         {{ t('general_welcome_to_ficore', default='Welcome to Ficore Africa: Track your income, net worth, budgets, and bills to grow your money with confidence.') | e }}
     </div>
 
-    {% if current_user.is_authenticated %}
+    {% if not current_user.is_authenticated %}
     <nav class="navbar navbar-expand-lg navbar-dark bg-dark" role="navigation" aria-label="{{ t('general_main_navigation', default='Main navigation') | e }}">
         <div class="container-fluid">
-            <a class="navbar-brand" href="{{ url_for('personal.index') | e }}" aria-label="{{ t('general_ficore_africa', default='Ficore Africa') | e }}">
-                <img src="{{ url_for('static_personal', filename='img/ficore_logo.png') | e }}" alt="{{ t('general_ficore_africa_logo', default='Ficore Africa Logo') | e }}" class="logo" style="border-radius: 50%; object-fit: contain; width: 80px; height: 80px;">
-                {{ t('general_ficore_africa', default='Ficore Africa') | e }}
-            </a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="{{ t('general_toggle_navigation', default='Toggle navigation') | e }}">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-            <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav me-auto">
-                    <li class="nav-item">
-                        <a class="nav-link {% if request.endpoint == 'personal.index' %}active{% endif %}" href="{{ url_for('personal.index') | e }}" data-bs-toggle="tooltip" data-bs-title="{{ t('general_home_tooltip', default='Go to homepage') | e }}" aria-current="{% if request.endpoint == 'personal.index' %}page{% endif %}">{{ t('general_home', default='Home') | e }}</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link {% if request.endpoint == 'personal.general_dashboard' %}active{% endif %}" href="{{ url_for('personal.general_dashboard') | e }}" data-bs-toggle="tooltip" data-bs-title="{{ t('general_dashboard_tooltip', default='View your dashboard') | e }}" aria-current="{% if request.endpoint == 'personal.general_dashboard' %}page{% endif %}">{{ t('general_general_dashboard', default='Dashboard') | e }}</a>
-                    </li>
-                    <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle" href="#" id="toolsDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false" data-bs-title="{{ t('general_tools_tooltip', default='Financial tools') | e }}" aria-label="{{ t('general_tools', default='Tools') | e }}">
-                            {{ t('general_tools', default='Tools') | e }}
-                        </a>
-                        <ul class="dropdown-menu" aria-labelledby="toolsDropdown">
-                            <li><a class="dropdown-item" href="{{ url_for('personal.budget.main') | e }}">{{ t('budget_budget_planner', default='Budget Planner') | e }}</a></li>
-                            <li><a class="dropdown-item" href="{{ url_for('personal.bill.main') | e }}">{{ t('bill_bill_planner', default='Bill Planner') | e }}</a></li>
-                            <li><a class="dropdown-item" href="{{ url_for('personal.financial_health.main') | e }}">{{ t('financial_health_financial_health_score', default='Financial Health Score') | e }}</a></li>
-                            <li><a class="dropdown-item" href="{{ url_for('personal.net_worth.main') | e }}">{{ t('net_worth_net_worth_calculator', default='Net Worth Tracker') | e }}</a></li>
-                            <li><a class="dropdown-item" href="{{ url_for('personal.emergency_fund.main') | e }}">{{ t('emergency_fund_calculator', default='Emergency Fund Planner') | e }}</a></li>
-                            <li><a class="dropdown-item" href="{{ url_for('personal.learning_hub.main') | e }}">{{ t('learning_hub_courses', default='Learning Hub') | e }}</a></li>
-                            <li><a class="dropdown-item" href="{{ url_for('personal.quiz.main') | e }}">{{ t('quiz_personality_quiz', default='Personality Quiz') | e }}</a></li>
-                        </ul>
-                    </li>
-                    <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle" href="#" id="taxationDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false" data-bs-title="{{ t('general_taxation_tooltip', default='Manage tax obligations') | e }}" aria-label="{{ t('general_taxation', default='Taxation') | e }}">
-                            {{ t('general_taxation', default='Taxation') | e }}
-                        </a>
-                        <ul class="dropdown-menu" aria-labelledby="taxationDropdown">
-                            <li><a class="dropdown-item" href="{{ url_for('taxation_bp.calculate_tax') | e }}">{{ t('general_calculate_your_tax', default='Calculate Your Tax') | e }}</a></li>
-                            <li><a class="dropdown-item" href="{{ url_for('taxation_bp.payment_info') | e }}">{{ t('general_tax_payment_information', default='Tax Payment Information') | e }}</a></li>
-                            <li><a class="dropdown-item" href="{{ url_for('taxation_bp.reminders') | e }}">{{ t('general_your_tax_reminders', default='Your Tax Reminders') | e }}</a></li>
-                        </ul>
-                    </li>
-                    <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle" href="#" id="newsDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false" data-bs-title="{{ t('general_news_tooltip', default='View news and updates') | e }}" aria-label="{{ t('general_news', default='News') | e }}">
-                            {{ t('general_news', default='News') | e }}
-                        </a>
-                        <ul class="dropdown-menu" aria-labelledby="newsDropdown">
-                            <li><a class="dropdown-item" href="{{ url_for('common_bp.news_list') | e }}">{{ t('general_ficore_news', default='Ficore News') | e }}</a></li>
-                            {% if current_user.get('is_admin', False) %}
-                            <li><a class="dropdown-item" href="{{ url_for('common_bp.news_management') | e }}">{{ t('general_news_management', default='News Management') | e }}</a></li>
-                            {% endif %}
-                        </ul>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link {% if request.endpoint == 'about' %}active{% endif %}" href="{{ url_for('about') | e }}" data-bs-toggle="tooltip" data-bs-title="{{ t('general_about_tooltip', default='Learn more about Ficore') | e }}" aria-current="{% if request.endpoint == 'about' %}page{% endif %}">{{ t('general_about', default='About') | e }}</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link {% if request.endpoint == 'contact' %}active{% endif %}" href="{{ url_for('contact') | e }}" data-bs-toggle="tooltip" data-bs-title="{{ t('general_contact_tooltip', default='Get in touch') | e }}" aria-current="{% if request.endpoint == 'contact' %}page{% endif %}">{{ t('general_contact', default='Contact') | e }}</a>
-                    </li>
-                    {% if current_user.get('is_admin', False) %}
-                    <li class="nav-item">
-                        <a class="nav-link {% if request.endpoint == 'admin.dashboard' %}active{% endif %}" href="{{ url_for('admin.dashboard') | e }}" data-bs-toggle="tooltip" data-bs-title="{{ t('admin_admin_panel_tooltip', default='Access admin panel') | e }}" aria-current="{% if request.endpoint == 'admin.dashboard' %}page{% endif %}">{{ t('admin_admin_panel', default='Admin Panel') | e }}</a>
-                    </li>
-                    {% endif %}
-                </ul>
-                <ul class="navbar-nav ms-auto align-items-center header-actions">
-                    <li class="nav-item">
-                        <button class="notification-bell btn btn-link text-white position-relative" id="notificationBell" data-bs-toggle="modal" data-bs-target="#notificationModal" data-bs-title="{{ t('general_notifications_tooltip', default='View notifications') | e }}" aria-label="{{ t('general_notifications', default='Notifications') | e }}">
-                            <i class="bi bi-bell"></i>
-                            <span class="notification-badge badge bg-danger rounded-circle d-none" id="notificationBadge" aria-hidden="true"></span>
-                        </button>
-                    </li>
-                    <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle" href="#" id="profileDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false" data-bs-title="{{ t('general_profile_tooltip', default='Manage your account') | e }}" aria-label="{{ t('general_profile', default='Profile') | e }}">
-                            <i class="bi bi-person-circle me-1"></i>
-                            {{ current_user.display_name | default(t('general_profile', default='Profile') | e) | e }}
-                        </a>
-                        <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="profileDropdown">
-                            <li><a class="dropdown-item" href="{{ url_for('personal.profile') | e }}">{{ t('general_profile', default='Profile') | e }}</a></li>
-                            <li><a class="dropdown-item" href="{{ url_for('feedback') | e }}">{{ t('general_feedback', default='Send Feedback') | e }}</a></li>
-                            {% if current_user.get('is_admin', False) %}
-                            <li><a class="dropdown-item" href="{{ url_for('admin.dashboard') | e }}">{{ t('admin_admin_panel', default='Admin Panel') | e }}</a></li>
-                            {% endif %}
-                            <li><a class="dropdown-item" href="{{ url_for('users.logout') | e }}">{{ t('general_logout', default='Logout') | e }}</a></li>
-                        </ul>
-                    </li>
-                    <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle" href="#" id="languageDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false" data-bs-title="{{ t('general_language_tooltip', default='Change language') | e }}" aria-label="{{ t('general_language', default='Language') | e }}">
-                            {{ session.get('lang', 'en').upper() | e }}
-                        </a>
-                        <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="languageDropdown">
-                            <li><a class="dropdown-item" href="{{ url_for('set_language', lang='en') | e }}">{{ t('general_english', default='English') | e }}</a></li>
-                            <li><a class="dropdown-item" href="{{ url_for('set_language', lang='ha') | e }}">{{ t('general_hausa', default='Hausa') | e }}</a></li>
-                        </ul>
-                    </li>
-                    <li class="nav-item">
-                        <button class="nav-link btn btn-link text-white" id="darkModeToggle" onclick="toggleDarkMode()" data-bs-toggle="tooltip" data-bs-title="{{ t('general_mode_toggle_tooltip_switch_to_dark', default='Switch to dark mode') | e }}" aria-label="{{ t('general_mode_toggle_dark', default='Toggle dark mode') | e }}">
-                            <i class="bi bi-moon-stars"></i>
-                        </button>
-                    </li>
-                </ul>
-            </div>
-        </div>
-    </nav>
-    {% else %}
-    <nav class="navbar navbar-expand-lg navbar-dark bg-dark" role="navigation" aria-label="{{ t('general_main_navigation', default='Main navigation') | e }}">
-        <div class="container-fluid">
-            <a class="navbar-brand" href="{{ url_for('personal.index') | e }}" aria-label="{{ t('general_ficore_africa', default='Ficore Africa') | e }}">
+            <a class="navbar-brand" href="{{ url_for('personal.index') | e }}" aria-label="{{ t('general_f winning bid icore_africa', default='Ficore Africa') | e }}">
                 <img src="{{ url_for('static_personal', filename='img/ficore_logo.png') | e }}" alt="{{ t('general_ficore_africa_logo', default='Ficore Africa Logo') | e }}" class="logo" style="border-radius: 50%; object-fit: contain; width: 80px; height: 80px;">
                 {{ t('general_ficore_africa', default='Ficore Africa') | e }}
             </a>
@@ -204,39 +100,31 @@
         </div>
     </main>
 
-    {% if current_user.is_authenticated and current_user.role in ['personal', 'admin'] %}
-    <nav class="bottom-navigation bg-dark text-white py-2 fixed-bottom" role="navigation" aria-label="{{ t('general_bottom_navigation', default='Bottom navigation') | e }}">
-        <div class="nav-container d-flex justify-content-around">
-            <a href="{{ url_for('personal.index') | e }}" class="nav-item {% if request.endpoint == 'personal.index' %}active{% endif %}" aria-current="{% if request.endpoint == 'personal.index' %}page{% endif %}">
-                <i class="bi bi-house"></i>
-                <span>{{ t('general_home', default='Home') | e }}</span>
-            </a>
-            <a href="{{ url_for('personal.general_dashboard') | e }}" class="nav-item {% if request.endpoint == 'personal.general_dashboard' %}active{% endif %}" aria-current="{% if request.endpoint == 'personal.general_dashboard' %}page{% endif %}">
-                <i class="bi bi-list-ul"></i>
-                <span>{{ t('general_general_dashboard', default='Dashboard') | e }}</span>
-            </a>
-            <a href="{{ url_for('personal.budget.main') | e }}" class="nav-item {% if request.endpoint == 'personal.budget.main' %}active{% endif %}" aria-current="{% if request.endpoint == 'personal.budget.main' %}page{% endif %}">
-                <i class="bi bi-calculator"></i>
-                <span>{{ t('budget_budget_planner', default='Budget') | e }}</span>
-            </a>
-            <a href="{{ url_for('personal.bill.main') | e }}" class="nav-item {% if request.endpoint == 'personal.bill.main' %}active{% endif %}" aria-current="{% if request.endpoint == 'personal.bill.main' %}page{% endif %}">
-                <i class="bi bi-receipt"></i>
-                <span>{{ t('bill_bill_planner', default='Bills') | e }}</span>
-            </a>
-            <a href="{{ url_for('personal.net_worth.main') | e }}" class="nav-item {% if request.endpoint == 'personal.net_worth.main' %}active{% endif %}" aria-current="{% if request.endpoint == 'personal.net_worth.main' %}page{% endif %}">
-                <i class="bi bi-balance-scale"></i>
-                <span>{{ t('net_worth_net_worth_calculator', default='Net Worth') | e }}</span>
-            </a>
-            <a href="{{ url_for('personal.learning_hub.main') | e }}" class="nav-item {% if request.endpoint == 'personal.learning_hub.main' %}active{% endif %}" aria-current="{% if request.endpoint == 'personal.learning_hub.main' %}page{% endif %}">
-                <i class="bi bi-book"></i>
-                <span>{{ t('learning_hub_courses', default='Learning') | e }}</span>
-            </a>
-            <a href="{{ url_for('personal.profile') | e }}" class="nav-item {% if request.endpoint == 'personal.profile' %}active{% endif %}" aria-current="{% if request.endpoint == 'personal.profile' %}page{% endif %}">
-                <i class="bi bi-person"></i>
-                <span>{{ t('general_profile', default='Profile') | e }}</span>
-            </a>
+    {% if not current_user.is_authenticated %}
+    <footer class="footer mt-5 py-4" style="background: linear-gradient(90deg, #003087, #004D40); color: white;" role="contentinfo">
+        <div class="container text-center">
+            <p>{{ t('general_about_ficore_africa', default='About Ficore Africa') | e }}: {{ t('general_empowering_financial_growth', default='Empowering financial growth across Africa since 2025') | e }}</p>
+            <p class="footer-disclaimer"><i class="fas fa-shield-alt me-1" aria-hidden="true"></i> {{ t('general_disclaimer', default='Ficore is not a bank and does not hold or move funds.') | e }} <a href="{{ url_for('about') | e }}" class="text-white text-decoration-underline">{{ t('general_learn_more', default='Learn more') | e }}</a></p>
+            <div class="footer-links mt-3 d-flex flex-wrap justify-content-center gap-3">
+                <a href="{{ url_for('terms') | e }}" class="text-white">{{ t('general_terms_of_service', default='Terms of Service') | e }}</a>
+                <a href="{{ url_for('privacy') | e }}" class="text-white">{{ t('general_privacy_policy', default='Privacy Policy') | e }}</a>
+                <a href="mailto:support@ficoreafrica.com" class="text-white"><i class="fas fa-envelope me-1" aria-hidden="true"></i> {{ t('general_contact_us', default='Contact Us') | e }}</a>
+                <a href="{{ url_for('feedback') | e }}" class="text-white"><i class="fas fa-comment me-1" aria-hidden="true"></i> {{ t('general_provide_feedback', default='Provide Feedback') | e }}</a>
+                <a href="{{ url_for('users.login') | e }}" class="text-white"><i class="fas fa-sign-in-alt me-1" aria-hidden="true"></i> {{ t('general_login', default='Login') | e }}</a>
+            </div>
+            <div class="social-icons d-flex justify-content-center gap-3 mt-3">
+                <a href="https://linkedin.com/company/ficoreafrica" target="_blank" aria-label="{{ t('general_connect_on_linkedin', default='Connect on LinkedIn') | e }}" class="d-flex align-items-center text-white">
+                    <i class="fab fa-linkedin me-1"></i> LinkedIn
+                </a>
+                <a href="https://x.com/ficoreafrica" target="_blank" aria-label="{{ t('general_follow_on_twitter', default='Follow on Twitter') | e }}" class="d-flex align-items-center text-white">
+                    <i class="fab fa-x-twitter me-1"></i> Twitter
+                </a>
+                <a href="https://facebook.com/ficoreafrica" target="_blank" aria-label="{{ t('general_follow_on_facebook', default='Follow on Facebook') | e }}" class="d-flex align-items-center text-white">
+                    <i class="fab fa-facebook me-1"></i> Facebook
+                </a>
+            </div>
         </div>
-    </nav>
+    </footer>
     {% endif %}
 
     <div class="modal fade" id="notificationModal" tabindex="-1" aria-labelledby="notificationModalLabel" aria-hidden="true">
@@ -255,35 +143,6 @@
             </div>
         </div>
     </div>
-
-    <footer class="footer mt-5 py-4" style="background: linear-gradient(90deg, #003087, #004D40); color: white;" role="contentinfo">
-        <div class="container text-center">
-            <p>{{ t('general_about_ficore_africa', default='About Ficore Africa') | e }}: {{ t('general_empowering_financial_growth', default='Empowering financial growth across Africa since 2025') | e }}</p>
-            <p class="footer-disclaimer"><i class="fas fa-shield-alt me-1" aria-hidden="true"></i> {{ t('general_disclaimer', default='Ficore is not a bank and does not hold or move funds.') | e }} <a href="{{ url_for('about') | e }}" class="text-white text-decoration-underline">{{ t('general_learn_more', default='Learn more') | e }}</a></p>
-            <div class="footer-links mt-3 d-flex flex-wrap justify-content-center gap-3">
-                <a href="{{ url_for('terms') | e }}" class="text-white">{{ t('general_terms_of_service', default='Terms of Service') | e }}</a>
-                <a href="{{ url_for('privacy') | e }}" class="text-white">{{ t('general_privacy_policy', default='Privacy Policy') | e }}</a>
-                <a href="mailto:support@ficoreafrica.com" class="text-white"><i class="fas fa-envelope me-1" aria-hidden="true"></i> {{ t('general_contact_us', default='Contact Us') | e }}</a>
-                <a href="{{ url_for('feedback') | e }}" class="text-white"><i class="fas fa-comment me-1" aria-hidden="true"></i> {{ t('general_provide_feedback', default='Provide Feedback') | e }}</a>
-                {% if current_user.is_authenticated %}
-                <a href="{{ url_for('users.logout') | e }}" class="text-white"><i class="fas fa-sign-out-alt me-1" aria-hidden="true"></i> {{ t('general_logout', default='Logout') | e }}</a>
-                {% else %}
-                <a href="{{ url_for('users.login') | e }}" class="text-white"><i class="fas fa-sign-in-alt me-1" aria-hidden="true"></i> {{ t('general_login', default='Login') | e }}</a>
-                {% endif %}
-            </div>
-            <div class="social-icons d-flex justify-content-center gap-3 mt-3">
-                <a href="https://linkedin.com/company/ficoreafrica" target="_blank" aria-label="{{ t('general_connect_on_linkedin', default='Connect on LinkedIn') | e }}" class="d-flex align-items-center text-white">
-                    <i class="fab fa-linkedin me-1"></i> LinkedIn
-                </a>
-                <a href="https://x.com/ficoreafrica" target="_blank" aria-label="{{ t('general_follow_on_twitter', default='Follow on Twitter') | e }}" class="d-flex align-items-center text-white">
-                    <i class="fab fa-x-twitter me-1"></i> Twitter
-                </a>
-                <a href="https://facebook.com/ficoreafrica" target="_blank" aria-label="{{ t('general_follow_on_facebook', default='Follow on Facebook') | e }}" class="d-flex align-items-center text-white">
-                    <i class="fab fa-facebook me-1"></i> Facebook
-                </a>
-            </div>
-        </div>
-    </footer>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
     <script src="{{ url_for('static_personal', filename='js/interactivity.js') | e }}"></script>
