@@ -1122,10 +1122,21 @@ def create_app():
 
     @app.route('/static_personal/<path:filename>')
     def static_personal(filename):
-        response = send_from_directory('static_personal', filename)
-        response.headers['Cache-Control'] = 'public, max-age=31536000'
-        return response
-    
+        allowed_extensions = {'.css', '.js', '.png', '.jpg', '.jpeg', '.gif', '.ico', '.svg'}
+        file_ext = os.path.splitext(filename)[1].lower()
+        
+        if file_ext not in allowed_extensions:
+            abort(403)
+            try:
+                response = send_from_directory('static_personal', filename)
+                if file_ext in {'.css', '.js'}:
+                    response.headers['Cache-Control'] = 'public, max-age=31536000'
+                elif file_ext in {'.png', '.jpg', '.jpeg', '.gif', '.ico', '.svg'}:
+                    response.headers['Cache-Control'] = 'public, max-age=604800'
+                    return response
+            except FileNotFoundError:
+                abort(404)
+                
     @app.route('/favicon.ico')
     def favicon():
         return send_from_directory(app.static_folder, 'icons/favicon.ico')
