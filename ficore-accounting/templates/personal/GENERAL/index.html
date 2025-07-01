@@ -328,23 +328,23 @@
         <nav class="bottom-nav fixed-bottom bg-light border-top d-flex justify-content-around align-items-center py-2">
             <a href="{{ url_for('index') }}" class="nav-item text-center text-dark" data-bs-toggle="tooltip" data-bs-title="{{ t('general_home', default='Home') | e }}">
                 <i class="bi bi-house-door"></i>
-                <div class="nav-label">{{ t('general_home', default='Home') }} / {{ t('general_hausa_home', default='Gida') }}</div>
+                <div class="nav-label">{{ t('general_home_tab', default='Home') }}</div>
             </a>
             <a href="{{ url_for('personal.budget.main') }}" class="nav-item text-center text-dark" data-bs-toggle="tooltip" data-bs-title="{{ t('budget_budget_planner', default='Budget Planner') | e }}">
                 <i class="bi bi-calculator"></i>
-                <div class="nav-label">{{ t('budget_budget_planner', default='Budget') }} / {{ t('budget_hausa_budget', default='Kasafin Kuɗi') }}</div>
+                <div class="nav-label">{{ t('budget_budget_planner_tab', default='Budget') }}</div>
             </a>
             <a href="{{ url_for('personal.bill.main') }}" class="nav-item text-center text-dark" data-bs-toggle="tooltip" data-bs-title="{{ t('bill_bill_planner', default='Bill Planner') | e }}">
                 <i class="bi bi-receipt"></i>
-                <div class="nav-label">{{ t('bill_bill_planner', default='Bills') }} / {{ t('bill_hausa_bills', default='Kudade') }}</div>
+                <div class="nav-label">{{ t('bill_bill_planner_tab', default='Bills') }}</div>
             </a>
             <a href="{{ url_for('personal.net_worth.main') }}" class="nav-item text-center text-dark" data-bs-toggle="tooltip" data-bs-title="{{ t('net_worth_net_worth_calculator', default='Net Worth Tracker') | e }}">
                 <i class="bi bi-balance-scale"></i>
-                <div class="nav-label">{{ t('net_worth_net_worth_calculator', default='Net Worth') }} / {{ t('net_worth_hausa_net_worth', default='Dukiyar Kuɗi') }}</div>
+                <div class="nav-label">{{ t('net_worth_net_worth_calculator_tab', default='Net Worth') }}</div>
             </a>
             <a href="{{ url_for('settings.profile') }}" class="nav-item text-center text-dark" data-bs-toggle="tooltip" data-bs-title="{{ t('general_profile', default='Profile') | e }}">
                 <i class="bi bi-person-circle"></i>
-                <div class="nav-label">{{ t('general_profile', default='Profile') }} / {{ t('general_hausa_profile', default='Shafinku') }}</div>
+                <div class="nav-label">{{ t('general_profile_tab', default='Profile') }}</div>
             </a>
         </nav>
     {% else %}
