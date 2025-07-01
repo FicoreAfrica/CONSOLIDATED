@@ -41,7 +41,7 @@
     <div class="tab-content" id="healthScoreTabContent">
         <!-- Assessment Tab -->
         <div class="tab-pane fade show active" id="assessment" role="tabpanel" aria-labelledby="assessment-tab">
-            <form method="POST" action="{{ url_for('financial_health.main') }}" id="healthScoreForm" class="validate-form">
+            <form method="POST" action="{{ url_for('personal.financial_health.main') }}" id="healthScoreForm" class="validate-form">
                 {{ form.csrf_token }}
                 <input type="hidden" name="action" value="calculate_score">
 
