@@ -9,8 +9,15 @@
                 <small class="text-muted">{{ t('general_welcome_back', default='Welcome back to Ficore Records') }}</small>
             </div>
             <div class="header-actions d-flex align-items-center gap-3">
+                <button class="notification-bell btn btn-link text-dark" id="notificationBell" data-bs-toggle="modal" data-bs-target="#notificationModal" data-bs-title="{{ t('general_notifications_tooltip', default='View notifications') | e }}" aria-label="{{ t('general_notifications', default='Notifications') | e }}">
+                    <i class="bi bi-bell"></i>
+                    <span class="notification-badge d-none" id="notificationBadge"></span>
+                </button>
                 <a href="{{ url_for('settings.profile') }}" class="profile-icon">
                     <i class="bi bi-person-circle"></i>
+                </a>
+                <a href="{{ url_for('users.logout') }}" class="logout-icon" data-bs-toggle="tooltip" data-bs-title="{{ t('general_logout', default='Logout') | e }}" aria-label="{{ t('general_logout', default='Logout') | e }}">
+                    <i class="bi bi-box-arrow-right"></i>
                 </a>
                 <div class="header-toggles d-flex align-items-center gap-2">
                     <div class="dropdown">
@@ -390,7 +397,6 @@ document.addEventListener('DOMContentLoaded', function() {
         owed_to_you: '{{ t("general_owed_to_you", default="Owed to you") }}',
         you_owe: '{{ t("general_you_owe", default="You owe") }}',
         balanced: '{{ t("general_balanced", default="Balanced") }}',
-        notifications_feature_coming_soon: '{{ t("general_notifications_feature_coming_soon", default="Notifications feature coming soon!") }}',
         no_recent_activity: '{{ t("general_no_recent_activity", default="No recent activity") }}',
         start_by_adding_debt: '{{ t("general_start_by_adding_debt", default="Start by adding a debt or transaction") }}'
     };
