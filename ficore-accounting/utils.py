@@ -102,17 +102,17 @@ def is_valid_email(email):
 def get_mongo_db():
     '''
     Get MongoDB database connection.
-    Uses the single client stored in current_app.mongo_client.
+    Uses the single client stored in current_app._get_current_object().mongo_client.
     
     Returns:
         Database object
     '''
     try:
         # Check if client exists in application context
-        if not hasattr(current_app, 'mongo_client'):
+        if not hasattr(current_app._get_current_object(), 'mongo_client'):
             raise RuntimeError('MongoDB client not initialized in application context')
         
-        return current_app.mongo_client[current_app.config.get('SESSION_MONGODB_DB', 'ficodb')]
+        return current_app._get_current_object().mongo_client[current_app.config.get('SESSION_MONGODB_DB', 'ficodb')]
     except Exception as e:
         logger.error(f"{trans('general_mongo_connection_error', default='Error getting MongoDB connection')}: {str(e)}", exc_info=True)
         raise
