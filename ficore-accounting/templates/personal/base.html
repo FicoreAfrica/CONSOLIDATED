@@ -21,10 +21,6 @@
     {% block extra_head %}{% endblock %}
 </head>
 <body>
-    <div class="header-message bg-primary text-white text-center py-2" role="banner">
-        {{ t('general_welcome_to_ficore', default='Welcome to Ficore Africa: Track your income, net worth, budgets, and bills to grow your money with confidence.') | e }}
-    </div>
-
     {% if not current_user.is_authenticated %}
     <nav class="navbar navbar-expand-lg navbar-dark bg-dark" role="navigation" aria-label="{{ t('general_main_navigation', default='Main navigation') | e }}">
         <div class="container-fluid">
