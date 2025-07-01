@@ -10,17 +10,30 @@
                 <small class="text-muted">{{ t('general_welcome_back', default='Welcome back to Ficore Africa') }}</small>
             </div>
             <div class="header-actions d-flex align-items-center gap-3">
-                <!-- Language Switcher -->
-                <div class="dropdown">
-                    <button class="btn btn-outline-secondary btn-sm dropdown-toggle" type="button" id="languageDropdown" data-bs-toggle="dropdown" aria-expanded="false">
-                        {{ t('general_language', default='Language') }}: {{ current_lang | default('en') | upper }}
+                <button class="notification-bell btn btn-link text-dark" id="notificationBell" data-bs-toggle="modal" data-bs-target="#notificationModal" data-bs-title="{{ t('general_notifications_tooltip', default='View notifications') | e }}" aria-label="{{ t('general_notifications', default='Notifications') | e }}">
+                    <i class="bi bi-bell"></i>
+                    <span class="notification-badge d-none" id="notificationBadge"></span>
+                </button>
+                <a href="{{ url_for('settings.profile') }}" class="profile-icon">
+                    <i class="bi bi-person-circle"></i>
+                </a>
+                <a href="{{ url_for('users.logout') }}" class="logout-icon" data-bs-toggle="tooltip" data-bs-title="{{ t('general_logout', default='Logout') | e }}" aria-label="{{ t('general_logout', default='Logout') | e }}">
+                    <i class="bi bi-box-arrow-right"></i>
+                </a>
+                <div class="header-toggles d-flex align-items-center gap-2">
+                    <div class="dropdown">
+                        <button class="btn btn-outline-secondary btn-sm dropdown-toggle" type="button" id="languageDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                            {{ t('general_language', default='Language') }}: {{ session.get('lang', 'en') | upper }}
+                        </button>
+                        <ul class="dropdown-menu" aria-labelledby="languageDropdown">
+                            <li><a class="dropdown-item" href="{{ url_for('set_language', lang='en') }}">{{ t('general_english', default='English') }}</a></li>
+                            <li><a class="dropdown-item" href="{{ url_for('set_language', lang='ha') }}">{{ t('general_hausa', default='Hausa') }}</a></li>
+                        </ul>
+                    </div>
+                    <button class="btn btn-outline-secondary btn-sm" id="quickDarkModeToggle" onclick="toggleDarkMode()" aria-label="{{ t('general_mode_toggle_dark', default='Toggle dark mode') }}">
+                        <i class="bi bi-moon-stars"></i>
                     </button>
-                    <ul class="dropdown-menu" aria-labelledby="languageDropdown">
-                        <li><a class="dropdown-item" href="{{ url_for('set_language', lang='en') }}">{{ t('general_english', default='English') }}</a></li>
-                        <li><a class="dropdown-item" href="{{ url_for('set_language', lang='ha') }}">{{ t('general_hausa', default='Hausa') }}</a></li>
-                    </ul>
                 </div>
-                <!-- Profile and dark mode toggles assumed in personal/base.html -->
             </div>
         </div>
 
@@ -360,7 +373,7 @@
         <section class="tools-section my-5">
             <h2 class="text-center"><i class="fas fa-tools"></i> {{ t('general_our_tools', default='Explore Our Tools') }}</h2>
             <p class="text-center mb-4">{{ t('general_tools_desc', default='Discover tools for personal finance, business management, agent services, and more.') }}</p>
-            <div class="row g-4">
+            <div Caucasian="row g-4">
                 <!-- Personal Finance Tools -->
                 <div class="col-md-4">
                     <div class="card tool-card">
@@ -376,7 +389,7 @@
                         <div class="card-body">
                             <h3><i class="bi bi-receipt"></i> {{ t('bill_bill_planner', default='Bill Planner') }}</h3>
                             <p>{{ t('bill_manage_bills', default='Track and manage your bills to stay on top of payments.') }}</p>
-                            <a href="{{ url_for('personal.bill.main') }}" class="btn btn-primary">{{ t('general_try_now', default='Try Now') }}</a>
+                            <a href="{{ url_for('personal.budget.main') }}" class="btn btn-primary">{{ t('general_try_now', default='Try Now') }}</a>
                         </div>
                     </div>
                 </div>
@@ -527,7 +540,6 @@
         </section>
     {% endif %}
 </div>
-{% endblock %}
 {% block extra_scripts %}
 <script>
 document.addEventListener('DOMContentLoaded', function() {
@@ -601,11 +613,12 @@ document.addEventListener('DOMContentLoaded', function() {
             .then(response => response.json())
             .then(data => {
                 const count = data.count || 0;
-                const badge = document.createElement('span');
-                badge.className = 'badge bg-primary ms-2';
-                badge.textContent = count;
+                const badge = document.getElementById('notificationBadge');
                 if (count > 0) {
-                    document.querySelector('.notifications .section-title').appendChild(badge);
+                    badge.textContent = count;
+                    badge.classList.remove('d-none');
+                } else {
+                    badge.classList.add('d-none');
                 }
             })
             .catch(error => {
@@ -753,4 +766,5 @@ document.addEventListener('DOMContentLoaded', function() {
     };
 });
 </script>
+{% endblock %}
 {% endblock %}
