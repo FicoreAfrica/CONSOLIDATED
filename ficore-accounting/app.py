@@ -69,7 +69,7 @@ def admin_required(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
         if not current_user.is_authenticated:
-            return redirect(url_for('users_bp.login'))
+            return redirect(url_for('users.login'))
         if not is_admin():
             flash(trans('general_no_permission', default='You do not have permission to access this page.'), 'danger')
             return redirect(url_for('index'))
@@ -81,7 +81,7 @@ def custom_login_required(f):
     def decorated_function(*args, **kwargs):
         if current_user.is_authenticated or session.get('is_anonymous', False):
             return f(*args, **kwargs)
-        return redirect(url_for('users_bp.login', next=request.url))
+        return redirect(url_for('users.login', next=request.url))
     return decorated_function
 
 def ensure_session_id(f):
@@ -271,7 +271,7 @@ def create_app():
     
     # Configure Flask-Login
     login_manager.init_app(app)
-    login_manager.login_view = 'users_bp.login'
+    login_manager.login_view = 'users.login'
     login_manager.login_message = trans('general_login_required', default='Please log in to access this page.')
     login_manager.login_message_category = 'info'
     
