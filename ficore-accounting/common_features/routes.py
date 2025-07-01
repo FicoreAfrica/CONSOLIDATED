@@ -5,6 +5,7 @@ from utils import requires_role, get_mongo_db
 import bleach
 import datetime
 import logging
+from bson import ObjectId
 
 common_bp = Blueprint('common_bp', __name__)
 
@@ -44,11 +45,11 @@ def news_list():
             'content': article['content'][:100] + '...' if len(article['content']) > 100 else article['content']
         } for article in articles])
     
-    return render_template('common_features/news.html', 
-                         section='list', 
-                         articles=articles, 
+    return render_template('common_features/news.html',
+                         section='list',
+                         articles=articles,
                          categories=categories,
-                         t=trans, 
+                         t=trans,
                          lang=session.get('lang', 'en'))
 
 @common_bp.route('/news/<article_id>', methods=['GET'])
@@ -67,10 +68,10 @@ def news_detail(article_id):
         return redirect(url_for('common_bp.news_list'))
     
     logging.info(f"News detail viewed: id={article_id}, title={article['title']}")
-    return render_template('common_features/news.html', 
-                         section='detail', 
-                         article=article, 
-                         t=trans, 
+    return render_template('common_features/news.html',
+                         section='detail',
+                         article=article,
+                         t=trans,
                          lang=session.get('lang', 'en'))
 
 @common_bp.route('/admin/news_management', methods=['GET', 'POST'])
@@ -105,10 +106,10 @@ def news_management():
             return redirect(url_for('common_bp.news_management'))
     
     articles = list(db.news.find().sort('published_at', -1))
-    return render_template('common_features/news.html', 
-                         section='admin', 
-                         articles=articles, 
-                         t=trans, 
+    return render_template('common_features/news.html',
+                         section='admin',
+                         articles=articles,
+                         t=trans,
                          lang=session.get('lang', 'en'))
 
 @common_bp.route('/admin/news_management/edit/<article_id>', methods=['GET', 'POST'])
@@ -153,10 +154,10 @@ def edit_news(article_id):
             flash(trans('news_article_updated', default='News article updated successfully'), 'success')
             return redirect(url_for('common_bp.news_management'))
     
-    return render_template('common_features/news.html', 
-                         section='edit', 
-                         article=article, 
-                         t=trans, 
+    return render_template('common_features/news.html',
+                         section='edit',
+                         article=article,
+                         t=trans,
                          lang=session.get('lang', 'en'))
 
 @common_bp.route('/admin/news_management/delete/<article_id>', methods=['POST'])
@@ -177,13 +178,12 @@ def delete_news(article_id):
         flash(trans('news_error', default='Error deleting article'), 'danger')
     return redirect(url_for('common_bp.news_management'))
 
-# Seed initial articles (run once, e.g., via a setup script)
 def seed_news():
     db = get_mongo_db()
     if db.news.count_documents({}) == 0:
         articles = [
             {
-                'title': 'Welcome to iHatch Cohort 4 – Next Steps Facore News',
+                'title': 'Welcome to iHatch Cohort 4 – Next Steps & Resources',
                 'content': """
                     <p>Congratulations to all innovators selected for the iHatch Startup Support Programme Cohort 4, a 5-month intensive incubation program by NITDA and JICA, running from October 2024 to March 2025. This program empowers early-stage Nigerian startups in sectors like fintech, agritech, and healthtech with mentorship, training, and resources to scale their ventures.</p>
                     <p><strong>Next Steps:</strong></p>
@@ -217,6 +217,18 @@ def seed_news():
                 'category': 'Agritech',
                 'is_active': True,
                 'published_at': datetime.datetime(2025, 5, 30),
+                'created_by': 'admin'
+            },
+            {
+                'title': 'Nigeria’s Startup Ecosystem: Opportunities in 2025',
+                'content': """
+                    <p>Nigeria’s startup ecosystem continues to thrive, with increased investments in fintech, agritech, and healthtech. Programs like iHatch Cohort 4 are empowering entrepreneurs with resources and mentorship.</p>
+                    <p>In 2025, expect more focus on AI-driven solutions and sustainable business models to address local challenges.</p>
+                """,
+                'source_link': None,
+                'category': 'Startups',
+                'is_active': True,
+                'published_at': datetime.datetime(2025, 6, 3),
                 'created_by': 'admin'
             }
         ]
