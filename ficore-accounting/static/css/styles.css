@@ -165,7 +165,7 @@ h3 { font-size: 1.25rem; }
 
 .main-content {
     flex: 1 0 auto;
-    padding-top: calc(var(--navbar-height) + 1rem);
+    padding-top: 0;
     padding-bottom: 1rem;
 }
 
@@ -222,7 +222,7 @@ h3 { font-size: 1.25rem; }
 .navbar {
     background: var(--navbar-bg) !important;
     border-bottom: 1px solid var(--card-border);
-    position: fixed;
+    position: relative;
     top: 0;
     width: 100%;
     height: var(--navbar-height);
@@ -511,30 +511,90 @@ h3 { font-size: 1.25rem; }
 }
 
 /* Hero Section */
-.hero {
-    width: 100vw;
-    margin-left: calc(-50vw + 50%);
-    padding: 0 0 2rem 0;
-    background: linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.6)), linear-gradient(135deg, var(--button-primary-bg), var(--button-success-bg));
-    color: white;
-    text-align: center;
-    box-sizing: border-box;
+.hero.hero-background {
+    background: linear-gradient(rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.6)), 
+                url('/static/images/hero-financial-africa.jpg') center/cover no-repeat,
+                linear-gradient(135deg, var(--button-primary-bg), var(--button-success-bg));
+    padding: 3rem 0 4rem;
+    position: relative;
+    overflow: hidden;
+    min-height: 400px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    margin-top: 0;
 }
+
 .hero .container {
-    max-width: 1200px;
-    padding: 0 1rem;
-    margin: 0 auto;
+    padding: 0 1.5rem;
+    z-index: 1;
 }
 
 .hero h1 {
-    font-size: clamp(2rem, 5vw, 3rem);
-    margin-bottom: 1rem;
+    font-size: clamp(2rem, 5vw, 3.5rem);
+    margin-bottom: 1.5rem;
+    line-height: 1.2;
 }
 
 .hero p.lead {
-    font-size: clamp(1rem, 3vw, 1.2rem);
-    max-width: 800px;
-    margin: 0 auto 1.5rem;
+    font-size: clamp(1rem, 2.5vw, 1.3rem);
+    max-width: 850px;
+    margin: 0 auto 2rem;
+    line-height: 1.5;
+}
+
+.hero .dropdown {
+    position: relative;
+}
+
+.hero .dropdown-menu {
+    min-width: 220px;
+    border-radius: 0.5rem;
+    box-shadow: var(--card-shadow);
+    transform: translateY(0.5rem);
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+.hero .dropdown:hover .dropdown-menu,
+.hero .dropdown:focus-within .dropdown-menu {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+}
+
+.hero .btn-lg {
+    padding: 0.85rem 2.5rem;
+    font-size: 1.1rem;
+    font-weight: 600;
+    min-width: 180px;
+}
+
+@media (max-width: 576px) {
+    .hero.hero-background {
+        padding: 2rem 0;
+        min-height: 300px;
+    }
+    .hero .container {
+        padding: 0 1rem;
+    }
+    .hero h1 {
+        font-size: clamp(1.5rem, 4vw, 2rem);
+        margin-bottom: 1rem;
+    }
+    .hero p.lead {
+        font-size: clamp(0.9rem, 2vw, 1rem);
+        margin-bottom: 1.5rem;
+    }
+    .hero .btn-lg {
+        padding: 0.6rem 1.5rem;
+        font-size: 1rem;
+        min-width: 150px;
+    }
+    .hero .dropdown-menu {
+        min-width: 160px;
+    }
 }
 
 /* Buttons */
@@ -1428,7 +1488,7 @@ h2.card-title {
         min-width: 80px;
     }
 
-    .hero {
+    .hero.hero-background {
         padding: 0 0 1.5rem 0;
     }
     .hero .container {
@@ -1626,7 +1686,7 @@ h2.card-title {
         padding: 1rem 2rem;
     }
 
-    .hero {
+    .hero.hero-background {
         padding: 0 0 4rem 0;
     }
     .hero .container {
@@ -1966,107 +2026,76 @@ h2.card-title {
         padding: 0.5rem 1rem;
     }
 }
-/* Hero Section Enhancements */
-.hero.hero-background {
-    /* Add a background image with a fallback gradient */
-    background: linear-gradient(rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.6)), 
-                url('/static/img/hero-financial-africa.jpg') center/cover no-repeat,
-                linear-gradient(135deg, var(--button-primary-bg), var(--button-success-bg));
-    padding: 3rem 0;
-    position: relative;
-    overflow: hidden;
+
+/* Role-Based Value Proposition Refinements */
+.role-card {
+    min-height: 250px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
 }
 
-/* Optional slideshow animation (uncomment if implementing a slideshow) */
-
-.hero.hero-background::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: url('/static/imag/hero-financial-africa-alt.jpg') center/cover no-repeat;
-    opacity: 0;
-    animation: slideshow 10s infinite;
-}
-@keyframes slideshow {
-    0%, 40% { opacity: 0; }
-    50%, 90% { opacity: 1; }
-    100% { opacity: 0; }
-}
-*/
-
-.hero .dropdown-menu {
-    min-width: 200px;
-    border-radius: 0.5rem;
-    box-shadow: var(--card-shadow);
-}
-
-.hero .btn-lg {
-    padding: 0.75rem 2rem;
-    font-size: 1.1rem;
-    font-weight: 600;
-}
-
-@media (max-width: 576px) {
-    .hero.hero-background {
-        padding: 2rem 0;
-    }
-    .hero .btn-lg {
-        padding: 0.5rem 1.5rem;
-        font-size: 1rem;
-    }
-    .hero .dropdown-menu {
-        min-width: 150px;
-    }
-}
-
-/* Role-Based Value Proposition Enhancements */
 .role-card.role-personal {
     border-left: 4px solid var(--accent-blue);
+    background: rgba(58, 134, 255, 0.05);
 }
 
 .role-card.role-business {
     border-left: 4px solid var(--button-success-bg);
+    background: rgba(16, 185, 129, 0.05);
 }
 
 .role-card.role-agent {
     border-left: 4px solid var(--button-warning-bg);
+    background: rgba(245, 158, 11, 0.05);
 }
 
 .role-card .card-body i {
-    font-size: 2rem;
-    margin-bottom: 0.5rem;
-    color: var(--text-color);
+    font-size: 2.5rem;
+    margin-bottom: 1rem;
+    transition: transform 0.3s ease;
 }
 
-.role-card.role-personal .card-body i {
-    color: var(--accent-blue);
+.role-card:hover .card-body i {
+    transform: scale(1.1);
 }
 
-.role-card.role-business .card-body i {
-    color: var(--button-success-bg);
+.role-card .card-body h3 {
+    font-size: 1.3rem;
+    margin-bottom: 0.75rem;
 }
 
-.role-card.role-agent .card-body i {
-    color: var(--button-warning-bg);
+.role-card .card-body p {
+    font-size: 0.95rem;
+    color: var(--text-secondary);
 }
 
 @media (max-width: 768px) {
     .role-card {
+        min-height: 200px;
         margin-bottom: 1.5rem;
+    }
+    .role-card .card-body i {
+        font-size: 2rem;
+    }
+    .role-card .card-body h3 {
+        font-size: 1.1rem;
+    }
+    .role-card .card-body p {
+        font-size: 0.9rem;
     }
 }
 
-/* Tools Section Enhancements */
+/* Tools Section Refinements */
 .tools-section .accordion-button {
-    font-size: 1.25rem;
+    font-size: 1.3rem;
     font-weight: 600;
     color: var(--text-color);
     background: var(--card-bg);
-    border-radius: 0.5rem !important;
-    padding: 1rem 1.5rem;
+    border-radius: 0.5rem;
+    padding: 1.2rem 1.5rem;
+    display: flex;
+    align-items: center;
 }
 
 .tools-section .accordion-button:not(.collapsed) {
@@ -2074,90 +2103,126 @@ h2.card-title {
     color: var(--accent-blue);
 }
 
-.tools-section .accordion-button::after {
-    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='%231e293b'%3e%3cpath fill-rule='evenodd' d='M1.646 4.646a.5.5 0 0 1 .708 0L8 10.293l5.646-5.647a.5.5 0 0 1 .708.708l-6 6a.5.5 0 0 1-.708 0l-6-6a.5.5 0 0 1 0-.708z'/%3e%3c/svg%3e");
+.tools-section .accordion-button i {
+    margin-right: 0.75rem;
+    font-size: 1.5rem;
 }
 
-.dark-mode .tools-section .accordion-button::after {
-    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='%23f1f5f9'%3e%3cpath fill-rule='evenodd' d='M1.646 4.646a.5.5 0 0 1 .708 0L8 10.293l5.646-5.647a.5.5 0 0 1 .708.708l-6 6a.5.5 0 0 1-.708 0l-6-6a.5.5 0 0 1 0-.708z'/%3e%3c/svg%3e");
+.tool-card {
+    min-height: 250px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
 }
 
 .tool-card.tool-personal {
     border-left: 4px solid var(--accent-blue);
+    background: rgba(58, 134, 255, 0.05);
 }
 
 .tool-card.tool-business {
     border-left: 4px solid var(--button-success-bg);
+    background: rgba(16, 185, 129, 0.05);
 }
 
 .tool-card.tool-agent {
     border-left: 4px solid var(--button-warning-bg);
+    background: rgba(245, 158, 11, 0.05);
 }
 
 .tool-card.tool-shared {
     border-left: 4px solid var(--button-primary-bg);
+    background: rgba(184, 138, 68, 0.05);
 }
 
 .tool-card .card-body i {
-    font-size: 1.5rem;
+    font-size: 1.8rem;
+    margin-bottom: 0.75rem;
+    transition: transform 0.3s ease;
+}
+
+.tool-card:hover .card-body i {
+    transform: scale(1.1);
+}
+
+.tool-card .card-body h4 {
+    font-size: 1.1rem;
     margin-bottom: 0.5rem;
-    color: var(--text-color);
 }
 
-.tool-card.tool-personal .card-body i {
-    color: var(--accent-blue);
-}
-
-.tool-card.tool-business .card-body i {
-    color: var(--button-success-bg);
-}
-
-.tool-card.tool-agent .card-body i {
-    color: var(--button-warning-bg);
-}
-
-.tool-card.tool-shared .card-body i {
-    color: var(--button-primary-bg);
+.tool-card .card-body p {
+    font-size: 0.9rem;
+    color: var(--text-secondary);
 }
 
 .tools-section .accordion-body {
     padding: 1.5rem;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 1.5rem;
 }
 
 @media (max-width: 768px) {
     .tools-section .accordion-button {
         font-size: 1.1rem;
-        padding: 0.75rem 1rem;
+        padding: 0.9rem 1rem;
+    }
+    .tools-section .accordion-button i {
+        font-size: 1.3rem;
+    }
+    .tool-card {
+        min-height: 220px;
+    }
+    .tool-card .card-body i {
+        font-size: 1.5rem;
+    }
+    .tool-card .card-body h4 {
+        font-size: 1rem;
     }
     .tools-section .accordion-body {
         padding: 1rem;
-    }
-    .tool-card {
-        margin-bottom: 1rem;
+        gap: 1rem;
     }
 }
 
-/* Why FiCore Section Enhancements */
+/* Why Choose FiCore Section Refinements */
 .why-section .highlight-text {
-    font-size: 1.5rem;
-    font-weight: 600;
+    font-size: 1.6rem;
+    font-weight: 700;
     color: var(--accent-blue);
+    margin-bottom: 1.5rem;
 }
 
 .why-item {
-    padding: 1rem;
-    border-radius: 0.5rem;
+    padding: 1.2rem;
+    border-radius: 0.6rem;
+    background: var(--card-bg);
+    border: 1px solid var(--card-border);
     transition: transform 0.3s ease, box-shadow 0.3s ease, background-color 0.3s ease;
+    position: relative;
+    padding-left: 2.5rem;
+}
+
+.why-item::before {
+    content: "✔";
+    font-size: 1.2rem;
+    color: var(--success-color);
+    position: absolute;
+    left: 1rem;
+    top: 50%;
+    transform: translateY(-50%);
 }
 
 .why-item:hover {
-    transform: translateY(-4px);
+    transform: translateY(-5px);
     box-shadow: var(--card-shadow-hover);
     background: var(--button-secondary-hover);
 }
 
 .why-item i {
     color: var(--success-color);
+    font-size: 2.5rem;
+    margin-bottom: 1rem;
     transition: color 0.3s ease;
 }
 
@@ -2166,30 +2231,36 @@ h2.card-title {
 }
 
 .animated-counter {
-    font-size: 1.5rem;
+    font-size: 1.8rem;
     font-weight: 700;
     color: var(--accent-blue);
+    display: block;
+    margin-top: 1.5rem;
 }
 
 @media (max-width: 768px) {
     .why-section .highlight-text {
-        font-size: 1.2rem;
+        font-size: 1.3rem;
     }
     .why-item {
-        padding: 0.75rem;
+        padding: 0.9rem;
+        padding-left: 2rem;
+    }
+    .why-item::before {
+        font-size: 1rem;
+        left: 0.7rem;
+    }
+    .why-item i {
+        font-size: 2rem;
     }
     .animated-counter {
-        font-size: 1.2rem;
+        font-size: 1.4rem;
     }
 }
 
-/* Testimonials Section Enhancements */
+/* Testimonials Section Refinements */
 .testimonials-section .carousel.fade .carousel-item {
-    transition: opacity 0.5s ease-in-out;
-}
-
-.testimonials-section .carousel-item {
-    opacity: 0;
+    transition: opacity 0.6s ease-in-out;
 }
 
 .testimonials-section .carousel-item.active {
@@ -2197,17 +2268,17 @@ h2.card-title {
 }
 
 .avatar-circle {
-    width: 60px;
-    height: 60px;
+    width: 70px;
+    height: 70px;
     border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 1.5rem;
-    font-weight: 600;
+    font-size: 1.8rem;
+    font-weight: 700;
     color: #fff;
-    margin: 0 auto 1rem;
-    background: var(--text-muted);
+    margin: 0 auto 1.2rem;
+    box-shadow: var(--card-shadow);
 }
 
 .avatar-circle.gradient-bg[data-initials="MU"] {
@@ -2222,36 +2293,59 @@ h2.card-title {
     background: linear-gradient(135deg, var(--button-warning-bg), #fbbf24);
 }
 
+.testimonials-section .testimonial p {
+    font-size: 1rem;
+    color: var(--text-secondary);
+    margin-bottom: 0.5rem;
+    max-width: 600px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.testimonials-section .testimonial .name {
+    font-size: 0.9rem;
+    color: var(--text-muted);
+    font-style: italic;
+}
+
 .testimonials-section .carousel-control-prev,
 .testimonials-section .carousel-control-next {
     width: 10%;
-    background: rgba(0, 0, 0, 0.2);
-}
-
-.testimonials-section .carousel-control-prev-icon,
-.testimonials-section .carousel-control-next-icon {
-    background-size: 1.5rem;
+    background: rgba(0, 0, 0, 0.3);
+    border-radius: 50%;
+    height: 40px;
+    width: 40px;
+    top: 50%;
+    transform: translateY(-50%);
 }
 
 @media (max-width: 576px) {
     .avatar-circle {
         width: 50px;
         height: 50px;
-        font-size: 1.2rem;
+        font-size: 1.3rem;
+    }
+    .testimonials-section .testimonial p {
+        font-size: 0.9rem;
     }
     .testimonials-section .carousel-control-prev,
     .testimonials-section .carousel-control-next {
-        width: 15%;
+        width: 20%;
+        height: 30px;
+        width: 30px;
     }
 }
 
-/* FAQ Section Enhancements */
+/* FAQ Section Refinements */
 .faq-section .accordion-button {
-    font-size: 1.1rem;
+    font-size: 1.2rem;
     font-weight: 500;
     color: var(--text-color);
     background: var(--card-bg);
-    border-radius: 0.5rem !important;
+    border-radius: 0.5rem;
+    padding: 1.1rem 1.5rem;
+    display: flex;
+    align-items: center;
 }
 
 .faq-section .accordion-button:not(.collapsed) {
@@ -2259,41 +2353,79 @@ h2.card-title {
     color: var(--accent-blue);
 }
 
+.faq-section .accordion-button i {
+    margin-right: 0.75rem;
+    font-size: 1.4rem;
+}
+
 .faq-section .accordion-body {
-    font-size: 0.9rem;
+    font-size: 0.95rem;
     color: var(--text-secondary);
-    padding: 1rem 1.5rem;
+    padding: 1.2rem 1.5rem;
+    line-height: 1.6;
 }
 
 @media (max-width: 768px) {
     .faq-section .accordion-button {
         font-size: 1rem;
-        padding: 0.75rem 1rem;
+        padding: 0.8rem 1rem;
+    }
+    .faq-section .accordion-button i {
+        font-size: 1.2rem;
     }
     .faq-section .accordion-body {
-        padding: 0.75rem 1rem;
+        padding: 0.8rem 1rem;
+        font-size: 0.9rem;
     }
 }
 
-/* CTA Section Enhancements */
-.cta-section .dropdown-menu {
-    min-width: 200px;
-    border-radius: 0.5rem;
+/* CTA Section Refinements */
+.cta-section {
+    padding: 3rem 0;
+    background: var(--card-bg);
+    border-radius: 1rem;
+    margin: 2rem 0;
     box-shadow: var(--card-shadow);
+    text-align: center;
 }
 
 .cta-section .btn-lg {
-    padding: 0.75rem 2rem;
+    padding: 0.85rem 2.5rem;
     font-size: 1.1rem;
     font-weight: 600;
+    min-width: 180px;
+    margin: 0 0.5rem;
+}
+
+.cta-section .dropdown-menu {
+    min-width: 220px;
+    border-radius: 0.5rem;
+    box-shadow: var(--card-shadow);
+    transform: translateY(0.5rem);
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+.cta-section .dropdown:hover .dropdown-menu,
+.cta-section .dropdown:focus-within .dropdown-menu {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
 }
 
 @media (max-width: 576px) {
+    .cta-section {
+        padding: 2rem 0;
+        margin: 1.5rem 0;
+    }
     .cta-section .btn-lg {
-        padding: 0.5rem 1.5rem;
+        padding: 0.6rem 1.5rem;
         font-size: 1rem;
+        min-width: 150px;
+        margin: 0.25rem 0;
     }
     .cta-section .dropdown-menu {
-        min-width: 150px;
+        min-width: 160px;
     }
 }
