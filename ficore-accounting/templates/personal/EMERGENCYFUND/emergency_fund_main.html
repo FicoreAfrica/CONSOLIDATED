@@ -36,7 +36,7 @@
     <div class="tab-content" id="emergencyFundTabContent">
         <!-- Create Plan Tab -->
         <div class="tab-pane fade show active" id="create-plan" role="tabpanel" aria-labelledby="create-plan-tab">
-            <form method="POST" action="{{ url_for('emergency_fund.main') }}" id="emergencyFundForm" class="validate-form">
+            <form method="POST" action="{{ url_for('personal.emergency_fund.main') }}" id="emergencyFundForm" class="validate-form">
                 {{ form.csrf_token }}
                 <input type="hidden" name="action" value="create_plan">
 
