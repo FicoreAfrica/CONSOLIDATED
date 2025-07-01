@@ -3,7 +3,7 @@ from flask_wtf import FlaskForm
 from flask_wtf.csrf import CSRFProtect, CSRFError
 from wtforms import StringField, BooleanField, SubmitField, FloatField
 from wtforms.validators import DataRequired, NumberRange, Optional, Email, ValidationError
-from flask_login import current_user, login_required  # Added login_required
+from flask_login import current_user, login_required
 from translations import trans
 from mailersend_email import send_email, EMAIL_CONFIG
 from datetime import datetime
@@ -168,7 +168,8 @@ def main():
                     'total_liabilities': total_liabilities,
                     'net_worth': net_worth,
                     'badges': badges,
-                    'created_at': datetime.utcnow()
+                    'created_at': datetime.utcnow(),
+                    'currency': 'NGN'  # Added currency field
                 }
                 
                 try:
@@ -178,7 +179,7 @@ def main():
                 except Exception as e:
                     current_app.logger.error(f"Failed to save net worth data to MongoDB: {str(e)}", extra={'session_id': session['sid']})
                     flash(trans("net_worth_storage_error", default="Error saving net worth data."), "danger")
-                    return redirect(url_for('net_worth.main'))
+                    return redirect(url_for('personal.net_worth.main'))
 
                 # Send email if requested
                 if form.send_email.data and form.email.data:
@@ -203,8 +204,9 @@ def main():
                                 "net_worth": net_worth_record['net_worth'],
                                 "badges": net_worth_record['badges'],
                                 "created_at": net_worth_record['created_at'].strftime('%Y-%m-%d'),
-                                "cta_url": url_for('net_worth.main', _external=True),
-                                "unsubscribe_url": url_for('net_worth.unsubscribe', email=form.email.data, _external=True)
+                                "cta_url": url_for('personal.net_worth.main', _external=True),
+                                "unsubscribe_url": url_for('personal.net_worth.unsubscribe', email=form.email.data, _external=True),
+                                "currency": net_worth_record['currency']
                             },
                             lang=lang
                         )
@@ -217,7 +219,7 @@ def main():
         user_records = get_mongo_db().net_worth_data.find(filter_criteria).sort('created_at', -1)
         
         # Fallback to email for authenticated users
-        if not user_records and current_user.is_authenticated and current_user.email:
+        if not user_records.count() and current_user.is_authenticated and current_user.email:
             user_records = get_mongo_db().net_worth_data.find({'email': current_user.email}).sort('created_at', -1)
         
         records = []
@@ -237,11 +239,12 @@ def main():
                 'total_liabilities': record.get('total_liabilities', 0),
                 'net_worth': record.get('net_worth', 0),
                 'badges': record.get('badges', []),
-                'created_at': record.get('created_at').strftime('%Y-%m-%d') if record.get('created_at') else 'N/A'
+                'created_at': record.get('created_at').strftime('%Y-%m-%d') if record.get('created_at') else 'N/A',
+                'currency': record.get('currency', 'NGN')
             }
             records.append((record_data['id'], record_data))
         
-        latest_record = records[-1][1] if records else {
+        latest_record = records[0][1] if records else {
             'cash_savings': 0,
             'investments': 0,
             'property': 0,
@@ -250,11 +253,12 @@ def main():
             'total_liabilities': 0,
             'net_worth': 0,
             'badges': [],
-            'created_at': 'N/A'
+            'created_at': 'N/A',
+            'currency': 'NGN'
         }
 
         # Calculate comparison metrics
-        all_records = list(get_mongo_db().net_worth_data.find({}))
+        all_records = list(get_mongo_db().net_worth_data.find({'currency': 'NGN'}))
         all_net_worths = [record['net_worth'] for record in all_records if record.get('net_worth') is not None]
         total_users = len(all_net_worths)
         rank = 0
@@ -333,7 +337,8 @@ def main():
                 'total_liabilities': 0,
                 'net_worth': 0,
                 'badges': [],
-                'created_at': 'N/A'
+                'created_at': 'N/A',
+                'currency': 'NGN'
             },
             insights=[],
             cross_tool_insights=[],
@@ -351,7 +356,6 @@ def main():
             tool_title=trans('net_worth_title', default='Net Worth Calculator', lang=lang)
         ), 500
 
-# NEW: Added summary endpoint for homepage financial summary
 @net_worth_bp.route('/summary')
 @login_required
 def summary():
@@ -367,16 +371,17 @@ def summary():
         if not latest_record:
             current_app.logger.info(f"No net worth record found for user {current_user.id}", 
                                   extra={'session_id': session.get('sid', 'unknown')})
-            return jsonify({'netWorth': 0.0})
+            return jsonify({'netWorth': 0.0, 'currency': 'NGN'})
         
         net_worth = latest_record[0].get('net_worth', 0.0)
-        current_app.logger.info(f"Fetched net worth summary for user {current_user.id}: {net_worth}", 
+        currency = latest_record[0].get('currency', 'NGN')
+        current_app.logger.info(f"Fetched net worth summary for user {current_user.id}: {net_worth} {currency}", 
                               extra={'session_id': session.get('sid', 'unknown')})
-        return jsonify({'netWorth': net_worth})
+        return jsonify({'netWorth': net_worth, 'currency': currency})
     except Exception as e:
         current_app.logger.error(f"Error in net_worth.summary: {str(e)}", 
                                 extra={'session_id': session.get('sid', 'unknown')})
-        return jsonify({'netWorth': 0.0}), 500
+        return jsonify({'netWorth': 0.0, 'currency': 'NGN'}), 500
 
 @net_worth_bp.route('/unsubscribe/<email>')
 @custom_login_required
@@ -431,4 +436,4 @@ def handle_csrf_error(e):
     lang = session.get('lang', 'en')
     current_app.logger.error(f"CSRF error on {request.path}: {e.description}", extra={'session_id': session.get('sid', 'unknown')})
     flash(trans("net_worth_csrf_error", default="Form submission failed due to a missing security token. Please refresh and try again."), "danger")
-    return redirect(url_for('net_worth.main')), 400
+    return redirect(url_for('personal.net_worth.main')), 400
