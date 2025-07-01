@@ -572,6 +572,19 @@ document.addEventListener('DOMContentLoaded', function() {
         return Math.floor(diffInSeconds / 86400) + translations.days_ago;
     }
     
+    document.addEventListener('DOMContentLoaded', function() {
+        const currentPath = window.location.pathname;
+        const navItems = document.querySelectorAll('.bottom-nav .nav-item');
+        
+        navItems.forEach(item => {
+            const itemHref = item.getAttribute('href');
+            // Check if the current path exactly matches the item's href
+            // Or, for broader matching (e.g., /budget/123 still highlights /budget),
+            // you might use `currentPath.startsWith(itemHref)`
+            if (currentPath === itemHref) {
+                item.classList.add('active');
+        }
+    
     // Global functions
     window.toggleAmountVisibility = function() {
         amountsVisible = !amountsVisible;
