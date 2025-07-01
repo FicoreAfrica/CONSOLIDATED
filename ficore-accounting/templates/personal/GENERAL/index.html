@@ -291,7 +291,7 @@
                             <h4>{{ t('general_taxation', default='Taxation') }}</h4>
                             <p>{{ t('general_taxation_desc', default='Calculate and manage taxes') }}</p>
                         </div>
-                        <a href="{{ url_for('taxation_bp.calculate_tax') }}" class="nav-card-link"></a>
+                        <a href="{{ url_for('taxation.calculate_tax') }}" class="nav-card-link"></a>
                     </div>
                 </div>
                 <div class="col-6 col-md-4">
@@ -303,7 +303,7 @@
                             <h4>{{ t('general_news', default='News') }}</h4>
                             <p>{{ t('general_news_desc', default='Stay updated with financial news') }}</p>
                         </div>
-                        <a href="{{ url_for('common_bp.news_list') }}" class="nav-card-link"></a>
+                        <a href="{{ url_for('common.news_list') }}" class="nav-card-link"></a>
                     </div>
                 </div>
             </div>
@@ -316,8 +316,8 @@
             <h1><i class="fas fa-wallet"></i> {{ t('general_welcome', default='Welcome to FiCore Africa') }}</h1>
             <p class="lead">{{ t('general_ficore_desc', default='Your all-in-one platform for personal finance, business management, financial literacy, and agent services across Africa.') }}</p>
             <div class="d-flex justify-content-center gap-3 mt-4">
-                <a href="{{ url_for('users_bp.signup') }}" class="btn btn-primary btn-lg" aria-label="{{ t('general_signup', default='Sign Up') }}">{{ t('general_signup', default='Sign Up') }}</a>
-                <a href="{{ url_for('users_bp.login') }}" class="btn btn-outline-secondary btn-lg" aria-label="{{ t('general_login', default='Log In') }}">{{ t('general_login', default='Log In') }}</a>
+                <a href="{{ url_for('users.signup') }}" class="btn btn-primary btn-lg" aria-label="{{ t('general_signup', default='Sign Up') }}">{{ t('general_signup', default='Sign Up') }}</a>
+                <a href="{{ url_for('users.login') }}" class="btn btn-outline-secondary btn-lg" aria-label="{{ t('general_login', default='Log In') }}">{{ t('general_login', default='Log In') }}</a>
             </div>
         </section>
 
@@ -331,7 +331,7 @@
                         <div class="card-body text-center">
                             <h3><i class="fas fa-user"></i> {{ t('general_personal', default='Personal Users') }}</h3>
                             <p>{{ t('general_personal_desc', default='Track budgets, bills, and financial health to achieve your goals.') }}</p>
-                            <a href="{{ url_for('users_bp.signup', role='personal') }}" class="btn btn-outline-primary">{{ t('general_get_started', default='Get Started') }}</a>
+                            <a href="{{ url_for('users.signup', role='personal') }}" class="btn btn-outline-primary">{{ t('general_get_started', default='Get Started') }}</a>
                         </div>
                     </div>
                 </div>
@@ -433,7 +433,7 @@
                         <div class="card-body">
                             <h3><i class="bi bi-calculator"></i> {{ t('general_your_taxation_tool', default='Your Taxation Tool') }}</h3>
                             <p>{{ t('general_taxation_desc', default='Calculate and manage your taxes with ease.') }}</p>
-                            <a href="{{ url_for('users_bp.login', next=url_for('taxation_bp.calculate_tax')) }}" class="btn btn-primary">{{ t('general_try_now', default='Try Now') }}</a>
+                            <a href="{{ url_for('users.login', next=url_for('taxation_bp.calculate_tax')) }}" class="btn btn-primary">{{ t('general_try_now', default='Try Now') }}</a>
                         </div>
                     </div>
                 </div>
@@ -442,7 +442,7 @@
                         <div class="card-body">
                             <h3><i class="bi bi-newspaper"></i> {{ t('general_finance_news', default='Finance News Highlights') }}</h3>
                             <p>{{ t('general_news_desc', default='Stay updated with the latest financial news and insights.') }}</p>
-                            <a href="{{ url_for('common_bp.news_list') }}" class="btn btn-primary">{{ t('general_try_now', default='Try Now') }}</a>
+                            <a href="{{ url_for('common.news_list') }}" class="btn btn-primary">{{ t('general_try_now', default='Try Now') }}</a>
                         </div>
                     </div>
                 </div>
