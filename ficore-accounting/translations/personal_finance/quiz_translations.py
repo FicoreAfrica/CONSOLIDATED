@@ -9,6 +9,7 @@ QUIZ_TRANSLATIONS = {
         'quiz_your_financial_personality_results': 'Your Financial Personality Results',
         'quiz_your_financial_personality_results_subtitle': 'Discover your financial personality and insights',
         'quiz_enter_personal_information': 'Enter Your Personal Information',
+        'quiz_take_quiz': 'Take the quiz',
         'quiz_questions_part1': 'Questions Part 1',
         'quiz_questions_part2': 'Questions Part 2',
         'quiz_question_required': 'Question is required',
@@ -183,7 +184,7 @@ QUIZ_TRANSLATIONS = {
         'quiz_yes': 'Eh',
         'quiz_no': 'A’a',
         'quiz_submit_quiz': 'Mika Tambayoyin',
-        
+        'quiz_take_quiz': 'Ɗauki Jarabawa',
         # Tips
         'quiz_tip_planner_1': 'Ci gaba da saita manufofin kuɗi na dogon lokaci.',
         'quiz_tip_saver_1': 'Ka ji daɗin saka hannun jari don haɓaka ajiyarka.',
