@@ -10,6 +10,8 @@ GENERAL_TRANSLATIONS = {
         'general_wallet_balance': 'Wallet Balance',
         'general_net_cashflow_mtd': 'Net Cashflow (Month-to-Date)',
         'general_see_more_testimonials': 'See more testimonials',
+        'general_login_required': 'Please log in to access this page.',  # Added
+
         # General module
         'general_home_tab': 'Home',
         'general_debtors_tab': 'Debtors',
@@ -1273,6 +1275,7 @@ GENERAL_TRANSLATIONS = {
         'general_profile_tab': 'Bayanin Martaba',
         'general_csrf_error': 'Kuskuren alamar CSRF. Da fatan za a sabunta kuma a gwada sake.',
         'general_forbidden': 'An hana',
+        'general_login_required': 'Da fatan za a shiga don samun damar shiga wannan shafi.',
         'general_forbidden_403': 'Ba ku da izinin shiga wannan albarkatu.',
         'An sabunta harshe cikin nasara': 'An sabunta harshe cikin nasara',
         'general_faq_pricing_answer': 'Farashinmu ya bambanta dangane da shirin da kuka zaɓa. Da fatan za ku ziyarci shafin farashinmu don ƙarin bayani.',
