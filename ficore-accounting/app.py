@@ -214,25 +214,26 @@ def create_app():
         logger.warning('SMTP credentials not set')
     
     # Initialize MongoDB client
-    with app.app_context():
-        try:
-            client = MongoClient(app.config['MONGO_URI'], serverSelectionTimeoutMS=5000,
-                                 tlsCAFile=os.getenv('MONGO_CA_FILE', None))
-            client.admin.command('ping')
-            current_app.mongo_client = client
-            logger.info('MongoDB client initialized successfully')
-            
-            @app.teardown_appcontext
-            def close_mongo_client(exception=None):
+    try:
+        client = MongoClient(app.config['MONGO_URI'], serverSelectionTimeoutMS=5000,
+                             tlsCAFile=os.getenv('MONGO_CA_FILE', None))
+        client.admin.command('ping')
+        app.mongo_client = client  # Store client directly on app to avoid context issues
+        logger.info('MongoDB client initialized successfully')
+        
+        def shutdown_mongo_client():
+            with app.app_context():
                 try:
-                    if hasattr(current_app, 'mongo_client') and current_app.mongo_client:
-                        current_app.mongo_client.close()
+                    if hasattr(app, 'mongo_client') and app.mongo_client:
+                        app.mongo_client.close()
                         logger.info('MongoDB client closed successfully')
                 except Exception as e:
                     logger.error(f'Error closing MongoDB client: {str(e)}', exc_info=True)
-        except Exception as e:
-            logger.error(f'MongoDB connection test failed: {str(e)}')
-            raise RuntimeError(f'Failed to connect to MongoDB: {str(e)}')
+        
+        atexit.register(shutdown_mongo_client)
+    except Exception as e:
+        logger.error(f'MongoDB connection test failed: {str(e)}')
+        raise RuntimeError(f'Failed to connect to MongoDB: {str(e)}')
     
     # Initialize extensions
     setup_logging(app)
