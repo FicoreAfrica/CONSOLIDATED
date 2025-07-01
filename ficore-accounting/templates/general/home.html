@@ -441,7 +441,7 @@ document.addEventListener('DOMContentLoaded', function() {
     
     function loadFinancialSummary() {
         Promise.all([
-            fetch('{{ url_for("api.debt_summary") }}').then(r => r.json()).catch(() => ({totalIOwe: 0, totalIAmOwed: 0})),
+            fetch('{{ url_for("debt_summary") }}').then(r => r.json()).catch(() => ({totalIOwe: 0, totalIAmOwed: 0})),
             fetch('{{ url_for("coins.history") }}').then(r => r.json()).catch(() => ({coin_balance: 0})),
             fetch('{{ url_for("api.cashflow_summary") }}').then(r => r.json()).catch(() => ({netCashflow: 0})),
             fetch('{{ url_for("api.inventory_summary") }}').then(r => r.json()).catch(() => ({totalValue: 0}))
