@@ -416,7 +416,7 @@ def create_app():
         logger.info('Registered admin blueprint')
     except Exception as e:
         logger.warning(f'Could not import admin blueprint: {str(e)}')
-    app.register_blueprint(personal_bp, url_prefix='/personal')
+    app.register_blueprint(personal_bp)
     logger.info('Registered personal blueprint with url_prefix="/personal"')
     app.register_blueprint(general_bp, url_prefix='/general')
     logger.info('Registered general blueprint')
