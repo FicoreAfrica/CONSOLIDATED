@@ -5,7 +5,7 @@ import uuid
 from datetime import datetime, date, timedelta
 from flask import (
     Flask, jsonify, request, render_template, redirect, url_for, flash,
-    make_response, has_request_context, g, send_from_directory, session, Response, current_app
+    make_response, has_request_context, g, send_from_directory, session, Response, current_app, abort
 )
 from flask_cors import CORS
 from werkzeug.security import generate_password_hash
@@ -140,7 +140,7 @@ def setup_session(app):
                 logger.info('Session configured with filesystem fallback')
                 return
             app.config['SESSION_TYPE'] = 'mongodb'
-            app.config['SESSION_MONGODB'] = current_app.mongo_client
+            app.config['SESSION_MONGODB'] = current_app._get_current_object().mongo_client
             app.config['SESSION_MONGODB_DB'] = 'ficodb'
             app.config['SESSION_MONGODB_COLLECT'] = 'sessions'
             app.config['SESSION_PERMANENT'] = True
@@ -1126,18 +1126,19 @@ def create_app():
     def static_personal(filename):
         allowed_extensions = {'.css', '.js', '.png', '.jpg', '.jpeg', '.gif', '.ico', '.svg'}
         file_ext = os.path.splitext(filename)[1].lower()
-        
+
         if file_ext not in allowed_extensions:
             abort(403)
-            try:
-                response = send_from_directory('static_personal', filename)
-                if file_ext in {'.css', '.js'}:
-                    response.headers['Cache-Control'] = 'public, max-age=31536000'
-                elif file_ext in {'.png', '.jpg', '.jpeg', '.gif', '.ico', '.svg'}:
-                    response.headers['Cache-Control'] = 'public, max-age=604800'
-                    return response
-            except FileNotFoundError:
-                abort(404)
+
+        try:
+            response = send_from_directory('static_personal', filename)
+            if file_ext in {'.css', '.js'}:
+                response.headers['Cache-Control'] = 'public, max-age=31536000'
+            elif file_ext in {'.png', '.jpg', '.jpeg', '.gif', '.ico', '.svg'}:
+                response.headers['Cache-Control'] = 'public, max-age=604800'
+            return response
+        except FileNotFoundError:
+            abort(404)
                 
     @app.route('/favicon.ico')
     def favicon():
