@@ -1,43 +1,4 @@
-<script type="text/javascript">
-        var gk_isXlsx = false;
-        var gk_xlsxFileLookup = {};
-        var gk_fileData = {};
-        function filledCell(cell) {
-          return cell !== '' && cell != null;
-        }
-        function loadFileData(filename) {
-        if (gk_isXlsx && gk_xlsxFileLookup[filename]) {
-            try {
-                var workbook = XLSX.read(gk_fileData[filename], { type: 'base64' });
-                var firstSheetName = workbook.SheetNames[0];
-                var worksheet = workbook.Sheets[firstSheetName];
-
-                // Convert sheet to JSON to filter blank rows
-                var jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1, blankrows: false, defval: '' });
-                // Filter out blank rows (rows where all cells are empty, null, or undefined)
-                var filteredData = jsonData.filter(row => row.some(filledCell));
-
-                // Heuristic to find the header row by ignoring rows with fewer filled cells than the next row
-                var headerRowIndex = filteredData.findIndex((row, index) =>
-                  row.filter(filledCell).length >= filteredData[index + 1]?.filter(filledCell).length
-                );
-                // Fallback
-                if (headerRowIndex === -1 || headerRowIndex > 25) {
-                  headerRowIndex = 0;
-                }
-
-                // Convert filtered JSON back to CSV
-                var csv = XLSX.utils.aoa_to_sheet(filteredData.slice(headerRowIndex)); // Create a new sheet from filtered array of arrays
-                csv = XLSX.utils.sheet_to_csv(csv, { header: 1 });
-                return csv;
-            } catch (e) {
-                console.error(e);
-                return "";
-            }
-        }
-        return gk_fileData[filename] || "";
-        }
-        </script>{% extends "base.html" %}
+{% extends "base.html" %}
 {% block content %}
 <div class="container">
     {% with messages = get_flashed_messages(with_categories=true) %}
@@ -71,7 +32,7 @@
                 <a href="{{ url_for('common_bp.news_detail', article_id=article._id) }}" class="list-group-item list-group-item-action">
                     <h5 class="mb-1">{{ article.title }}</h5>
                     <p class="mb-1">{{ article.content | safe | truncate(100) }}</p>
-                    <small class="text-muted">{{ t('news_published_on', default='Published on') }}: {{ article.published_at.strftime('%Y-%m-%d') }}</small>
+                    <small class="text-muted">{{ t('news_published_on', default='Published on') }} {{ article.published_at.strftime('%Y-%m-%d') }}</small>
                     {% if article.category %}
                         <span class="badge bg-secondary">{{ article.category }}</span>
                     {% endif %}
@@ -81,7 +42,7 @@
 
     {% elif section == 'detail' %}
         <h1>{{ article.title }}</h1>
-        <p><small class="text-muted">{{ t('news_published_on', default='Published on') }}: {{ article.published_at.strftime('%Y-%m-%d') }}</small></p>
+        <p><small class="text-muted">{{ t('news_published_on', default='Published on') }} {{ article.published_at.strftime('%Y-%m-%d') }}</small></p>
         {% if article.source_link %}
             <p><a href="{{ article.source_link }}" target="_blank">{{ t('news_source', default='Source') }}</a></p>
         {% endif %}
@@ -92,6 +53,7 @@
         <h1>{{ t('news_management', default='News Management') }}</h1>
         <h2>{{ t('news_add_new_article', default='Add New Article') }}</h2>
         <form method="POST" action="{{ url_for('common_bp.news_management') }}">
+            {{ form.hidden_tag() if form else '' }}
             <div class="mb-3">
                 <label for="title" class="form-label">{{ t('news_title', default='Title') }}</label>
                 <input type="text" class="form-control" id="title" name="title" required>
@@ -143,6 +105,7 @@
                         <td>
                             <a href="{{ url_for('common_bp.edit_news', article_id=article._id) }}" class="btn btn-sm btn-warning">{{ t('news_edit', default='Edit') }}</a>
                             <form action="{{ url_for('common_bp.delete_news', article_id=article._id) }}" method="POST" style="display:inline;">
+                                {{ form.hidden_tag() if form else '' }}
                                 <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('{{ t('news_are_you_sure', default='Are you sure?') }}')">{{ t('news_delete', default='Delete') }}</button>
                             </form>
                         </td>
@@ -155,6 +118,7 @@
         <h1>{{ t('news_management', default='News Management') }}</h1>
         <h2>{{ t('news_edit_article', default='Edit News Article') }}</h2>
         <form method="POST" action="{{ url_for('common_bp.edit_news', article_id=article._id) }}">
+            {{ form.hidden_tag() if form else '' }}
             <div class="mb-3">
                 <label for="title" class="form-label">{{ t('news_title', default='Title') }}</label>
                 <input type="text" class="form-control" id="title" name="title" value="{{ article.title }}" required>
@@ -203,7 +167,7 @@
                     <a href="{{ url_for('common_bp.news_detail', article_id='') }}${article.id}" class="list-group-item list-group-item-action">
                         <h5 class="mb-1">${article.title}</h5>
                         <p class="mb-1">${article.content}</p>
-                        <small class="text-muted">{{ t('news_published_on', default='Published on') }}: ${article.published_at}</small>
+                        <small class="text-muted">{{ t('news_published_on', default='Published on') }} ${article.published_at}</small>
                         ${article.category ? `<span class="badge bg-secondary">${article.category}</span>` : ''}
                     </a>
                 `).join('');
