@@ -190,7 +190,7 @@ def requires_role(role):
         def decorated_function(*args, **kwargs):
             if not current_user.is_authenticated:
                 flash(trans('general_login_required', default='Please log in to access this page.'), 'warning')
-                return redirect(url_for('users_bp.login'))
+                return redirect(url_for('users.login'))
             
             # Allow admins to access all tools
             if is_admin():
