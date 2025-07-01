@@ -299,6 +299,32 @@
             </div>
         </div>
 
+        <!-- Bottom Navigation Bar -->
+        <nav class="bottom-nav fixed-bottom bg-light border-top d-flex justify-content-around align-items-center py-2">
+            <a href="{{ url_for('index') }}" class="nav-item text-center text-dark" data-bs-toggle="tooltip" data-bs-title="{{ t('general_home', default='Home') | e }}">
+                <i class="bi bi-house-door"></i>
+                <div class="nav-label">{{ t('general_home', default='Home') }} / {{ t('general_hausa_home', default='Gida') }}</div>
+            </a>
+            <a href="{{ url_for('debtors.index') }}" class="nav-item text-center text-dark" data-bs-toggle="tooltip" data-bs-title="{{ t('general_debtors_creditors', default='Debtors & Creditors') | e }}">
+                <i class="bi bi-person-dash"></i>
+                <div class="nav-label">{{ t('general_debtors_creditors', default='Debtors') }} / {{ t('general_hausa_debtors', default='Bashi') }}</div>
+            </a>
+            <a href="{{ url_for('inventory.index') }}" class="nav-item text-center text-dark" data-bs-toggle="tooltip" data-bs-title="{{ t('inventory_management', default='Inventory Management') | e }}">
+                <i class="bi bi-box-seam"></i>
+                <div class="nav-label">{{ t('inventory_management', default='Inventory') }} / {{ t('inventory_hausa', default='Kaya') }}</div>
+            </a>
+            {% if current_user.role == 'agent' %}
+            <a href="{{ url_for('agents_bp.register_trader') }}" class="nav-item text-center text-dark" data-bs-toggle="tooltip" data-bs-title="{{ t('agents_register_trader', default='Register Trader') | e }}">
+                <i class="bi bi-person-plus"></i>
+                <div class="nav-label">{{ t('agents_register_trader', default='Register') }} / {{ t('agents_hausa_register_trader', default='Rijista') }}</div>
+            </a>
+            {% endif %}
+            <a href="{{ url_for('settings.profile') }}" class="nav-item text-center text-dark" data-bs-toggle="tooltip" data-bs-title="{{ t('general_profile', default='Profile') | e }}">
+                <i class="bi bi-person-circle"></i>
+                <div class="nav-label">{{ t('general_profile', default='Profile') }} / {{ t('general_hausa_profile', default='Shafinku') }}</div>
+            </a>
+        </nav>
+
     {% else %}
         <!-- Public View for Unauthenticated Users -->
         <div class="text-center">
@@ -382,8 +408,14 @@
     {% endif %}
 </div>
 
+{% block extra_scripts %}
 <script>
 document.addEventListener('DOMContentLoaded', function() {
+    // Initialize tooltips for bottom navigation
+    document.querySelectorAll('.bottom-nav [data-bs-toggle="tooltip"]').forEach(tooltipTriggerEl => {
+        new bootstrap.Tooltip(tooltipTriggerEl);
+    });
+
     if (!{{ current_user.is_authenticated | tojson }}) return;
     
     let amountsVisible = true;
@@ -407,10 +439,10 @@ document.addEventListener('DOMContentLoaded', function() {
     
     function loadFinancialSummary() {
         Promise.all([
-            fetch('/api/debt-summary').then(r => r.json()).catch(() => ({totalIOwe: 0, totalIAmOwed: 0})),
-            fetch('/coins/balance').then(r => r.json()).catch(() => ({coin_balance: 0})),
-            fetch('/api/cashflow-summary').then(r => r.json()).catch(() => ({netCashflow: 0})),
-            fetch('/api/inventory-summary').then(r => r.json()).catch(() => ({totalValue: 0}))
+            fetch('{{ url_for("api.debt_summary") }}').then(r => r.json()).catch(() => ({totalIOwe: 0, totalIAmOwed: 0})),
+            fetch('{{ url_for("coins.history") }}').then(r => r.json()).catch(() => ({coin_balance: 0})),
+            fetch('{{ url_for("api.cashflow_summary") }}').then(r => r.json()).catch(() => ({netCashflow: 0})),
+            fetch('{{ url_for("api.inventory_summary") }}').then(r => r.json()).catch(() => ({totalValue: 0}))
         ]).then(([debtData, walletData, cashflowData, inventoryData]) => {
             updateDebtSummary(debtData);
             updateSnapshots(walletData, cashflowData, inventoryData);
@@ -458,7 +490,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     
     function loadRecentActivity() {
-        fetch('/api/recent-activity')
+        fetch('{{ url_for("api.recent_activity") }}')
             .then(response => response.json())
             .then(activities => {
                 const activityList = document.getElementById('recentActivityList');
