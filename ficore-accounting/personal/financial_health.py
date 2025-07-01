@@ -3,7 +3,7 @@ from flask_wtf import FlaskForm
 from flask_wtf.csrf import CSRFProtect, CSRFError
 from wtforms import StringField, SelectField, BooleanField, SubmitField, FloatField
 from wtforms.validators import DataRequired, NumberRange, Optional, Email, ValidationError
-from flask_login import current_user, login_required  # Added login_required
+from flask_login import current_user, login_required
 from datetime import datetime
 from bson import ObjectId
 from mailersend_email import send_email, EMAIL_CONFIG
@@ -344,7 +344,7 @@ def main():
                     cross_tool_insights.append(trans('financial_health_cross_tool_savings_possible', default='Your budget shows {amount:,.2f} available for savings monthly.', lang=lang, amount=savings_possible))
 
         return render_template(
-            'HEALTHSCORE/health_score_main.html',
+            'health_score_main.html',
             form=form,
             records=records,
             latest_record=latest_record,
@@ -368,7 +368,7 @@ def main():
         current_app.logger.error(f"Error in financial_health.main for session {session.get('sid', 'unknown')}: {str(e)}", extra={'session_id': session.get('sid', 'unknown')})
         flash(trans("financial_health_dashboard_load_error", default='Error loading financial health dashboard.'), "danger")
         return render_template(
-            'HEALTHSCORE/health_score_main.html',
+            'health_score_main.html',
             form=form,
             records=[],
             latest_record={
@@ -400,7 +400,6 @@ def main():
             tool_title=trans('financial_health_title', default='Financial Health Score', lang=lang)
         ), 500
 
-# NEW: Added summary endpoint for homepage financial summary
 @financial_health_bp.route('/summary')
 @login_required
 def summary():
@@ -428,6 +427,7 @@ def summary():
         return jsonify({'financialHealthScore': 0}), 500
 
 @financial_health_bp.route('/unsubscribe/<email>')
+@custom_login_required
 def unsubscribe(email):
     """Unsubscribe user from financial health emails."""
     if 'sid' not in session:
