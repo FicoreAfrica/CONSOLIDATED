@@ -221,14 +221,15 @@ def create_app():
             client.admin.command('ping')
             current_app.mongo_client = client
             logger.info('MongoDB client initialized successfully')
-            def shutdown_mongo_client():
+            
+            @app.teardown_appcontext
+            def close_mongo_client(exception=None):
                 try:
                     if hasattr(current_app, 'mongo_client') and current_app.mongo_client:
                         current_app.mongo_client.close()
                         logger.info('MongoDB client closed successfully')
                 except Exception as e:
                     logger.error(f'Error closing MongoDB client: {str(e)}', exc_info=True)
-            atexit.register(shutdown_mongo_client)
         except Exception as e:
             logger.error(f'MongoDB connection test failed: {str(e)}')
             raise RuntimeError(f'Failed to connect to MongoDB: {str(e)}')
