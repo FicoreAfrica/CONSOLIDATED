@@ -1970,7 +1970,7 @@ h2.card-title {
 .hero.hero-background {
     /* Add a background image with a fallback gradient */
     background: linear-gradient(rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.6)), 
-                url('/static/images/hero-financial-africa.jpg') center/cover no-repeat,
+                url('/static/img/hero-financial-africa.jpg') center/cover no-repeat,
                 linear-gradient(135deg, var(--button-primary-bg), var(--button-success-bg));
     padding: 3rem 0;
     position: relative;
