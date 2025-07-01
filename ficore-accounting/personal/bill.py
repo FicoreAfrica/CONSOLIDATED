@@ -387,7 +387,7 @@ def main():
                 continue
 
         return render_template(
-            'personal/BILL/bill_main.html',
+            'bill_main.html',
             form=form,
             bills_data=bills_data,
             edit_forms=edit_forms,
@@ -414,7 +414,7 @@ def main():
         current_app.logger.error(f"Error in bill.main: {str(e)}", extra={'session_id': session.get('sid', 'unknown')})
         flash(trans('bill_dashboard_load_error', default='Error loading bill dashboard.', lang=lang), 'danger')
         return render_template(
-            'personal/BILL/bill_main.html',
+            'bill_main.html',
             form=form,
             bills_data=[],
             edit_forms={},
