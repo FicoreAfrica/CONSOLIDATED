@@ -187,12 +187,6 @@ def seed_news():
                 'content': """
                     <p>Congratulations to all innovators selected for the iHatch Startup Support Programme Cohort 4, a 5-month intensive incubation program by NITDA and JICA, running from October 2024 to March 2025. This program empowers early-stage Nigerian startups in sectors like fintech, agritech, and healthtech with mentorship, training, and resources to scale their ventures.</p>
                     <p><strong>Next Steps:</strong></p>
-                    <ul>
-                        <li><a href="https://example.com/ihatch-onboarding" target="_blank">Watch the onboarding recording</a> to understand the program structure.</li>
-                        <li>Join the <a href="https://example.com/ihatch-whatsapp" target="_blank">Cohort 4 WhatsApp Group</a> for updates and networking.</li>
-                        <li>Complete the <a href="https://example.com/ihatch-form" target="_blank">onboarding form</a> by June 2, 2025, to confirm participation.</li>
-                        <li>Review the <a href="https://example.com/ihatch-packet" target="_blank">iHatch Cohort 4 Welcome Packet</a> for details.</li>
-                    </ul>
                     <p>Let's work together to empower Nigeria's innovation landscape, one startup at a time!</p>
                 """,
                 'source_link': 'https://programs.startup.gov.ng/ihatch',
