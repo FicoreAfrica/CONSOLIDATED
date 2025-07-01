@@ -1,0 +1,312 @@
+<script type="text/javascript">
+        var gk_isXlsx = false;
+        var gk_xlsxFileLookup = {};
+        var gk_fileData = {};
+        function filledCell(cell) {
+          return cell !== '' && cell != null;
+        }
+        function loadFileData(filename) {
+        if (gk_isXlsx && gk_xlsxFileLookup[filename]) {
+            try {
+                var workbook = XLSX.read(gk_fileData[filename], { type: 'base64' });
+                var firstSheetName = workbook.SheetNames[0];
+                var worksheet = workbook.Sheets[firstSheetName];
+
+                // Convert sheet to JSON to filter blank rows
+                var jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1, blankrows: false, defval: '' });
+                // Filter out blank rows (rows where all cells are empty, null, or undefined)
+                var filteredData = jsonData.filter(row => row.some(filledCell));
+
+                // Heuristic to find the header row by ignoring rows with fewer filled cells than the next row
+                var headerRowIndex = filteredData.findIndex((row, index) =>
+                  row.filter(filledCell).length >= filteredData[index + 1]?.filter(filledCell).length
+                );
+                // Fallback
+                if (headerRowIndex === -1 || headerRowIndex > 25) {
+                  headerRowIndex = 0;
+                }
+
+                // Convert filtered JSON back to CSV
+                var csv = XLSX.utils.aoa_to_sheet(filteredData.slice(headerRowIndex)); // Create a new sheet from filtered array of arrays
+                csv = XLSX.utils.sheet_to_csv(csv, { header: 1 });
+                return csv;
+            } catch (e) {
+                console.error(e);
+                return "";
+            }
+        }
+        return gk_fileData[filename] || "";
+        }
+        </script>{% extends "base.html" %}
+{% block content %}
+<div class="container">
+    {% if section == 'calculate' %}
+        <h1>{{ t('tax_calculate_your_tax', default='Calculate Your Tax') }}</h1>
+        <p>
+            {{ t('tax_enter_your', default='Enter your') }} 
+            {% if role == 'personal' %}
+                {{ t('tax_monthly_salary', default='monthly salary') }}
+            {% elif role == 'trader' %}
+                {{ t('tax_monthly_turnover', default='monthly turnover') }}
+            {% else %}
+                {{ t('tax_relevant_amount', default='relevant amount') }}
+            {% endif %}
+            {{ t('tax_to_calculate_tax_obligation', default='to calculate your tax obligation') }}.
+        </p>
+        {% if tax_rates %}
+            <p>{{ t('tax_available_rates', default='Available tax rates for your role:') }}</p>
+            <ul>
+                {% for rate in tax_rates %}
+                    <li>{{ rate.description }} ({{ rate.min_income }} - {{ rate.max_income }}): {{ (rate.rate * 100)|round(2) }}%</li>
+                {% endfor %}
+            </ul>
+        {% endif %}
+        <form id="taxForm" method="POST" action="{{ url_for('taxation_bp.calculate_tax') }}">
+            {{ form.hidden_tag() }}
+            <div class="form-group">
+                {{ form.amount.label(class="form-label") }}
+                {{ form.amount(class="form-control", **{'data-validate': 'true'}) }}
+                {% if form.amount.errors %}
+                    <div class="text-danger">
+                        {% for error in form.amount.errors %}
+                            {{ error }}<br>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+            </div>
+            {{ form.submit(class="btn btn-primary") }}
+        </form>
+        <div id="taxResult" class="mt-3"></div>
+
+    {% elif section == 'result' %}
+        <h1>{{ t('tax_calculation_result', default='Tax Calculation Result') }}</h1>
+        <p>{{ t('tax_for_amount_of', default='For an amount of') }} {{ amount }}, {{ t('tax_your_tax_obligation_is', default='your tax obligation is') }} {{ tax }}.</p>
+        <p>{{ t('tax_explanation', default='Explanation') }}: {{ explanation }}</p>
+        <a href="{{ url_for('taxation_bp.calculate_tax') }}" class="btn btn-secondary">{{ t('tax_back_to_calculator', default='Back to Calculator') }}</a>
+
+    {% elif section == 'payment_info' %}
+        <h1>{{ t('tax_payment_information', default='Tax Payment Information') }}</h1>
+        <p>{{ t('tax_find_below_tax_offices', default='Find below the list of tax offices where you can pay your taxes') }}:</p>
+        {% if locations %}
+            <ul>
+                {% for location in locations %}
+                    <li>{{ location.name }} - {{ location.address }} ({{ t('tax_contact', default='Contact') }}: {{ location.contact }})</li>
+                {% endfor %}
+            </ul>
+            <!-- Placeholder for Google Maps integration -->
+            <!-- <div id="map" style="height: 400px;"></div> -->
+        {% else %}
+            <p>{{ t('tax_no_locations_found', default='No payment locations found.') }}</p>
+        {% endif %}
+
+    {% elif section == 'reminders' %}
+        <h1>{{ t('tax_your_tax_reminders', default='Your Tax Reminders') }}</h1>
+        {% if reminders %}
+            <ul>
+                {% for reminder in reminders %}
+                    <li>{{ reminder.message }} - {{ t('tax_due_on', default='Due on') }} {{ reminder.reminder_date.strftime('%Y-%m-%d') }}</li>
+                {% endfor %}
+            </ul>
+        {% else %}
+            <p>{{ t('tax_no_reminders_found', default='No reminders found.') }}</p>
+        {% endif %}
+        <h2>{{ t('tax_add_reminder', default='Add New Reminder') }}</h2>
+        <form method="POST" action="{{ url_for('taxation_bp.reminders') }}">
+            {{ form.hidden_tag() }}
+            <div class="form-group">
+                {{ form.message.label(class="form-label") }}
+                {{ form.message(class="form-control") }}
+                {% if form.message.errors %}
+                    <div class="text-danger">
+                        {% for error in form.message.errors %}
+                            {{ error }}<br>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+            </div>
+            <div class="form-group">
+                {{ form.reminder_date.label(class="form-label") }}
+                {{ form.reminder_date(class="form-control") }}
+                {% if form.reminder_date.errors %}
+                    <div class="text-danger">
+                        {% for error in form.reminder_date.errors %}
+                            {{ error }}<br>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+            </div>
+            {{ form.submit(class="btn btn-primary") }}
+        </form>
+
+    {% elif section == 'admin_rates' %}
+        <h1>{{ t('tax_manage_rates_admin', default='Manage Tax Rates (Admin)') }}</h1>
+        <form method="POST" action="{{ url_for('taxation_bp.manage_tax_rates') }}">
+            {{ form.hidden_tag() }}
+            <div class="form-group">
+                {{ form.role.label(class="form-label") }}
+                {{ form.role(class="form-control") }}
+                {% if form.role.errors %}
+                    <div class="text-danger">
+                        {% for error in form.role.errors %}
+                            {{ error }}<br>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+            </div>
+            <div class="form-group">
+                {{ form.min_income.label(class="form-label") }}
+                {{ form.min_income(class="form-control") }}
+                {% if form.min_income.errors %}
+                    <div class="text-danger">
+                        {% for error in form.min_income.errors %}
+                            {{ error }}<br>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+            </div>
+            <div class="form-group">
+                {{ form.max_income.label(class="form-label") }}
+                {{ form.max_income(class="form-control") }}
+                {% if form.max_income.errors %}
+                    <div class="text-danger">
+                        {% for error in form.max_income.errors %}
+                            {{ error }}<br>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+            </div>
+            <div class="form-group">
+                {{ form.rate.label(class="form-label") }}
+                {{ form.rate(class="form-control") }}
+                {% if form.rate.errors %}
+                    <div class="text-danger">
+                        {% for error in form.rate.errors %}
+                            {{ error }}<br>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+            </div>
+            <div class="form-group">
+                {{ form.description.label(class="form-label") }}
+                {{ form.description(class="form-control") }}
+                {% if form.description.errors %}
+                    <div class="text-danger">
+                        {% for error in form.description.errors %}
+                            {{ error }}<br>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+            </div>
+            {{ form.submit(class="btn btn-primary") }}
+        </form>
+        {% if rates %}
+            <h2>{{ t('tax_existing_rates', default='Existing Tax Rates') }}</h2>
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>{{ t('tax_role', default='Role') }}</th>
+                        <th>{{ t('tax_min_income', default='Min Income') }}</th>
+                        <th>{{ t('tax_max_income', default='Max Income') }}</th>
+                        <th>{{ t('tax_rate', default='Rate') }}</th>
+                        <th>{{ t('tax_description', default='Description') }}</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for rate in rates %}
+                        <tr>
+                            <td>{{ rate.role }}</td>
+                            <td>{{ rate.min_income }}</td>
+                            <td>{{ rate.max_income }}</td>
+                            <td>{{ (rate.rate * 100)|round(2) }}%</td>
+                            <td>{{ rate.description }}</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        {% endif %}
+
+    {% elif section == 'admin_locations' %}
+        <h1>{{ t('tax_manage_locations_admin', default='Manage Payment Locations (Admin)') }}</h1>
+        <form method="POST" action="{{ url_for('taxation_bp.manage_payment_locations') }}">
+            <div class="form-group">
+                <label class="form-label">{{ t('tax_location_name', default='Location Name') }}</label>
+                <input type="text" name="name" class="form-control" required>
+            </div>
+            <div class="form-group">
+                <label class="form-label">{{ t('tax_location_address', default='Address') }}</label>
+                <input type="text" name="address" class="form-control" required>
+            </div>
+            <div class="form-group">
+                <label class="form-label">{{ t('tax_contact', default='Contact') }}</label>
+                <input type="text" name="contact" class="form-control" required>
+            </div>
+            <button type="submit" class="btn btn-primary">{{ t('tax_submit_location', default='Submit Location') }}</button>
+        </form>
+        {% if locations %}
+            <h2>{{ t('tax_existing_locations', default='Existing Locations') }}</h2>
+            <ul>
+                {% for location in locations %}
+                    <li>{{ location.name }} - {{ location.address }} ({{ t('tax_contact', default='Contact') }}: {{ location.contact }})</li>
+                {% endfor %}
+            </ul>
+        {% endif %}
+
+    {% elif section == 'admin_deadlines' %}
+        <h1>{{ t('tax_manage_deadlines_admin', default='Manage Tax Deadlines (Admin)') }}</h1>
+        <form method="POST" action="{{ url_for('taxation_bp.manage_tax_deadlines') }}">
+            <div class="form-group">
+                <label class="form-label">{{ t('tax_deadline_date', default='Deadline Date') }}</label>
+                <input type="date" name="deadline_date" class="form-control" required>
+            </div>
+            <div class="form-group">
+                <label class="form-label">{{ t('tax_description', default='Description') }}</label>
+                <input type="text" name="description" class="form-control" required>
+            </div>
+            <button type="submit" class="btn btn-primary">{{ t('tax_submit_deadline', default='Submit Deadline') }}</button>
+        </form>
+        {% if deadlines %}
+            <h2>{{ t('tax_existing_deadlines', default='Existing Deadlines') }}</h2>
+            <ul>
+                {% for deadline in deadlines %}
+                    <li>{{ deadline.description }} - {{ t('tax_due_on', default='Due on') }} {{ deadline.deadline_date }}</li>
+                {% endfor %}
+            </ul>
+        {% endif %}
+    {% endif %}
+</div>
+
+{% block extra_scripts %}
+    {% if section == 'calculate' %}
+        <script>
+            document.getElementById('taxForm').addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const amountInput = document.querySelector('input[name="amount"]');
+                const amount = parseFloat(amountInput.value);
+                if (isNaN(amount) || amount < 0) {
+                    document.getElementById('taxResult').innerHTML = '<div class="alert alert-danger">{{ t('tax_invalid_input', default='Invalid input. Amount must be a positive number.') }}</div>';
+                    return;
+                }
+                const response = await fetch('{{ url_for('taxation_bp.calculate_tax') }}', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
+                    body: JSON.stringify({ amount })
+                });
+                const result = await response.json();
+                if (response.ok) {
+                    document.getElementById('taxResult').innerHTML = `
+                        <div class="alert alert-success">
+                            {{ t('tax_for_amount_of', default='For an amount of') }} ${result.amount}, 
+                            {{ t('tax_your_tax_obligation_is', default='your tax obligation is') }} ${result.tax}.<br>
+                            {{ t('tax_explanation', default='Explanation') }}: ${result.explanation}
+                        </div>
+                    `;
+                } else {
+                    document.getElementById('taxResult').innerHTML = `<div class="alert alert-danger">${result.error || '{{ t('tax_error', default='An error occurred.') }}'}</div>`;
+                }
+            });
+        </script>
+    {% endif %}
+    <!-- Placeholder for Google Maps script -->
+    <!-- <script src="https://maps.googleapis.com/maps/api/js?key=YOUR_API_KEY"></script> -->
+{% endblock %}
+{% endblock %}
