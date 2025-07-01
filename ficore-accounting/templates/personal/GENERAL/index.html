@@ -3,7 +3,7 @@
 {% block content %}
 <div class="container">
     {% if current_user.is_authenticated %}
-        <!-- Authenticated User Section (unchanged) -->
+        <!-- Authenticated User Section -->
         <div class="top-header d-flex justify-content-between align-items-center mb-4">
             <div class="welcome-section">
                 <h2 class="welcome-text mb-0">{{ t('general_hello_user', default='Hello') }}, {{ current_user.display_name | default(current_user.id) | e }}!</h2>
@@ -37,7 +37,7 @@
             </div>
         </div>
 
-        <!-- Financial Summary (unchanged) -->
+        <!-- Financial Summary -->
         <div class="financial-summary mb-4">
             <div class="row g-3 mb-3">
                 <div class="col-6">
@@ -84,7 +84,7 @@
             </div>
         </div>
 
-        <!-- Financial Snapshots (unchanged) -->
+        <!-- Financial Snapshots -->
         <div class="financial-snapshots mb-4">
             <div class="stat-cards-container">
                 <div class="stat-card">
@@ -108,7 +108,7 @@
             </div>
         </div>
 
-        <!-- Quick Actions (unchanged) -->
+        <!-- Quick Actions -->
         <div class="quick-actions mb-4">
             <h3 class="section-title">{{ t('general_quick_actions', default='Quick Actions') }}</h3>
             <div class="actions-grid">
@@ -151,7 +151,7 @@
             </div>
         </div>
 
-        <!-- Notifications (unchanged) -->
+        <!-- Notifications -->
         <div class="notifications mb-4">
             <div class="d-flex justify-content-between align-items-center mb-3">
                 <h3 class="section-title mb-0">{{ t('general_notifications', default='Notifications') }}</h3>
@@ -172,7 +172,7 @@
             </div>
         </div>
 
-        <!-- Recent Activity (unchanged) -->
+        <!-- Recent Activity -->
         <div class="recent-activity mb-4">
             <div class="d-flex justify-content-between align-items-center mb-3">
                 <h3 class="section-title mb-0">{{ t('general_recent_activity', default='Recent Activity') }}</h3>
@@ -193,7 +193,7 @@
             </div>
         </div>
 
-        <!-- Navigation Cards (unchanged) -->
+        <!-- Navigation Cards -->
         <div class="navigation-cards">
             <h3 class="section-title mb-3">{{ t('general_explore_features', default='Explore Features') }}</h3>
             <div class="row g-3">
@@ -321,6 +321,30 @@
                 </div>
             </div>
         </div>
+
+        <!-- Bottom Navigation Bar -->
+        <nav class="bottom-nav fixed-bottom bg-light border-top d-flex justify-content-around align-items-center py-2">
+            <a href="{{ url_for('index') }}" class="nav-item text-center text-dark" data-bs-toggle="tooltip" data-bs-title="{{ t('general_home', default='Home') | e }}">
+                <i class="bi bi-house-door"></i>
+                <div class="nav-label">{{ t('general_home', default='Home') }} / {{ t('general_hausa_home', default='Gida') }}</div>
+            </a>
+            <a href="{{ url_for('personal.budget.main') }}" class="nav-item text-center text-dark" data-bs-toggle="tooltip" data-bs-title="{{ t('budget_budget_planner', default='Budget Planner') | e }}">
+                <i class="bi bi-calculator"></i>
+                <div class="nav-label">{{ t('budget_budget_planner', default='Budget') }} / {{ t('budget_hausa_budget', default='Kasafin Kuɗi') }}</div>
+            </a>
+            <a href="{{ url_for('personal.bill.main') }}" class="nav-item text-center text-dark" data-bs-toggle="tooltip" data-bs-title="{{ t('bill_bill_planner', default='Bill Planner') | e }}">
+                <i class="bi bi-receipt"></i>
+                <div class="nav-label">{{ t('bill_bill_planner', default='Bills') }} / {{ t('bill_hausa_bills', default='Kudade') }}</div>
+            </a>
+            <a href="{{ url_for('personal.net_worth.main') }}" class="nav-item text-center text-dark" data-bs-toggle="tooltip" data-bs-title="{{ t('net_worth_net_worth_calculator', default='Net Worth Tracker') | e }}">
+                <i class="bi bi-balance-scale"></i>
+                <div class="nav-label">{{ t('net_worth_net_worth_calculator', default='Net Worth') }} / {{ t('net_worth_hausa_net_worth', default='Dukiyar Kuɗi') }}</div>
+            </a>
+            <a href="{{ url_for('settings.profile') }}" class="nav-item text-center text-dark" data-bs-toggle="tooltip" data-bs-title="{{ t('general_profile', default='Profile') | e }}">
+                <i class="bi bi-person-circle"></i>
+                <div class="nav-label">{{ t('general_profile', default='Profile') }} / {{ t('general_hausa_profile', default='Shafinku') }}</div>
+            </a>
+        </nav>
 
     {% else %}
         <!-- Prospective User Section -->
@@ -727,6 +751,11 @@ document.addEventListener('DOMContentLoaded', function() {
         updateCounter();
     }
 
+    // Initialize tooltips for bottom navigation
+    document.querySelectorAll('.bottom-nav [data-bs-toggle="tooltip"]').forEach(tooltipTriggerEl => {
+        new bootstrap.Tooltip(tooltipTriggerEl);
+    });
+
     if (!{{ current_user.is_authenticated | tojson }}) return;
 
     let amountsVisible = true;
@@ -942,5 +971,4 @@ document.addEventListener('DOMContentLoaded', function() {
     };
 });
 </script>
-{% endblock %}
 {% endblock %}
