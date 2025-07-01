@@ -64,7 +64,7 @@
                 </div>
             </div>
             <div class="text-center">
-                <a href="{{ url_for('dashboard.index') }}" class="btn btn-outline-primary btn-sm">
+                <a href="{{ url_for('personal.dashboard.index') }}" class="btn btn-outline-primary btn-sm">
                     {{ t('general_view_detailed_summary', default='View Detailed Summary') }}
                     <i class="bi bi-arrow-right ms-1"></i>
                 </a>
@@ -99,37 +99,37 @@
         <div class="quick-actions mb-4">
             <h3 class="section-title">{{ t('general_quick_actions', default='Quick Actions') }}</h3>
             <div class="actions-grid">
-                <a href="{{ url_for('budget.main') }}" class="action-card">
+                <a href="{{ url_for('personal.budget.main') }}" class="action-card">
                     <div class="action-icon">
                         <i class="bi bi-calculator"></i>
                     </div>
                     <div class="action-label">{{ t('budget_budget_planner', default='Budget Planner') }}</div>
                 </a>
-                <a href="{{ url_for('bill.main') }}" class="action-card">
+                <a href="{{ url_for('personal.bill.main') }}" class="action-card">
                     <div class="action-icon">
                         <i class="bi bi-receipt"></i>
                     </div>
                     <div class="action-label">{{ t('bill_bill_planner', default='Bill Planner') }}</div>
                 </a>
-                <a href="{{ url_for('net_worth.main') }}" class="action-card">
+                <a href="{{ url_for('personal.net_worth.main') }}" class="action-card">
                     <div class="action-icon">
                         <i class="bi bi-balance-scale"></i>
                     </div>
                     <div class="action-label">{{ t('net_worth_net_worth_calculator', default='Net Worth Tracker') }}</div>
                 </a>
-                <a href="{{ url_for('financial_health.main') }}" class="action-card">
+                <a href="{{ url_for('personal.financial_health.main') }}" class="action-card">
                     <div class="action-icon">
                         <i class="bi bi-heartbeat"></i>
                     </div>
                     <div class="action-label">{{ t('financial_health_financial_health_score', default='Financial Health') }}</div>
                 </a>
-                <a href="{{ url_for('emergency_fund.main') }}" class="action-card">
+                <a href="{{ url_for('personal.emergency_fund.main') }}" class="action-card">
                     <div class="action-icon">
                         <i class="bi bi-shield-check"></i>
                     </div>
                     <div class="action-label">{{ t('emergency_fund_calculator', default='Emergency Fund') }}</div>
                 </a>
-                <a href="{{ url_for('learning_hub.main') }}" class="action-card">
+                <a href="{{ url_for('personal.learning_hub.main') }}" class="action-card">
                     <div class="action-icon">
                         <i class="bi bi-book"></i>
                     </div>
@@ -163,7 +163,7 @@
         <div class="recent-activity mb-4">
             <div class="d-flex justify-content-between align-items-center mb-3">
                 <h3 class="section-title mb-0">{{ t('general_recent_activity', default='Recent Activity') }}</h3>
-                <a href="{{ url_for('dashboard.index') }}" class="btn btn-link btn-sm p-0">
+                <a href="{{ url_for('personal.dashboard.index') }}" class="btn btn-link btn-sm p-0">
                     {{ t('general_view_all', default='View All') }}
                 </a>
             </div>
@@ -207,7 +207,7 @@
                             <h4>{{ t('budget_budget_planner', default='Budget Planner') }}</h4>
                             <p>{{ t('budget_allocate_income', default='Plan and allocate your income') }}</p>
                         </div>
-                        <a href="{{ url_for('budget.main') }}" class="nav-card-link"></a>
+                        <a href="{{ url_for('personal.budget.main') }}" class="nav-card-link"></a>
                     </div>
                 </div>
                 <div class="col-6 col-md-4">
@@ -219,7 +219,7 @@
                             <h4>{{ t('bill_bill_planner', default='Bill Planner') }}</h4>
                             <p>{{ t('bill_manage_bills', default='Track and manage your bills') }}</p>
                         </div>
-                        <a href="{{ url_for('bill.main') }}" class="nav-card-link"></a>
+                        <a href="{{ url_for('personal.bill.main') }}" class="nav-card-link"></a>
                     </div>
                 </div>
                 <div class="col-6 col-md-4">
@@ -231,7 +231,7 @@
                             <h4>{{ t('net_worth_net_worth_calculator', default='Net Worth Tracker') }}</h4>
                             <p>{{ t('net_worth_track_assets', default='Track assets and liabilities') }}</p>
                         </div>
-                        <a href="{{ url_for('net_worth.main') }}" class="nav-card-link"></a>
+                        <a href="{{ url_for('personal.net_worth.main') }}" class="nav-card-link"></a>
                     </div>
                 </div>
                 <div class="col-6 col-md-4">
@@ -243,7 +243,7 @@
                             <h4>{{ t('financial_health_financial_health_score', default='Financial Health') }}</h4>
                             <p>{{ t('financial_health_evaluate_finances', default='Assess your financial health') }}</p>
                         </div>
-                        <a href="{{ url_for('financial_health.main') }}" class="nav-card-link"></a>
+                        <a href="{{ url_for('personal.financial_health.main') }}" class="nav-card-link"></a>
                     </div>
                 </div>
                 <div class="col-6 col-md-4">
@@ -255,7 +255,7 @@
                             <h4>{{ t('emergency_fund_calculator', default='Emergency Fund') }}</h4>
                             <p>{{ t('emergency_fund_plan_savings', default='Plan for emergencies') }}</p>
                         </div>
-                        <a href="{{ url_for('emergency_fund.main') }}" class="nav-card-link"></a>
+                        <a href="{{ url_for('personal.emergency_fund.main') }}" class="nav-card-link"></a>
                     </div>
                 </div>
                 <div class="col-6 col-md-4">
@@ -267,7 +267,7 @@
                             <h4>{{ t('learning_hub_courses', default='Learning Hub') }}</h4>
                             <p>{{ t('learning_hub_dashboard', default='Improve financial literacy') }}</p>
                         </div>
-                        <a href="{{ url_for('learning_hub.main') }}" class="nav-card-link"></a>
+                        <a href="{{ url_for('personal.learning_hub.main') }}" class="nav-card-link"></a>
                     </div>
                 </div>
                 <div class="col-6 col-md-4">
@@ -279,7 +279,7 @@
                             <h4>{{ t('quiz_personality_quiz', default='Personality Quiz') }}</h4>
                             <p>{{ t('quiz_take_quiz', default='Discover your financial personality') }}</p>
                         </div>
-                        <a href="{{ url_for('quiz.main') }}" class="nav-card-link"></a>
+                        <a href="{{ url_for('personal.quiz.main') }}" class="nav-card-link"></a>
                     </div>
                 </div>
                 <div class="col-6 col-md-4">
@@ -291,7 +291,7 @@
                             <h4>{{ t('general_taxation', default='Taxation') }}</h4>
                             <p>{{ t('general_taxation_desc', default='Calculate and manage taxes') }}</p>
                         </div>
-                        <a href="{{ url_for('taxation.calculate_tax') }}" class="nav-card-link"></a>
+                        <a href="{{ url_for('taxation_bp.calculate_tax') }}" class="nav-card-link"></a>
                     </div>
                 </div>
                 <div class="col-6 col-md-4">
@@ -303,7 +303,7 @@
                             <h4>{{ t('general_news', default='News') }}</h4>
                             <p>{{ t('general_news_desc', default='Stay updated with financial news') }}</p>
                         </div>
-                        <a href="{{ url_for('common.news_list') }}" class="nav-card-link"></a>
+                        <a href="{{ url_for('common_bp.news_list') }}" class="nav-card-link"></a>
                     </div>
                 </div>
             </div>
@@ -367,7 +367,7 @@
                         <div class="card-body">
                             <h3><i class="bi bi-calculator"></i> {{ t('budget_budget_planner', default='Budget Planner') }}</h3>
                             <p>{{ t('budget_allocate_income', default='Plan and allocate your income across expense categories.') }}</p>
-                            <a href="{{ url_for('budget.main') }}" class="btn btn-primary">{{ t('general_try_now', default='Try Now') }}</a>
+                            <a href="{{ url_for('personal.budget.main') }}" class="btn btn-primary">{{ t('general_try_now', default='Try Now') }}</a>
                         </div>
                     </div>
                 </div>
@@ -376,7 +376,7 @@
                         <div class="card-body">
                             <h3><i class="bi bi-receipt"></i> {{ t('bill_bill_planner', default='Bill Planner') }}</h3>
                             <p>{{ t('bill_manage_bills', default='Track and manage your bills to stay on top of payments.') }}</p>
-                            <a href="{{ url_for('bill.main') }}" class="btn btn-primary">{{ t('general_try_now', default='Try Now') }}</a>
+                            <a href="{{ url_for('personal.bill.main') }}" class="btn btn-primary">{{ t('general_try_now', default='Try Now') }}</a>
                         </div>
                     </div>
                 </div>
@@ -385,7 +385,7 @@
                         <div class="card-body">
                             <h3><i class="bi bi-heartbeat"></i> {{ t('financial_health_financial_health_score', default='Financial Health Score') }}</h3>
                             <p>{{ t('financial_health_evaluate_finances', default='Assess your income, expenses, and debt for a clear financial picture.') }}</p>
-                            <a href="{{ url_for('financial_health.main') }}" class="btn btn-primary">{{ t('general_try_now', default='Try Now') }}</a>
+                            <a href="{{ url_for('personal.financial_health.main') }}" class="btn btn-primary">{{ t('general_try_now', default='Try Now') }}</a>
                         </div>
                     </div>
                 </div>
@@ -424,7 +424,7 @@
                         <div class="card-body">
                             <h3><i class="bi bi-book"></i> {{ t('learning_hub_courses', default='Learning Hub') }}</h3>
                             <p>{{ t('learning_hub_dashboard', default='Access courses to improve your financial literacy.') }}</p>
-                            <a href="{{ url_for('learning_hub.main') }}" class="btn btn-primary">{{ t('general_try_now', default='Try Now') }}</a>
+                            <a href="{{ url_for('personal.learning_hub.main') }}" class="btn btn-primary">{{ t('general_try_now', default='Try Now') }}</a>
                         </div>
                     </div>
                 </div>
@@ -442,7 +442,7 @@
                         <div class="card-body">
                             <h3><i class="bi bi-newspaper"></i> {{ t('general_finance_news', default='Finance News Highlights') }}</h3>
                             <p>{{ t('general_news_desc', default='Stay updated with the latest financial news and insights.') }}</p>
-                            <a href="{{ url_for('common.news_list') }}" class="btn btn-primary">{{ t('general_try_now', default='Try Now') }}</a>
+                            <a href="{{ url_for('common_bp.news_list') }}" class="btn btn-primary">{{ t('general_try_now', default='Try Now') }}</a>
                         </div>
                     </div>
                 </div>
@@ -560,11 +560,11 @@ document.addEventListener('DOMContentLoaded', function() {
 
     function loadFinancialSummary() {
         Promise.all([
-            fetch('{{ url_for("budget.summary") }}').then(r => r.json()).catch(() => ({totalBudget: 0})),
-            fetch('{{ url_for("bill.summary") }}').then(r => r.json()).catch(() => ({totalUpcomingBills: 0})),
-            fetch('{{ url_for("net_worth.summary") }}').then(r => r.json()).catch(() => ({netWorth: 0})),
-            fetch('{{ url_for("financial_health.summary") }}').then(r => r.json()).catch(() => ({score: 0})),
-            fetch('{{ url_for("emergency_fund.summary") }}').then(r => r.json()).catch(() => ({savings: 0}))
+            fetch('{{ url_for("personal.budget.summary") }}').then(r => r.json()).catch(() => ({totalBudget: 0})),
+            fetch('{{ url_for("personal.bill.summary") }}').then(r => r.json()).catch(() => ({totalUpcomingBills: 0})),
+            fetch('{{ url_for("personal.net_worth.summary") }}').then(r => r.json()).catch(() => ({netWorth: 0})),
+            fetch('{{ url_for("personal.financial_health.summary") }}').then(r => r.json()).catch(() => ({score: 0})),
+            fetch('{{ url_for("personal.emergency_fund.summary") }}').then(r => r.json()).catch(() => ({savings: 0}))
         ]).then(([budgetData, billData, netWorthData, healthData, emergencyFundData]) => {
             updateFinancialSummary(budgetData, billData, netWorthData, healthData, emergencyFundData);
         }).catch(error => {
