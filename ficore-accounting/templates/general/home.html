@@ -1,5 +1,6 @@
 {% extends 'base.html' %}
-{% block title %}{{ t('general_business_home', default='Business & Agent Home') }}{% endblock %}
+{% block title %}{{ t('general_business_home', default='Business & Agent Home') }}{% endblock title %}
+
 {% block content %}
 <div class="container">
     {% if current_user.is_authenticated %}
@@ -407,6 +408,7 @@
         </section>
     {% endif %}
 </div>
+{% endblock content %}
 
 {% block extra_scripts %}
 <script>
@@ -597,4 +599,4 @@ document.addEventListener('DOMContentLoaded', function() {
     };
 });
 </script>
-{% endblock %}
+{% endblock extra_scripts %}
