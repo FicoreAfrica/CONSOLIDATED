@@ -443,8 +443,8 @@ document.addEventListener('DOMContentLoaded', function() {
         Promise.all([
             fetch('{{ url_for("debt_summary") }}').then(r => r.json()).catch(() => ({totalIOwe: 0, totalIAmOwed: 0})),
             fetch('{{ url_for("coins.history") }}').then(r => r.json()).catch(() => ({coin_balance: 0})),
-            fetch('{{ url_for("api.cashflow_summary") }}').then(r => r.json()).catch(() => ({netCashflow: 0})),
-            fetch('{{ url_for("api.inventory_summary") }}').then(r => r.json()).catch(() => ({totalValue: 0}))
+            fetch('{{ url_for("cashflow_summary") }}').then(r => r.json()).catch(() => ({netCashflow: 0})),
+            fetch('{{ url_for("inventory_summary") }}').then(r => r.json()).catch(() => ({totalValue: 0}))
         ]).then(([debtData, walletData, cashflowData, inventoryData]) => {
             updateDebtSummary(debtData);
             updateSnapshots(walletData, cashflowData, inventoryData);
@@ -492,7 +492,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     
     function loadRecentActivity() {
-        fetch('{{ url_for("api.recent_activity") }}')
+        fetch('{{ url_for("recent_activity") }}')
             .then(response => response.json())
             .then(activities => {
                 const activityList = document.getElementById('recentActivityList');
