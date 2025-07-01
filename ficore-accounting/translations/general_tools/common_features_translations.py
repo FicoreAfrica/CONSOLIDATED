@@ -52,7 +52,7 @@ COMMON_FEATURES_TRANSLATIONS = {
         'news_ihatch_form': 'Complete the onboarding form',
         'news_ihatch_packet': 'Review the iHatch Cohort 4 Welcome Packet',
         'news_ihatch_deadline': 'Complete by June 2, 2025',
-        'news_ihatch_empower': 'Empowering Nigeria\'s innovation landscape, one startup at a time.'
+        'news_ihatch_empower': 'Empowering Nigeria\'s innovation landscape, one startup at a time.',
         
         # Taxation
         'tax_amount_label': 'Amount',
@@ -235,7 +235,7 @@ COMMON_FEATURES_TRANSLATIONS = {
         'news_ihatch_form': 'Kammala fom ɗin shiga',
         'news_ihatch_packet': 'Duba Fakitin Maraba na iHatch Cohort 4',
         'news_ihatch_deadline': 'Kammala kafin 2 ga Yuni, 2025',
-        'news_ihatch_empower': 'Ƙarfafa yanayin ƙirƙira na Najeriya, farawa ɗaya bayan ɗaya.'
+        'news_ihatch_empower': 'Ƙarfafa yanayin ƙirƙira na Najeriya, farawa ɗaya bayan ɗaya.',
         
         # Taxation
         'tax_amount_label': 'Adadin Kuɗi',
