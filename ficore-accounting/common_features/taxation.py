@@ -35,6 +35,17 @@ def calculate_tax():
     form = TaxCalculationForm()
     db = get_mongo_db()
     tax_rates = list(db.tax_rates.find({'role': current_user.role}))
+    # Convert ObjectId to string for JSON serialization
+    serialized_tax_rates = [
+        {
+            'role': rate['role'],
+            'min_income': rate['min_income'],
+            'max_income': rate['max_income'],
+            'rate': rate['rate'],
+            'description': rate['description'],
+            '_id': str(rate['_id'])  # Convert ObjectId to string
+        } for rate in tax_rates
+    ]
     if request.method == 'POST':
         if form.validate_on_submit():
             amount = form.amount.data
@@ -56,7 +67,7 @@ def calculate_tax():
                                      explanation=explanation,
                                      amount=amount,
                                      form=form,
-                                     tax_rates=tax_rates,
+                                     tax_rates=serialized_tax_rates,
                                      t=trans,
                                      lang=session.get('lang', 'en'))
             else:
@@ -73,7 +84,7 @@ def calculate_tax():
                          section='calculate',
                          form=form,
                          role=current_user.role,
-                         tax_rates=tax_rates,
+                         tax_rates=serialized_tax_rates,
                          t=trans,
                          lang=session.get('lang', 'en'))
 
@@ -83,9 +94,18 @@ def calculate_tax():
 def payment_info():
     db = get_mongo_db()
     locations = list(db.tax_locations.find())
+    # Convert ObjectId to string for safety
+    serialized_locations = [
+        {
+            'name': loc['name'],
+            'address': loc['address'],
+            'contact': loc['contact'],
+            '_id': str(loc['_id'])
+        } for loc in locations
+    ]
     return render_template('common_features/taxation/taxation.html',
                          section='payment_info',
-                         locations=locations,
+                         locations=serialized_locations,
                          t=trans,
                          lang=session.get('lang', 'en'))
 
@@ -106,10 +126,20 @@ def reminders():
         flash(trans('tax_reminder_added', default='Reminder added successfully'), 'success')
         return redirect(url_for('taxation_bp.reminders'))
     reminders = list(db.reminders.find({'user_id': current_user.id}))
+    # Convert ObjectId and dates for template
+    serialized_reminders = [
+        {
+            'message': rem['message'],
+            'reminder_date': rem['reminder_date'],
+            'created_at': rem['created_at'],
+            '_id': str(rem['_id']),
+            'user_id': str(rem['user_id'])
+        } for rem in reminders
+    ]
     return render_template('common_features/taxation/taxation.html',
                          section='reminders',
                          form=form,
-                         reminders=reminders,
+                         reminders=serialized_reminders,
                          t=trans,
                          lang=session.get('lang', 'en'))
 
@@ -131,10 +161,20 @@ def manage_tax_rates():
         flash(trans('tax_rate_added', default='Tax rate added successfully'), 'success')
         return redirect(url_for('taxation_bp.manage_tax_rates'))
     rates = list(db.tax_rates.find())
+    serialized_rates = [
+        {
+            'role': rate['role'],
+            'min_income': rate['min_income'],
+            'max_income': rate['max_income'],
+            'rate': rate['rate'],
+            'description': rate['description'],
+            '_id': str(rate['_id'])
+        } for rate in rates
+    ]
     return render_template('common_features/taxation/taxation.html',
                          section='admin_rates',
                          form=form,
-                         rates=rates,
+                         rates=serialized_rates,
                          t=trans,
                          lang=session.get('lang', 'en'))
 
@@ -158,9 +198,17 @@ def manage_payment_locations():
         else:
             flash(trans('tax_invalid_input', default='Invalid input. Please check your fields.'), 'danger')
     locations = list(db.tax_locations.find())
+    serialized_locations = [
+        {
+            'name': loc['name'],
+            'address': loc['address'],
+            'contact': loc['contact'],
+            '_id': str(loc['_id'])
+        } for loc in locations
+    ]
     return render_template('common_features/taxation/taxation.html',
                          section='admin_locations',
-                         locations=locations,
+                         locations=serialized_locations,
                          t=trans,
                          lang=session.get('lang', 'en'))
 
@@ -186,8 +234,86 @@ def manage_tax_deadlines():
             flash(trans('tax_invalid_input', default='Invalid input. Please check your fields.'), 'danger')
         return redirect(url_for('taxation_bp.manage_tax_deadlines'))
     deadlines = list(db.tax_deadlines.find())
+    serialized_deadlines = [
+        {
+            'deadline_date': dl['deadline_date'],
+            'description': dl['description'],
+            '_id': str(dl['_id'])
+        } for dl in deadlines
+    ]
     return render_template('common_features/taxation/taxation.html',
                          section='admin_deadlines',
-                         deadlines=deadlines,
+                         deadlines=serialized_deadlines,
                          t=trans,
                          lang=session.get('lang', 'en'))
+
+def seed_tax_data():
+    db = get_mongo_db()
+    if db.tax_rates.count_documents({}) == 0:
+        tax_rates = [
+            {
+                'role': 'personal',
+                'min_income': 0.0,
+                'max_income': 300000.0,
+                'rate': 0.07,
+                'description': '7% tax rate for personal income up to 300,000 NGN'
+            },
+            {
+                'role': 'personal',
+                'min_income': 300001.0,
+                'max_income': 600000.0,
+                'rate': 0.11,
+                'description': '11% tax rate for personal income between 300,001 and 600,000 NGN'
+            },
+            {
+                'role': 'trader',
+                'min_income': 0.0,
+                'max_income': 500000.0,
+                'rate': 0.05,
+                'description': '5% tax rate for trader turnover up to 500,000 NGN'
+            },
+            {
+                'role': 'trader',
+                'min_income': 500001.0,
+                'max_income': 1000000.0,
+                'rate': 0.08,
+                'description': '8% tax rate for trader turnover between 500,001 and 1,000,000 NGN'
+            },
+            {
+                'role': 'agent',
+                'min_income': 0.0,
+                'max_income': 400000.0,
+                'rate': 0.06,
+                'description': '6% tax rate for agent income up to 400,000 NGN'
+            }
+        ]
+        db.tax_rates.insert_many(tax_rates)
+        logging.info("Seeded tax rates")
+
+    if db.tax_locations.count_documents({}) == 0:
+        locations = [
+            {
+                'name': 'Lagos Tax Office',
+                'address': '123 Broad Street, Lagos',
+                'contact': '+234-1-2345678'
+            },
+            {
+                'name': 'Abuja Tax Office',
+                'address': '456 Garki Road, Abuja',
+                'contact': '+234-9-8765432'
+            }
+        ]
+        db.tax_locations.insert_many(locations)
+        logging.info("Seeded tax locations")
+
+    if db.reminders.count_documents({}) == 0:
+        reminders = [
+            {
+                'user_id': 'admin',  # Replace with actual user ID after models.py
+                'message': 'File quarterly tax return',
+                'reminder_date': datetime.datetime(2025, 9, 30),
+                'created_at': datetime.datetime.utcnow()
+            }
+        ]
+        db.reminders.insert_many(reminders)
+        logging.info("Seeded reminders")
