@@ -12,7 +12,12 @@ from models import log_tool_usage
 from session_utils import create_anonymous_session
 from utils import requires_role, is_admin, get_mongo_db
 
-quiz_bp = Blueprint('quiz', __name__, template_folder='templates/personal/QUIZ', url_prefix='/QUIZ')
+quiz_bp = Blueprint(
+    'quiz',
+    __name__,
+    template_folder='templates/personal/QUIZ',
+    url_prefix='/QUIZ'
+)
 
 # Initialize CSRF protection
 csrf = CSRFProtect()
@@ -34,7 +39,8 @@ class QuizForm(FlaskForm):
         validators=[DataRequired(message=trans('general_first_name_required', default='Please enter your first name.'))],
         render_kw={
             'placeholder': trans('general_first_name_placeholder', default='e.g., Muhammad, Bashir, Umar'),
-            'title': trans('general_first_name_title', default='Enter your first name to personalize your quiz results')
+            'title': trans('general_first_name_title', default='Enter your first name to personalize your quiz results'),
+            'aria-describedby': 'first-name-help'
         }
     )
     email = StringField(
@@ -42,21 +48,24 @@ class QuizForm(FlaskForm):
         validators=[Optional(), Email(message=trans('general_email_invalid', default='Please enter a valid email address.'))],
         render_kw={
             'placeholder': trans('general_email_placeholder', default='e.g., muhammad@example.com'),
-            'title': trans('general_email_title', default='Enter your email to receive quiz results')
+            'title': trans('general_email_title', default='Enter your email to receive quiz results'),
+            'aria-describedby': 'email-help'
         }
     )
     lang = SelectField(
         trans('general_language', default='Language'),
         choices=[('en', trans('general_english', default='English')), ('ha', trans('general_hausa', default='Hausa'))],
         default='en',
-        validators=[Optional()]
+        validators=[Optional()],
+        render_kw={'aria-describedby': 'language-help'}
     )
     send_email = BooleanField(
         trans('general_send_email', default='Send Email'),
         default=False,
         validators=[Optional()],
         render_kw={
-            'title': trans('general_send_email_title', default='Check to receive an email with your quiz results')
+            'title': trans('general_send_email_title', default='Check to receive an email with your quiz results'),
+            'aria-describedby': 'send-email-help'
         }
     )
     
@@ -65,64 +74,77 @@ class QuizForm(FlaskForm):
         trans('quiz_track_expenses_label', default='Do you track your expenses regularly?'),
         validators=[DataRequired(message=trans('quiz_question_required', default='Please answer this question'))],
         choices=[('Yes', trans('quiz_yes', default='Yes')), ('No', trans('quiz_no', default='No'))],
-        id='question_1'
+        id='question_1',
+        render_kw={'aria-describedby': 'question_1_help'}
     )
     question_2 = RadioField(
         trans('quiz_save_regularly_label', default='Do you save a portion of your income regularly?'),
         validators=[DataRequired(message=trans('quiz_question_required', default='Please answer this question'))],
         choices=[('Yes', trans('quiz_yes', default='Yes')), ('No', trans('quiz_no', default='No'))],
-        id='question_2'
+        id='question_2',
+        render_kw={'aria-describedby': 'question_2_help'}
     )
     question_3 = RadioField(
         trans('quiz_budget_monthly_label', default='Do you set a monthly budget?'),
         validators=[DataRequired(message=trans('quiz_question_required', default='Please answer this question'))],
         choices=[('Yes', trans('quiz_yes', default='Yes')), ('No', trans('quiz_no', default='No'))],
-        id='question_3'
+        id='question_3',
+        render_kw={'aria-describedby': 'question_3_help'}
     )
     question_4 = RadioField(
         trans('quiz_emergency_fund_label', default='Do you have an emergency fund?'),
         validators=[DataRequired(message=trans('quiz_question_required', default='Please answer this question'))],
         choices=[('Yes', trans('quiz_yes', default='Yes')), ('No', trans('quiz_no', default='No'))],
-        id='question_4'
+        id='question_4',
+        render_kw={'aria-describedby': 'question_4_help'}
     )
     question_5 = RadioField(
         trans('quiz_invest_regularly_label', default='Do you invest your money regularly?'),
         validators=[DataRequired(message=trans('quiz_question_required', default='Please answer this question'))],
         choices=[('Yes', trans('quiz_yes', default='Yes')), ('No', trans('quiz_no', default='No'))],
-        id='question_5'
+        id='question_5',
+        render_kw={'aria-describedby': 'question_5_help'}
     )
     question_6 = RadioField(
         trans('quiz_spend_impulse_label', default='Do you often spend money on impulse?'),
         validators=[DataRequired(message=trans('quiz_question_required', default='Please answer this question'))],
         choices=[('Yes', trans('quiz_yes', default='Yes')), ('No', trans('quiz_no', default='No'))],
-        id='question_6'
+        id='question_6',
+        render_kw={'aria-describedby': 'question_6_help'}
     )
     question_7 = RadioField(
         trans('quiz_financial_goals_label', default='Do you set financial goals?'),
         validators=[DataRequired(message=trans('quiz_question_required', default='Please answer this question'))],
         choices=[('Yes', trans('quiz_yes', default='Yes')), ('No', trans('quiz_no', default='No'))],
-        id='question_7'
+        id='question_7',
+        render_kw={'aria-describedby': 'question_7_help'}
     )
     question_8 = RadioField(
         trans('quiz_review_spending_label', default='Do you review your spending habits regularly?'),
         validators=[DataRequired(message=trans('quiz_question_required', default='Please answer this question'))],
         choices=[('Yes', trans('quiz_yes', default='Yes')), ('No', trans('quiz_no', default='No'))],
-        id='question_8'
+        id='question_8',
+        render_kw={'aria-describedby': 'question_8_help'}
     )
     question_9 = RadioField(
         trans('quiz_multiple_income_label', default='Do you have multiple sources of income?'),
         validators=[DataRequired(message=trans('quiz_question_required', default='Please answer this question'))],
         choices=[('Yes', trans('quiz_yes', default='Yes')), ('No', trans('quiz_no', default='No'))],
-        id='question_9'
+        id='question_9',
+        render_kw={'aria-describedby': 'question_9_help'}
     )
     question_10 = RadioField(
         trans('quiz_retirement_plan_label', default='Do you have a retirement savings plan?'),
         validators=[DataRequired(message=trans('quiz_question_required', default='Please answer this question'))],
         choices=[('Yes', trans('quiz_yes', default='Yes')), ('No', trans('quiz_no', default='No'))],
-        id='question_10'
+        id='question_10',
+        render_kw={'aria-describedby': 'question_10_help'}
     )
     
-    submit = SubmitField(trans('quiz_submit_quiz', default='Submit Quiz'))
+    submit = SubmitField(
+        trans('quiz_submit_quiz', default='Submit Quiz'),
+        render_kw={'aria-label': trans('quiz_submit_quiz', default='Submit Quiz')}
+    )
 
     def validate_email(self, field):
         """Custom email validation, required only if send_email is checked."""
@@ -238,7 +260,7 @@ def main():
     course_id = request.args.get('course_id', 'financial_quiz')
     
     # Initialize form with user data
-    form_data = {}
+    form_data = {'lang': lang}
     if current_user.is_authenticated:
         form_data['email'] = current_user.email
         form_data['first_name'] = current_user.username
@@ -268,6 +290,12 @@ def main():
                     mongo=get_mongo_db()
                 )
 
+                # Update session language if changed
+                if form.lang.data != lang:
+                    session['lang'] = form.lang.data
+                    lang = form.lang.data
+                    current_app.logger.info(f"Language changed to {lang} for session {session['sid']}", extra={'session_id': session['sid']})
+
                 # Calculate results
                 answers = [getattr(form, f'question_{i}').data for i in range(1, 11)]
                 score = calculate_score(answers)
@@ -285,10 +313,12 @@ def main():
                     'email': form.email.data,
                     'send_email': form.send_email.data,
                     'personality': personality['name'],
+                    'description': personality['description'],
                     'score': score,
                     'badges': badges,
                     'insights': personality['insights'],
-                    'tips': personality['tips']
+                    'tips': personality['tips'],
+                    'course_id': course_id
                 }
                 
                 try:
@@ -298,7 +328,7 @@ def main():
                 except Exception as e:
                     current_app.logger.error(f"Failed to save quiz result to MongoDB: {str(e)}", extra={'session_id': session['sid']})
                     flash(trans('quiz_storage_error', default='Error saving quiz results.'), 'danger')
-                    return redirect(url_for('quiz.main', course_id=course_id))
+                    return redirect(url_for('personal.quiz.main', course_id=course_id))
 
                 # Send email if user opted in
                 if form.send_email.data and form.email.data:
@@ -317,12 +347,13 @@ def main():
                                 'score': quiz_result['score'],
                                 'max_score': 30,
                                 'personality': quiz_result['personality'],
+                                'description': quiz_result['description'],
                                 'badges': quiz_result['badges'],
                                 'insights': quiz_result['insights'],
                                 'tips': quiz_result['tips'],
                                 'created_at': quiz_result['created_at'].strftime('%Y-%m-%d'),
-                                'cta_url': url_for('quiz.main', course_id=course_id, _external=True),
-                                'unsubscribe_url': url_for('quiz.unsubscribe', email=form.email.data, _external=True)
+                                'cta_url': url_for('personal.quiz.main', course_id=course_id, _external=True),
+                                'unsubscribe_url': url_for('personal.quiz.unsubscribe', email=form.email.data, _external=True)
                             },
                             lang=lang
                         )
@@ -334,28 +365,39 @@ def main():
         # Get quiz results for display
         quiz_results = list(get_mongo_db().quiz_responses.find(filter_criteria).sort('created_at', -1))
         
+        # Fallback to email for authenticated users
         if not quiz_results and current_user.is_authenticated and current_user.email:
             quiz_results = list(get_mongo_db().quiz_responses.find({'email': current_user.email}).sort('created_at', -1))
 
-        latest_record = quiz_results[0] if quiz_results else {
+        # Format records for display
+        records = []
+        for result in quiz_results:
+            record_data = {
+                'id': str(result['_id']),
+                'score': result.get('score', 0),
+                'personality': result.get('personality', ''),
+                'description': result.get('description', ''),
+                'badges': result.get('badges', []),
+                'insights': result.get('insights', []),
+                'tips': result.get('tips', []),
+                'created_at': result.get('created_at').strftime('%Y-%m-%d') if result.get('created_at') else 'N/A',
+                'course_id': result.get('course_id', 'financial_quiz')
+            }
+            records.append((record_data['id'], record_data))
+        
+        latest_record = records[0][1] if records else {
             'score': 0,
             'personality': '',
+            'description': '',
             'badges': [],
             'insights': [],
             'tips': [],
-            'created_at': 'N/A'
+            'created_at': 'N/A',
+            'course_id': course_id
         }
         
-        # Format created_at for display
-        if latest_record and latest_record.get('created_at') != 'N/A':
-            try:
-                latest_record['created_at'] = latest_record['created_at'].strftime('%Y-%m-%d')
-            except (TypeError, AttributeError) as e:
-                current_app.logger.error(f"Failed to format created_at '{latest_record.get('created_at')}' in results: {str(e)}", extra={'session_id': session['sid']})
-                latest_record['created_at'] = 'N/A'
-
         # Calculate comparison metrics
-        all_results = list(get_mongo_db().quiz_responses.find({}))
+        all_results = list(get_mongo_db().quiz_responses.find({'course_id': course_id}))
         all_scores = [result['score'] for result in all_results if result.get('score') is not None]
         total_users = len(all_scores)
         rank = 0
@@ -364,7 +406,7 @@ def main():
             all_scores.sort(reverse=True)
             user_score = latest_record.get('score', 0)
             rank = sum(1 for score in all_scores if score > user_score) + 1
-            average_score = sum(all_scores) / total_users
+            average_score = sum(all_scores) / total_users if total_users > 0 else 0
 
         # Cross-tool insights from net_worth_data
         cross_tool_insights = []
@@ -374,27 +416,92 @@ def main():
         if net_worth_data and latest_record and latest_record.get('score', 0) < 13:
             latest_net_worth = net_worth_data[0]
             if latest_net_worth.get('net_worth', 0) > 0:
-                cross_tool_insights.append(trans('quiz_cross_tool_net_worth', default='Your net worth is positive, indicating good financial health despite lower quiz scores.', lang=lang))
+                cross_tool_insights.append(trans(
+                    'quiz_cross_tool_net_worth',
+                    default='Your net worth is positive, indicating good financial health despite lower quiz scores.',
+                    lang=lang
+                ))
 
         # Preprocessed questions for template
         questions = [
-            {'id': 'question_1', 'text_key': 'quiz_track_expenses_label', 'text': 'Do you track your expenses regularly?', 'tooltip': 'quiz_track_expenses_tooltip', 'icon': '💰'},
-            {'id': 'question_2', 'text_key': 'quiz_save_regularly_label', 'text': 'Do you save a portion of your income regularly?', 'tooltip': 'quiz_save_regularly_tooltip', 'icon': '💰'},
-            {'id': 'question_3', 'text_key': 'quiz_budget_monthly_label', 'text': 'Do you set a monthly budget?', 'tooltip': 'quiz_budget_monthly_tooltip', 'icon': '📝'},
-            {'id': 'question_4', 'text_key': 'quiz_emergency_fund_label', 'text': 'Do you have an emergency fund?', 'tooltip': 'quiz_emergency_fund_tooltip', 'icon': '🚨'},
-            {'id': 'question_5', 'text_key': 'quiz_invest_regularly_label', 'text': 'Do you invest your money regularly?', 'tooltip': 'quiz_invest_regularly_tooltip', 'icon': '📈'},
-            {'id': 'question_6', 'text_key': 'quiz_spend_impulse_label', 'text': 'Do you often spend money on impulse?', 'tooltip': 'quiz_spend_impulse_tooltip', 'icon': '🛒'},
-            {'id': 'question_7', 'text_key': 'quiz_financial_goals_label', 'text': 'Do you set financial goals?', 'tooltip': 'quiz_financial_goals_tooltip', 'icon': '🎯'},
-            {'id': 'question_8', 'text_key': 'quiz_review_spending_label', 'text': 'Do you review your spending habits regularly?', 'tooltip': 'quiz_review_spending_tooltip', 'icon': '🔍'},
-            {'id': 'question_9', 'text_key': 'quiz_multiple_income_label', 'text': 'Do you have multiple sources of income?', 'tooltip': 'quiz_multiple_income_tooltip', 'icon': '💼'},
-            {'id': 'question_10', 'text_key': 'quiz_retirement_plan_label', 'text': 'Do you have a retirement savings plan?', 'tooltip': 'quiz_retirement_plan_tooltip', 'icon': '🏖️'},
+            {
+                'id': 'question_1',
+                'text_key': 'quiz_track_expenses_label',
+                'text': 'Do you track your expenses regularly?',
+                'tooltip': 'quiz_track_expenses_tooltip',
+                'icon': '💰'
+            },
+            {
+                'id': 'question_2',
+                'text_key': 'quiz_save_regularly_label',
+                'text': 'Do you save a portion of your income regularly?',
+                'tooltip': 'quiz_save_regularly_tooltip',
+                'icon': '💰'
+            },
+            {
+                'id': 'question_3',
+                'text_key': 'quiz_budget_monthly_label',
+                'text': 'Do you set a monthly budget?',
+                'tooltip': 'quiz_budget_monthly_tooltip',
+                'icon': '📝'
+            },
+            {
+                'id': 'question_4',
+                'text_key': 'quiz_emergency_fund_label',
+                'text': 'Do you have an emergency fund?',
+                'tooltip': 'quiz_emergency_fund_tooltip',
+                'icon': '🚨'
+            },
+            {
+                'id': 'question_5',
+                'text_key': 'quiz_invest_regularly_label',
+                'text': 'Do you invest your money regularly?',
+                'tooltip': 'quiz_invest_regularly_tooltip',
+                'icon': '📈'
+            },
+            {
+                'id': 'question_6',
+                'text_key': 'quiz_spend_impulse_label',
+                'text': 'Do you often spend money on impulse?',
+                'tooltip': 'quiz_spend_impulse_tooltip',
+                'icon': '🛒'
+            },
+            {
+                'id': 'question_7',
+                'text_key': 'quiz_financial_goals_label',
+                'text': 'Do you set financial goals?',
+                'tooltip': 'quiz_financial_goals_tooltip',
+                'icon': '🎯'
+            },
+            {
+                'id': 'question_8',
+                'text_key': 'quiz_review_spending_label',
+                'text': 'Do you review your spending habits regularly?',
+                'tooltip': 'quiz_review_spending_tooltip',
+                'icon': '🔍'
+            },
+            {
+                'id': 'question_9',
+                'text_key': 'quiz_multiple_income_label',
+                'text': 'Do you have multiple sources of income?',
+                'tooltip': 'quiz_multiple_income_tooltip',
+                'icon': '💼'
+            },
+            {
+                'id': 'question_10',
+                'text_key': 'quiz_retirement_plan_label',
+                'text': 'Do you have a retirement savings plan?',
+                'tooltip': 'quiz_retirement_plan_tooltip',
+                'icon': '🏖️'
+            },
         ]
 
-        current_app.logger.info(f"Rendering quiz main page with {len(quiz_results)} results for session {session['sid']}", extra={'session_id': session['sid']})
+        current_app.logger.info(f"Rendering quiz main page with {len(records)} results for session {session['sid']}", extra={'session_id': session['sid']})
         return render_template(
             'personal/QUIZ/quiz_main.html',
             form=form,
             questions=questions,
+            records=records,
             latest_record=latest_record,
             insights=latest_record.get('insights', []),
             cross_tool_insights=cross_tool_insights,
@@ -415,14 +522,17 @@ def main():
         return render_template(
             'personal/QUIZ/quiz_main.html',
             form=form,
-            questions=[],
+            questions=questions,
+            records=[],
             latest_record={
                 'score': 0,
                 'personality': '',
+                'description': '',
                 'badges': [],
                 'insights': [],
                 'tips': [],
-                'created_at': 'N/A'
+                'created_at': 'N/A',
+                'course_id': course_id
             },
             insights=[],
             cross_tool_insights=[],
@@ -460,7 +570,7 @@ def unsubscribe(email):
         if current_user.is_authenticated:
             filter_criteria['user_id'] = current_user.id
         else:
-            filter_criteria['session_id': session['sid']]
+            filter_criteria['session_id'] = session['sid']
         
         existing_record = get_mongo_db().quiz_responses.find_one(filter_criteria)
         if not existing_record:
@@ -490,4 +600,4 @@ def handle_csrf_error(e):
     lang = session.get('lang', 'en')
     current_app.logger.error(f"CSRF error on {request.path}: {e.description}", extra={'session_id': session.get('sid', 'unknown')})
     flash(trans('quiz_csrf_error', default='Form submission failed due to a missing security token. Please refresh and try again.'), 'danger')
-    return redirect(url_for('quiz.main')), 400
+    return redirect(url_for('personal.quiz.main')), 400
