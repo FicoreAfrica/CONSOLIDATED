@@ -350,7 +350,7 @@
         <!-- Prospective User Section -->
         <!-- Hero Section -->
         <section class="hero text-center my-5">
-            <h1><i class="fas fa-wallet"></i> {{ t('general_welcome', default='Manage Your Finances in Minutes with FiCore Africa') }}</h1>
+            <h1><i class="bi bi-wallet"></i> {{ t('general_welcome', default='Manage Your Finances in Minutes with FiCore Africa') }}</h1>
             <p class="lead">{{ t('general_ficore_desc', default='Africa’s #1 localized platform for personal finance, business management, and agent services.') }}</p>
             <div class="d-flex justify-content-center gap-3 mt-4">
                 <div class="dropdown">
@@ -371,13 +371,13 @@
 
         <!-- Role-Based Value Proposition -->
         <section class="roles-section my-5">
-            <h2 class="text-center"><i class="fas fa-users"></i> {{ t('general_who_we_serve', default='Who We Serve') }}</h2>
+            <h2 class="text-center"><i class="bi bi-people"></i> {{ t('general_who_we_serve', default='Who We Serve') }}</h2>
             <p class="text-center mb-4">{{ t('general_who_we_serve_desc', default='FiCore empowers individuals, businesses, and agents with tools tailored to their needs.') }}</p>
             <div class="row g-4">
                 <div class="col-md-4">
                     <div class="card role-card role-personal">
                         <div class="card-body text-center">
-                            <h3><i class="fas fa-user"></i> {{ t('general_personal', default='Personal Users') }}</h3>
+                            <h3><i class="bi bi-person"></i> {{ t('general_personal', default='Personal Users') }}</h3>
                             <p>{{ t('general_personal_desc', default='Track budgets, bills, and financial health to achieve your goals.') }}</p>
                             <a href="{{ url_for('users.signup', role='personal') }}" class="btn btn-primary">{{ t('general_get_started', default='Get Started') }}</a>
                         </div>
@@ -386,7 +386,7 @@
                 <div class="col-md-4">
                     <div class="card role-card role-business">
                         <div class="card-body text-center">
-                            <h3><i class="fas fa-briefcase"></i> {{ t('general_trader', default='Business Owners') }}</h3>
+                            <h3><i class="bi bi-briefcase"></i> {{ t('general_trader', default='Business Owners') }}</h3>
                             <p>{{ t('general_trader_desc', default='Manage debtors, creditors, inventory, and cashflow for your business.') }}</p>
                             <a href="{{ url_for('users.signup', role='trader') }}" class="btn btn-primary">{{ t('general_get_started', default='Get Started') }}</a>
                         </div>
@@ -395,7 +395,7 @@
                 <div class="col-md-4">
                     <div class="card role-card role-agent">
                         <div class="card-body text-center">
-                            <h3><i class="fas fa-handshake"></i> {{ t('general_agent', default='Agents') }}</h3>
+                            <h3><i class="bi bi-handshake"></i> {{ t('general_agent', default='Agents') }}</h3>
                             <p>{{ t('general_agent_desc', default='Register traders, facilitate token purchases, and support client records.') }}</p>
                             <a href="{{ url_for('users.signup', role='agent') }}" class="btn btn-primary">{{ t('general_get_started', default='Get Started') }}</a>
                         </div>
@@ -406,13 +406,13 @@
 
         <!-- Tools Overview -->
         <section class="tools-section my-5">
-            <h2 class="text-center"><i class="fas fa-tools"></i> {{ t('general_our_tools', default='Explore Our Tools') }}</h2>
+            <h2 class="text-center"><i class="bi bi-tools"></i> {{ t('general_our_tools', default='Explore Our Tools') }}</h2>
             <p class="text-center mb-4">{{ t('general_tools_desc', default='Discover powerful tools tailored for personal finance, business management, and agent services.') }}</p>
             <div class="accordion" id="toolsAccordion">
                 <div class="accordion-item">
                     <h3 class="accordion-header" id="personalToolsHeading">
                         <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#personalToolsCollapse" aria-expanded="true" aria-controls="personalToolsCollapse">
-                            <i class="fas fa-user me-2"></i> {{ t('general_personal_tools', default='Personal Finance Tools') }}
+                            <i class="bi bi-person me-2"></i> {{ t('general_personal_tools', default='Personal Finance Tools') }}
                         </button>
                     </h3>
                     <div id="personalToolsCollapse" class="accordion-collapse collapse show" aria-labelledby="personalToolsHeading" data-bs-parent="#toolsAccordion">
@@ -452,7 +452,7 @@
                 <div class="accordion-item">
                     <h3 class="accordion-header" id="businessToolsHeading">
                         <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#businessToolsCollapse" aria-expanded="false" aria-controls="businessToolsCollapse">
-                            <i class="fas fa-briefcase me-2"></i> {{ t('general_business_tools', default='Business Management Tools') }}
+                            <i class="bi bi-briefcase me-2"></i> {{ t('general_business_tools', default='Business Management Tools') }}
                         </button>
                     </h3>
                     <div id="businessToolsCollapse" class="accordion-collapse collapse" aria-labelledby="businessToolsHeading" data-bs-parent="#toolsAccordion">
@@ -483,7 +483,7 @@
                 <div class="accordion-item">
                     <h3 class="accordion-header" id="agentToolsHeading">
                         <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#agentToolsCollapse" aria-expanded="false" aria-controls="agentToolsCollapse">
-                            <i class="fas fa-handshake me-2"></i> {{ t('general_agent_tools', default='Agent Services Tools') }}
+                            <i class="bi bi-handshake me-2"></i> {{ t('general_agent_tools', default='Agent Services Tools') }}
                         </button>
                     </h3>
                     <div id="agentToolsCollapse" class="accordion-collapse collapse" aria-labelledby="agentToolsHeading" data-bs-parent="#toolsAccordion">
@@ -505,7 +505,7 @@
                 <div class="accordion-item">
                     <h3 class="accordion-header" id="sharedToolsHeading">
                         <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#sharedToolsCollapse" aria-expanded="false" aria-controls="sharedToolsCollapse">
-                            <i class="fas fa-share-alt me-2"></i> {{ t('general_shared_tools', default='Shared Tools') }}
+                            <i class="bi bi-share me-2"></i> {{ t('general_shared_tools', default='Shared Tools') }}
                         </button>
                     </h3>
                     <div id="sharedToolsCollapse" class="accordion-collapse collapse" aria-labelledby="sharedToolsHeading" data-bs-parent="#toolsAccordion">
@@ -547,30 +547,30 @@
 
         <!-- Why FiCore -->
         <section class="why-section my-5">
-            <h2 class="text-center"><i class="fas fa-info-circle"></i> {{ t('general_why_ficore', default='Why FiCore Africa?') }}</h2>
+            <h2 class="text-center"><i class="bi bi-info-circle"></i> {{ t('general_why_ficore', default='Why FiCore Africa?') }}</h2>
             <p class="text-center mb-4 highlight-text">{{ t('general_ficore_highlight', default='Africa’s #1 Localized Financial Management Platform') }}</p>
             <div class="row g-4">
                 <div class="col-md-3">
                     <div class="why-item text-center">
-                        <i class="fas fa-check-circle fa-2x mb-2"></i>
+                        <i class="bi bi-check-circle-fill fa-2x mb-2"></i>
                         <p>{{ t('general_localized', default='Built for Africa with Naira support and regional insights') }}</p>
                     </div>
                 </div>
                 <div class="col-md-3">
                     <div class="why-item text-center">
-                        <i class="fas fa-check-circle fa-2x mb-2"></i>
+                        <i class="bi bi-check-circle-fill fa-2x mb-2"></i>
                         <p>{{ t('general_empowers', default='Empowers individuals, businesses, and agents with tailored tools') }}</p>
                     </div>
                 </div>
                 <div class="col-md-3">
                     <div class="why-item text-center">
-                        <i class="fas fa-check-circle fa-2x mb-2"></i>
+                        <i class="bi bi-check-circle-fill fa-2x mb-2"></i>
                         <p>{{ t('general_actionable', default='Actionable insights for smarter financial decisions') }}</p>
                     </div>
                 </div>
                 <div class="col-md-3">
                     <div class="why-item text-center">
-                        <i class="fas fa-check-circle fa-2x mb-2"></i>
+                        <i class="bi bi-check-circle-fill fa-2x mb-2"></i>
                         <p>{{ t('general_secure', default='Advisory-only platform – we don’t store or access your funds') }}</p>
                     </div>
                 </div>
@@ -582,7 +582,7 @@
 
         <!-- Testimonials -->
         <section class="testimonials-section my-5">
-            <h2 class="text-center"><i class="fas fa-quote-left"></i> {{ t('general_testimonials', default='What Our Users Say') }}</h2>
+            <h2 class="text-center"><i class="bi bi-quote"></i> {{ t('general_testimonials', default='What Our Users Say') }}</h2>
             <div id="testimonialCarousel" class="carousel slide" data-bs-ride="carousel">
                 <div class="carousel-inner">
                     <div class="carousel-item active">
@@ -623,7 +623,7 @@
 
         <!-- FAQ Section -->
         <section class="faq-section my-5">
-            <h2 class="text-center"><i class="fas fa-question-circle"></i> {{ t('general_faq', default='Frequently Asked Questions') }}</h2>
+            <h2 class="text-center"><i class="bi bi-question-circle"></i> {{ t('general_faq', default='Frequently Asked Questions') }}</h2>
             <div class="accordion" id="faqAccordion">
                 <div class="accordion-item">
                     <h3 class="accordion-header" id="faqFundHandling">
@@ -760,7 +760,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     let amountsVisible = true;
 
-    // Define translation strings
+    // Define translation strings with fallback
     const translations = {
         just_now: '{{ t("general_just_now", default="Just now") }}',
         minutes_ago: '{{ t("general_minutes_ago", default="m ago") }}',
@@ -940,9 +940,9 @@ document.addEventListener('DOMContentLoaded', function() {
         const diffInSeconds = Math.floor((now - time) / 1000);
 
         if (diffInSeconds < 60) return translations.just_now;
-        if (diffInSeconds < 3600) return Math.floor(diffInSeconds / 60) + translations.minutes_ago;
-        if (diffInSeconds < 86400) return Math.floor(diffInSeconds / 3600) + translations.hours_ago;
-        return Math.floor(diffInSeconds / 86400) + translations.days_ago;
+        if (diffInSeconds < 3600) return Math.floor(diffInSeconds / 60) + ' ' + translations.minutes_ago;
+        if (diffInSeconds < 86400) return Math.floor(diffInSeconds / 3600) + ' ' + translations.hours_ago;
+        return Math.floor(diffInSeconds / 86400) + ' ' + translations.days_ago;
     }
 
     window.toggleAmountVisibility = function() {
