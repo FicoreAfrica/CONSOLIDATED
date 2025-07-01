@@ -2455,3 +2455,40 @@ h2.card-title {
         min-width: 160px;
     }
 }
+/* style.css */
+
+.bottom-nav .nav-item {
+    /* Distribute space evenly, allowing items to grow */
+    flex-grow: 1;
+    /* Ensures items are centered vertically within their flex container */
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    padding: 5px 0; /* Add some vertical padding */
+}
+
+.bottom-nav .nav-item i {
+    font-size: 1.8rem; /* Custom icon size */
+    margin-bottom: 3px; /* Space between icon and label */
+    color: #007bff; /* Custom icon color, e.g., Bootstrap primary blue */
+}
+
+.bottom-nav .nav-item .nav-label {
+    font-size: 0.75rem; /* Smaller label text */
+    font-weight: 500;
+    color: #333; /* Darker grey for labels */
+    white-space: nowrap; /* Prevent labels from wrapping */
+    overflow: hidden;
+    text-overflow: ellipsis; /* Add ellipsis if text overflows */
+    max-width: 100%; /* Ensure text doesn't push parent width */
+}
+
+/* Optional: Style for active nav item */
+.bottom-nav .nav-item.active {
+    color: #28a745 !important; /* Green for active item */
+}
+
+.bottom-nav .nav-item.active i {
+    color: #28a745 !important;
+}
