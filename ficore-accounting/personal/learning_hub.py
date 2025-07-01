@@ -1,4 +1,3 @@
-```python
 from flask import Blueprint, render_template, session, request, redirect, url_for, flash, current_app, send_from_directory, jsonify
 from flask_wtf import FlaskForm
 from wtforms import StringField, BooleanField, SubmitField, FileField, SelectField
