@@ -1,11 +1,25 @@
+```html
 {% extends "personal/base.html" %}
 {% block title %}{{ t('learning_hub_courses', default='Learning Hub') }}{% endblock %}
 {% block extra_head %}
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+    <style>
+        .course-card { transition: transform 0.2s; }
+        .course-card:hover { transform: scale(1.02); }
+        .alert-dismissible .btn-close { background: none; }
+        .tab-content { min-height: 400px; }
+        .form-control:invalid, .form-select:invalid { border-color: #dc3545; }
+        .invalid-feedback { display: none; }
+        .form-control:invalid ~ .invalid-feedback,
+        .form-select:invalid ~ .invalid-feedback { display: block; }
+        canvas#progressChart { max-height: 400px; width: 100%; }
+    </style>
 {% endblock %}
 {% block content %}
-<div class="container">
+<div class="container my-4">
     {% set tool_name = 'learning_hub_courses' %}
     {% set tool_icon = 'fa-graduation-cap' %}
     {% set subtitle = t('learning_hub_improve_financial_literacy', default='Improve your financial literacy with our courses') %}
@@ -13,12 +27,14 @@
 
     {% with messages = get_flashed_messages(with_categories=true) %}
         {% if messages %}
-            {% for category, message in messages %}
-                <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
-                    {{ t(message, default=message) }}
-                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="{{ t('general_close', default='Close') }}"></button>
-                </div>
-            {% endfor %}
+            <div class="alert-container">
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                        {{ t(message, default=message, lang=lang) }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="{{ t('general_close', default='Close') }}"></button>
+                    </div>
+                {% endfor %}
+            </div>
         {% endif %}
     {% endwith %}
 
@@ -26,23 +42,23 @@
     <ul class="nav nav-tabs mb-4" id="learningTabs" role="tablist">
         <li class="nav-item" role="presentation">
             <button class="nav-link active" id="courses-tab" data-bs-toggle="tab" data-bs-target="#courses" type="button" role="tab" aria-controls="courses" aria-selected="true">
-                <i class="fas fa-book"></i> {{ t('learning_hub_courses', default='Courses') }}
+                <i class="fas fa-book me-1"></i> {{ t('learning_hub_courses', default='Courses') }}
             </button>
         </li>
         <li class="nav-item" role="presentation">
             <button class="nav-link" id="progress-tab" data-bs-toggle="tab" data-bs-target="#progress" type="button" role="tab" aria-controls="progress" aria-selected="false">
-                <i class="fas fa-chart-line"></i> {{ t('learning_hub_my_progress', default='My Progress') }}
+                <i class="fas fa-chart-line me-1"></i> {{ t('learning_hub_my_progress', default='My Progress') }}
             </button>
         </li>
         <li class="nav-item" role="presentation">
             <button class="nav-link" id="profile-tab" data-bs-toggle="tab" data-bs-target="#profile" type="button" role="tab" aria-controls="profile" aria-selected="false">
-                <i class="fas fa-user"></i> {{ t('learning_hub_profile', default='Profile') }}
+                <i class="fas fa-user me-1"></i> {{ t('learning_hub_profile', default='Profile') }}
             </button>
         </li>
-        {% if current_user.is_authenticated and current_user.get('is_admin', False) %}
+        {% if is_admin() %}
         <li class="nav-item" role="presentation">
             <button class="nav-link" id="upload-tab" data-bs-toggle="tab" data-bs-target="#upload" type="button" role="tab" aria-controls="upload" aria-selected="false">
-                <i class="fas fa-upload"></i> {{ t('learning_hub_upload_content', default='Upload Content') }}
+                <i class="fas fa-upload me-1"></i> {{ t('learning_hub_upload_content', default='Upload Content') }}
             </button>
         </li>
         {% endif %}
@@ -52,79 +68,82 @@
     <div class="tab-content" id="learningTabContent">
         <!-- Courses Tab -->
         <div class="tab-pane fade show active" id="courses" role="tabpanel" aria-labelledby="courses-tab">
-            {% if courses %}
-                <div class="row">
-                    {% for course in courses.values() %}
-                        <div class="col-md-6 col-lg-4 mb-4">
-                            <div class="card h-100 course-card">
-                                <div class="card-header">
-                                    <h5 class="card-title">
-                                        <i class="fas fa-book-open"></i>
-                                        {{ t(course.title_key, default=course.title_en) }}
-                                    </h5>
-                                    {% if course.is_premium %}
-                                        <span class="badge bg-warning">{{ t('learning_hub_premium', default='Premium') }}</span>
-                                    {% else %}
-                                        <span class="badge bg-success">{{ t('learning_hub_free', default='Free') }}</span>
-                                    {% endif %}
-                                </div>
-                                <div class="card-body">
-                                    <p class="card-text">{{ t(course.desc_key, default=course.description_en) }}</p>
-                                    
-                                    {% set lessons_total = sum(module.lessons | length for module in course.modules) %}
-                                    {% if lessons_total %}
-                                        <div class="mb-3">
-                                            <small class="text-muted">
-                                                <i class="fas fa-list"></i>
-                                                {{ lessons_total }} {{ t('learning_hub_lessons', default='lessons') }}
-                                            </small>
-                                        </div>
-                                        
-                                        <!-- Progress bar if user has started -->
-                                        {% if progress.get(course.id) %}
-                                            {% set user_progress = progress.get(course.id, {}) %}
-                                            {% set progress_percent = (user_progress.lessons_completed | length / lessons_total * 100) | round %}
-                                            <div class="progress mb-3">
-                                                <div class="progress-bar" role="progressbar" style="width: {{ progress_percent }}%" aria-valuenow="{{ progress_percent }}" aria-valuemin="0" aria-valuemax="100">
-                                                    {{ progress_percent }}%
-                                                </div>
-                                            </div>
-                                            <small class="text-muted">
-                                                {{ user_progress.lessons_completed | length }} / {{ lessons_total }} {{ t('learning_hub_completed', default='completed') }}
-                                            </small>
-                                        {% endif %}
-                                    {% endif %}
-                                </div>
-                                <div class="card-footer">
-                                    <a href="{{ url_for('learning_hub.get_course_data', course_id=course.id) }}" class="btn btn-primary">
-                                        {% if progress.get(course.id, {}).get('lessons_completed') %}
-                                            <i class="fas fa-play"></i> {{ t('learning_hub_continue', default='Continue') }}
+            <div id="course-content">
+                {% if courses %}
+                    <div class="row" id="course-list">
+                        {% for course in courses.values() %}
+                            <div class="col-md-6 col-lg-4 mb-4">
+                                <div class="card h-100 course-card">
+                                    <div class="card-header d-flex justify-content-between align-items-center">
+                                        <h5 class="card-title mb-0">
+                                            <i class="fas fa-book-open me-2"></i>
+                                            {{ t(course.title_key, default=course.title_en, lang=lang) }}
+                                        </h5>
+                                        {% if course.is_premium %}
+                                            <span class="badge bg-warning">{{ t('learning_hub_premium', default='Premium') }}</span>
                                         {% else %}
-                                            <i class="fas fa-play"></i> {{ t('learning_hub_start', default='Start') }}
+                                            <span class="badge bg-success">{{ t('learning_hub_free', default='Free') }}</span>
                                         {% endif %}
-                                    </a>
-                                    <a href="{{ url_for('learning_hub.get_course_data', course_id=course.id) }}" class="btn btn-outline-secondary">
-                                        <i class="fas fa-info-circle"></i> {{ t('learning_hub_details', default='Details') }}
-                                    </a>
+                                    </div>
+                                    <div class="card-body">
+                                        <p class="card-text">{{ t(course.desc_key, default=course.description_en, lang=lang) }}</p>
+                                        
+                                        {% set lessons_total = course.modules | sum(attribute='lessons | length') %}
+                                        {% if lessons_total %}
+                                            <div class="mb-3">
+                                                <small class="text-muted">
+                                                    <i class="fas fa-list me-1"></i>
+                                                    {{ lessons_total }} {{ t('learning_hub_lessons', default='lessons') }}
+                                                </small>
+                                            </div>
+                                            
+                                            <!-- Progress bar if user has started -->
+                                            {% set user_progress = progress.get(course.id, {}) %}
+                                            {% if user_progress.get('lessons_completed') %}
+                                                {% set progress_percent = (user_progress.lessons_completed | length / lessons_total * 100) | round %}
+                                                <div class="progress mb-3">
+                                                    <div class="progress-bar bg-success" role="progressbar" style="width: {{ progress_percent }}%" aria-valuenow="{{ progress_percent }}" aria-valuemin="0" aria-valuemax="100">
+                                                        {{ progress_percent }}%
+                                                    </div>
+                                                </div>
+                                                <small class="text-muted">
+                                                    {{ user_progress.lessons_completed | length }} / {{ lessons_total }} {{ t('learning_hub_completed', default='completed') }}
+                                                </small>
+                                            {% endif %}
+                                        {% endif %}
+                                    </div>
+                                    <div class="card-footer d-flex justify-content-between">
+                                        <button class="btn btn-primary load-course" data-course-id="{{ course.id }}">
+                                            <i class="fas fa-play me-1"></i>
+                                            {% if user_progress.get('lessons_completed') %}
+                                                {{ t('learning_hub_continue', default='Continue') }}
+                                            {% else %}
+                                                {{ t('learning_hub_start', default='Start') }}
+                                            {% endif %}
+                                        </button>
+                                        <button class="btn btn-outline-secondary load-course-details" data-course-id="{{ course.id }}">
+                                            <i class="fas fa-info-circle me-1"></i> {{ t('learning_hub_details', default='Details') }}
+                                        </button>
+                                    </div>
                                 </div>
                             </div>
-                        </div>
-                    {% endfor %}
-                </div>
-            {% else %}
-                <div class="card">
-                    <div class="card-body text-center">
-                        <i class="fas fa-book fa-3x mb-3 text-muted"></i>
-                        <h5>{{ t('learning_hub_no_courses', default='No courses available') }}</h5>
-                        <p>{{ t('learning_hub_check_back_later', default='Check back later for new courses!') }}</p>
+                        {% endfor %}
                     </div>
-                </div>
-            {% endif %}
+                {% else %}
+                    <div class="card">
+                        <div class="card-body text-center">
+                            <i class="fas fa-book fa-3x mb-3 text-muted"></i>
+                            <h5>{{ t('learning_hub_no_courses', default='No courses available') }}</h5>
+                            <p>{{ t('learning_hub_check_back_later', default='Check back later for new courses!') }}</p>
+                        </div>
+                    </div>
+                {% endif %}
+            </div>
         </div>
 
         <!-- Progress Tab -->
         <div class="tab-pane fade" id="progress" role="tabpanel" aria-labelledby="progress-tab">
-            {% if current_user.is_authenticated %}
+            {% if current_user.is_authenticated or session.get('is_anonymous', False) %}
                 {% if progress %}
                     <div class="row mb-4">
                         <div class="col-md-4">
@@ -156,13 +175,13 @@
                     <!-- Progress Chart -->
                     <div class="card mb-4">
                         <div class="card-header">
-                            <h5><i class="fas fa-chart-bar"></i> {{ t('learning_hub_learning_progress', default='Learning Progress') }}</h5>
+                            <h5><i class="fas fa-chart-bar me-1"></i> {{ t('learning_hub_learning_progress', default='Learning Progress') }}</h5>
                         </div>
                         <div class="card-body">
                             {% if progress_summary %}
                                 <canvas id="progressChart" style="max-height: 400px;"></canvas>
                             {% else %}
-                                <p>{{ t('learning_hub_no_progress_data', default='No progress data available') }}</p>
+                                <p class="text-muted">{{ t('learning_hub_no_progress_data', default='No progress data available') }}</p>
                             {% endif %}
                         </div>
                     </div>
@@ -170,27 +189,27 @@
                     <!-- Course Progress Details -->
                     <div class="card">
                         <div class="card-header">
-                            <h5><i class="fas fa-list"></i> {{ t('learning_hub_course_progress', default='Course Progress') }}</h5>
+                            <h5><i class="fas fa-list me-1"></i> {{ t('learning_hub_course_progress', default='Course Progress') }}</h5>
                         </div>
                         <div class="card-body">
                             {% for summary in progress_summary %}
                                 {% set course = summary.course %}
-                                <div class="mb-3">
+                                <div class="mb-4">
                                     <div class="d-flex justify-content-between align-items-center mb-2">
-                                        <h6 class="mb-0">{{ t(course.title_key, default=course.title_en) }}</h6>
+                                        <h6 class="mb-0">{{ t(course.title_key, default=course.title_en, lang=lang) }}</h6>
                                         <small class="text-muted">
                                             {{ summary.completed }} / {{ summary.total }} {{ t('learning_hub_lessons', default='lessons') }}
                                         </small>
                                     </div>
                                     <div class="progress">
-                                        <div class="progress-bar" role="progressbar" style="width: {{ summary.percent }}%" aria-valuenow="{{ summary.percent }}" aria-valuemin="0" aria-valuemax="100">
+                                        <div class="progress-bar bg-success" role="progressbar" style="width: {{ summary.percent }}%" aria-valuenow="{{ summary.percent }}" aria-valuemin="0" aria-valuemax="100">
                                             {{ summary.percent }}%
                                         </div>
                                     </div>
                                     <div class="mt-2">
-                                        <a href="{{ url_for('learning_hub.get_course_data', course_id=course.id) }}" class="btn btn-sm btn-primary">
-                                            <i class="fas fa-play"></i> {{ t('learning_hub_continue', default='Continue') }}
-                                        </a>
+                                        <button class="btn btn-sm btn-primary load-course" data-course-id="{{ course.id }}">
+                                            <i class="fas fa-play me-1"></i> {{ t('learning_hub_continue', default='Continue') }}
+                                        </button>
                                     </div>
                                 </div>
                             {% endfor %}
@@ -202,9 +221,9 @@
                             <i class="fas fa-chart-line fa-3x mb-3 text-muted"></i>
                             <h5>{{ t('learning_hub_no_progress', default='No learning progress yet') }}</h5>
                             <p>{{ t('learning_hub_start_course_to_track', default='Start a course to track your progress!') }}</p>
-                            <a href="#courses" class="btn btn-primary" onclick="document.getElementById('courses-tab').click()">
-                                <i class="fas fa-book"></i> {{ t('learning_hub_browse_courses', default='Browse Courses') }}
-                            </a>
+                            <button class="btn btn-primary" onclick="document.getElementById('courses-tab').click()">
+                                <i class="fas fa-book me-1"></i> {{ t('learning_hub_browse_courses', default='Browse Courses') }}
+                            </button>
                         </div>
                     </div>
                 {% endif %}
@@ -215,7 +234,7 @@
                         <h5>{{ t('learning_hub_login_required', default='Login Required') }}</h5>
                         <p>{{ t('learning_hub_login_to_track_progress', default='Please log in to track your learning progress.') }}</p>
                         <a href="{{ url_for('users.login') }}" class="btn btn-primary">
-                            <i class="fas fa-sign-in-alt"></i> {{ t('general_login', default='Login') }}
+                            <i class="fas fa-sign-in-alt me-1"></i> {{ t('general_login', default='Login') }}
                         </a>
                     </div>
                 </div>
@@ -226,31 +245,31 @@
         <div class="tab-pane fade" id="profile" role="tabpanel" aria-labelledby="profile-tab">
             <div class="card">
                 <div class="card-header">
-                    <h5><i class="fas fa-user"></i> {{ t('learning_hub_profile', default='Profile') }}</h5>
+                    <h5><i class="fas fa-user me-1"></i> {{ t('learning_hub_profile', default='Profile') }}</h5>
                 </div>
                 <div class="card-body">
-                    <form method="POST" action="{{ url_for('learning_hub.profile') }}" class="validate-form">
+                    <form method="POST" action="{{ url_for('personal.learning_hub.profile') }}" class="validate-form needs-validation" novalidate>
                         {{ profile_form.csrf_token }}
                         
                         <div class="mb-3">
-                            <label class="form-label">{{ t('general_first_name', default='First Name') }}</label>
-                            {{ profile_form.first_name(class="form-control", placeholder=t('general_first_name_placeholder', default='Enter your first name')) }}
+                            <label for="{{ profile_form.first_name.id }}" class="form-label">{{ t('general_first_name', default='First Name') }}</label>
+                            {{ profile_form.first_name(class="form-control", placeholder=t('general_first_name_placeholder', default='Enter your first name'), required=True) }}
                             <div class="invalid-feedback">{{ t('general_first_name_required', default='First name is required') }}</div>
                         </div>
                         
                         <div class="mb-3">
-                            <label class="form-label">{{ t('general_email', default='Email') }}</label>
+                            <label for="{{ profile_form.email.id }}" class="form-label">{{ t('general_email', default='Email') }}</label>
                             {{ profile_form.email(class="form-control", placeholder=t('general_email_placeholder', default='Enter your email')) }}
                             <div class="invalid-feedback">{{ t('general_email_invalid', default='Invalid email address') }}</div>
                         </div>
                         
                         <div class="mb-3 form-check">
                             {{ profile_form.send_email(class="form-check-input") }}
-                            <label class="form-check-label">{{ t('general_send_email', default='Send Email') }}</label>
+                            <label class="form-check-label" for="{{ profile_form.send_email.id }}">{{ t('general_send_email', default='Receive email notifications') }}</label>
                         </div>
                         
                         <button type="submit" class="btn btn-primary">
-                            <i class="fas fa-save"></i> {{ t('general_submit', default='Submit') }}
+                            <i class="fas fa-save me-1"></i> {{ t('general_submit', default='Submit') }}
                         </button>
                     </form>
                 </div>
@@ -258,65 +277,65 @@
         </div>
 
         <!-- Upload Content Tab (Admin Only) -->
-        {% if current_user.is_authenticated and current_user.get('is_admin', False) %}
+        {% if is_admin() %}
         <div class="tab-pane fade" id="upload" role="tabpanel" aria-labelledby="upload-tab">
             <div class="card">
                 <div class="card-header">
-                    <h5><i class="fas fa-upload"></i> {{ t('learning_hub_upload_content', default='Upload Learning Content') }}</h5>
+                    <h5><i class="fas fa-upload me-1"></i> {{ t('learning_hub_upload_content', default='Upload Learning Content') }}</h5>
                 </div>
                 <div class="card-body">
-                    <form method="POST" action="{{ url_for('learning_hub.main') }}" enctype="multipart/form-data" class="validate-form">
+                    <form method="POST" action="{{ url_for('personal.learning_hub.main') }}" enctype="multipart/form-data" class="validate-form needs-validation" novalidate>
                         {{ upload_form.csrf_token }}
                         <input type="hidden" name="action" value="upload">
                         
                         <div class="row">
                             <div class="col-md-6">
                                 <div class="mb-3">
-                                    <label class="form-label">{{ t('learning_hub_course_title', default='Course Title') }}</label>
-                                    {{ upload_form.title(class="form-control", placeholder=t('learning_hub_course_title_placeholder', default='e.g., Budgeting Basics')) }}
+                                    <label for="{{ upload_form.title.id }}" class="form-label">{{ t('learning_hub_course_title', default='Course Title') }}</label>
+                                    {{ upload_form.title(class="form-control", placeholder=t('learning_hub_course_title_placeholder', default='e.g., Budgeting Basics'), required=True) }}
                                     <div class="invalid-feedback">{{ t('learning_hub_course_title_required', default='Course title is required') }}</div>
                                 </div>
                             </div>
                             <div class="col-md-6">
                                 <div class="mb-3">
-                                    <label class="form-label">{{ t('learning_hub_course_id', default='Course ID') }}</label>
-                                    {{ upload_form.course_id(class="form-control", placeholder=t('learning_hub_course_id_placeholder', default='e.g., budgeting_101')) }}
+                                    <label for="{{ upload_form.course_id.id }}" class="form-label">{{ t('learning_hub_course_id', default='Course ID') }}</label>
+                                    {{ upload_form.course_id(class="form-control", placeholder=t('learning_hub_course_id_placeholder', default='e.g., budgeting_101'), required=True) }}
                                     <div class="invalid-feedback">{{ t('learning_hub_course_id_required', default='Course ID is required') }}</div>
                                 </div>
                             </div>
                         </div>
 
                         <div class="mb-3">
-                            <label class="form-label">{{ t('learning_hub_description', default='Description') }}</label>
-                            {{ upload_form.description(class="form-control", rows="3", placeholder=t('learning_hub_description_placeholder', default='Brief description of the course')) }}
+                            <label for="{{ upload_form.description.id }}" class="form-label">{{ t('learning_hub_description', default='Description') }}</label>
+                            {{ upload_form.description(class="form-control", rows="3", placeholder=t('learning_hub_description_placeholder', default='Brief description of the course'), required=True) }}
                             <div class="invalid-feedback">{{ t('learning_hub_description_required', default='Description is required') }}</div>
                         </div>
 
                         <div class="row">
                             <div class="col-md-6">
                                 <div class="mb-3">
-                                    <label class="form-label">{{ t('learning_hub_content_type', default='Content Type') }}</label>
-                                    {{ upload_form.content_type(class="form-select") }}
+                                    <label for="{{ upload_form.content_type.id }}" class="form-label">{{ t('learning_hub_content_type', default='Content Type') }}</label>
+                                    {{ upload_form.content_type(class="form-select", required=True) }}
                                     <div class="invalid-feedback">{{ t('learning_hub_content_type_required', default='Content type is required') }}</div>
                                 </div>
                             </div>
                             <div class="col-md-6">
                                 <div class="mb-3 form-check mt-4">
                                     {{ upload_form.is_premium(class="form-check-input") }}
-                                    <label class="form-check-label">{{ t('learning_hub_is_premium', default='Premium Content') }}</label>
+                                    <label class="form-check-label" for="{{ upload_form.is_premium.id }}">{{ t('learning_hub_is_premium', default='Premium Content') }}</label>
                                 </div>
                             </div>
                         </div>
 
                         <div class="mb-3">
-                            <label class="form-label">{{ t('learning_hub_upload_file', default='Upload File') }}</label>
-                            {{ upload_form.file(class="form-control", accept=".pdf,.mp4,.txt,.md") }}
+                            <label for="{{ upload_form.file.id }}" class="form-label">{{ t('learning_hub_upload_file', default='Upload File') }}</label>
+                            {{ upload_form.file(class="form-control", accept=".pdf,.mp4,.txt,.md", required=True) }}
                             <div class="form-text">{{ t('learning_hub_supported_formats', default='Supported formats: PDF, MP4, TXT, MD') }}</div>
                             <div class="invalid-feedback">{{ t('learning_hub_file_required', default='File is required') }}</div>
                         </div>
 
                         <button type="submit" class="btn btn-primary">
-                            <i class="fas fa-upload"></i> {{ t('learning_hub_upload', default='Upload') }}
+                            <i class="fas fa-upload me-1"></i> {{ t('learning_hub_upload', default='Upload') }}
                         </button>
                     </form>
                 </div>
@@ -341,12 +360,83 @@
         </div>
     {% endif %}
 </div>
+
+<!-- Modal for Course Details -->
+<div class="modal fade" id="courseModal" tabindex="-1" aria-labelledby="courseModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="courseModalLabel"></h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="{{ t('general_close', default='Close') }}"></button>
+            </div>
+            <div class="modal-body" id="courseModalBody"></div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    <i class="fas fa-times me-1"></i> {{ t('general_close', default='Close') }}
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal for Lesson Content -->
+<div class="modal fade" id="lessonModal" tabindex="-1" aria-labelledby="lessonModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="lessonModalLabel"></h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="{{ t('general_close', default='Close') }}"></button>
+            </div>
+            <div class="modal-body" id="lessonModalBody"></div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary mark-complete" style="display: none;">
+                    <i class="fas fa-check me-1"></i> {{ t('learning_hub_mark_complete', default='Mark as Complete') }}
+                </button>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    <i class="fas fa-times me-1"></i> {{ t('general_close', default='Close') }}
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal for Quiz Content -->
+<div class="modal fade" id="quizModal" tabindex="-1" aria-labelledby="quizModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="quizModalLabel"></h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="{{ t('general_close', default='Close') }}"></button>
+            </div>
+            <div class="modal-body" id="quizModalBody"></div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary submit-quiz" style="display: none;">
+                    <i class="fas fa-check me-1"></i> {{ t('learning_hub_submit_quiz', default='Submit Quiz') }}
+                </button>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    <i class="fas fa-times me-1"></i> {{ t('general_close', default='Close') }}
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
 {% endblock %}
 
 {% block extra_scripts %}
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    {% if current_user.is_authenticated and progress_summary %}
+    // Client-side form validation
+    document.querySelectorAll('.validate-form').forEach(form => {
+        form.addEventListener('submit', function(event) {
+            if (!form.checkValidity()) {
+                event.preventDefault();
+                event.stopPropagation();
+            }
+            form.classList.add('was-validated');
+        });
+    });
+
     // Progress Chart
     const ctx = document.getElementById('progressChart')?.getContext('2d');
     if (ctx) {
@@ -354,7 +444,7 @@ document.addEventListener('DOMContentLoaded', function() {
         const progressData = [];
         
         {% for summary in progress_summary %}
-            courseNames.push('{{ t(summary.course.title_key, default=summary.course.title_en) }}');
+            courseNames.push('{{ t(summary.course.title_key, default=summary.course.title_en, lang=lang) | escape }}');
             progressData.push({{ summary.percent }});
         {% endfor %}
         
@@ -363,7 +453,7 @@ document.addEventListener('DOMContentLoaded', function() {
             data: {
                 labels: courseNames,
                 datasets: [{
-                    label: '{{ t('learning_hub_progress_percentage', default='Progress %') }}',
+                    label: '{{ t('learning_hub_progress_percentage', default='Progress %') | escape }}',
                     data: progressData,
                     backgroundColor: '#2E7D32',
                     borderColor: '#1B5E20',
@@ -387,7 +477,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     tooltip: {
                         callbacks: {
                             label: function(context) {
-                                return `{{ t('learning_hub_progress', default='Progress') }}: ${context.parsed.y}%`;
+                                return `{{ t('learning_hub_progress', default='Progress') | escape }}: ${context.parsed.y}%`;
                             }
                         }
                     }
@@ -397,15 +487,238 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
     }
-    {% endif %}
 
     // Copy referral link
     window.copyReferralLink = function() {
         const referralLink = document.getElementById('referralLink');
         referralLink.select();
-        document.execCommand('copy');
-        alert('{{ t('general_profile_link_copied', default='Referral link copied to clipboard!') }}');
+        navigator.clipboard.writeText(referralLink.value)
+            .then(() => {
+                alert('{{ t('general_profile_link_copied', default='Referral link copied to clipboard!') | escape }}');
+            })
+            .catch(() => {
+                alert('{{ t('general_copy_failed', default='Failed to copy link') | escape }}');
+            });
     };
+
+    // Load course details
+    document.querySelectorAll('.load-course, .load-course-details').forEach(button => {
+        button.addEventListener('click', function() {
+            const courseId = this.getAttribute('data-course-id');
+            fetch('{{ url_for("personal.learning_hub.get_course_data") }}/' + courseId, {
+                headers: { 'X-Requested-With': 'XMLHttpRequest' }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (!data.success) {
+                    alert(data.message);
+                    return;
+                }
+                const course = data.course;
+                const progress = data.progress;
+                const modal = new bootstrap.Modal(document.getElementById('courseModal'));
+                const modalBody = document.getElementById('courseModalBody');
+                const modalTitle = document.getElementById('courseModalLabel');
+                
+                modalTitle.textContent = '{{ t("learning_hub_course", default="Course") | escape }}: ' + course.title_en;
+                let html = `
+                    <p>${course.description_en}</p>
+                    <h6>{{ t('learning_hub_modules', default='Modules') | escape }}</h6>
+                    <ul class="list-group">
+                `;
+                course.modules.forEach(module => {
+                    html += `
+                        <li class="list-group-item">
+                            <h6>${module.title_en}</h6>
+                            <ul>
+                    `;
+                    module.lessons.forEach(lesson => {
+                        const isCompleted = progress.lessons_completed.includes(lesson.id);
+                        html += `
+                            <li class="d-flex justify-content-between align-items-center">
+                                <span>
+                                    <i class="fas ${isCompleted ? 'fa-check-circle text-success' : 'fa-circle'} me-2"></i>
+                                    ${lesson.title_en}
+                                </span>
+                                <button class="btn btn-sm btn-primary load-lesson" data-course-id="${course.id}" data-lesson-id="${lesson.id}">
+                                    <i class="fas fa-eye me-1"></i> {{ t('learning_hub_view', default='View') | escape }}
+                                </button>
+                            </li>
+                        `;
+                    });
+                    html += `</ul></li>`;
+                });
+                html += `</ul>`;
+                modalBody.innerHTML = html;
+                modal.show();
+
+                // Load lesson content
+                document.querySelectorAll('.load-lesson').forEach(btn => {
+                    btn.addEventListener('click', function() {
+                        const courseId = this.getAttribute('data-course-id');
+                        const lessonId = this.getAttribute('data-lesson-id');
+                        fetch('{{ url_for("personal.learning_hub.get_lesson_data") }}?course_id=' + courseId + '&lesson_id=' + lessonId, {
+                            headers: { 'X-Requested-With': 'XMLHttpRequest' }
+                        })
+                        .then(res => res.json())
+                        .then(lessonData => {
+                            if (!lessonData.success) {
+                                alert(lessonData.message);
+                                return;
+                            }
+                            const lesson = lessonData.lesson;
+                            const lessonModal = new bootstrap.Modal(document.getElementById('lessonModal'));
+                            const lessonModalBody = document.getElementById('lessonModalBody');
+                            const lessonModalTitle = document.getElementById('lessonModalLabel');
+                            const markCompleteBtn = document.querySelector('#lessonModal .mark-complete');
+                            
+                            lessonModalTitle.textContent = lesson.title_en;
+                            let contentHtml = '';
+                            if (lesson.content_type === 'video') {
+                                contentHtml = `
+                                    <video controls class="w-100 mb-3">
+                                        <source src="{{ url_for('personal.learning_hub.serve_uploaded_file', filename='') }}${lesson.content_path}" type="video/mp4">
+                                        {{ t('learning_hub_video_not_supported', default='Your browser does not support the video tag.') | escape }}
+                                    </video>
+                                `;
+                            } else if (lesson.content_type === 'pdf') {
+                                contentHtml = `
+                                    <embed src="{{ url_for('personal.learning_hub.serve_uploaded_file', filename='') }}${lesson.content_path}" type="application/pdf" width="100%" height="600px" />
+                                `;
+                            } else {
+                                contentHtml = `<p>${lesson.content_en}</p>`;
+                            }
+                            
+                            if (lesson.quiz_id) {
+                                contentHtml += `
+                                    <button class="btn btn-primary mt-3 load-quiz" data-course-id="${courseId}" data-quiz-id="${lesson.quiz_id}">
+                                        <i class="fas fa-question-circle me-1"></i> {{ t('learning_hub_take_quiz', default='Take Quiz') | escape }}
+                                    </button>
+                                `;
+                            }
+                            
+                            lessonModalBody.innerHTML = contentHtml;
+                            markCompleteBtn.style.display = lessonData.progress.lessons_completed.includes(lesson.id) ? 'none' : 'inline-block';
+                            markCompleteBtn.onclick = function() {
+                                fetch('{{ url_for("personal.learning_hub.lesson_action") }}', {
+                                    method: 'POST',
+                                    headers: {
+                                        'Content-Type': 'application/x-www-form-urlencoded',
+                                        'X-Requested-With': 'XMLHttpRequest'
+                                    },
+                                    body: `course_id=${courseId}&lesson_id=${lessonId}&action=mark_complete`
+                                })
+                                .then(res => res.json())
+                                .then(actionData => {
+                                    alert(actionData.message);
+                                    if (actionData.success) {
+                                        lessonModal.hide();
+                                        modal.hide();
+                                        window.location.reload();
+                                    }
+                                });
+                            };
+                            lessonModal.show();
+
+                            // Load quiz content
+                            document.querySelectorAll('.load-quiz').forEach(quizBtn => {
+                                quizBtn.addEventListener('click', function() {
+                                    const quizId = this.getAttribute('data-quiz-id');
+                                    fetch('{{ url_for("personal.learning_hub.get_quiz_data") }}?course_id=' + courseId + '&quiz_id=' + quizId, {
+                                        headers: { 'X-Requested-With': 'XMLHttpRequest' }
+                                    })
+                                    .then(res => res.json())
+                                    .then(quizData => {
+                                        if (!quizData.success) {
+                                            alert(quizData.message);
+                                            return;
+                                        }
+                                        const quiz = quizData.quiz;
+                                        const quizModal = new bootstrap.Modal(document.getElementById('quizModal'));
+                                        const quizModalBody = document.getElementById('quizModalBody');
+                                        const quizModalTitle = document.getElementById('quizModalLabel');
+                                        const submitQuizBtn = document.querySelector('#quizModal .submit-quiz');
+                                        
+                                        quizModalTitle.textContent = '{{ t('learning_hub_quiz', default='Quiz') | escape }}';
+                                        let quizHtml = '<form id="quizForm">';
+                                        quiz.questions.forEach((q, index) => {
+                                            quizHtml += `
+                                                <div class="mb-3">
+                                                    <p><strong>${index + 1}. ${q.question_en}</strong></p>
+                                                    ${q.options_en.map((opt, i) => `
+                                                        <div class="form-check">
+                                                            <input class="form-check-input" type="radio" name="q${index}" value="${opt}" id="q${index}_${i}" required>
+                                                            <label class="form-check-label" for="q${index}_${i}">${opt}</label>
+                                                        </div>
+                                                    `).join('')}
+                                                </div>
+                                            `;
+                                        });
+                                        quizHtml += '</form>';
+                                        quizModalBody.innerHTML = quizHtml;
+                                        submitQuizBtn.style.display = quizData.progress.quiz_scores[quiz.id] ? 'none' : 'inline-block';
+                                        submitQuizBtn.onclick = function() {
+                                            const form = document.getElementById('quizForm');
+                                            if (!form.checkValidity()) {
+                                                form.reportValidity();
+                                                return;
+                                            }
+                                            const formData = new FormData(form);
+                                            formData.append('course_id', courseId);
+                                            formData.append('quiz_id', quizId);
+                                            formData.append('action', 'submit_quiz');
+                                            fetch('{{ url_for("personal.learning_hub.quiz_action") }}', {
+                                                method: 'POST',
+                                                body: new URLSearchParams(formData),
+                                                headers: { 'X-Requested-With': 'XMLHttpRequest' }
+                                            })
+                                            .then(res => res.json())
+                                            .then(quizActionData => {
+                                                alert(`${quizActionData.message}\n{{ t('learning_hub_score', default='Score') | escape }}: ${quizActionData.score}/${quizActionData.total}`);
+                                                if (quizActionData.success) {
+                                                    quizModal.hide();
+                                                    lessonModal.hide();
+                                                    modal.hide();
+                                                    window.location.reload();
+                                                }
+                                            });
+                                        };
+                                        quizModal.show();
+                                    });
+                                });
+                            });
+                        });
+                    });
+                });
+            });
+        });
+    });
+
+    // Handle hash-based navigation
+    if (window.location.hash) {
+        const hash = window.location.hash.substring(1);
+        if (hash.startsWith('course-')) {
+            const courseId = hash.replace('course-', '');
+            document.querySelector(`.load-course[data-course-id="${courseId}"]`)?.click();
+        } else if (hash.startsWith('lesson-')) {
+            const [_, courseId, lessonId] = hash.split('-');
+            document.querySelector(`.load-course-details[data-course-id="${courseId}"]`)?.click();
+            setTimeout(() => {
+                document.querySelector(`.load-lesson[data-course-id="${courseId}"][data-lesson-id="${courseId}-module-${lessonId.split('-')[1]}-lesson-${lessonId.split('-')[2]}"]`)?.click();
+            }, 1000);
+        } else if (hash.startsWith('quiz-')) {
+            const [_, courseId, quizId] = hash.split('-');
+            document.querySelector(`.load-course-details[data-course-id="${courseId}"]`)?.click();
+            setTimeout(() => {
+                const lessonBtn = document.querySelector(`.load-lesson[data-course-id="${courseId}"]`);
+                if (lessonBtn) {
+                    lessonBtn.click();
+                    setTimeout(() => {
+                        document.querySelector(`.load-quiz[data-course-id="${courseId}"][data-quiz-id="quiz-${quizId.split('-')[1]}-${quizId.split('-')[2]}"]`)?.click();
+                    }, 1000);
+                }
+            }, 1000);
+        }
+    }
 });
 </script>
-{% endblock %}
