@@ -1,8 +1,9 @@
+```python
 from flask import Blueprint, render_template, session, request, redirect, url_for, flash, current_app, send_from_directory, jsonify
 from flask_wtf import FlaskForm
-from wtforms import StringField, BooleanField, SubmitField, HiddenField, FileField, SelectField, FloatField
+from wtforms import StringField, BooleanField, SubmitField, FileField, SelectField
 from wtforms.validators import DataRequired, Email, Optional
-from flask_wtf.csrf import CSRFProtect, CSRFError
+from flask_wtf.csrf import CSRFProtect
 from flask_login import current_user
 from datetime import datetime
 from mailersend_email import send_email, EMAIL_CONFIG
@@ -14,7 +15,6 @@ from werkzeug.utils import secure_filename
 from models import log_tool_usage
 import pymongo
 import logging
-from flask import g
 from session_utils import create_anonymous_session
 from utils import requires_role, is_admin, get_mongo_db
 
@@ -24,17 +24,6 @@ learning_hub_bp = Blueprint(
     template_folder='templates/personal/LEARNINGHUB',
     url_prefix='/LEARNINGHUB'
 )
-
-def custom_login_required(f):
-    """Custom login decorator that allows both authenticated users and anonymous sessions."""
-    from functools import wraps
-    
-    @wraps(f)
-    def decorated_function(*args, **kwargs):
-        if current_user.is_authenticated or session.get('is_anonymous', False):
-            return f(*args, **kwargs)
-        return redirect(url_for('users.login', next=request.url))
-    return decorated_function
 
 # Initialize CSRF protection
 csrf = CSRFProtect()
@@ -274,9 +263,9 @@ class LearningHubProfileForm(FlaskForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         lang = session.get('lang', 'en')
-        self.first_name.validators[0].message = trans('general_first_name_required', lang=lang)
+        self.first_name.validators[0].message = trans('general_first_name_required', default='First name is required', lang=lang)
         if self.email.validators:
-            self.email.validators[1].message = trans('general_email_invalid', lang=lang)
+            self.email.validators[1].message = trans('general_email_invalid', default='Please enter a valid email address', lang=lang)
 
 class UploadForm(FlaskForm):
     title = StringField(trans('learning_hub_course_title', default='Course Title'), validators=[DataRequired()])
@@ -292,11 +281,22 @@ class UploadForm(FlaskForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         lang = session.get('lang', 'en')
-        self.title.validators[0].message = trans('learning_hub_course_title_required', lang=lang)
-        self.course_id.validators[0].message = trans('learning_hub_course_id_required', lang=lang)
-        self.description.validators[0].message = trans('learning_hub_description_required', lang=lang)
-        self.content_type.validators[0].message = trans('learning_hub_content_type_required', lang=lang)
-        self.file.validators[0].message = trans('learning_hub_file_required', lang=lang)
+        self.title.validators[0].message = trans('learning_hub_course_title_required', default='Course title is required', lang=lang)
+        self.course_id.validators[0].message = trans('learning_hub_course_id_required', default='Course ID is required', lang=lang)
+        self.description.validators[0].message = trans('learning_hub_description_required', default='Description is required', lang=lang)
+        self.content_type.validators[0].message = trans('learning_hub_content_type_required', default='Content type is required', lang=lang)
+        self.file.validators[0].message = trans('learning_hub_file_required', default='File is required', lang=lang)
+
+def custom_login_required(f):
+    """Custom login decorator that allows both authenticated users and anonymous sessions."""
+    from functools import wraps
+    
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if not current_user.is_authenticated and not session.get('is_anonymous', False):
+            create_anonymous_session()
+        return f(*args, **kwargs)
+    return decorated_function
 
 def get_progress():
     """Retrieve learning progress from MongoDB with caching."""
@@ -305,7 +305,7 @@ def get_progress():
             session['sid'] = str(uuid.uuid4())
             session.permanent = True
             session.modified = True
-        filter_kwargs = {'user_id': current_user.id} if current_user.is_authenticated else {'session_id': session.get('sid', str(uuid.uuid4()))}
+        filter_kwargs = {'user_id': current_user.id} if current_user.is_authenticated else {'session_id': session.get('sid')}
         progress_records = get_mongo_db().learning_materials.find(filter_kwargs)
         progress = {}
         for record in progress_records:
@@ -345,7 +345,8 @@ def save_course_progress(course_id, course_progress):
                 'course_id': course_id,
                 'lessons_completed': course_progress.get('lessons_completed', []),
                 'quiz_scores': course_progress.get('quiz_scores', {}),
-                'current_lesson': course_progress.get('current_lesson')
+                'current_lesson': course_progress.get('current_lesson'),
+                'updated_at': datetime.utcnow()
             }
         }
         get_mongo_db().learning_materials.update_one(filter_kwargs, update_data, upsert=True)
@@ -359,7 +360,7 @@ def init_storage(app):
         current_app.logger.info("Initializing courses storage.", extra={'session_id': 'no-request-context'})
         try:
             existing_courses = get_mongo_db().learning_materials.find({'type': 'course'})
-            if not existing_courses.count():
+            if existing_courses.count() == 0:
                 current_app.logger.info("Courses collection is empty. Initializing with default courses.", extra={'session_id': 'no-request-context'})
                 default_courses = [
                     {
@@ -370,7 +371,8 @@ def init_storage(app):
                         'title_ha': course['title_ha'],
                         'description_en': course['description_en'],
                         'description_ha': course['description_ha'],
-                        'is_premium': course.get('is_premium', False)
+                        'is_premium': course.get('is_premium', False),
+                        'created_at': datetime.utcnow()
                     } for course in courses_data.values()
                 ]
                 if default_courses:
@@ -438,7 +440,7 @@ def calculate_progress_summary():
         })
         
         total_completed += completed
-        total_quiz_scores += len(cp.get('quiz_scores', {}))
+        total_quiz_scores += sum(cp.get('quiz_scores', {}).values())
         if completed == lessons_total and lessons_total > 0:
             certificates_earned += 1
     
@@ -489,16 +491,16 @@ def main():
                     file_path = os.path.join(current_app.config.get('UPLOAD_FOLDER', UPLOAD_FOLDER), filename)
                     upload_form.file.data.save(file_path)
                     
-                    # Update courses_data (in-memory; should ideally update MongoDB)
+                    # Update MongoDB instead of in-memory courses_data
                     course_id = upload_form.course_id.data
-                    courses_data[course_id] = {
+                    course_data = {
+                        'type': 'course',
                         'id': course_id,
+                        'title_key': f"learning_hub_course_{course_id}_title",
                         'title_en': upload_form.title.data,
                         'title_ha': upload_form.title.data,  # Placeholder; should support translation
                         'description_en': upload_form.description.data,
                         'description_ha': upload_form.description.data,  # Placeholder
-                        'title_key': f"learning_hub_course_{course_id}_title",
-                        'desc_key': f"learning_hub_course_{course_id}_desc",
                         'is_premium': upload_form.is_premium.data,
                         'modules': [{
                             'id': f"{course_id}-module-1",
@@ -513,20 +515,16 @@ def main():
                                 'content_en': "Uploaded content",
                                 'quiz_id': None
                             }]
-                        }]
+                        }],
+                        'created_at': datetime.utcnow()
                     }
                     
                     # Save to MongoDB
-                    get_mongo_db().learning_materials.insert_one({
-                        'type': 'course',
-                        'id': course_id,
-                        'title_key': f"learning_hub_course_{course_id}_title",
-                        'title_en': upload_form.title.data,
-                        'title_ha': upload_form.title.data,
-                        'description_en': upload_form.description.data,
-                        'description_ha': upload_form.description.data,
-                        'is_premium': upload_form.is_premium.data
-                    })
+                    get_mongo_db().learning_materials.update_one(
+                        {'type': 'course', 'id': course_id},
+                        {'$set': course_data},
+                        upsert=True
+                    )
                     
                     flash(trans('learning_hub_upload_success', default='Content uploaded successfully'), 'success')
                     current_app.logger.info(f"Uploaded course {course_id}", extra={'session_id': session['sid']})
@@ -573,12 +571,13 @@ def main():
         ), 500
 
 @learning_hub_bp.route('/api/course/<course_id>')
+@custom_login_required
 def get_course_data(course_id):
     """API endpoint to get course data."""
     try:
         course = course_lookup(course_id)
         if not course:
-            return jsonify({'success': False, 'message': trans('learning_hub_course_not_found', default='Course not found')})
+            return jsonify({'success': False, 'message': trans('learning_hub_course_not_found', default='Course not found')}), 404
         
         progress = get_progress()
         course_progress = progress.get(course_id, {'lessons_completed': [], 'quiz_scores': {}, 'current_lesson': None})
@@ -590,9 +589,10 @@ def get_course_data(course_id):
         })
     except Exception as e:
         current_app.logger.error(f"Error getting course data: {str(e)}", extra={'session_id': session.get('sid', 'no-session-id')})
-        return jsonify({'success': False, 'message': trans('learning_hub_course_load_error', default='Error loading course')})
+        return jsonify({'success': False, 'message': trans('learning_hub_course_load_error', default='Error loading course')}), 500
 
 @learning_hub_bp.route('/api/lesson')
+@custom_login_required
 def get_lesson_data():
     """API endpoint to get lesson data."""
     try:
@@ -601,11 +601,11 @@ def get_lesson_data():
         
         course = course_lookup(course_id)
         if not course:
-            return jsonify({'success': False, 'message': trans('learning_hub_course_not_found', default='Course not found')})
+            return jsonify({'success': False, 'message': trans('learning_hub_course_not_found', default='Course not found')}), 404
         
         lesson, module = lesson_lookup(course, lesson_id)
         if not lesson:
-            return jsonify({'success': False, 'message': trans('learning_hub_lesson_not_found', default='Lesson not found')})
+            return jsonify({'success': False, 'message': trans('learning_hub_lesson_not_found', default='Lesson not found')}), 404
         
         progress = get_progress()
         course_progress = progress.get(course_id, {'lessons_completed': [], 'quiz_scores': {}, 'current_lesson': None})
@@ -632,9 +632,10 @@ def get_lesson_data():
         })
     except Exception as e:
         current_app.logger.error(f"Error getting lesson data: {str(e)}", extra={'session_id': session.get('sid', 'no-session-id')})
-        return jsonify({'success': False, 'message': trans('learning_hub_lesson_load_error', default='Error loading lesson')})
+        return jsonify({'success': False, 'message': trans('learning_hub_lesson_load_error', default='Error loading lesson')}), 500
 
 @learning_hub_bp.route('/api/quiz')
+@custom_login_required
 def get_quiz_data():
     """API endpoint to get quiz data."""
     try:
@@ -643,11 +644,11 @@ def get_quiz_data():
         
         course = course_lookup(course_id)
         if not course:
-            return jsonify({'success': False, 'message': trans('learning_hub_course_not_found', default='Course not found')})
+            return jsonify({'success': False, 'message': trans('learning_hub_course_not_found', default='Course not found')}), 404
         
         quiz = quizzes_data.get(quiz_id)
         if not quiz:
-            return jsonify({'success': False, 'message': trans('learning_hub_quiz_not_found', default='Quiz not found')})
+            return jsonify({'success': False, 'message': trans('learning_hub_quiz_not_found', default='Quiz not found')}), 404
         
         progress = get_progress()
         course_progress = progress.get(course_id, {'lessons_completed': [], 'quiz_scores': {}, 'current_lesson': None})
@@ -660,7 +661,7 @@ def get_quiz_data():
         })
     except Exception as e:
         current_app.logger.error(f"Error getting quiz data: {str(e)}", extra={'session_id': session.get('sid', 'no-session-id')})
-        return jsonify({'success': False, 'message': trans('learning_hub_quiz_load_error', default='Error loading quiz')})
+        return jsonify({'success': False, 'message': trans('learning_hub_quiz_load_error', default='Error loading quiz')}), 500
 
 @learning_hub_bp.route('/api/lesson/action', methods=['POST'])
 @custom_login_required
@@ -692,8 +693,8 @@ def lesson_action():
                         lesson, _ = lesson_lookup(course, lesson_id)
                         
                         config = EMAIL_CONFIG.get("learning_hub_lesson_completed", {})
-                        subject = trans(config.get("subject_key", ""), lang=session.get('lang', 'en'))
-                        template = config.get("template", "")
+                        subject = trans(config.get("subject_key", "learning_hub_lesson_completed_subject"), default="Lesson Completed", lang=session.get('lang', 'en'))
+                        template = config.get("template", "learning_hub_lesson_completed.html")
                         
                         send_email(
                             app=current_app,
@@ -705,9 +706,9 @@ def lesson_action():
                                 "first_name": profile.get('first_name', ''),
                                 "course_title": course.get('title_en', ''),
                                 "lesson_title": lesson.get('title_en', ''),
-                                "completed_at": datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
-                                "cta_url": url_for('learning_hub.main', _external=True),
-                                "unsubscribe_url": url_for('learning_hub.unsubscribe', email=profile['email'], _external=True)
+                                "completed_at": datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S'),
+                                "cta_url": url_for('personal.learning_hub.main', _external=True),
+                                "unsubscribe_url": url_for('personal.learning_hub.unsubscribe', email=profile['email'], _external=True)
                             },
                             lang=session.get('lang', 'en')
                         )
@@ -718,10 +719,10 @@ def lesson_action():
             else:
                 return jsonify({'success': True, 'message': trans('learning_hub_lesson_already_completed', default='Lesson already completed')})
         
-        return jsonify({'success': False, 'message': trans('learning_hub_invalid_action', default='Invalid action')})
+        return jsonify({'success': False, 'message': trans('learning_hub_invalid_action', default='Invalid action')}), 400
     except Exception as e:
         current_app.logger.error(f"Error in lesson action: {str(e)}", extra={'session_id': session.get('sid', 'no-session-id')})
-        return jsonify({'success': False, 'message': trans('learning_hub_action_error', default='Error processing action')})
+        return jsonify({'success': False, 'message': trans('learning_hub_action_error', default='Error processing action')}), 500
 
 @learning_hub_bp.route('/api/quiz/action', methods=['POST'])
 @custom_login_required
@@ -735,7 +736,7 @@ def quiz_action():
         if action == 'submit_quiz':
             quiz = quizzes_data.get(quiz_id)
             if not quiz:
-                return jsonify({'success': False, 'message': trans('learning_hub_quiz_not_found', default='Quiz not found')})
+                return jsonify({'success': False, 'message': trans('learning_hub_quiz_not_found', default='Quiz not found')}), 404
             
             # Calculate score
             score = 0
@@ -755,6 +756,36 @@ def quiz_action():
             course_progress['quiz_scores'][quiz_id] = score
             save_course_progress(course_id, course_progress)
             
+            # Send email notification for quiz completion
+            profile = session.get('learning_hub_profile', {})
+            if profile.get('send_email') and profile.get('email'):
+                try:
+                    course = course_lookup(course_id)
+                    config = EMAIL_CONFIG.get("learning_hub_quiz_completed", {})
+                    subject = trans(config.get("subject_key", "learning_hub_quiz_completed_subject"), default="Quiz Completed", lang=session.get('lang', 'en'))
+                    template = config.get("template", "learning_hub_quiz_completed.html")
+                    
+                    send_email(
+                        app=current_app,
+                        logger=current_app.logger,
+                        to_email=profile['email'],
+                        subject=subject,
+                        template_name=template,
+                        data={
+                            "first_name": profile.get('first_name', ''),
+                            "course_title": course.get('title_en', ''),
+                            "quiz_title": quiz.get('id', ''),
+                            "score": score,
+                            "total": len(quiz['questions']),
+                            "completed_at": datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S'),
+                            "cta_url": url_for('personal.learning_hub.main', _external=True),
+                            "unsubscribe_url": url_for('personal.learning_hub.unsubscribe', email=profile['email'], _external=True)
+                        },
+                        lang=session.get('lang', 'en')
+                    )
+                except Exception as e:
+                    current_app.logger.error(f"Failed to send email for quiz {quiz_id}: {str(e)}", extra={'session_id': session.get('sid', 'no-session-id')})
+            
             return jsonify({
                 'success': True,
                 'message': trans('learning_hub_quiz_submitted', default='Quiz submitted successfully'),
@@ -762,10 +793,10 @@ def quiz_action():
                 'total': len(quiz['questions'])
             })
         
-        return jsonify({'success': False, 'message': trans('learning_hub_invalid_action', default='Invalid action')})
+        return jsonify({'success': False, 'message': trans('learning_hub_invalid_action', default='Invalid action')}), 400
     except Exception as e:
         current_app.logger.error(f"Error in quiz action: {str(e)}", extra={'session_id': session.get('sid', 'no-session-id')})
-        return jsonify({'success': False, 'message': trans('learning_hub_quiz_error', default='Error processing quiz')})
+        return jsonify({'success': False, 'message': trans('learning_hub_quiz_error', default='Error processing quiz')}), 500
 
 @learning_hub_bp.route('/profile', methods=['GET', 'POST'])
 @custom_login_required
@@ -787,32 +818,32 @@ def profile():
             mongo=get_mongo_db()
         )
         
-        if request.method == 'POST':
-            profile_form = LearningHubProfileForm()
-            if profile_form.validate_on_submit():
-                session['learning_hub_profile'] = {
-                    'first_name': profile_form.first_name.data,
-                    'email': profile_form.email.data,
-                    'send_email': profile_form.send_email.data
-                }
-                session.permanent = True
-                session.modified = True
-                
-                current_app.logger.info(f"Profile saved for user {current_user.id if current_user.is_authenticated else 'anonymous'}", extra={'session_id': session.get('sid', 'no-session-id')})
-                flash(trans('learning_hub_profile_saved', default='Profile saved successfully', lang=lang), 'success')
-            else:
-                flash(trans('learning_hub_profile_failed', default='Failed to save profile', lang=lang), 'danger')
+        profile_form = LearningHubProfileForm()
+        if request.method == 'POST' and profile_form.validate_on_submit():
+            session['learning_hub_profile'] = {
+                'first_name': profile_form.first_name.data,
+                'email': profile_form.email.data,
+                'send_email': profile_form.send_email.data
+            }
+            session.permanent = True
+            session.modified = True
             
-            return redirect(url_for('learning_hub.main'))
+            current_app.logger.info(f"Profile saved for user {current_user.id if current_user.is_authenticated else 'anonymous'}", extra={'session_id': session.get('sid', 'no-session-id')})
+            flash(trans('learning_hub_profile_saved', default='Profile saved successfully', lang=lang), 'success')
+            return redirect(url_for('personal.learning_hub.main'))
         
-        return redirect(url_for('learning_hub.main'))
+        elif request.method == 'POST':
+            flash(trans('learning_hub_profile_failed', default='Failed to save profile', lang=lang), 'danger')
+        
+        return redirect(url_for('personal.learning_hub.main'))
         
     except Exception as e:
         current_app.logger.error(f"Error in profile page: {str(e)}", extra={'session_id': session.get('sid', 'no-session-id')})
         flash(trans("learning_hub_error_loading", default="Error loading profile", lang=lang), "danger")
-        return redirect(url_for('learning_hub.main'))
+        return redirect(url_for('personal.learning_hub.main')), 500
 
 @learning_hub_bp.route('/unsubscribe/<email>')
+@custom_login_required
 def unsubscribe(email):
     """Unsubscribe user from learning hub emails."""
     if 'sid' not in session:
@@ -840,17 +871,18 @@ def unsubscribe(email):
             current_app.logger.info(f"Unsubscribed email {email}", extra={'session_id': session.get('sid', 'no-session-id')})
             flash(trans("learning_hub_unsubscribed_success", default="Successfully unsubscribed from emails", lang=lang), "success")
         else:
-            current_app.logger.error(f"Failed to unsubscribe email {email}: No matching profile or already unsubscribed", extra={'session_id': session.get('sid', 'no-session-id')})
+            current_app.logger.warning(f"Failed to unsubscribe email {email}: No matching profile or already unsubscribed", extra={'session_id': session.get('sid', 'no-session-id')})
             flash(trans("learning_hub_unsubscribe_failed", default="Failed to unsubscribe. Email not found or already unsubscribed.", lang=lang), "danger")
         
-        return redirect(url_for('learning_hub.main'))
+        return redirect(url_for('personal.learning_hub.main'))
         
     except Exception as e:
         current_app.logger.error(f"Error in unsubscribe: {str(e)}", extra={'session_id': session.get('sid', 'no-session-id')})
         flash(trans("learning_hub_unsubscribe_error", default="Error processing unsubscribe request", lang=lang), "danger")
-        return redirect(url_for('learning_hub.main'))
+        return redirect(url_for('personal.learning_hub.main')), 500
 
 @learning_hub_bp.route('/static/uploads/<path:filename>')
+@custom_login_required
 def serve_uploaded_file(filename):
     """Serve uploaded files securely with caching."""
     if 'sid' not in session:
@@ -874,7 +906,8 @@ def serve_uploaded_file(filename):
         
     except Exception as e:
         current_app.logger.error(f"Error serving uploaded file {filename}: {str(e)}", extra={'session_id': session.get('sid', 'no-session-id')})
-        return redirect(url_for('learning_hub.main')), 404
+        flash(trans("learning_hub_file_not_found", default="File not found", lang=session.get('lang', 'en')), "danger")
+        return redirect(url_for('personal.learning_hub.main')), 404
 
 @learning_hub_bp.errorhandler(404)
 def handle_not_found(e):
@@ -887,7 +920,7 @@ def handle_not_found(e):
     lang = session.get('lang', 'en')
     current_app.logger.error(f"404 error on {request.path}: {str(e)}", extra={'session_id': session.get('sid', 'no-session-id')})
     flash(trans("learning_hub_not_found", default="The requested page was not found. Please check the URL or return to the main page.", lang=lang), "danger")
-    return redirect(url_for('learning_hub.main')), 404
+    return redirect(url_for('personal.learning_hub.main')), 404
 
 @learning_hub_bp.errorhandler(CSRFError)
 def handle_csrf_error(e):
@@ -900,25 +933,29 @@ def handle_csrf_error(e):
     lang = session.get('lang', 'en')
     current_app.logger.error(f"CSRF error on {request.path}: {e.description}", extra={'session_id': session.get('sid', 'no-session-id')})
     flash(trans("learning_hub_csrf_error", default="Form submission failed due to a missing security token. Please refresh and try again.", lang=lang), "danger")
-    return redirect(url_for('learning_hub.main')), 400
+    return redirect(url_for('personal.learning_hub.main')), 400
 
 # Legacy route redirects for backward compatibility
 @learning_hub_bp.route('/courses')
+@custom_login_required
 def courses():
     """Redirect to main page with courses tab."""
-    return redirect(url_for('learning_hub.main') + '#courses')
+    return redirect(url_for('personal.learning_hub.main') + '#courses')
 
 @learning_hub_bp.route('/courses/<course_id>')
+@custom_login_required
 def course_overview(course_id):
     """Redirect to main page and load course overview."""
-    return redirect(url_for('learning_hub.main') + f'#course-{course_id}')
+    return redirect(url_for('personal.learning_hub.main') + f'#course-{course_id}')
 
 @learning_hub_bp.route('/courses/<course_id>/lesson/<lesson_id>')
+@custom_login_required
 def lesson(course_id, lesson_id):
     """Redirect to main page and load lesson."""
-    return redirect(url_for('learning_hub.main') + f'#lesson-{course_id}-{lesson_id}')
+    return redirect(url_for('personal.learning_hub.main') + f'#lesson-{course_id}-{lesson_id}')
 
 @learning_hub_bp.route('/courses/<course_id>/quiz/<quiz_id>')
+@custom_login_required
 def quiz(course_id, quiz_id):
     """Redirect to main page and load quiz."""
-    return redirect(url_for('learning_hub.main') + f'#quiz-{course_id}-{quiz_id}')
+    return redirect(url_for('personal.learning_hub.main') + f'#quiz-{course_id}-{quiz_id}')
