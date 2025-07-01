@@ -49,13 +49,13 @@
                             {{ t('general_tools', default='Tools') | e }}
                         </a>
                         <ul class="dropdown-menu" aria-labelledby="toolsDropdown">
-                            <li><a class="dropdown-item" href="{{ url_for('budget.main') | e }}">{{ t('budget_budget_planner', default='Budget Planner') | e }}</a></li>
-                            <li><a class="dropdown-item" href="{{ url_for('bill.main') | e }}">{{ t('bill_bill_planner', default='Bill Planner') | e }}</a></li>
-                            <li><a class="dropdown-item" href="{{ url_for('financial_health.main') | e }}">{{ t('financial_health_financial_health_score', default='Financial Health Score') | e }}</a></li>
-                            <li><a class="dropdown-item" href="{{ url_for('net_worth.main') | e }}">{{ t('net_worth_net_worth_calculator', default='Net Worth Tracker') | e }}</a></li>
-                            <li><a class="dropdown-item" href="{{ url_for('emergency_fund.main') | e }}">{{ t('emergency_fund_calculator', default='Emergency Fund Planner') | e }}</a></li>
-                            <li><a class="dropdown-item" href="{{ url_for('learning_hub.main') | e }}">{{ t('learning_hub_courses', default='Learning Hub') | e }}</a></li>
-                            <li><a class="dropdown-item" href="{{ url_for('quiz.main') | e }}">{{ t('quiz_personality_quiz', default='Personality Quiz') | e }}</a></li>
+                            <li><a class="dropdown-item" href="{{ url_for('personal.budget.main') | e }}">{{ t('budget_budget_planner', default='Budget Planner') | e }}</a></li>
+                            <li><a class="dropdown-item" href="{{ url_for('personal.bill.main') | e }}">{{ t('bill_bill_planner', default='Bill Planner') | e }}</a></li>
+                            <li><a class="dropdown-item" href="{{ url_for('personal.financial_health.main') | e }}">{{ t('financial_health_financial_health_score', default='Financial Health Score') | e }}</a></li>
+                            <li><a class="dropdown-item" href="{{ url_for('personal.net_worth.main') | e }}">{{ t('net_worth_net_worth_calculator', default='Net Worth Tracker') | e }}</a></li>
+                            <li><a class="dropdown-item" href="{{ url_for('personal.emergency_fund.main') | e }}">{{ t('emergency_fund_calculator', default='Emergency Fund Planner') | e }}</a></li>
+                            <li><a class="dropdown-item" href="{{ url_for('personal.learning_hub.main') | e }}">{{ t('learning_hub_courses', default='Learning Hub') | e }}</a></li>
+                            <li><a class="dropdown-item" href="{{ url_for('personal.quiz.main') | e }}">{{ t('quiz_personality_quiz', default='Personality Quiz') | e }}</a></li>
                         </ul>
                     </li>
                     <li class="nav-item dropdown">
@@ -216,19 +216,19 @@
                 <i class="bi bi-list-ul"></i>
                 <span>{{ t('general_general_dashboard', default='Dashboard') | e }}</span>
             </a>
-            <a href="{{ url_for('budget.main') | e }}" class="nav-item {% if request.endpoint == 'budget.main' %}active{% endif %}" aria-current="{% if request.endpoint == 'budget.main' %}page{% endif %}">
+            <a href="{{ url_for('personal.budget.main') | e }}" class="nav-item {% if request.endpoint == 'personal.budget.main' %}active{% endif %}" aria-current="{% if request.endpoint == 'personal.budget.main' %}page{% endif %}">
                 <i class="bi bi-calculator"></i>
                 <span>{{ t('budget_budget_planner', default='Budget') | e }}</span>
             </a>
-            <a href="{{ url_for('bill.main') | e }}" class="nav-item {% if request.endpoint == 'bill.main' %}active{% endif %}" aria-current="{% if request.endpoint == 'bill.main' %}page{% endif %}">
+            <a href="{{ url_for('personal.bill.main') | e }}" class="nav-item {% if request.endpoint == 'personal.bill.main' %}active{% endif %}" aria-current="{% if request.endpoint == 'personal.bill.main' %}page{% endif %}">
                 <i class="bi bi-receipt"></i>
                 <span>{{ t('bill_bill_planner', default='Bills') | e }}</span>
             </a>
-            <a href="{{ url_for('net_worth.main') | e }}" class="nav-item {% if request.endpoint == 'net_worth.main' %}active{% endif %}" aria-current="{% if request.endpoint == 'net_worth.main' %}page{% endif %}">
+            <a href="{{ url_for('personal.net_worth.main') | e }}" class="nav-item {% if request.endpoint == 'personal.net_worth.main' %}active{% endif %}" aria-current="{% if request.endpoint == 'personal.net_worth.main' %}page{% endif %}">
                 <i class="bi bi-balance-scale"></i>
                 <span>{{ t('net_worth_net_worth_calculator', default='Net Worth') | e }}</span>
             </a>
-            <a href="{{ url_for('learning_hub.main') | e }}" class="nav-item {% if request.endpoint == 'learning_hub.main' %}active{% endif %}" aria-current="{% if request.endpoint == 'learning_hub.main' %}page{% endif %}">
+            <a href="{{ url_for('personal.learning_hub.main') | e }}" class="nav-item {% if request.endpoint == 'personal.learning_hub.main' %}active{% endif %}" aria-current="{% if request.endpoint == 'personal.learning_hub.main' %}page{% endif %}">
                 <i class="bi bi-book"></i>
                 <span>{{ t('learning_hub_courses', default='Learning') | e }}</span>
             </a>
@@ -403,7 +403,7 @@
         // Load notification count
         async function loadNotificationCount() {
             try {
-                const response = await fetch('{{ url_for("notification_count") | e }}');
+                const response = await fetch('{{ url_for("personal.notification_count") | e }}');
                 const data = await response.json();
                 const badge = document.getElementById('notificationBadge');
                 if (data.count > 0) {
@@ -421,7 +421,7 @@
         async function loadNotifications() {
             const body = document.getElementById('notificationBody');
             try {
-                const response = await fetch('{{ url_for("notifications") | e }}');
+                const response = await fetch('{{ url_for("personal.notifications") | e }}');
                 const data = await response.json();
                 if (data.error) {
                     body.innerHTML = `<p class="text-danger">${data.error}</p>`;
