@@ -37,6 +37,22 @@ COMMON_FEATURES_TRANSLATIONS = {
         'news_source_link': 'Source',
         'news_back_to_news': 'Back to News',
         'news_ficore_news': 'Ficore News',
+        # New news keys
+        'news_search_articles': 'Search articles...',
+        'news_all_categories': 'All Categories',
+        'news_startups': 'Startups',
+        'news_fintech': 'Fintech',
+        'news_agritech': 'Agritech',
+        'news_ihatch_welcome': 'Welcome to iHatch Cohort 4 – Next Steps & Resources',
+        'news_ihatch_congratulations': 'Congratulations on your selection for the iHatch Startup Support Programme Cohort 4!',
+        'news_ihatch_details': 'Details about the iHatch Cohort 4 program, including next steps and resources.',
+        'news_ihatch_next_steps': 'Next Steps',
+        'news_ihatch_onboarding': 'Watch the onboarding recording',
+        'news_ihatch_whatsapp': 'Join the Cohort 4 WhatsApp Group',
+        'news_ihatch_form': 'Complete the onboarding form',
+        'news_ihatch_packet': 'Review the iHatch Cohort 4 Welcome Packet',
+        'news_ihatch_deadline': 'Complete by June 2, 2025',
+        'news_ihatch_empower': 'Empowering Nigeria\'s innovation landscape, one startup at a time.'
         
         # Taxation
         'tax_amount_label': 'Amount',
@@ -204,6 +220,22 @@ COMMON_FEATURES_TRANSLATIONS = {
         'news_source_link': 'Tushen Hanya',
         'news_back_to_news': 'Koma zuwa Labarai',
         'news_ficore_news': 'Labaran Ficore',
+        # New news keys
+        'news_search_articles': 'Nemo labarai...',
+        'news_all_categories': 'Duk Rukunai',
+        'news_startups': 'Fara Kasuwanci',
+        'news_fintech': 'Fasahar Kuɗi',
+        'news_agritech': 'Fasahar Noma',
+        'news_ihatch_welcome': 'Barka da zuwa iHatch Cohort 4 – Matakai na Gaba & Albarkatu',
+        'news_ihatch_congratulations': 'Taya murna ga zaɓinku don Shirin Tallafawa Fara Kasuwanci na iHatch Cohort 4!',
+        'news_ihatch_details': 'Bayanai game da shirin iHatch Cohort 4, ciki har da matakai na gaba da albarkatu.',
+        'news_ihatch_next_steps': 'Matakai na Gaba',
+        'news_ihatch_onboarding': 'Kalli rikodin shiga',
+        'news_ihatch_whatsapp': 'Shiga Ƙungiyar WhatsApp na Cohort 4',
+        'news_ihatch_form': 'Kammala fom ɗin shiga',
+        'news_ihatch_packet': 'Duba Fakitin Maraba na iHatch Cohort 4',
+        'news_ihatch_deadline': 'Kammala kafin 2 ga Yuni, 2025',
+        'news_ihatch_empower': 'Ƙarfafa yanayin ƙirƙira na Najeriya, farawa ɗaya bayan ɗaya.'
         
         # Taxation
         'tax_amount_label': 'Adadin Kuɗi',
