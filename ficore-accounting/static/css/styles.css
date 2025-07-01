@@ -376,7 +376,33 @@ h3 { font-size: 1.25rem; }
 .header-actions {
     display: flex;
     align-items: center;
-    gap: 1rem;
+    gap: 0.5rem;
+    justify-content: flex-end;
+}
+
+@media (max-width: 360px) {
+    .header-actions {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: flex-end;
+        gap: 0.3rem;
+        max-width: 100%;
+    }
+
+    .language-btn,
+    .theme-toggle,
+    .profile-icon {
+        flex: 1 1 auto;
+        min-width: 40px;
+        font-size: 0.75rem;
+        margin: 0;
+        padding: 0.25rem;
+    }
+
+    .header {
+        flex-direction: column;
+        align-items: flex-start;
+    }
 }
 
 .notification-bell {
