@@ -7,8 +7,8 @@ from datetime import datetime
 from werkzeug.security import generate_password_hash
 import logging
 import uuid
-from ..utils import AGENT_TOOLS, AGENT_NAV, ALL_TOOLS, ADMIN_NAV, trans_function, requires_role, get_mongo_db, format_currency, format_date
-from ..translations import trans
+from utils import AGENT_TOOLS, AGENT_NAV, ALL_TOOLS, ADMIN_NAV, trans_function, requires_role, get_mongo_db, format_currency, format_date
+from translations import trans
 
 logger = logging.getLogger(__name__)
 
