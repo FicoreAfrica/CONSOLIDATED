@@ -186,7 +186,7 @@ def main():
                 except Exception as e:
                     current_app.logger.error(f"Failed to save budget to MongoDB for session {session['sid']}: {str(e)}", extra={'session_id': session['sid']})
                     flash(trans("budget_storage_error", default='Error saving budget.', lang=lang), "danger")
-                    return redirect(url_for('budget.main'))
+                    return redirect(url_for('personal/BUDGET/budget.main'))
 
                 # Send email if requested
                 if form.send_email.data and form.email.data:
@@ -213,7 +213,7 @@ def main():
                                 "savings_goal": savings_goal,
                                 "surplus_deficit": surplus_deficit,
                                 "created_at": budget_data['created_at'].strftime('%Y-%m-%d'),
-                                "cta_url": url_for('budget.main', _external=True)
+                                "cta_url": url_for('personal/BUDGET/budget.main', _external=True)
                             },
                             lang=lang
                         )
@@ -385,4 +385,4 @@ def handle_csrf_error(e):
     lang = session.get('lang', 'en')
     current_app.logger.error(f"CSRF error on {request.path}: {e.description}", extra={'session_id': session.get('sid', 'unknown')})
     flash(trans('budget_csrf_error', default='Form submission failed due to a missing security token. Please refresh and try again.', lang=lang), 'danger')
-    return redirect(url_for('budget.main')), 400
+    return redirect(url_for('personal/BUDGET/budget.main')), 400
