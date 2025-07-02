@@ -24,7 +24,8 @@ from models import (
 from utils import (
     trans_function, is_valid_email, get_mongo_db, close_mongo_db, get_limiter,
     get_mail, requires_role, check_coin_balance, is_admin, login_manager,
-    flask_session, csrf, babel, compress
+    flask_session, csrf, babel, compress, PERSONAL_TOOLS, PERSONAL_NAV,
+    BUSINESS_TOOLS, BUSINESS_NAV, AGENT_TOOLS, AGENT_NAV, ALL_TOOLS, ADMIN_NAV
 )
 from session_utils import create_anonymous_session
 from translations import trans, get_translations, get_all_translations, get_module_translations
@@ -34,7 +35,7 @@ from jinja2.exceptions import TemplateNotFound
 import time
 from pymongo import MongoClient
 import certifi
-from common_features.taxation import seed_tax_data  # Import seed_tax_data
+from common_features.taxation import seed_tax_data
 
 # Load environment variables
 load_dotenv()
@@ -205,19 +206,27 @@ def create_app():
     app.config['SMTP_PORT'] = int(os.environ.get('SMTP_PORT', 587))
     app.config['SMTP_USERNAME'] = os.environ.get('SMTP_USERNAME')
     app.config['SMTP_PASSWORD'] = os.environ.get('SMTP_PASSWORD')
+    app.config['SMS_API_URL'] = os.environ.get('SMS_API_URL')
+    app.config['SMS_API_KEY'] = os.environ.get('SMS_API_KEY')
+    app.config['WHATSAPP_API_URL'] = os.environ.get('WHATSAPP_API_URL')
+    app.config['WHATSAPP_API_KEY'] = os.environ.get('WHATSAPP_API_KEY')
     app.config['BASE_URL'] = os.environ.get('BASE_URL', 'http://localhost:5000')
     
     if not app.config['GOOGLE_CLIENT_ID'] or not app.config['GOOGLE_CLIENT_SECRET']:
         logger.warning('Google OAuth2 credentials not set')
     if not app.config['SMTP_USERNAME'] or not app.config['SMTP_PASSWORD']:
         logger.warning('SMTP credentials not set')
+    if not app.config['SMS_API_URL'] or not app.config['SMS_API_KEY']:
+        logger.warning('SMS API credentials not set')
+    if not app.config['WHATSAPP_API_URL'] or not app.config['WHATSAPP_API_KEY']:
+        logger.warning('WhatsApp API credentials not set')
     
     # Initialize MongoDB client
     try:
         client = MongoClient(app.config['MONGO_URI'], serverSelectionTimeoutMS=5000,
                              tlsCAFile=os.getenv('MONGO_CA_FILE', None))
         client.admin.command('ping')
-        app.mongo_client = client  # Store client directly on app to avoid context issues
+        app.mongo_client = client
         logger.info('MongoDB client initialized successfully')
         
         def shutdown_mongo_client():
@@ -358,7 +367,7 @@ def create_app():
     
     # Register blueprints
     from users.routes import users_bp
-    from agents.routes import agents
+    from agents.routes import agents_bp
     from common_features.routes import common_bp
     from common_features.taxation import taxation_bp
     from creditors.routes import creditors_bp
@@ -369,12 +378,12 @@ def create_app():
     from receipts.routes import receipts_bp
     from reports.routes import reports_bp
     from settings.routes import settings_bp
-    from personal import personal_bp  # Import personal blueprint
+    from personal import personal_bp
     from general.routes import general_bp
     
     app.register_blueprint(users_bp, url_prefix='/users')
     logger.info('Registered users blueprint')
-    app.register_blueprint(agents, url_prefix='/agents')
+    app.register_blueprint(agents_bp, url_prefix='/agents')
     logger.info('Registered agents blueprint')
     app.register_blueprint(common_bp)
     logger.info('Registered common blueprint')
@@ -504,15 +513,15 @@ def create_app():
     def inject_role_nav():
         if not current_user.is_authenticated:
             return {}
-            if current_user.role == 'personal':
-                return dict(tools=PERSONAL_TOOLS, nav_items=PERSONAL_NAV)
-            elif current_user.role == 'trader':
-                return dict(tools=BUSINESS_TOOLS, nav_items=BUSINESS_NAV)
-            elif current_user.role == 'agent':
-                return dict(tools=AGENT_TOOLS, nav_items=AGENT_NAV)
-            elif current_user.role == 'admin':
-                return dict(tools=ALL_TOOLS, nav_items=ADMIN_NAV)
-                return {}
+        if current_user.role == 'personal':
+            return dict(tools=PERSONAL_TOOLS, nav_items=PERSONAL_NAV)
+        elif current_user.role == 'trader':
+            return dict(tools=BUSINESS_TOOLS, nav_items=BUSINESS_NAV)
+        elif current_user.role == 'agent':
+            return dict(tools=AGENT_TOOLS, nav_items=AGENT_NAV)
+        elif current_user.role == 'admin':
+            return dict(tools=ALL_TOOLS, nav_items=ADMIN_NAV)
+        return {}
     
     @app.context_processor
     def inject_globals():
@@ -612,16 +621,16 @@ def create_app():
             return '', 200
         if current_user.is_authenticated:
             if current_user.role == 'agent':
-                return redirect(url_for('agents.dashboard'))
+                return redirect(url_for('agents_bp.agent_portal'))
             elif current_user.role == 'trader':
-                return redirect(url_for('general.home'))
+                return redirect(url_for('general_bp.home'))
             elif current_user.role == 'admin':
                 try:
                     return redirect(url_for('admin.dashboard'))
                 except:
-                    return redirect(url_for('general.home'))
+                    return redirect(url_for('general_bp.home'))
             elif current_user.role == 'personal':
-                return redirect(url_for('personal.index'))  # Redirect to personal finance homepage
+                return redirect(url_for('personal_bp.index'))
             else:
                 try:
                     return render_template('general/home.html', t=trans, lang=lang)
@@ -657,7 +666,7 @@ def create_app():
     @ensure_session_id
     def general_dashboard():
         logger.info(f'Redirecting to unified dashboard for {"authenticated" if current_user.is_authenticated else "anonymous"} user')
-        return redirect(url_for('dashboard.index'))
+        return redirect(url_for('dashboard_bp.index'))
     
     @app.route('/business-agent-home')
     @ensure_session_id
@@ -666,7 +675,7 @@ def create_app():
         logger.info(f'Serving business/agent home page, authenticated: {current_user.is_authenticated}')
         if current_user.is_authenticated:
             if current_user.role == 'agent':
-                return redirect(url_for('agents.dashboard'))
+                return redirect(url_for('agents_bp.agent_portal'))
             elif current_user.role == 'trader':
                 try:
                     return render_template('general/home.html', t=trans, lang=lang, title=trans('general_business_home', lang=lang))
@@ -681,39 +690,6 @@ def create_app():
         except TemplateNotFound as e:
             logger.error(f'Template not found: {str(e)}', exc_info=True)
             return render_template('personal/GENERAL/error.html', t=trans, lang=lang, error=str(e)), 404
-    
-    @app.route('/about')
-    def about():
-        lang = session.get('lang', 'en')
-        logger.info('Serving about page')
-        try:
-            return render_template('general/about.html', 
-                                 t=trans, 
-                                 lang=lang,
-                                 title=trans('general_about', lang=lang))
-        except TemplateNotFound as e:
-            logger.error(f'Template not found: {str(e)}', exc_info=True)
-            return render_template('personal/GENERAL/error.html', 
-                                 t=trans, 
-                                 lang=lang,
-                                 error=str(e),
-                                 title=trans('general_about', lang=lang)), 404
-    
-    @app.route('/contact')
-    def contact():
-        lang = session.get('lang', 'en')
-        try:
-            return render_template('general/contact.html', 
-                                 t=trans, 
-                                 lang=lang,
-                                 title=trans('general_contact', lang=lang))
-        except TemplateNotFound as e:
-            logger.error(f'Template not found: {str(e)}', exc_info=True)
-            return render_template('personal/GENERAL/error.html', 
-                                 t=trans, 
-                                 lang=lang,
-                                 error=str(e),
-                                 title=trans('general_contact', lang=lang)), 404
     
     @app.route('/privacy')
     def privacy():
