@@ -331,8 +331,8 @@ def create_app():
                 db.create_collection('tax_reminders')
             if db.tax_rates.count_documents({}) == 0:
                 sample_rates = [
-                    {'role': 'personal', 'min_income': 0, 'max_income': 100000, 'rate': 0.1, 'description': '10% tax for income up to 100,000'},
-                    {'role': 'trader', 'min_income': 0, 'max_income': 500000, 'rate': 0.15, 'description': '15% tax for turnover up to 500,000'},
+                    {'role': 'personal', 'min_income': 0, 'max_income': 800000, 'rate': 0.1, 'description': 'progressive PAYE tax for annual income above 800,000'},
+                    {'role': 'trader', 'min_income': 0, 'max_income': 25,000,000, 'rate': 0, 'description': '0% tax for turnover up to N25 million.'},
                 ]
                 db.tax_rates.insert_many(sample_rates)
             if db.payment_locations.count_documents({}) == 0:
