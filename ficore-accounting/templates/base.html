@@ -24,7 +24,7 @@
     {% if not current_user.is_authenticated %}
     <nav class="navbar navbar-expand-lg navbar-dark bg-dark" role="navigation">
         <div class="container-fluid">
-            <a class="navbar-brand" href="{{ url_for('index') | e }}" aria-label="{{ t('general_ficore_africa', default='Ficore Africa') | e }}">
+            <a class="navbar-brand" href="{{ url_for('app.index') | e }}" aria-label="{{ t('general_ficore_africa', default='Ficore Africa') | e }}">
                 <img src="{{ url_for('static', filename='img/ficore_records_logo.png') | e }}" alt="{{ t('general_ficore_africa_logo', default='Ficore Africa Logo') | e }}" class="logo" style="border-radius: 50%; object-fit: contain; width: 80px; height: 80px;">
                 {{ t('general_ficore_africa', default='Ficore Africa') | e }}
             </a>
@@ -34,13 +34,13 @@
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav me-auto">
                     <li class="nav-item">
-                        <a class="nav-link {% if request.endpoint == 'index' %}active{% endif %}" href="{{ url_for('index') | e }}" data-bs-toggle="tooltip" data-bs-title="{{ t('general_home_tooltip', default='Go to homepage') | e }}" aria-current="{% if request.endpoint == 'index' %}page{% endif %}">{{ t('general_home', default='Home') | e }}</a>
+                        <a class="nav-link {% if request.endpoint == 'app.index' %}active{% endif %}" href="{{ url_for('app.index') | e }}" data-bs-toggle="tooltip" data-bs-title="{{ t('general_home_tooltip', default='Go to homepage') | e }}" aria-current="{% if request.endpoint == 'app.index' %}page{% endif %}">{{ t('general_home', default='Home') | e }}</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link {% if request.endpoint == 'about' %}active{% endif %}" href="{{ url_for('about') | e }}" data-bs-toggle="tooltip" data-bs-title="{{ t('general_about_tooltip', default='Learn more about Ficore') | e }}" aria-current="{% if request.endpoint == 'about' %}page{% endif %}">{{ t('general_about', default='About') | e }}</a>
+                        <a class="nav-link {% if request.endpoint == 'app.about' %}active{% endif %}" href="{{ url_for('app.about') | e }}" data-bs-toggle="tooltip" data-bs-title="{{ t('general_about_tooltip', default='Learn more about Ficore') | e }}" aria-current="{% if request.endpoint == 'app.about' %}page{% endif %}">{{ t('general_about', default='About') | e }}</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link {% if request.endpoint == 'contact' %}active{% endif %}" href="{{ url_for('contact') | e }}" data-bs-toggle="tooltip" data-bs-title="{{ t('general_contact_tooltip', default='Get in touch') | e }}" aria-current="{% if request.endpoint == 'contact' %}page{% endif %}">{{ t('general_contact', default='Contact') | e }}</a>
+                        <a class="nav-link {% if request.endpoint == 'app.contact' %}active{% endif %}" href="{{ url_for('app.contact') | e }}" data-bs-toggle="tooltip" data-bs-title="{{ t('general_contact_tooltip', default='Get in touch') | e }}" aria-current="{% if request.endpoint == 'app.contact' %}page{% endif %}">{{ t('general_contact', default='Contact') | e }}</a>
                     </li>
                 </ul>
                 <ul class="navbar-nav ms-auto align-items-center header-actions">
@@ -55,8 +55,64 @@
                             {{ session.get('lang', 'en').upper() | e }}
                         </a>
                         <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="languageDropdown">
-                            <li><a class="dropdown-item" href="{{ url_for('set_language', lang='en') | e }}">{{ t('general_english', default='English') | e }}</a></li>
-                            <li><a class="dropdown-item" href="{{ url_for('set_language', lang='ha') | e }}">{{ t('general_hausa', default='Hausa') | e }}</a></li>
+                            <li><a class="dropdown-item" href="{{ url_for('app.set_language', lang='en') | e }}">{{ t('general_english', default='English') | e }}</a></li>
+                            <li><a class="dropdown-item" href="{{ url_for('app.set_language', lang='ha') | e }}">{{ t('general_hausa', default='Hausa') | e }}</a></li>
+                        </ul>
+                    </li>
+                    <li class="nav-item">
+                        <button class="nav-link btn btn-link text-white" id="darkModeToggle" onclick="toggleDarkMode()" data-bs-toggle="tooltip" data-bs-title="{{ t('general_mode_toggle_tooltip_switch_to_dark', default='Switch to dark mode') | e }}" aria-label="{{ t('general_mode_toggle_dark', default='Toggle dark mode') | e }}">
+                            <i class="bi bi-moon-stars"></i>
+                        </button>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+    {% else %}
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark" role="navigation">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="{{ url_for('app.index') | e }}" aria-label="{{ t('general_ficore_africa', default='Ficore Africa') | e }}">
+                <img src="{{ url_for('static', filename='img/ficore_records_logo.png') | e }}" alt="{{ t('general_ficore_africa_logo', default='Ficore Africa Logo') | e }}" class="logo" style="border-radius: 50%; object-fit: contain; width: 80px; height: 80px;">
+                {{ t('general_ficore_africa', default='Ficore Africa') | e }}
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="{{ t('general_toggle_navigation', default='Toggle navigation') | e }}">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto">
+                    {% for item in nav_items %}
+                    <li class="nav-item">
+                        <a class="nav-link {% if request.endpoint == item.endpoint %}active{% endif %}" href="{{ item.url | e }}" data-bs-toggle="tooltip" data-bs-title="{{ t(item.tooltip, default=item.label) | e }}" aria-current="{% if request.endpoint == item.endpoint %}page{% endif %}">
+                            {% if item.icon %}<i class="{{ item.icon }}"></i> {% endif %}
+                            {{ t(item.label, default=item.label) | e }}
+                        </a>
+                    </li>
+                    {% endfor %}
+                </ul>
+                <ul class="navbar-nav ms-auto align-items-center header-actions">
+                    <li class="nav-item">
+                        <button class="notification-bell btn btn-link text-white" id="notificationBell" data-bs-toggle="modal" data-bs-target="#notificationModal" data-bs-title="{{ t('general_notifications_tooltip', default='View notifications') | e }}" aria-label="{{ t('general_notifications', default='Notifications') | e }}">
+                            <i class="bi bi-bell"></i>
+                            <span class="notification-badge d-none" id="notificationBadge"></span>
+                        </button>
+                    </li>
+                    <li class="nav-item">
+                        <a href="{{ url_for('settings.profile') | e }}" class="nav-link" data-bs-toggle="tooltip" data-bs-title="{{ t('general_profile', default='Profile') | e }}" aria-label="{{ t('general_profile', default='Profile') | e }}">
+                            <i class="bi bi-person-circle"></i>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="{{ url_for('users.logout') | e }}" class="nav-link no-js-intercept" data-bs-toggle="tooltip" data-bs-title="{{ t('general_logout', default='Logout') | e }}" aria-label="{{ t('general_logout', default='Logout') | e }}" rel="external">
+                            <i class="bi bi-box-arrow-right"></i>
+                        </a>
+                    </li>
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="languageDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false" data-bs-title="{{ t('general_language_tooltip', default='Change language') | e }}" aria-label="{{ t('general_language', default='Language') | e }}">
+                            {{ session.get('lang', 'en').upper() | e }}
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="languageDropdown">
+                            <li><a class="dropdown-item" href="{{ url_for('app.set_language', lang='en') | e }}">{{ t('general_english', default='English') | e }}</a></li>
+                            <li><a class="dropdown-item" href="{{ url_for('app.set_language', lang='ha') | e }}">{{ t('general_hausa', default='Hausa') | e }}</a></li>
                         </ul>
                     </li>
                     <li class="nav-item">
@@ -90,22 +146,47 @@
         {% endwith %}
     </div>
 
+    {% if current_user.is_authenticated %}
+    <div class="container-fluid">
+        <div class="row">
+            <aside class="col-md-3 col-lg-2 d-md-block bg-light sidebar collapse" id="sidebarMenu">
+                <div class="position-sticky pt-3">
+                    <h5 class="sidebar-heading">{{ t('general_tools', default='Tools') | e }}</h5>
+                    <ul class="nav flex-column">
+                        {% for tool in tools %}
+                        <li class="nav-item">
+                            <a class="nav-link {% if request.endpoint == tool.endpoint %}active{% endif %}" href="{{ tool.url | e }}" data-bs-toggle="tooltip" data-bs-title="{{ t(tool.tooltip, default=tool.label) | e }}">
+                                {% if tool.icon %}<i class="{{ tool.icon }}"></i> {% endif %}
+                                {{ t(tool.label, default=tool.label) | e }}
+                            </a>
+                        </li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            </aside>
+            <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4 main-content">
+                {% block content %}{% endblock %}
+            </main>
+        </div>
+    </div>
+    {% else %}
     <main class="main-content">
         <div class="container">
             {% block content %}{% endblock %}
         </div>
     </main>
+    {% endif %}
 
     {% if not current_user.is_authenticated %}
     <footer class="footer mt-5" style="background: linear-gradient(90deg, #003087, #004D40); color: white;">
         <div class="container text-center py-4" role="contentinfo">
             <p>{{ t('general_about_ficore_africa', default='About Ficore Africa') | e }}: {{ t('general_empowering_financial_growth', default='Empowering financial growth across Africa since 2025') | e }}</p>
-            <p class="footer-disclaimer"><i class="fas fa-shield-alt me-1" aria-hidden="true"></i> {{ t('general_disclaimer', default='Ficore is not a bank and does not hold or move funds.') | e }} <a href="{{ url_for('about') | e }}" class="text-white text-decoration-underline">{{ t('general_learn_more', default='Learn more') | e }}</a></p>
+            <p class="footer-disclaimer"><i class="fas fa-shield-alt me-1" aria-hidden="true"></i> {{ t('general_disclaimer', default='Ficore is not a bank and does not hold or move funds.') | e }} <a href="{{ url_for('app.about') | e }}" class="text-white text-decoration-underline">{{ t('general_learn_more', default='Learn more') | e }}</a></p>
             <div class="footer-links mt-3">
-                <a href="{{ url_for('terms') | e }}" class="text-white me-3">{{ t('general_terms_of_service', default='Terms of Service') | e }}</a>
-                <a href="{{ url_for('privacy') | e }}" class="text-white me-3">{{ t('general_privacy_policy', default='Privacy Policy') | e }}</a>
+                <a href="{{ url_for('app.terms') | e }}" class="text-white me-3">{{ t('general_terms_of_service', default='Terms of Service') | e }}</a>
+                <a href="{{ url_for('app.privacy') | e }}" class="text-white me-3">{{ t('general_privacy_policy', default='Privacy Policy') | e }}</a>
                 <a href="mailto:support@ficoreafrica.com" class="text-white me-3"><i class="fas fa-envelope"></i> {{ t('general_contact_us', default='Contact Us') | e }}</a>
-                <a href="{{ url_for('feedback') | e }}" class="text-white me-3"><i class="fas fa-comment"></i> {{ t('general_provide_feedback', default='Provide Feedback') | e }}</a>
+                <a href="{{ url_for('app.feedback') | e }}" class="text-white me-3"><i class="fas fa-comment"></i> {{ t('general_provide_feedback', default='Provide Feedback') | e }}</a>
                 <a href="{{ url_for('users.login') | e }}" class="text-white"><i class="fas fa-sign-in-alt"></i> {{ t('general_login', default='Login') | e }}</a>
             </div>
             <div class="social-icons d-flex justify-content-center gap-3 mt-3">
@@ -197,7 +278,7 @@
             if (consentBtn) {
                 consentBtn.addEventListener('click', function() {
                     const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
-                    fetch('{{ url_for("acknowledge_consent") | e }}', {
+                    fetch('{{ url_for("app.acknowledge_consent") | e }}', {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json',
@@ -257,7 +338,7 @@
         // Load notification count
         async function loadNotificationCount() {
             try {
-                const response = await fetch('{{ url_for("notification_count") | e }}');
+                const response = await fetch('{{ url_for("personal.notification_count") | e }}');
                 const data = await response.json();
                 const badge = document.getElementById('notificationBadge');
                 if (data.count > 0) {
@@ -275,7 +356,7 @@
         async function loadNotifications() {
             const body = document.getElementById('notificationBody');
             try {
-                const response = await fetch('{{ url_for("notifications") | e }}');
+                const response = await fetch('{{ url_for("personal.notifications") | e }}');
                 const data = await response.json();
                 if (data.error) {
                     body.innerHTML = `<p class="text-danger">${data.error}</p>`;
