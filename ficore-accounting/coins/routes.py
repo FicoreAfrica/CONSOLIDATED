@@ -150,6 +150,15 @@ def history():
         flash(trans('general_something_went_wrong', default='An error occurred'), 'danger')
         return render_template('coins/history.html', transactions=[], coin_balance=0, t=trans, lang=session.get('lang', 'en')), 500
 
+@general_bp.route('/home')
+@login_required
+def home():
+    if current_user.role not in ['trader', 'admin']:
+        return redirect(url_for('app.index'))
+    tools = BUSINESS_TOOLS if current_user.role == 'trader' else ALL_TOOLS
+    nav_items = BUSINESS_NAV if current_user.role == 'trader' else ADMIN_NAV
+    return render_template('general/home.html', tools=tools, nav_items=nav_items, t=trans, lang=session.get('lang', 'en'))
+
 @coins_bp.route('/receipt_upload', methods=['GET', 'POST'])
 @login_required
 @requires_role(['trader', 'personal'])
