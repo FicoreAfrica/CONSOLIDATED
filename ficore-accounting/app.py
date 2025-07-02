@@ -543,6 +543,8 @@ def create_app():
     # Security headers
     @app.after_request
     def add_security_headers(response):
+        if not request.path.startswith('/static'):
+            response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, max-age=0
         response.headers['Content-Security-Policy'] = (
             'default-src \'self\'; '
             'script-src \'self\' \'unsafe-inline\' https://cdn.jsdelivr.net https://code.jquery.com; '
