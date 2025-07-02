@@ -1,4 +1,4 @@
-{% extends 'base.html' %}
+{% extends 'personal/base.html' %}
 
 {% block title %}
 {{ t('bill_bill_planner', default='Bill Planner') }}
@@ -6,11 +6,13 @@
 
 {% block content %}
 <div class="container">
+    <!-- Tool Header -->
     {% set tool_name = 'bill_bill_planner' %}
     {% set tool_icon = 'fa-file-invoice' %}
     {% set subtitle = t('bill_manage_track_bills', default='Manage and track all your bills in one place') %}
     {% include 'personal/GENERAL/tool_header.html' %}
 
+    <!-- Flashed Messages -->
     {% with messages = get_flashed_messages(with_categories=true) %}
         {% if messages %}
             {% for category, message in messages %}
@@ -306,7 +308,7 @@
         </div>
     </div>
 
-    <!-- Share Ficore Africa Section -->
+    <!-- Share Ficore Africa and Email Preferences Section -->
     {% if current_user.is_authenticated %}
         <div class="card mt-4">
             <div class="card-header">
@@ -318,25 +320,17 @@
                     <input type="text" class="form-control" id="referralLink" value="{{ url_for('users.signup', ref=current_user.referral_code, _external=True) }}" readonly>
                     <button class="btn btn-primary" type="button" onclick="copyReferralLink()">{{ t('general_profile_copy_link', default='Copy') }}</button>
                 </div>
+                <div class="mt-3">
+                    <h6>{{ t('bill_email_preferences', default='Email Preferences') }}</h6>
+                    <p>{{ t('bill_unsubscribe_description', default='Click below to unsubscribe from bill reminder emails.') }}</p>
+                    <form method="POST" action="{{ url_for('personal.bill.unsubscribe', email=current_user.email) }}" class="d-inline">
+                        {{ form.csrf_token }}
+                        <button type="submit" class="btn btn-warning btn-sm">{{ t('bill_unsubscribe', default='Unsubscribe') }}</button>
+                    </form>
+                </div>
             </div>
         </div>
     {% endif %}
-
-    <!-- Unsubscribe Section -->
-    <div class="card mt-4">
-        <div class="card-header">
-            <h5>{{ t('bill_email_preferences', default='Email Preferences') }}</h5>
-        </div>
-        <div class="card-body">
-            <p>{{ t('bill_unsubscribe_description', default='You can unsubscribe from all bill reminder emails at any time.') }}</p>
-            <form method="POST" action="{{ url_for('personal.bill.unsubscribe') }}" class="d-inline">
-                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                <button type="submit" class="btn btn-outline-secondary btn-sm" onclick="return confirm('{{ t('bill_confirm_unsubscribe', default='Are you sure you want to unsubscribe from all bill reminder emails?') }}');">
-                    {{ t('bill_unsubscribe_all', default='Unsubscribe from All Reminders') }}
-                </button>
-            </form>
-        </div>
-    </div>
 </div>
 {% endblock %}
 
