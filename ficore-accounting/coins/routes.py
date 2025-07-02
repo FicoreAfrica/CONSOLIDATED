@@ -14,7 +14,13 @@ from pymongo import errors
 logger = getLogger(__name__)
 
 coins_bp = Blueprint('coins', __name__, template_folder='templates/coins')
-limiter = get_limiter(current_app)
+
+# Initialize limiter later in app.py or within a function
+limiter = None
+
+def init_coins_limiter(app):
+    global limiter
+    limiter = get_limiter(app)
 
 class PurchaseForm(FlaskForm):
     amount = SelectField(
@@ -101,7 +107,7 @@ def purchase():
             return render_template('coins/purchase.html', form=form, t=trans, lang=session.get('lang', 'en'), tools=tools, nav_items=nav_items)
         except errors.PyMongoError as e:
             logger.error(f"MongoDB error purchasing coins for user {current_user.id}: {str(e)}")
-            flash(trans('generalория_went_wrong', default='An error occurred'), 'danger')
+            flash(trans('general_something_went_wrong', default='An error occurred'), 'danger')
             return render_template('coins/purchase.html', form=form, t=trans, lang=session.get('lang', 'en'), tools=tools, nav_items=nav_items)
         except Exception as e:
             logger.error(f"Unexpected error purchasing coins for user {current_user.id}: {str(e)}")
