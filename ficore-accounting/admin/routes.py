@@ -8,6 +8,8 @@ from utils import trans_function, requires_role, get_mongo_db, is_admin, get_use
 from bson import ObjectId
 import logging
 import re
+from ..utils import ALL_TOOLS, ADMIN_NAV
+from ..translations import trans
 
 logger = logging.getLogger(__name__)
 
