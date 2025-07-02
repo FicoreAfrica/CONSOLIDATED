@@ -5,6 +5,7 @@ Bill management translations for personal finance tools
 BILL_TRANSLATIONS = {
     'en': {
         'bill_bill_planner': 'Bill Planner',
+        'bill_bill_planner_tab': 'Bill Planner',
         'bill_bill_dashboard': 'Bill Dashboard',
         'bill_view_edit_bills': 'View and Edit Bills',
         'bill_update': 'Update Bill',
@@ -409,6 +410,7 @@ BILL_TRANSLATIONS = {
         'bill_frequency_select': 'Zaɓi Yawan Lokaci',
         'bill_status_select': 'Zaɓi Matsayi',
         'bill_select_category': 'Zaɓi Rukuni Kuɗin Biya',
+        'bill_bill_planner_tab': ''Tsara Biya'',
         'bill_select_frequency': 'Zaɓi Sau Nawa',
         'bill_invalid_records_skipped': 'An tsallake bayanan kuɗin biya guda {count} saboda rashin maɓallan da ake buƙata ko bayanan da ba daidai ba.',
         'bill_dashboard': 'Allon Kuɗin Biya',
