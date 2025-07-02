@@ -3,13 +3,11 @@ from flask_login import login_required, current_user
 from flask_wtf import FlaskForm
 from wtforms import StringField, FloatField, SelectField, validators, SubmitField
 from datetime import datetime
-from translations import trans
-from utils import trans_function, requires_role, get_mongo_db, is_admin, get_user_query, get_limiter
+from ..translations import trans
+from ..utils import trans_function, requires_role, get_mongo_db, is_admin, get_user_query, get_limiter, ALL_TOOLS, ADMIN_NAV
 from bson import ObjectId
 import logging
 import re
-from ..utils import ALL_TOOLS, ADMIN_NAV
-from ..translations import trans
 
 logger = logging.getLogger(__name__)
 
@@ -40,7 +38,7 @@ class AgentManagementForm(FlaskForm):
         ('active', trans('agents_active', default='Active')),
         ('inactive', trans('agents_inactive', default='Inactive'))
     ], validators=[validators.DataRequired(message=trans('agents_status_required', default='Status is required'))], render_kw={'class': 'form-select'})
-    submit = SubmitField(trans('agents_manage_submit', default='Add/Update Agent'), render_kw={'class': 'btn btn-primary w-100'})
+    submit = import SubmitField(trans('agents_manage_submit', default='Add/Update Agent'), render_kw={'class': 'btn btn-primary w-100'})
 
 def log_audit_action(action, details=None):
     """Log an admin action to audit_logs collection."""
@@ -85,13 +83,15 @@ def dashboard():
                 'audit_logs': audit_log_count
             },
             recent_users=recent_users,
+            tools=ALL_TOOLS,
+            nav_items=ADMIN_NAV,
             t=trans,
             lang=session.get('lang', 'en')
         )
     except Exception as e:
         logger.error(f"Error loading admin dashboard: {str(e)}")
         flash(trans('admin_database_error', default='An error occurred while accessing the database'), 'danger')
-        return render_template('500.html', error=str(e)), 500
+        return render_template('500.html', error=str(e), tools=ALL_TOOLS, nav_items=ADMIN_NAV, t=trans, lang=session.get('lang', 'en')), 500
 
 @admin_bp.route('/users', methods=['GET'])
 @login_required
@@ -106,11 +106,11 @@ def manage_users():
         users = list(db.users.find({} if is_admin() else {'role': {'$ne': 'admin'}}).sort('created_at', -1))
         for user in users:
             user['_id'] = str(user['_id'])
-        return render_template('admin/users.html', users=users, t=trans, lang=session.get('lang', 'en'))
+        return render_template('admin/users.html', users=users, tools=ALL_TOOLS, nav_items=ADMIN_NAV, t=trans, lang=session.get('lang', 'en'))
     except Exception as e:
         logger.error(f"Error fetching users for admin: {str(e)}")
         flash(trans('admin_database_error', default='An error occurred while accessing the database'), 'danger')
-        return render_template('admin/users.html', users=[], t=trans, lang=session.get('lang', 'en')), 500
+        return render_template('admin/users.html', users=[], tools=ALL_TOOLS, nav_items=ADMIN_NAV, t=trans, lang=session.get('lang', 'en')), 500
 
 @admin_bp.route('/users/suspend/<user_id>', methods=['POST'])
 @login_required
@@ -141,7 +141,7 @@ def suspend_user(user_id):
     except Exception as e:
         logger.error(f"Error suspending user {user_id}: {str(e)}")
         flash(trans('admin_database_error', default='An error occurred while accessing the database'), 'danger')
-        return redirect(url_for('admin.manage_users')), 500
+        return redirect(url_for('admin.manage_users'))
 
 @admin_bp.route('/users/delete/<user_id>', methods=['POST'])
 @login_required
@@ -174,7 +174,7 @@ def delete_user(user_id):
     except Exception as e:
         logger.error(f"Error deleting user {user_id}: {str(e)}")
         flash(trans('admin_database_error', default='An error occurred while accessing the database'), 'danger')
-        return redirect(url_for('admin.manage_users')), 500
+        return redirect(url_for('admin.manage_users'))
 
 @admin_bp.route('/data/delete/<collection>/<item_id>', methods=['POST'])
 @login_required
@@ -199,7 +199,7 @@ def delete_item(collection, item_id):
     except Exception as e:
         logger.error(f"Error deleting {collection} item {item_id}: {str(e)}")
         flash(trans('admin_database_error', default='An error occurred while accessing the database'), 'danger')
-        return redirect(url_for('admin.dashboard')), 500
+        return redirect(url_for('admin.dashboard'))
 
 @admin_bp.route('/coins/credit', methods=['GET', 'POST'])
 @login_required
@@ -216,7 +216,7 @@ def credit_coins():
             user = db.users.find_one(user_query)
             if not user:
                 flash(trans('admin_user_not_found', default='User not found'), 'danger')
-                return render_template('admin/reset.html', form=form, t=trans, lang=session.get('lang', 'en'))
+                return render_template('admin/reset.html', form=form, tools=ALL_TOOLS, nav_items=ADMIN_NAV, t=trans, lang=session.get('lang', 'en'))
             amount = int(form.amount.data)
             db.users.update_one(
                 user_query,
@@ -237,8 +237,8 @@ def credit_coins():
         except Exception as e:
             logger.error(f"Error crediting coins by admin {current_user.id}: {str(e)}")
             flash(trans('admin_database_error', default='An error occurred while accessing the database'), 'danger')
-            return render_template('admin/reset.html', form=form, t=trans, lang=session.get('lang', 'en')), 500
-    return render_template('admin/reset.html', form=form, t=trans, lang=session.get('lang', 'en'))
+            return render_template('admin/reset.html', form=form, tools=ALL_TOOLS, nav_items=ADMIN_NAV, t=trans, lang=session.get('lang', 'en'))
+    return render_template('admin/reset.html', form=form, tools=ALL_TOOLS, nav_items=ADMIN_NAV, t=trans, lang=session.get('lang', 'en'))
 
 @admin_bp.route('/audit', methods=['GET'])
 @login_required
@@ -251,18 +251,11 @@ def audit():
         logs = list(db.audit_logs.find().sort('timestamp', -1).limit(100))
         for log in logs:
             log['_id'] = str(log['_id'])
-        return render_template('admin/audit.html', logs=logs, t=trans, lang=session.get('lang', 'en'))
+        return render_template('admin/audit.html', logs=logs, tools=ALL_TOOLS, nav_items=ADMIN_NAV, t=trans, lang=session.get('lang', 'en'))
     except Exception as e:
         logger.error(f"Error fetching audit logs for admin {current_user.id}: {str(e)}")
         flash(trans('admin_database_error', default='An error occurred while accessing the database'), 'danger')
-        return render_template('admin/audit.html', logs=[], t=trans, lang=session.get('lang', 'en')), 500
-
-@admin_bp.route('/dashboard')
-@login_required
-def dashboard():
-    if current_user.role != 'admin':
-        return redirect(url_for('app.index'))
-    return render_template('admin/dashboard.html', tools=ALL_TOOLS, nav_items=ADMIN_NAV, t=trans, lang=session.get('lang', 'en'))
+        return render_template('admin/audit.html', logs=[], tools=ALL_TOOLS, nav_items=ADMIN_NAV, t=trans, lang=session.get('lang', 'en'))
 
 @admin_bp.route('/manage_agents', methods=['GET', 'POST'])
 @login_required
@@ -309,9 +302,9 @@ def manage_agents():
             
             return redirect(url_for('admin.manage_agents'))
         
-        return render_template('admin/manage_agents.html', form=form, agents=agents, t=trans, lang=session.get('lang', 'en'))
+        return render_template('admin/manage_agents.html', form=form, agents=agents, tools=ALL_TOOLS, nav_items=ADMIN_NAV, t=trans, lang=session.get('lang', 'en'))
     
     except Exception as e:
         logger.error(f"Error managing agents for admin {current_user.id}: {str(e)}")
         flash(trans('admin_database_error', default='An error occurred while accessing the database'), 'danger')
-        return render_template('admin/manage_agents.html', form=form, agents=[], t=trans, lang=session.get('lang', 'en')), 500
+        return render_template('admin/manage_agents.html', form=form, agents=[], tools=ALL_TOOLS, nav_items=ADMIN_NAV, t=trans, lang=session.get('lang', 'en'))
