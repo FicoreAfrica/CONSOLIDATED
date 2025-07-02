@@ -10,6 +10,11 @@ QUIZ_TRANSLATIONS = {
         'quiz_your_financial_personality_results_subtitle': 'Discover your financial personality and insights',
         'quiz_enter_personal_information': 'Enter Your Personal Information',
         'quiz_take_quiz': 'Take the quiz',
+        'admin_manage_quiz_results': 'Manage Quiz Results',
+        'admin_no_quiz_results': 'No quiz results found',
+        'quiz_results_title': 'Quiz Results',
+        'quiz_results_quiz_id': 'Quiz ID',
+        'quiz_results_score': 'Score',
         'quiz_questions_part1': 'Questions Part 1',
         'quiz_questions_part2': 'Questions Part 2',
         'quiz_question_required': 'Question is required',
@@ -191,6 +196,11 @@ QUIZ_TRANSLATIONS = {
         'quiz_tip_balanced_1': 'Gwada amfani da manhajar kasafin kuɗi don inganta halayenka.',
         'quiz_tip_spender_1': 'Kiyaye kashe kuɗinka don guje wa kashewa fiye da kima.',
         'quiz_tip_avoider_1': 'Fara da sauƙin kasafin kuɗi na wata-wata.',
+        'admin_manage_quiz_results': 'Sarrafa Sakamakon Tambayoyi',
+        'admin_no_quiz_results': 'Ba a sami sakamakon tambayoyi ba',
+        'quiz_results_title': 'Sakamakon Tambayoyi',
+        'quiz_results_quiz_id': 'ID na Tambaya',
+        'quiz_results_score': 'Maki',
         
         # Badges
         'badge_first_quiz_completed': 'An Kammala Gwaji na Farko!',
