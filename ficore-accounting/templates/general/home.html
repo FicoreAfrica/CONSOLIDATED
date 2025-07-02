@@ -159,13 +159,13 @@
                 <div class="col-6 col-md-4">
                     <div class="nav-card">
                         <div class="nav-card-icon">
-                            <i class="{{ item.icon | e }}"></i>
+                            <i class="{{ item.get('icon', '') | e }}"></i>
                         </div>
                         <div class="nav-card-content">
-                            <h4>{{ t(item.label, default=item.label) | e }}</h4>
-                            <p>{{ t(item.description, default=item.label + '_desc') | e }}</p>
+                            <h4>{{ t(item.get('label', ''), default=item.get('label', '')) | e }}</h4>
+                            <p>{{ t(item.get('description', ''), default=item.get('label', '') + '_desc') | e }}</p>
                         </div>
-                        <a href="{{ item.url | e }}" class="nav-card-link"></a>
+                        <a href="{{ item.get('url', '#') | e }}" class="nav-card-link"></a>
                     </div>
                 </div>
                 {% endfor %}
@@ -175,9 +175,9 @@
         <!-- Bottom Navigation Bar -->
         <nav class="bottom-nav fixed-bottom bg-light border-top d-flex justify-content-around align-items-center py-2">
             {% for item in nav_items %}
-            <a href="{{ item.url | e }}" class="nav-item text-center text-dark" data-bs-toggle="tooltip" data-bs-title="{{ t(item.tooltip, default=item.label) | e }}">
-                <i class="{{ item.icon | e }}"></i>
-                <div class="nav-label">{{ t(item.label, default=item.label) | e }}</div>
+            <a href="{{ item.get('url', '#') | e }}" class="nav-item text-center text-dark" data-bs-toggle="tooltip" data-bs-title="{{ t(item.get('tooltip', item.get('label', '')), default=item.get('label', '')) | e }}">
+                <i class="{{ item.get('icon', '') | e }}"></i>
+                <div class="nav-label">{{ t(item.get('label', ''), default=item.get('label', '')) | e }}</div>
             </a>
             {% endfor %}
         </nav>
