@@ -192,6 +192,15 @@ def send_reminder():
         logger.error(f"Error sending reminder: {str(e)}")
         return jsonify({'success': False, 'message': trans('creditors_reminder_error', default='An error occurred')}), 500
 
+@general_bp.route('/home')
+@login_required
+def home():
+    if current_user.role not in ['trader', 'admin']:
+        return redirect(url_for('app.index'))
+    tools = BUSINESS_TOOLS if current_user.role == 'trader' else ALL_TOOLS
+    nav_items = BUSINESS_NAV if current_user.role == 'trader' else ADMIN_NAV
+    return render_template('general/home.html', tools=tools, nav_items=nav_items, t=trans, lang=session.get('lang', 'en'))
+
 @creditors_bp.route('/generate_iou/<id>')
 @login_required
 @requires_role('trader')
