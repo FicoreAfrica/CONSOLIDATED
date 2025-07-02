@@ -44,6 +44,52 @@ class ReminderForm(FlaskForm):
     reminder_date = DateField('Reminder Date', validators=[DataRequired()])
     submit = SubmitField('Add Reminder')
 
+def seed_tax_data():
+    db = get_mongo_db()
+    if 'tax_rates' not in db.list_collection_names():
+        db.create_collection('tax_rates')
+    if 'payment_locations' not in db.list_collection_names():
+        db.create_collection('payment_locations')
+    if 'tax_reminders' not in db.list_collection_names():
+        db.create_collection('tax_reminders')
+    if db.tax_rates.count_documents({}) == 0:
+        tax_rates = [
+            # PAYE (Personal) Progressive Rates
+            {'role': 'personal', 'min_income': 0.0, 'max_income': 800000.0, 'rate': 0.0, 'description': '0% tax rate for personal income up to 800,000 NGN'},
+            {'role': 'personal', 'min_income': 800001.0, 'max_income': 3000000.0, 'rate': 0.15, 'description': '15% tax rate for personal income from 800,001 to 3,000,000 NGN'},
+            {'role': 'personal', 'min_income': 3000001.0, 'max_income': 12000000.0, 'rate': 0.18, 'description': '18% tax rate for personal income from 3,000,001 to 12,000,000 NGN'},
+            {'role': 'personal', 'min_income': 12000001.0, 'max_income': float('inf'), 'rate': 0.25, 'description': '25% tax rate for personal income above 12,000,000 NGN'},
+            # Small Business Rates
+            {'role': 'company', 'min_income': 0.0, 'max_income': 25000000.0, 'rate': 0.0, 'description': '0% for revenue up to ₦25M (Small Business)'},
+            {'role': 'company', 'min_income': 25000001.0, 'max_income': 100000000.0, 'rate': 0.20, 'description': '20% for revenue between ₦25M and ₦100M (Medium Business)'},
+            {'role': 'company', 'min_income': 100000001.0, 'max_income': float('inf'), 'rate': 0.30, 'description': '30% for revenue above ₦100M (Large Business)'},
+            # CIT Rates (aligned with Small Business for simplicity, expandable for Real Estate/PPT)
+            {'role': 'company', 'min_income': 0.0, 'max_income': 25000000.0, 'rate': 0.0, 'description': '0% CIT for turnover ≤ ₦25M'},
+            {'role': 'company', 'min_income': 25000001.0, 'max_income': 100000000.0, 'rate': 0.20, 'description': '20% CIT for turnover ₦25M - ₦100M'},
+            {'role': 'company', 'min_income': 100000001.0, 'max_income': float('inf'), 'rate': 0.30, 'description': '30% CIT for turnover > ₦100M'}
+        ]
+        db.tax_rates.insert_many(tax_rates)
+        logging.info("Seeded tax rates")
+
+    if db.payment_locations.count_documents({}) == 0:
+        locations = [
+            {'name': 'Lagos NRS Office', 'address': '123 Broad Street, Lagos', 'contact': '+234-1-2345678'},
+            {'name': 'Abuja NRS Office', 'address': '456 Garki Road, Abuja', 'contact': '+234-9-8765432'}
+        ]
+        db.payment_locations.insert_many(locations)
+        logging.info("Seeded tax locations")
+
+    if db.tax_reminders.count_documents({}) == 0:
+        reminders = [
+            {'user_id': 'admin', 'message': 'File quarterly tax return with NRS', 'reminder_date': datetime.datetime(2025, 9, 30), 'created_at': datetime.datetime.utcnow()}
+        ]
+        db.tax_reminders.insert_many(reminders)
+        logging.info("Seeded reminders")
+
+# Call seed_tax_data on blueprint initialization if needed
+with taxation_bp.app_context():
+    seed_tax_data()
+
 @taxation_bp.route('/calculate', methods=['GET', 'POST'])
 @requires_role(['personal', 'trader', 'agent', 'company'])
 @login_required
@@ -164,7 +210,7 @@ def calculate_tax():
 @login_required
 def payment_info():
     db = get_mongo_db()
-    locations = list(db.tax_locations.find())
+    locations = list(db.payment_locations.find())
     serialized_locations = [
         {
             'name': loc['name'],
@@ -192,10 +238,10 @@ def reminders():
             'reminder_date': form.reminder_date.data,
             'created_at': datetime.datetime.utcnow()
         }
-        db.reminders.insert_one(reminder)
+        db.tax_reminders.insert_one(reminder)
         flash(trans('tax_reminder_added', default='Reminder added successfully'), 'success')
         return redirect(url_for('taxation_bp.reminders'))
-    reminders = list(db.reminders.find({'user_id': current_user.id}))
+    reminders = list(db.tax_reminders.find({'user_id': current_user.id}))
     serialized_reminders = [
         {
             'message': rem['message'],
@@ -257,7 +303,7 @@ def manage_payment_locations():
         address = request.form.get('address')
         contact = request.form.get('contact')
         if name and address and contact:
-            db.tax_locations.insert_one({
+            db.payment_locations.insert_one({
                 'name': name,
                 'address': address,
                 'contact': contact
@@ -266,7 +312,7 @@ def manage_payment_locations():
             return redirect(url_for('taxation_bp.manage_payment_locations'))
         else:
             flash(trans('tax_invalid_input', default='Invalid input. Please check your fields.'), 'danger')
-    locations = list(db.tax_locations.find())
+    locations = list(db.payment_locations.find())
     serialized_locations = [
         {
             'name': loc['name'],
@@ -292,7 +338,7 @@ def manage_tax_deadlines():
         if deadline_date and description:
             try:
                 deadline_date = datetime.datetime.strptime(deadline_date, '%Y-%m-%d')
-                db.tax_deadlines.insert_one({
+                db.tax_reminders.insert_one({
                     'deadline_date': deadline_date,
                     'description': description
                 })
@@ -302,7 +348,7 @@ def manage_tax_deadlines():
         else:
             flash(trans('tax_invalid_input', default='Invalid input. Please check your fields.'), 'danger')
         return redirect(url_for('taxation_bp.manage_tax_deadlines'))
-    deadlines = list(db.tax_deadlines.find())
+    deadlines = list(db.tax_reminders.find())
     serialized_deadlines = [
         {
             'deadline_date': dl['deadline_date'],
@@ -324,39 +370,3 @@ def understand_taxes():
                          section='understand_taxes',
                          t=trans,
                          lang=session.get('lang', 'en'))
-
-def seed_tax_data():
-    db = get_mongo_db()
-    if db.tax_rates.count_documents({}) == 0:
-        tax_rates = [
-            # PAYE (Personal) Progressive Rates
-            {'role': 'personal', 'min_income': 0.0, 'max_income': 800000.0, 'rate': 0.0, 'description': '0% tax rate for personal income up to 800,000 NGN'},
-            {'role': 'personal', 'min_income': 800001.0, 'max_income': 3000000.0, 'rate': 0.15, 'description': '15% tax rate for personal income from 800,001 to 3,000,000 NGN'},
-            {'role': 'personal', 'min_income': 3000001.0, 'max_income': 12000000.0, 'rate': 0.18, 'description': '18% tax rate for personal income from 3,000,001 to 12,000,000 NGN'},
-            {'role': 'personal', 'min_income': 12000001.0, 'max_income': float('inf'), 'rate': 0.25, 'description': '25% tax rate for personal income above 12,000,000 NGN'},
-            # Small Business Rates
-            {'role': 'company', 'min_income': 0.0, 'max_income': 25000000.0, 'rate': 0.0, 'description': '0% for revenue up to ₦25M (Small Business)'},
-            {'role': 'company', 'min_income': 25000001.0, 'max_income': 100000000.0, 'rate': 0.20, 'description': '20% for revenue between ₦25M and ₦100M (Medium Business)'},
-            {'role': 'company', 'min_income': 100000001.0, 'max_income': float('inf'), 'rate': 0.30, 'description': '30% for revenue above ₦100M (Large Business)'},
-            # CIT Rates (aligned with Small Business for simplicity, expandable for Real Estate/PPT)
-            {'role': 'company', 'min_income': 0.0, 'max_income': 25000000.0, 'rate': 0.0, 'description': '0% CIT for turnover ≤ ₦25M'},
-            {'role': 'company', 'min_income': 25000001.0, 'max_income': 100000000.0, 'rate': 0.20, 'description': '20% CIT for turnover ₦25M - ₦100M'},
-            {'role': 'company', 'min_income': 100000001.0, 'max_income': float('inf'), 'rate': 0.30, 'description': '30% CIT for turnover > ₦100M'}
-        ]
-        db.tax_rates.insert_many(tax_rates)
-        logging.info("Seeded tax rates")
-
-    if db.tax_locations.count_documents({}) == 0:
-        locations = [
-            {'name': 'Lagos NRS Office', 'address': '123 Broad Street, Lagos', 'contact': '+234-1-2345678'},
-            {'name': 'Abuja NRS Office', 'address': '456 Garki Road, Abuja', 'contact': '+234-9-8765432'}
-        ]
-        db.tax_locations.insert_many(locations)
-        logging.info("Seeded tax locations")
-
-    if db.reminders.count_documents({}) == 0:
-        reminders = [
-            {'user_id': 'admin', 'message': 'File quarterly tax return with NRS', 'reminder_date': datetime.datetime(2025, 9, 30), 'created_at': datetime.datetime.utcnow()}
-        ]
-        db.reminders.insert_many(reminders)
-        logging.info("Seeded reminders")
