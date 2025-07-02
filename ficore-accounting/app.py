@@ -34,6 +34,7 @@ from jinja2.exceptions import TemplateNotFound
 import time
 from pymongo import MongoClient
 import certifi
+from common_features.taxation import seed_tax_data  # Import seed_tax_data
 
 # Load environment variables
 load_dotenv()
@@ -261,6 +262,14 @@ def create_app():
             logger.error(f'Failed to initialize scheduler: {str(e)}', exc_info=True)
     
     setup_session(app)
+    
+    # Call seed_tax_data to initialize tax-related collections
+    with app.app_context():
+        try:
+            seed_tax_data()
+            logger.info('Tax data seeded successfully')
+        except Exception as e:
+            logger.error(f'Failed to seed tax data: {str(e)}', exc_info=True)
     
     # Flask-Babel locale selector
     def get_locale():
@@ -1014,7 +1023,7 @@ def create_app():
                     logger.error(f'Invalid feedback tool: {tool_name}')
                     flash(trans('general_invalid_input', default='Please select a valid tool'), 'danger')
                     return render_template('general/feedback.html', t=trans, lang=lang, tool_options=tool_options)
-                if not rating or not rating.isdigit() or int(rating) < 1 or int(rating) > 5:
+                if not rating or not rating.is_digit() or int(rating) < 1 or int(rating) > 5:
                     logger.error(f'Invalid rating: {rating}')
                     flash(trans('general_invalid_input', default='Please provide a rating between 1 and 5'), 'danger')
                     return render_template('general/feedback.html', t=trans, lang=lang, tool_options=tool_options)
