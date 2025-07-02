@@ -10,6 +10,8 @@ COMMON_FEATURES_TRANSLATIONS = {
         'tax_amount': 'Tax Amount',
         'tax_calculate': 'Calculate Tax',
         'news_title_content_required': 'Title and content are required',
+        'tax_welcome_user': 'Welcome to Tax Calculator',
+        'tax_ready_to_calculate': 'Ready to calculate your taxes?',
         'tax_select_business_size': 'Select Business Size',
         'tax_estimated_tax': 'Estimated Tax',
         'tax_understand_your_taxes': 'Understand Your Taxes',
@@ -374,6 +376,8 @@ COMMON_FEATURES_TRANSLATIONS = {
         'system_issues': 'Tsarin yana da matsaloli',
         'news_published_on': 'An buga a kan',
         # Common Features
+        'tax_welcome_user': 'Barka da zuwa Kalkuleta Haraji',
+        'tax_ready_to_calculate': 'A shirye don ƙididdige harajinka?',
         'tax_amount': 'Adadin Haraji',
         'tax_calculate': 'Ƙididdige Haraji',
         # API & Integration
