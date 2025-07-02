@@ -38,7 +38,7 @@ class AgentManagementForm(FlaskForm):
         ('active', trans('agents_active', default='Active')),
         ('inactive', trans('agents_inactive', default='Inactive'))
     ], validators=[validators.DataRequired(message=trans('agents_status_required', default='Status is required'))], render_kw={'class': 'form-select'})
-    submit = import SubmitField(trans('agents_manage_submit', default='Add/Update Agent'), render_kw={'class': 'btn btn-primary w-100'})
+    submit = SubmitField(trans('agents_manage_submit', default='Add/Update Agent'), render_kw={'class': 'btn btn-primary w-100'})
 
 def log_audit_action(action, details=None):
     """Log an admin action to audit_logs collection."""
