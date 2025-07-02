@@ -7,14 +7,23 @@ from bson import ObjectId
 from datetime import datetime, timedelta
 import logging
 import io
-import os
-import requests
 import re
 import urllib.parse
 from utils import BUSINESS_TOOLS, BUSINESS_NAV, ALL_TOOLS, ADMIN_NAV, trans_function, requires_role, check_coin_balance, format_currency, format_date, get_mongo_db, is_admin, get_user_query
 from translations import trans
 
 logger = logging.getLogger(__name__)
+
+# Placeholder functions for SMS/WhatsApp reminders (implement in utils.py or with external API)
+def send_sms_reminder(recipient, message):
+    """Placeholder for sending SMS reminder."""
+    logger.info(f"Simulating SMS to {recipient}: {message}")
+    return True, {'status': 'SMS sent successfully'}  # Replace with actual API call
+
+def send_whatsapp_reminder(recipient, message):
+    """Placeholder for sending WhatsApp reminder."""
+    logger.info(f"Simulating WhatsApp to {recipient}: {message}")
+    return True, {'status': 'WhatsApp sent successfully'}  # Replace with actual API call
 
 class CreditorForm(FlaskForm):
     name = StringField(trans('creditors_creditor_name', default='Creditor Name'), validators=[DataRequired()])
@@ -32,6 +41,8 @@ def index():
     """List all creditor records for the current user."""
     try:
         db = get_mongo_db()
+        # TEMPORARY: Allow admin to view all creditors during testing
+        # TODO: Restore original user_id filter {'user_id': str(current_user.id), 'type': 'creditor'} for production
         query = {'type': 'creditor'} if is_admin() else {'user_id': str(current_user.id), 'type': 'creditor'}
         creditors = list(db.records.find(query).sort('created_at', -1))
         tools = BUSINESS_TOOLS if current_user.role == 'trader' else ALL_TOOLS
@@ -49,6 +60,8 @@ def view(id):
     """View detailed information about a specific creditor (JSON API)."""
     try:
         db = get_mongo_db()
+        # TEMPORARY: Allow admin to view any creditor during testing
+        # TODO: Restore original user_id filter for production
         query = {'_id': ObjectId(id), 'type': 'creditor'} if is_admin() else {'_id': ObjectId(id), 'user_id': str(current_user.id), 'type': 'creditor'}
         creditor = db.records.find_one(query)
         if not creditor:
@@ -70,6 +83,8 @@ def view_page(id):
     """Render a detailed view page for a specific creditor."""
     try:
         db = get_mongo_db()
+        # TEMPORARY: Allow admin to view any creditor during testing
+        # TODO: Restore original user_id filter for production
         query = {'_id': ObjectId(id), 'type': 'creditor'} if is_admin() else {'_id': ObjectId(id), 'user_id': str(current_user.id), 'type': 'creditor'}
         creditor = db.records.find_one(query)
         if not creditor:
@@ -90,13 +105,15 @@ def share(id):
     """Generate a WhatsApp link to share IOU details."""
     try:
         db = get_mongo_db()
+        # TEMPORARY: Allow admin to share any creditor during testing
+        # TODO: Restore original user_id filter for production
         query = {'_id': ObjectId(id), 'type': 'creditor'} if is_admin() else {'_id': ObjectId(id), 'user_id': str(current_user.id), 'type': 'creditor'}
         creditor = db.records.find_one(query)
         if not creditor:
             return jsonify({'success': False, 'message': trans('creditors_record_not_found', default='Record not found')}), 404
         if not creditor.get('contact'):
             return jsonify({'success': False, 'message': trans('creditors_no_contact', default='No contact provided for sharing')}), 400
-        if not is_admin() and not check_coin balance(1):
+        if not is_admin() and not check_coin_balance(1):
             return jsonify({'success': False, 'message': trans('creditors_insufficient_coins', default='Insufficient coins to share IOU')}), 400
         
         contact = re.sub(r'\D', '', creditor['contact'])
@@ -141,6 +158,8 @@ def send_reminder():
             return jsonify({'success': False, 'message': trans('creditors_missing_fields', default='Missing required fields')}), 400
         
         db = get_mongo_db()
+        # TEMPORARY: Allow admin to send reminders for any creditor during testing
+        # TODO: Restore original user_id filter for production
         query = {'_id': ObjectId(debt_id), 'type': 'creditor'} if is_admin() else {'_id': ObjectId(debt_id), 'user_id': str(current_user.id), 'type': 'creditor'}
         creditor = db.records.find_one(query)
         
@@ -207,6 +226,8 @@ def generate_iou(id):
         from reportlab.lib.units import inch
         
         db = get_mongo_db()
+        # TEMPORARY: Allow admin to generate IOU for any creditor during testing
+        # TODO: Restore original user_id filter for production
         query = {'_id': ObjectId(id), 'type': 'creditor'} if is_admin() else {'_id': ObjectId(id), 'user_id': str(current_user.id), 'type': 'creditor'}
         creditor = db.records.find_one(query)
         
@@ -322,6 +343,8 @@ def edit(id):
     """Edit an existing creditor record."""
     try:
         db = get_mongo_db()
+        # TEMPORARY: Allow admin to edit any creditor during testing
+        # TODO: Restore original user_id filter for production
         query = {'_id': ObjectId(id), 'type': 'creditor'} if is_admin() else {'_id': ObjectId(id), 'user_id': str(current_user.id), 'type': 'creditor'}
         creditor = db.records.find_one(query)
         if not creditor:
@@ -366,6 +389,8 @@ def delete(id):
     """Delete a creditor record."""
     try:
         db = get_mongo_db()
+        # TEMPORARY: Allow admin to delete any creditor during testing
+        # TODO: Restore original user_id filter for production
         query = {'_id': ObjectId(id), 'type': 'creditor'} if is_admin() else {'_id': ObjectId(id), 'user_id': str(current_user.id), 'type': 'creditor'}
         result = db.records.delete_one(query)
         if result.deleted_count:
