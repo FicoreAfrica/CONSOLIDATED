@@ -205,7 +205,7 @@ def main():
                 except Exception as e:
                     current_app.logger.error(f"Failed to save emergency fund record to MongoDB: {str(e)}", extra={'session_id': session['sid']})
                     flash(trans('emergency_fund_storage_error', default='Error saving emergency fund plan.'), 'danger')
-                    return render_template('emergency_fund/main.html', form=form, records=[], latest_record={}, insights=[], cross_tool_insights=[], tips=[], t=trans, lang=lang, tool_title=trans('emergency_fund_title', default='Emergency Fund Calculator', lang=lang), tools=tools, nav_items=nav_items)
+                    return render_template('personal/EMERGENCYFUND/emergency_fund_main.html', form=form, records=[], latest_record={}, insights=[], cross_tool_insights=[], tips=[], t=trans, lang=lang, tool_title=trans('emergency_fund_title', default='Emergency Fund Calculator', lang=lang), tools=tools, nav_items=nav_items)
                 if form.email_opt_in.data and form.email.data:
                     try:
                         config = EMAIL_CONFIG["emergency_fund"]
@@ -310,7 +310,7 @@ def main():
                 if savings_possible > 0:
                     cross_tool_insights.append(trans('emergency_fund_cross_tool_savings_possible', default='Your budget shows {amount:,.2f} available for savings monthly.', lang=lang, amount=savings_possible))
         return render_template(
-            'emergency_fund/main.html',
+            'personal/EMERGENCYFUND/emergency_fund_main.html',
             form=form,
             records=records,
             latest_record=latest_record,
@@ -332,7 +332,7 @@ def main():
         current_app.logger.error(f"Error in emergency_fund.main for session {session.get('sid', 'unknown')}: {str(e)}", extra={'session_id': session['sid']})
         flash(trans('emergency_fund_load_dashboard_error', default='Error loading emergency fund dashboard.'), 'danger')
         return render_template(
-            'emergency_fund/main.html',
+            'personal/EMERGENCYFUND/emergency_fund_main.html',
             form=form,
             records=[],
             latest_record={
