@@ -921,7 +921,7 @@ def create_app():
                 ).sort('created_at', -1).limit(3))
                 for cashflow in recent_cashflows:
                     activity_type = 'money_in' if cashflow['type'] == 'receipt' else 'money_out'
-                    description = f'{"Received" if cashflow["type"] == 'receipt' else "Paid"} {cashflow["party_name"]}'
+                    description = f'{"Received" if cashflow["type"] == "receipt" else "Paid"} {cashflow["party_name"]}'
                     activities.append({
                         'type': activity_type,
                         'description': description,
