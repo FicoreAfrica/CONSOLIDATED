@@ -225,11 +225,11 @@ def main():
                     due_date = datetime.strptime(form.due_date.data, '%Y-%m-%d').date()
                     if due_date < date.today():
                         flash(trans('bill_due_date_future_validation', default='Due date must be today or in the future.', lang=lang), 'danger')
-                        return redirect(url_for('bill.main'))
+                        return redirect(url_for('personal/BILL/bill.main'))
                 except ValueError:
                     current_app.logger.error(f"Invalid due_date format: {form.due_date.data}", extra={'session_id': session['sid']})
                     flash(trans('bill_due_date_format_invalid', default='Invalid due date format.', lang=lang), 'danger')
-                    return redirect(url_for('bill.main'))
+                    return redirect(url_for('personal/BILL/bill.main'))
 
                 status = form.status.data
                 if status not in ['paid', 'pending'] and due_date < date.today():
@@ -270,7 +270,7 @@ def main():
                             data={
                                 'first_name': form.first_name.data,
                                 'bills': [bill_data],
-                                'cta_url': url_for('bill.main', _external=True),
+                                'cta_url': url_for('personal/BILL/bill.main', _external=True),
                                 'unsubscribe_url': url_for('bill.unsubscribe', email=form.email.data, _external=True)
                             },
                             lang=lang
@@ -286,7 +286,7 @@ def main():
                 if not bill:
                     current_app.logger.warning(f"Bill {bill_id} not found for update/delete/toggle", extra={'session_id': session['sid']})
                     flash(trans('bill_not_found', default='Bill not found.', lang=lang), 'danger')
-                    return redirect(url_for('bill.main'))
+                    return redirect(url_for('personal/BILL/bill.main'))
 
                 if action == 'update_bill':
                     edit_form = EditBillForm(formdata=request.form, bill=bill)
@@ -527,4 +527,4 @@ def handle_csrf_error(e):
     lang = session.get('lang', 'en')
     current_app.logger.error(f"CSRF error on {request.path}: {e.description}", extra={'session_id': session.get('sid', 'unknown')})
     flash(trans('bill_csrf_error', default='Form submission failed due to a missing security token. Please refresh and try again.', lang=lang), 'danger')
-    return redirect(url_for('bill.main')), 400
+    return redirect(url_for('personal/BILL/bill.main')), 400
