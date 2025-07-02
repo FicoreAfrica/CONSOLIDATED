@@ -1,32 +1,25 @@
-from datetime import datetime
-from logging import getLogger
-from bson import ObjectId
-from bson.errors import InvalidId
-from flask import Blueprint, request, render_template, redirect, url_for, flash, current_app, jsonify, session
+from flask import Blueprint, request, render_template, redirect, url_for, flash, session, jsonify
 from flask_login import login_required, current_user
 from flask_wtf import FlaskForm
 from flask_wtf.file import FileField, FileAllowed
 from gridfs import GridFS
 from wtforms import FloatField, StringField, SelectField, SubmitField, validators
 from translations import trans
-from utils import trans_function, requires_role, check_coin_balance, get_mongo_db, is_admin, get_user_query, get_limiter
+from utils import trans_function, requires_role, check_coin_balance, get_mongo_db, is_admin, get_user_query, get_limiter, PERSONAL_TOOLS, PERSONAL_NAV, BUSINESS_TOOLS, BUSINESS_NAV, AGENT_TOOLS, AGENT_NAV, ALL_TOOLS, ADMIN_NAV
+from bson import ObjectId
+from datetime import datetime
+from logging import getLogger
 from pymongo import errors
 
 logger = getLogger(__name__)
 
 coins_bp = Blueprint('coins', __name__, template_folder='templates/coins')
-
-# Initialize limiter
 limiter = get_limiter(current_app)
 
 class PurchaseForm(FlaskForm):
     amount = SelectField(
         trans('coins_coin_amount', default='Coin Amount'),
-        choices=[
-            ('10', '10 Coins'),
-            ('50', '50 Coins'),
-            ('100', '100 Coins')
-        ],
+        choices=[('10', '10 Coins'), ('50', '50 Coins'), ('100', '100 Coins')],
         validators=[validators.DataRequired()]
     )
     payment_method = SelectField(
@@ -51,13 +44,11 @@ class ReceiptUploadForm(FlaskForm):
 def credit_coins(user_id: str, amount: int, ref: str, type: str = 'purchase') -> None:
     """Credit coins to a user and log transaction using MongoDB transaction."""
     db = get_mongo_db()
-    client = db.client  # Get MongoDB client for session
+    client = db.client
     user_query = get_user_query(user_id)
-    
     with client.start_session() as session:
         with session.start_transaction():
             try:
-                # Update user coin balance
                 result = db.users.update_one(
                     user_query,
                     {'$inc': {'coin_balance': amount}},
@@ -66,8 +57,6 @@ def credit_coins(user_id: str, amount: int, ref: str, type: str = 'purchase') ->
                 if result.matched_count == 0:
                     logger.error(f"No user found for ID {user_id} to credit coins")
                     raise ValueError(f"No user found for ID {user_id}")
-                
-                # Insert coin transaction
                 db.coin_transactions.insert_one({
                     'user_id': user_id,
                     'amount': amount,
@@ -75,15 +64,12 @@ def credit_coins(user_id: str, amount: int, ref: str, type: str = 'purchase') ->
                     'ref': ref,
                     'date': datetime.utcnow()
                 }, session=session)
-                
-                # Insert audit log
                 db.audit_logs.insert_one({
                     'admin_id': 'system' if type == 'purchase' else str(current_user.id),
                     'action': f'credit_coins_{type}',
                     'details': {'user_id': user_id, 'amount': amount, 'ref': ref},
                     'timestamp': datetime.utcnow()
                 }, session=session)
-                
             except ValueError as e:
                 logger.error(f"Transaction aborted: {str(e)}")
                 session.abort_transaction()
@@ -112,16 +98,18 @@ def purchase():
         except ValueError as e:
             logger.error(f"User not found for coin purchase: {str(e)}")
             flash(trans('general_user_not_found', default='User not found'), 'danger')
-            return render_template('coins/purchase.html', form=form, t=trans, lang=session.get('lang', 'en')), 404
+            return render_template('coins/purchase.html', form=form, t=trans, lang=session.get('lang', 'en'), tools=tools, nav_items=nav_items)
         except errors.PyMongoError as e:
             logger.error(f"MongoDB error purchasing coins for user {current_user.id}: {str(e)}")
-            flash(trans('general_something_went_wrong', default='An error occurred'), 'danger')
-            return render_template('coins/purchase.html', form=form, t=trans, lang=session.get('lang', 'en')), 500
+            flash(trans('generalория_went_wrong', default='An error occurred'), 'danger')
+            return render_template('coins/purchase.html', form=form, t=trans, lang=session.get('lang', 'en'), tools=tools, nav_items=nav_items)
         except Exception as e:
             logger.error(f"Unexpected error purchasing coins for user {current_user.id}: {str(e)}")
             flash(trans('general_something_went_wrong', default='An error occurred'), 'danger')
-            return render_template('coins/purchase.html', form=form, t=trans, lang=session.get('lang', 'en')), 500
-    return render_template('coins/purchase.html', form=form, t=trans, lang=session.get('lang', 'en'))
+            return render_template('coins/purchase.html', form=form, t=trans, lang=session.get('lang', 'en'), tools=tools, nav_items=nav_items)
+    tools = PERSONAL_TOOLS if current_user.role == 'personal' else BUSINESS_TOOLS if current_user.role == 'trader' else AGENT_TOOLS if current_user.role == 'agent' else ALL_TOOLS
+    nav_items = PERSONAL_NAV if current_user.role == 'personal' else BUSINESS_NAV if current_user.role == 'trader' else AGENT_NAV if current_user.role == 'agent' else ADMIN_NAV
+    return render_template('coins/purchase.html', form=form, t=trans, lang=session.get('lang', 'en'), tools=tools, nav_items=nav_items)
 
 @coins_bp.route('/history', methods=['GET'])
 @login_required
@@ -132,32 +120,25 @@ def history():
         db = get_mongo_db()
         user_query = get_user_query(str(current_user.id))
         user = db.users.find_one(user_query)
-        # TEMPORARY: Allow admin to view all transactions during testing
-        # TODO: Restore original query {'user_id': str(current_user.id)} for production
         query = {} if is_admin() else {'user_id': str(current_user.id)}
         transactions = list(db.coin_transactions.find(query).sort('date', -1).limit(50))
         for tx in transactions:
             tx['_id'] = str(tx['_id'])
+        tools = PERSONAL_TOOLS if current_user.role == 'personal' else BUSINESS_TOOLS if current_user.role == 'trader' else AGENT_TOOLS if current_user.role == 'agent' else ALL_TOOLS
+        nav_items = PERSONAL_NAV if current_user.role == 'personal' else BUSINESS_NAV if current_user.role == 'trader' else AGENT_NAV if current_user.role == 'agent' else ADMIN_NAV
         return render_template(
             'coins/history.html',
             transactions=transactions,
             coin_balance=user.get('coin_balance', 0) if user else 0,
             t=trans,
-            lang=session.get('lang', 'en')
+            lang=session.get('lang', 'en'),
+            tools=tools,
+            nav_items=nav_items
         )
     except Exception as e:
         logger.error(f"Error fetching coin history for user {current_user.id}: {str(e)}")
         flash(trans('general_something_went_wrong', default='An error occurred'), 'danger')
-        return render_template('coins/history.html', transactions=[], coin_balance=0, t=trans, lang=session.get('lang', 'en')), 500
-
-@general_bp.route('/home')
-@login_required
-def home():
-    if current_user.role not in ['trader', 'admin']:
-        return redirect(url_for('app.index'))
-    tools = BUSINESS_TOOLS if current_user.role == 'trader' else ALL_TOOLS
-    nav_items = BUSINESS_NAV if current_user.role == 'trader' else ADMIN_NAV
-    return render_template('general/home.html', tools=tools, nav_items=nav_items, t=trans, lang=session.get('lang', 'en'))
+        return render_template('coins/history.html', transactions=[], coin_balance=0, t=trans, lang=session.get('lang', 'en'), tools=tools, nav_items=nav_items)
 
 @coins_bp.route('/receipt_upload', methods=['GET', 'POST'])
 @login_required
@@ -166,25 +147,18 @@ def home():
 def receipt_upload():
     """Handle payment receipt uploads with transaction for coin deduction."""
     form = ReceiptUploadForm()
-    # TEMPORARY: Bypass coin check for admin during testing
-    # TODO: Restore original check_coin_balance(1) for production
     if not is_admin() and not check_coin_balance(1):
-        flash(
-            trans('coins_insufficient_coins', default='Insufficient coins to upload receipt. Purchase more coins.'),
-            'danger'
-        )
+        flash(trans('coins_insufficient_coins', default='Insufficient coins to upload receipt. Purchase more coins.'), 'danger')
         return redirect(url_for('coins.purchase'))
     if form.validate_on_submit():
         try:
             db = get_mongo_db()
-            client = db.client  # Get MongoDB client for session
+            client = db.client
             fs = GridFS(db)
             receipt_file = form.receipt.data
             ref = f"RECEIPT_UPLOAD_{datetime.utcnow().isoformat()}"
-            
             with client.start_session() as session:
                 with session.start_transaction():
-                    # Store receipt file
                     file_id = fs.put(
                         receipt_file,
                         filename=receipt_file.filename,
@@ -192,8 +166,6 @@ def receipt_upload():
                         upload_date=datetime.utcnow(),
                         session=session
                     )
-                    
-                    # Deduct coins and log transaction (non-admin only)
                     if not is_admin():
                         user_query = get_user_query(str(current_user.id))
                         result = db.users.update_one(
@@ -204,7 +176,6 @@ def receipt_upload():
                         if result.matched_count == 0:
                             logger.error(f"No user found for ID {current_user.id} to deduct coins")
                             raise ValueError(f"No user found for ID {current_user.id}")
-                        
                         db.coin_transactions.insert_one({
                             'user_id': str(current_user.id),
                             'amount': -1,
@@ -212,31 +183,30 @@ def receipt_upload():
                             'ref': ref,
                             'date': datetime.utcnow()
                         }, session=session)
-                    
-                    # Insert audit log
                     db.audit_logs.insert_one({
                         'admin_id': 'system',
                         'action': 'receipt_upload',
                         'details': {'user_id': str(current_user.id), 'file_id': str(file_id), 'ref': ref},
                         'timestamp': datetime.utcnow()
                     }, session=session)
-            
             flash(trans('coins_receipt_uploaded', default='Receipt uploaded successfully'), 'success')
             logger.info(f"User {current_user.id} uploaded receipt {file_id}")
             return redirect(url_for('coins.history'))
         except ValueError as e:
             logger.error(f"User not found for receipt upload: {str(e)}")
             flash(trans('general_user_not_found', default='User not found'), 'danger')
-            return render_template('coins/receipt_upload.html', form=form, t=trans, lang=session.get('lang', 'en')), 404
+            return render_template('coins/receipt_upload.html', form=form, t=trans, lang=session.get('lang', 'en'), tools=tools, nav_items=nav_items)
         except errors.PyMongoError as e:
             logger.error(f"MongoDB error uploading receipt for user {current_user.id}: {str(e)}")
             flash(trans('general_something_went_wrong', default='An error occurred'), 'danger')
-            return render_template('coins/receipt_upload.html', form=form, t=trans, lang=session.get('lang', 'en')), 500
+            return render_template('coins/receipt_upload.html', form=form, t=trans, lang=session.get('lang', 'en'), tools=tools, nav_items=nav_items)
         except Exception as e:
             logger.error(f"Unexpected error uploading receipt for user {current_user.id}: {str(e)}")
             flash(trans('general_something_went_wrong', default='An error occurred'), 'danger')
-            return render_template('coins/receipt_upload.html', form=form, t=trans, lang=session.get('lang', 'en')), 500
-    return render_template('coins/receipt_upload.html', form=form, t=trans, lang=session.get('lang', 'en'))
+            return render_template('coins/receipt_upload.html', form=form, t=trans, lang=session.get('lang', 'en'), tools=tools, nav_items=nav_items)
+    tools = PERSONAL_TOOLS if current_user.role == 'personal' else BUSINESS_TOOLS if current_user.role == 'trader' else AGENT_TOOLS if current_user.role == 'agent' else ALL_TOOLS
+    nav_items = PERSONAL_NAV if current_user.role == 'personal' else BUSINESS_NAV if current_user.role == 'trader' else AGENT_NAV if current_user.role == 'agent' else ADMIN_NAV
+    return render_template('coins/receipt_upload.html', form=form, t=trans, lang=session.get('lang', 'en'), tools=tools, nav_items=nav_items)
 
 @coins_bp.route('/balance', methods=['GET'])
 @login_required
