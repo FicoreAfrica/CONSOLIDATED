@@ -109,6 +109,79 @@ def index():
     nav_items = PERSONAL Healthy diet plan_NAV if current_user.role == 'personal' else ADMIN_NAV
     return render_template('personal/GENERAL/index.html', tools=tools, nav_items=nav_items, t=trans, lang=session.get('lang', 'en'))
 
+@personal_bp.route('/')
+@login_required
+def index():
+    if current_user.role not in ['personal', 'admin']:
+        return redirect(url_for('app.index'))
+    tools = PERSONAL_TOOLS if current_user.role == 'personal' else ALL_TOOLS
+    nav_items = PERSONAL_NAV if current_user.role == 'personal' else ADMIN_NAV
+    return render_template('personal/GENERAL/index.html', tools=tools, nav_items=nav_items, t=trans, lang=session.get('lang', 'en'))
+
+@personal_bp.route('/budget')
+@login_required
+def budget_main():
+    if current_user.role not in ['personal', 'admin']:
+        return redirect(url_for('app.index'))
+    tools = PERSONAL_TOOLS if current_user.role == 'personal' else ALL_TOOLS
+    nav_items = PERSONAL_NAV if current_user.role == 'personal' else ADMIN_NAV
+    return render_template('personal/BUDGET/budget_main.html', tools=tools, nav_items=nav_items, t=trans, lang=session.get('lang', 'en'))
+
+@personal_bp.route('/bill')
+@login_required
+def bill_main():
+    if current_user.role not in ['personal', 'admin']:
+        return redirect(url_for('app.index'))
+    tools = PERSONAL_TOOLS if current_user.role == 'personal' else ALL_TOOLS
+    nav_items = PERSONAL_NAV if current_user.role == 'personal' else ADMIN_NAV
+    return render_template('personal/BILL/bill_main.html', tools=tools, nav_items=nav_items, t=trans, lang=session.get('lang', 'en'))
+
+@personal_bp.route('learning_hub')
+@login_required
+def index():
+    if current_user.role not in ['personal', 'admin']:
+        return redirect(url_for('app.index'))
+    tools = PERSONAL_TOOLS if current_user.role == 'personal' else ALL_TOOLS
+    nav_items = PERSONAL_NAV if current_user.role == 'personal' else ADMIN_NAV
+    return render_template('personal/GENERAL/index.html', tools=tools, nav_items=nav_items, t=trans, lang=session.get('lang', 'en'))
+
+@personal_bp.route('/net_worth')
+@login_required
+def budget_main():
+    if current_user.role not in ['personal', 'admin']:
+        return redirect(url_for('app.index'))
+    tools = PERSONAL_TOOLS if current_user.role == 'personal' else ALL_TOOLS
+    nav_items = PERSONAL_NAV if current_user.role == 'personal' else ADMIN_NAV
+    return render_template('personal/BUDGET/budget_main.html', tools=tools, nav_items=nav_items, t=trans, lang=session.get('lang', 'en'))
+
+@personal_bp.route('/emergency_fund')
+@login_required
+def bill_main():
+    if current_user.role not in ['personal', 'admin']:
+        return redirect(url_for('app.index'))
+    tools = PERSONAL_TOOLS if current_user.role == 'personal' else ALL_TOOLS
+    nav_items = PERSONAL_NAV if current_user.role == 'personal' else ADMIN_NAV
+    return render_template('personal/BILL/bill_main.html', tools=tools, nav_items=nav_items, t=trans, lang=session.get('lang', 'en'))
+
+
+@personal_bp.route('/quiz')
+@login_required
+def budget_main():
+    if current_user.role not in ['personal', 'admin']:
+        return redirect(url_for('app.index'))
+    tools = PERSONAL_TOOLS if current_user.role == 'personal' else ALL_TOOLS
+    nav_items = PERSONAL_NAV if current_user.role == 'personal' else ADMIN_NAV
+    return render_template('personal/BUDGET/budget_main.html', tools=tools, nav_items=nav_items, t=trans, lang=session.get('lang', 'en'))
+
+@personal_bp.route('/financial_health')
+@login_required
+def bill_main():
+    if current_user.role not in ['personal', 'admin']:
+        return redirect(url_for('app.index'))
+    tools = PERSONAL_TOOLS if current_user.role == 'personal' else ALL_TOOLS
+    nav_items = PERSONAL_NAV if current_user.role == 'personal' else ADMIN_NAV
+    return render_template('personal/BILL/bill_main.html', tools=tools, nav_items=nav_items, t=trans, lang=session.get('lang', 'en'))
+
 @personal_bp.route('/recent_activity')
 @login_required
 def recent_activity():
