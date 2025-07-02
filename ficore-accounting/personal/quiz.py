@@ -4,6 +4,7 @@ from flask_wtf.csrf import CSRFProtect, CSRFError
 from wtforms import StringField, SelectField, BooleanField, SubmitField, RadioField
 from wtforms.validators import DataRequired, Email, Optional, ValidationError
 from flask_login import current_user
+from flask_login import current_user
 from bson import ObjectId
 from datetime import datetime
 from translations import trans
