@@ -6,7 +6,7 @@
     {% if current_user.is_authenticated %}
         <div class="top-header d-flex justify-content-between align-items-center mb-4">
             <div class="welcome-section">
-                <h2 class="welcome-text mb-0">{{ t('general_hello_user', default='Hello') }}, {{ current_user.display_name | default(current_user.id) }}!</h2>
+                <h2 class="welcome-text mb-0">{{ t('general_hello_user', default='Hello') }}, {{ current_user.display_name | default(current_user.id) | e }}!</h2>
                 <small class="text-muted">{{ t('general_welcome_back', default='Welcome back to Ficore Records') }}</small>
             </div>
             <div class="header-actions d-flex align-items-center gap-3">
@@ -17,17 +17,17 @@
                 <a href="{{ url_for('settings.profile') }}" class="profile-icon">
                     <i class="bi bi-person-circle"></i>
                 </a>
-                <a href="{{ url_for('users.logout') }}" class="logout-icon" data-bs-toggle="tooltip" data-bs-title="{{ t('general_logout', default='Logout') | e }}" aria-label="{{ t('general_logout', default='Logout') | e }}">
+                <a href="{{ url_for('users.logout') }}" class="logout-icon no-js-intercept" data-bs-toggle="tooltip" data-bs-title="{{ t('general_logout', default='Logout') | e }}" aria-label="{{ t('general_logout', default='Logout') | e }}" rel="external">
                     <i class="bi bi-box-arrow-right"></i>
                 </a>
                 <div class="header-toggles d-flex align-items-center gap-2">
                     <div class="dropdown">
-                        <button class="btn btn-outline-secondary btn-sm dropdown-toggle" type="button" id="langDropdown" data-bs-toggle="dropdown" aria-expanded="false">
-                            {{ session.get('lang', 'EN').upper() }}
+                        <button class="btn btn-outline-secondary btn-sm dropdown-toggle" type="button" id="languageDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                            {{ t('general_language', default='Language') }}: {{ session.get('lang', 'en') | upper }}
                         </button>
-                        <ul class="dropdown-menu" aria-labelledby="langDropdown">
-                            <li><a class="dropdown-item" href="{{ url_for('set_language', lang='en') }}">English</a></li>
-                            <li><a class="dropdown-item" href="{{ url_for('set_language', lang='ha') }}">Hausa</a></li>
+                        <ul class="dropdown-menu" aria-labelledby="languageDropdown">
+                            <li><a class="dropdown-item" href="{{ url_for('set_language', lang='en') }}">{{ t('general_english', default='English') }}</a></li>
+                            <li><a class="dropdown-item" href="{{ url_for('set_language', lang='ha') }}">{{ t('general_hausa', default='Hausa') }}</a></li>
                         </ul>
                     </div>
                     <button class="btn btn-outline-secondary btn-sm" id="quickDarkModeToggle" onclick="toggleDarkMode()" aria-label="{{ t('general_mode_toggle_dark', default='Toggle dark mode') }}">
@@ -72,7 +72,7 @@
                         <span class="net-amount" id="netPosition">₦0</span>
                         <span class="net-status" id="netStatus"></span>
                     </div>
-                    <button class="visibility-toggle" onclick="toggleAmountVisibility()">
+                    <button class="visibility-toggle" onclick="toggleAmountVisibility()" aria-label="{{ t('general_toggle_visibility', default='Toggle amount visibility') }}">
                         <i class="bi bi-eye" id="visibilityIcon"></i>
                     </button>
                 </div>
@@ -306,20 +306,18 @@
                 <i class="bi bi-house-door"></i>
                 <div class="nav-label">{{ t('general_home_tab', default='Home') }}</div>
             </a>
-            <a href="{{ url_for('debtors.index') }}" class="nav-item text-center text-dark" data-bs-toggle="tooltip" data-bs-title="{{ t('general_debtors_creditors', default='Debtors & Creditors') | e }}">
-                <i class="bi bi-person-dash"></i>
-                <div class="nav-label">{{ t('general_debtors_tab', default='Debtors') }}</div>
+            <a href="{{ url_for('personal.budget.main') }}" class="nav-item text-center text-dark" data-bs-toggle="tooltip" data-bs-title="{{ t('budget_budget_planner', default='Budget Planner') | e }}">
+                <i class="bi bi-calculator"></i>
+                <div class="nav-label">{{ t('budget_budget_planner_tab', default='Budget') }}</div>
             </a>
-            <a href="{{ url_for('inventory.index') }}" class="nav-item text-center text-dark" data-bs-toggle="tooltip" data-bs-title="{{ t('inventory_management', default='Inventory Management') | e }}">
-                <i class="bi bi-box-seam"></i>
-                <div class="nav-label">{{ t('inventory_management_tab', default='Inventory') }}</div>
+            <a href="{{ url_for('personal.bill.main') }}" class="nav-item text-center text-dark" data-bs-toggle="tooltip" data-bs-title="{{ t('bill_bill_planner', default='Bill Planner') | e }}">
+                <i class="bi bi-receipt"></i>
+                <div class="nav-label">{{ t('bill_bill_planner_tab', default='Bills') }}</div>
             </a>
-            {% if current_user.role == 'agent' %}
-            <a href="{{ url_for('agents_bp.register_trader') }}" class="nav-item text-center text-dark" data-bs-toggle="tooltip" data-bs-title="{{ t('agents_register_trader', default='Register Trader') | e }}">
-                <i class="bi bi-person-plus"></i>
-                <div class="nav-label">{{ t('agents_register_trader', default='Register') }}</div>
+            <a href="{{ url_for('taxation_bp.calculate_tax') }}" class="nav-item text-center text-dark" data-bs-toggle="tooltip" data-bs-title="{{ t('general_taxation', default='Taxation') | e }}">
+                <i class="bi bi-calculator"></i>
+                <div class="nav-label">{{ t('general_taxation_tab', default='Taxation') }}</div>
             </a>
-            {% endif %}
             <a href="{{ url_for('settings.profile') }}" class="nav-item text-center text-dark" data-bs-toggle="tooltip" data-bs-title="{{ t('general_profile', default='Profile') | e }}">
                 <i class="bi bi-person-circle"></i>
                 <div class="nav-label">{{ t('general_profile_tab', default='Profile') }}</div>
@@ -337,7 +335,7 @@
 
         <!-- Business and Agent Tools Overview -->
         <section class="tools-section my-5">
-            <h2 class="text-center"><i class="fas fa-tools"></i> {{ t('general_our_tools', default='Our Business & Agent Tools') }}</h2>
+            <h2 class="text-center"><i class="bi bi-tools"></i> {{ t('general_our_tools', default='Our Business & Agent Tools') }}</h2>
             <p class="text-center mb-4">{{ t('general_business_tools_desc', default='Discover powerful tools to manage your business or support traders as an agent.') }}</p>
             <div class="row g-4">
                 <div class="col-md-4">
@@ -418,11 +416,21 @@ document.addEventListener('DOMContentLoaded', function() {
         new bootstrap.Tooltip(tooltipTriggerEl);
     });
 
+    // Navigation highlighting with startsWith
+    const currentPath = window.location.pathname;
+    const navItems = document.querySelectorAll('.bottom-nav .nav-item');
+    navItems.forEach(item => {
+        const itemHref = item.getAttribute('href');
+        if (currentPath === itemHref || currentPath.startsWith(itemHref + '/')) {
+            item.classList.add('active');
+        }
+    });
+
     if (!{{ current_user.is_authenticated | tojson }}) return;
-    
+
     let amountsVisible = true;
-    
-    // Define translation strings as JavaScript variables
+
+    // Define translation strings with fallback
     const translations = {
         just_now: '{{ t("general_just_now", default="Just now") }}',
         minutes_ago: '{{ t("general_minutes_ago", default="m ago") }}',
@@ -434,11 +442,12 @@ document.addEventListener('DOMContentLoaded', function() {
         no_recent_activity: '{{ t("general_no_recent_activity", default="No recent activity") }}',
         start_by_adding_debt: '{{ t("general_start_by_adding_debt", default="Start by adding a debt or transaction") }}'
     };
-    
-    // Load financial data and notifications
+
+    // Load financial data, notifications, and recent activity
     loadFinancialSummary();
+    loadNotifications();
     loadRecentActivity();
-    
+
     function loadFinancialSummary() {
         Promise.all([
             fetch('{{ url_for("debt_summary") }}').then(r => r.json()).catch(() => ({totalIOwe: 0, totalIAmOwed: 0})),
@@ -452,24 +461,24 @@ document.addEventListener('DOMContentLoaded', function() {
             console.error('Error loading financial data:', error);
         });
     }
-    
+
     function updateDebtSummary(data) {
         const totalIOwe = data.totalIOwe || 0;
         const totalIAmOwed = data.totalIAmOwed || 0;
         const netPosition = totalIAmOwed - totalIOwe;
-        
+
         document.querySelector('#totalIOwe .amount-value').textContent = formatCurrency(totalIOwe);
         document.querySelector('#totalIOwe .amount-value').dataset.amount = totalIOwe;
-        
+
         document.querySelector('#totalIAmOwed .amount-value').textContent = formatCurrency(totalIAmOwed);
         document.querySelector('#totalIAmOwed .amount-value').dataset.amount = totalIAmOwed;
-        
+
         const netPositionEl = document.getElementById('netPosition');
         const netStatusEl = document.getElementById('netStatus');
-        
+
         netPositionEl.textContent = '₦' + formatCurrency(Math.abs(netPosition));
         netPositionEl.dataset.amount = netPosition;
-        
+
         if (netPosition > 0) {
             netPositionEl.className = 'net-amount text-success';
             netStatusEl.textContent = `(${translations.owed_to_you})`;
@@ -484,13 +493,70 @@ document.addEventListener('DOMContentLoaded', function() {
             netStatusEl.className = 'net-status text-muted';
         }
     }
-    
+
     function updateSnapshots(walletData, cashflowData, inventoryData) {
         document.getElementById('walletBalance').textContent = '₦' + formatCurrency(walletData.coin_balance || 0);
+        document.getElementById('walletBalance').dataset.originalText = '₦' + formatCurrency(walletData.coin_balance || 0);
         document.getElementById('netCashflow').textContent = '₦' + formatCurrency(cashflowData.netCashflow || 0);
+        document.getElementById('netCashflow').dataset.originalText = '₦' + formatCurrency(cashflowData.netCashflow || 0);
         document.getElementById('inventoryValue').textContent = '₦' + formatCurrency(inventoryData.totalValue || 0);
+        document.getElementById('inventoryValue').dataset.originalText = '₦' + formatCurrency(inventoryData.totalValue || 0);
     }
-    
+
+    function loadNotifications() {
+        fetch('{{ url_for("personal.notification_count") }}')
+            .then(response => response.json())
+            .then(data => {
+                const count = data.count || 0;
+                const badge = document.getElementById('notificationBadge');
+                if (count > 0) {
+                    badge.textContent = count;
+                    badge.classList.remove('d-none');
+                } else {
+                    badge.classList.add('d-none');
+                }
+            })
+            .catch(error => {
+                console.error('Error loading notification count:', error);
+            });
+
+        fetch('{{ url_for("personal.notifications") }}')
+            .then(response => response.json())
+            .then(notifications => {
+                const notificationList = document.getElementById('notificationList');
+                if (notificationList) {
+                    if (notifications && notifications.length > 0) {
+                        notificationList.innerHTML = notifications.map(notification => `
+                            <div class="notification-item">
+                                <div class="notification-icon">
+                                    <i class="bi bi-bell ${notification.read ? 'text-muted' : 'text-primary'}"></i>
+                                </div>
+                                <div class="notification-content">
+                                    <div class="notification-description">${notification.message}</div>
+                                    <div class="notification-time text-muted">${formatTimeAgo(notification.timestamp)}</div>
+                                </div>
+                            </div>
+                        `).join('');
+                    } else {
+                        notificationList.innerHTML = `
+                            <div class="notification-item">
+                                <div class="notification-icon">
+                                    <i class="bi bi-bell text-muted"></i>
+                                </div>
+                                <div class="notification-content">
+                                    <div class="notification-description">${translations.no_notifications || 'No notifications'}</div>
+                                    <div class="notification-time text-muted">${translations.check_back_later || 'Check back later'}</div>
+                                </div>
+                            </div>
+                        `;
+                    }
+                }
+            })
+            .catch(error => {
+                console.error('Error loading notifications:', error);
+            });
+    }
+
     function loadRecentActivity() {
         fetch('{{ url_for("recent_activity") }}')
             .then(response => response.json())
@@ -527,7 +593,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 console.error('Error loading recent activity:', error);
             });
     }
-    
+
     function getActivityIcon(type) {
         const icons = {
             'debt_added': 'bi-plus-circle',
@@ -540,7 +606,7 @@ document.addEventListener('DOMContentLoaded', function() {
         };
         return icons[type] || 'bi-circle';
     }
-    
+
     function getActivityColor(type) {
         const colors = {
             'debt_added': 'text-primary',
@@ -553,44 +619,31 @@ document.addEventListener('DOMContentLoaded', function() {
         };
         return colors[type] || 'text-muted';
     }
-    
+
     function formatCurrency(amount) {
         return new Intl.NumberFormat('en-NG', {
             minimumFractionDigits: 0,
             maximumFractionDigits: 2
         }).format(amount);
     }
-    
+
     function formatTimeAgo(timestamp) {
         const now = new Date();
         const time = new Date(timestamp);
         const diffInSeconds = Math.floor((now - time) / 1000);
-        
+
         if (diffInSeconds < 60) return translations.just_now;
-        if (diffInSeconds < 3600) return Math.floor(diffInSeconds / 60) + translations.minutes_ago;
-        if (diffInSeconds < 86400) return Math.floor(diffInSeconds / 3600) + translations.hours_ago;
-        return Math.floor(diffInSeconds / 86400) + translations.days_ago;
+        if (diffInSeconds < 3600) return Math.floor(diffInSeconds / 60) + ' ' + translations.minutes_ago;
+        if (diffInSeconds < 86400) return Math.floor(diffInSeconds / 3600) + ' ' + translations.hours_ago;
+        return Math.floor(diffInSeconds / 86400) + ' ' + translations.days_ago;
     }
-    
-    document.addEventListener('DOMContentLoaded', function() {
-        const currentPath = window.location.pathname;
-        const navItems = document.querySelectorAll('.bottom-nav .nav-item');
-        
-        navItems.forEach(item => {
-            const itemHref = item.getAttribute('href');
-            // Check if the current path exactly matches the item's href
-            // Or, for broader matching (e.g., /budget/123 still highlights /budget),
-            // you might use `currentPath.startsWith(itemHref)`
-            if (currentPath === itemHref) {
-                item.classList.add('active');
-        }
-    
-    // Global functions
+
+    // Global toggleAmountVisibility function
     window.toggleAmountVisibility = function() {
         amountsVisible = !amountsVisible;
         const icon = document.getElementById('visibilityIcon');
         const amounts = document.querySelectorAll('.amount-value, .net-amount, .stat-card-value');
-        
+
         amounts.forEach(el => {
             if (amountsVisible) {
                 if (el.classList.contains('amount-value')) {
@@ -607,7 +660,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 el.textContent = '****';
             }
         });
-        
+
         icon.className = amountsVisible ? 'bi bi-eye' : 'bi bi-eye-slash';
     };
 });
