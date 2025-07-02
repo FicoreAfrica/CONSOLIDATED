@@ -221,7 +221,7 @@ def main():
                 except Exception as e:
                     current_app.logger.error(f"Failed to save emergency fund record to MongoDB: {str(e)}", extra={'session_id': session['sid']})
                     flash(trans('emergency_fund_storage_error', default='Error saving emergency fund plan.'), 'danger')
-                    return redirect(url_for('emergency_fund.main'))
+                    return redirect(url_for(personal/EMERGENCYFUND/emergency_fund_main))
 
                 # Send email if opted in
                 if form.email_opt_in.data and form.email.data:
@@ -251,7 +251,7 @@ def main():
                                 'percent_of_income': percent_of_income,
                                 'badges': badges,
                                 'created_at': emergency_fund['created_at'].strftime('%Y-%m-%d'),
-                                'cta_url': url_for('emergency_fund.main', _external=True),
+                                'cta_url': url_for(personal/EMERGENCYFUND/emergency_fund_main, _external=True),
                                 'unsubscribe_url': url_for('emergency_fund.unsubscribe', email=form.email.data, _external=True)
                             },
                             lang=lang
@@ -459,4 +459,4 @@ def handle_csrf_error(e):
     lang = session.get('lang', 'en')
     current_app.logger.error(f"CSRF error on {request.path}: {e.description}", extra={'session_id': session.get('sid', 'unknown')})
     flash(trans('emergency_fund_csrf_error', default='Form submission failed due to a missing security token. Please refresh and try again.'), 'danger')
-    return redirect(url_for('emergency_fund.main')), 400
+    return redirect(url_for(personal/EMERGENCYFUND/emergency_fund_main)), 400
