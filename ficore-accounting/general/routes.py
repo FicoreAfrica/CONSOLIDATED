@@ -11,9 +11,11 @@ from wtforms import StringField, IntegerField, FloatField, SubmitField
 from wtforms.validators import DataRequired, Optional
 import logging
 
-general_bp = Blueprint('general_bp', __name__, template_folder='templates/general')
-
 @general_bp.route('/home')
+@login_required
 def home():
-    lang = session.get('lang', 'en')
-    return render_template('general/home.html', t=trans, lang=lang, is_public=not current_user.is_authenticated, title=trans('general_business_home', lang=lang))
+    if current_user.role not in ['trader', 'admin']:
+        return redirect(url_for('app.index'))
+    tools = BUSINESS_TOOLS if current_user.role == 'trader' else ALL_TOOLS
+    nav_items = BUSINESS_NAV if current_user.role == 'trader' else ADMIN_NAV
+    return render_template('general/home.html', tools=tools, nav_items=nav_items, t=trans, lang=session.get('lang', 'en'))
