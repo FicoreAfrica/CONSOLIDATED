@@ -143,6 +143,15 @@ def generate_pdf(id):
         flash(trans('payments_pdf_generation_error', default='An error occurred'), 'danger')
         return redirect(url_for('payments.index'))
 
+@general_bp.route('/home')
+@login_required
+def home():
+    if current_user.role not in ['trader', 'admin']:
+        return redirect(url_for('app.index'))
+    tools = BUSINESS_TOOLS if current_user.role == 'trader' else ALL_TOOLS
+    nav_items = BUSINESS_NAV if current_user.role == 'trader' else ADMIN_NAV
+    return render_template('general/home.html', tools=tools, nav_items=nav_items, t=trans, lang=session.get('lang', 'en'))
+
 @payments_bp.route('/add', methods=['GET', 'POST'])
 @login_required
 @requires_role('trader')
