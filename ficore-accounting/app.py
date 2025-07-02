@@ -614,12 +614,12 @@ def create_app():
             if current_user.role == 'agent':
                 return redirect(url_for('agents.dashboard'))
             elif current_user.role == 'trader':
-                return redirect(url_for('general_bp.home'))
+                return redirect(url_for('general.home'))
             elif current_user.role == 'admin':
                 try:
-                    return redirect(url_for('admin_bp.dashboard'))
+                    return redirect(url_for('admin.dashboard'))
                 except:
-                    return redirect(url_for('general_bp.home'))
+                    return redirect(url_for('general.home'))
             elif current_user.role == 'personal':
                 return redirect(url_for('personal.index'))  # Redirect to personal finance homepage
             else:
