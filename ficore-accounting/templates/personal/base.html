@@ -14,18 +14,71 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" integrity="sha512-SnH5WK+bZxgPHs44uWIX+LLJAJ9/2PkPKZ5QiAj6Ta86w+fsb2TkcmfRyVX3pBnMFcV7oQPJkl9QevSCWr3W6A==" crossorigin="anonymous" referrerpolicy="no-referrer">
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js" integrity="sha256-LwX4N1IpsvxT6J+wZ3WVE4R0ZbL6QFL7JYOFhcWmdDY=" crossorigin="anonymous"></script>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') | e }}">
-    <link rel="icon" href="{{ url_for('static_personal', filename='img/favicon.ico') | e }}">
-    <link rel="apple-touch-icon" href="{{ url_for('static_personal', filename='img/apple-touch-icon.png') | e }}">
-    <link rel="icon" type="image/png" sizes="32x32" href="{{ url_for('static_personal', filename='img/favicon-32x32.png') | e }}">
-    <link rel="icon" type="image/png" sizes="16x16" href="{{ url_for('static_personal', filename='img/favicon-16x16.png') | e }}">
+    <link rel="icon" href="{{ url_for('static', filename='img/favicon.ico') | e }}">
+    <link rel="apple-touch-icon" href="{{ url_for('static', filename='img/apple-touch-icon.png') | e }}">
+    <link rel="icon" type="image/png" sizes="32x32" href="{{ url_for('static', filename='img/favicon-32x32.png') | e }}">
+    <link rel="icon" type="image/png" sizes="16x16" href="{{ url_for('static', filename='img/favicon-16x16.png') | e }}">
     {% block extra_head %}{% endblock %}
 </head>
 <body>
-    {% if not current_user.is_authenticated %}
+    {% if current_user.is_authenticated %}
     <nav class="navbar navbar-expand-lg navbar-dark bg-dark" role="navigation" aria-label="{{ t('general_main_navigation', default='Main navigation') | e }}">
         <div class="container-fluid">
-            <a class="navbar-brand" href="{{ url_for('personal.index') | e }}" aria-label="{{ t('general_f winning bid icore_africa', default='Ficore Africa') | e }}">
-                <img src="{{ url_for('static_personal', filename='img/ficore_logo.png') | e }}" alt="{{ t('general_ficore_africa_logo', default='Ficore Africa Logo') | e }}" class="logo" style="border-radius: 50%; object-fit: contain; width: 80px; height: 80px;">
+            <a class="navbar-brand" href="{{ url_for('personal.index') | e }}" aria-label="{{ t('general_ficore_africa', default='Ficore Africa') | e }}">
+                <img src="{{ url_for('static', filename='img/ficore_logo.png') | e }}" alt="{{ t('general_ficore_africa_logo', default='Ficore Africa Logo') | e }}" class="logo" style="border-radius: 50%; object-fit: contain; width: 80px; height: 80px;">
+                {{ t('general_ficore_africa', default='Ficore Africa') | e }}
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="{{ t('general_toggle_navigation', default='Toggle navigation') | e }}">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto">
+                    {% for item in nav_items %}
+                    <li class="nav-item">
+                        <a class="nav-link {% if request.endpoint == item.endpoint %}active{% endif %}" href="{{ url_for(item.endpoint) | e }}" data-bs-toggle="tooltip" data-bs-title="{{ t(item.tooltip_key, default=item.label) | e }}" aria-current="{% if request.endpoint == item.endpoint %}page{% endif %}">{{ t(item.label_key, default=item.label) | e }}</a>
+                    </li>
+                    {% endfor %}
+                </ul>
+                <ul class="navbar-nav ms-auto align-items-center header-actions">
+                    <li class="nav-item">
+                        <button class="nav-link btn btn-link text-white" id="notificationBell" data-bs-toggle="modal" data-bs-target="#notificationModal" data-bs-title="{{ t('general_notifications_tooltip', default='View notifications') | e }}" aria-label="{{ t('general_notifications', default='Notifications') | e }}">
+                            <i class="bi bi-bell"></i>
+                            <span class="notification-badge d-none" id="notificationBadge"></span>
+                        </button>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('settings.profile') | e }}" data-bs-toggle="tooltip" data-bs-title="{{ t('general_profile_tooltip', default='View profile') | e }}" aria-label="{{ t('general_profile', default='Profile') | e }}">
+                            <i class="bi bi-person-circle"></i>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link no-js-intercept" href="{{ url_for('users.logout') | e }}" data-bs-toggle="tooltip" data-bs-title="{{ t('general_logout', default='Logout') | e }}" aria-label="{{ t('general_logout', default='Logout') | e }}" rel="external">
+                            <i class="bi bi-box-arrow-right"></i>
+                        </a>
+                    </li>
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="languageDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false" data-bs-title="{{ t('general_language_tooltip', default='Change language') | e }}" aria-label="{{ t('general_language', default='Language') | e }}">
+                            {{ session.get('lang', 'en').upper() | e }}
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="languageDropdown">
+                            <li><a class="dropdown-item" href="{{ url_for('set_language', lang='en') | e }}">{{ t('general_english', default='English') | e }}</a></li>
+                            <li><a class="dropdown-item" href="{{ url_for('set_language', lang='ha') | e }}">{{ t('general_hausa', default='Hausa') | e }}</a></li>
+                        </ul>
+                    </li>
+                    <li class="nav-item">
+                        <button class="nav-link btn btn-link text-white" id="darkModeToggle" onclick="toggleDarkMode()" data-bs-toggle="tooltip" data-bs-title="{{ t('general_mode_toggle_tooltip_switch_to_dark', default='Switch to dark mode') | e }}" aria-label="{{ t('general_mode_toggle_dark', default='Toggle dark mode') | e }}">
+                            <i class="bi bi-moon-stars"></i>
+                        </button>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+    {% else %}
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark" role="navigation" aria-label="{{ t('general_main_navigation', default='Main navigation') | e }}">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="{{ url_for('personal.index') | e }}" aria-label="{{ t('general_ficore_africa', default='Ficore Africa') | e }}">
+                <img src="{{ url_for('static', filename='img/ficore_logo.png') | e }}" alt="{{ t('general_ficore_africa_logo', default='Ficore Africa Logo') | e }}" class="logo" style="border-radius: 50%; object-fit: contain; width: 80px; height: 80px;">
                 {{ t('general_ficore_africa', default='Ficore Africa') | e }}
             </a>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="{{ t('general_toggle_navigation', default='Toggle navigation') | e }}">
@@ -96,7 +149,6 @@
         </div>
     </main>
 
-    {% if not current_user.is_authenticated %}
     <footer class="footer mt-5 py-4" style="background: linear-gradient(90deg, #003087, #004D40); color: white;" role="contentinfo">
         <div class="container text-center">
             <p>{{ t('general_about_ficore_africa', default='About Ficore Africa') | e }}: {{ t('general_empowering_financial_growth', default='Empowering financial growth across Africa since 2025') | e }}</p>
@@ -106,7 +158,12 @@
                 <a href="{{ url_for('privacy') | e }}" class="text-white">{{ t('general_privacy_policy', default='Privacy Policy') | e }}</a>
                 <a href="mailto:support@ficoreafrica.com" class="text-white"><i class="fas fa-envelope me-1" aria-hidden="true"></i> {{ t('general_contact_us', default='Contact Us') | e }}</a>
                 <a href="{{ url_for('feedback') | e }}" class="text-white"><i class="fas fa-comment me-1" aria-hidden="true"></i> {{ t('general_provide_feedback', default='Provide Feedback') | e }}</a>
+                {% if current_user.is_authenticated %}
+                <a href="{{ url_for('settings.profile') | e }}" class="text-white"><i class="fas fa-user me-1" aria-hidden="true"></i> {{ t('general_profile', default='Profile') | e }}</a>
+                <a href="{{ url_for('users.logout') | e }}" class="text-white"><i class="fas fa-sign-out-alt me-1" aria-hidden="true"></i> {{ t('general_logout', default='Logout') | e }}</a>
+                {% else %}
                 <a href="{{ url_for('users.login') | e }}" class="text-white"><i class="fas fa-sign-in-alt me-1" aria-hidden="true"></i> {{ t('general_login', default='Login') | e }}</a>
+                {% endif %}
             </div>
             <div class="social-icons d-flex justify-content-center gap-3 mt-3">
                 <a href="https://linkedin.com/company/ficoreafrica" target="_blank" aria-label="{{ t('general_connect_on_linkedin', default='Connect on LinkedIn') | e }}" class="d-flex align-items-center text-white">
@@ -121,7 +178,6 @@
             </div>
         </div>
     </footer>
-    {% endif %}
 
     <div class="modal fade" id="notificationModal" tabindex="-1" aria-labelledby="notificationModalLabel" aria-hidden="true">
         <div class="modal-dialog">
@@ -141,8 +197,8 @@
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
-    <script src="{{ url_for('static_personal', filename='js/interactivity.js') | e }}"></script>
-    <script src="{{ url_for('static_personal', filename='js/scripts.js') | e }}"></script>
+    <script src="{{ url_for('static', filename='js/interactivity.js') | e }}"></script>
+    <script src="{{ url_for('static', filename='js/scripts.js') | e }}"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             // Initialize dark mode
