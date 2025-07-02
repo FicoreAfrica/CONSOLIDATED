@@ -47,21 +47,29 @@ root_logger.setLevel(logging.INFO)
 class SessionFormatter(logging.Formatter):
     def format(self, record):
         record.session_id = getattr(record, 'session_id', 'no-session-id')
+        record.user_role = getattr(record, 'user_role', 'anonymous')
+        record.ip_address = getattr(record, 'ip_address', 'unknown')
         return super().format(record)
 
 class SessionAdapter(logging.LoggerAdapter):
     def process(self, msg, kwargs):
         kwargs['extra'] = kwargs.get('extra', {})
         session_id = 'no-session-id'
+        user_role = 'anonymous'
+        ip_address = 'unknown'
         try:
             if has_request_context():
                 session_id = session.get('sid', 'no-session-id')
+                user_role = current_user.role if current_user.is_authenticated else 'anonymous'
+                ip_address = request.remote_addr
             else:
                 session_id = 'no-request-context'
         except Exception as e:
             session_id = 'session-error'
             kwargs['extra']['session_error'] = str(e)
         kwargs['extra']['session_id'] = session_id
+        kwargs['extra']['user_role'] = user_role
+        kwargs['extra']['ip_address'] = ip_address
         return msg, kwargs
 
 logger = SessionAdapter(root_logger, {})
@@ -71,9 +79,11 @@ def admin_required(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
         if not current_user.is_authenticated:
+            logger.warning("Unauthorized access attempt to admin route", extra={'ip_address': request.remote_addr})
             return redirect(url_for('users.login'))
         if not is_admin():
             flash(trans('general_no_permission', default='You do not have permission to access this page.'), 'danger')
+            logger.warning(f"Non-admin user {current_user.id} attempted access", extra={'ip_address': request.remote_addr})
             return redirect(url_for('index'))
         return f(*args, **kwargs)
     return decorated_function
@@ -83,6 +93,7 @@ def custom_login_required(f):
     def decorated_function(*args, **kwargs):
         if current_user.is_authenticated or session.get('is_anonymous', False):
             return f(*args, **kwargs)
+        logger.info("Redirecting unauthenticated user to login", extra={'ip_address': request.remote_addr})
         return redirect(url_for('users.login', next=request.url))
     return decorated_function
 
@@ -93,19 +104,20 @@ def ensure_session_id(f):
             if 'sid' not in session:
                 if not current_user.is_authenticated:
                     create_anonymous_session()
+                    logger.info(f'New anonymous session created: {session["sid"]}', extra={'ip_address': request.remote_addr})
                 else:
-                    session['sid'] = session.sid
+                    session['sid'] = str(uuid.uuid4())
                     session['is_anonymous'] = False
-                    logger.info(f'New session ID generated for authenticated user: {session["sid"]}')
+                    logger.info(f'New session ID generated for authenticated user {current_user.id}: {session["sid"]}', extra={'ip_address': request.remote_addr})
         except Exception as e:
-            logger.error(f'Session operation failed: {str(e)}')
+            logger.error(f'Session operation failed: {str(e)}', exc_info=True)
         return f(*args, **kwargs)
     return decorated_function
 
 def setup_logging(app):
     handler = logging.StreamHandler(sys.stderr)
     handler.setLevel(logging.INFO)
-    handler.setFormatter(SessionFormatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s [session: %(session_id)s]'))
+    handler.setFormatter(SessionFormatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s [session: %(session_id)s, role: %(user_role)s, ip: %(ip_address)s]'))
     root_logger.handlers = []
     root_logger.addHandler(handler)
     
@@ -128,7 +140,8 @@ def check_mongodb_connection(app):
             logger.info('MongoDB connection verified with ping')
             return True
         except Exception as e:
-            logger.error(f'MongoDB connection failed: {str(e)}')
+            logger.error(f'MongoDB connection failed: {str(e)}', exc_info=True)
+            # Alert or notify for monitoring in production
             return False
 
 def setup_session(app):
@@ -140,9 +153,10 @@ def setup_session(app):
                 app.config['SESSION_TYPE'] = 'filesystem'
                 flask_session.init_app(app)
                 logger.info('Session configured with filesystem fallback')
+                # Consider alerting for monitoring
                 return
             app.config['SESSION_TYPE'] = 'mongodb'
-            app.config['SESSION_MONGODB'] = current_app._get_current_object().mongo_client
+            app.config['SESSION_MONGODB'] = app.mongo_client
             app.config['SESSION_MONGODB_DB'] = 'ficodb'
             app.config['SESSION_MONGODB_COLLECT'] = 'sessions'
             app.config['SESSION_PERMANENT'] = True
@@ -179,7 +193,7 @@ class User(UserMixin):
                 user = get_mongo_db().users.find_one({'_id': self.id})
                 return user.get('is_active', True) if user else False
             except Exception as e:
-                logger.error(f'Error checking active status for user {self.id}: {str(e)}')
+                logger.error(f'Error checking active status for user {self.id}: {str(e)}', exc_info=True)
                 return False
 
     def get_id(self):
@@ -187,7 +201,7 @@ class User(UserMixin):
 
 def create_app():
     app = Flask(__name__, template_folder='templates', static_folder='static')
-    CORS(app)
+    CORS(app, resources={r"/api/*": {"origins": "*"}})  # Restrict CORS for API routes
     
     # Load configuration
     app.config['SECRET_KEY'] = os.getenv('SECRET_KEY')
@@ -200,31 +214,32 @@ def create_app():
         logger.error('MONGO_URI environment variable is not set')
         raise ValueError('MONGO_URI must be set in environment variables')
     
-    app.config['GOOGLE_CLIENT_ID'] = os.environ.get('GOOGLE_CLIENT_ID')
-    app.config['GOOGLE_CLIENT_SECRET'] = os.environ.get('GOOGLE_CLIENT_SECRET')
-    app.config['SMTP_SERVER'] = os.environ.get('SMTP_SERVER', 'smtp.gmail.com')
-    app.config['SMTP_PORT'] = int(os.environ.get('SMTP_PORT', 587))
-    app.config['SMTP_USERNAME'] = os.environ.get('SMTP_USERNAME')
-    app.config['SMTP_PASSWORD'] = os.environ.get('SMTP_PASSWORD')
-    app.config['SMS_API_URL'] = os.environ.get('SMS_API_URL')
-    app.config['SMS_API_KEY'] = os.environ.get('SMS_API_KEY')
-    app.config['WHATSAPP_API_URL'] = os.environ.get('WHATSAPP_API_URL')
-    app.config['WHATSAPP_API_KEY'] = os.environ.get('WHATSAPP_API_KEY')
-    app.config['BASE_URL'] = os.environ.get('BASE_URL', 'http://localhost:5000')
+    app.config['GOOGLE_CLIENT_ID'] = os.getenv('GOOGLE_CLIENT_ID')
+    app.config['GOOGLE_CLIENT_SECRET'] = os.getenv('GOOGLE_CLIENT_SECRET')
+    app.config['SMTP_SERVER'] = os.getenv('SMTP_SERVER', 'smtp.gmail.com')
+    app.config['SMTP_PORT'] = int(os.getenv('SMTP_PORT', 587))
+    app.config['SMTP_USERNAME'] = os.getenv('SMTP_USERNAME')
+    app.config['SMTP_PASSWORD'] = os.getenv('SMTP_PASSWORD')
+    app.config['SMS_API_URL'] = os.getenv('SMS_API_URL')
+    app.config['SMS_API_KEY'] = os.getenv('SMS_API_KEY')
+    app.config['WHATSAPP_API_URL'] = os.getenv('WHATSAPP_API_URL')
+    app.config['WHATSAPP_API_KEY'] = os.getenv('WHATSAPP_API_KEY')
+    app.config['BASE_URL'] = os.getenv('BASE_URL', 'http://localhost:5000')
+    app.config['SETUP_KEY'] = os.getenv('SETUP_KEY')  # Required for setup route
     
-    if not app.config['GOOGLE_CLIENT_ID'] or not app.config['GOOGLE_CLIENT_SECRET']:
-        logger.warning('Google OAuth2 credentials not set')
-    if not app.config['SMTP_USERNAME'] or not app.config['SMTP_PASSWORD']:
-        logger.warning('SMTP credentials not set')
-    if not app.config['SMS_API_URL'] or not app.config['SMS_API_KEY']:
-        logger.warning('SMS API credentials not set')
-    if not app.config['WHATSAPP_API_URL'] or not app.config['WHATSAPP_API_KEY']:
-        logger.warning('WhatsApp API credentials not set')
-    
-    # Initialize MongoDB client
+    # Validate critical environment variables
+    for key in ['SETUP_KEY', 'GOOGLE_CLIENT_ID', 'GOOGLE_CLIENT_SECRET', 'SMTP_USERNAME', 'SMTP_PASSWORD']:
+        if not app.config.get(key):
+            logger.warning(f'{key} environment variable not set; some features may be disabled')
+
+    # Initialize MongoDB client with explicit TLS/SSL
     try:
-        client = MongoClient(app.config['MONGO_URI'], serverSelectionTimeoutMS=5000,
-                             tlsCAFile=os.getenv('MONGO_CA_FILE', None))
+        client = MongoClient(
+            app.config['MONGO_URI'],
+            serverSelectionTimeoutMS=5000,
+            tls=True,  # Explicitly enable TLS
+            tlsCAFile=certifi.where() if os.getenv('MONGO_CA_FILE') is None else os.getenv('MONGO_CA_FILE')
+        )
         client.admin.command('ping')
         app.mongo_client = client
         logger.info('MongoDB client initialized successfully')
@@ -272,17 +287,30 @@ def create_app():
     
     setup_session(app)
     
-    # Call seed_tax_data to initialize tax-related collections
+    # Call seed_tax_data with version check
     with app.app_context():
         try:
-            seed_tax_data()
-            logger.info('Tax data seeded successfully')
+            db = get_mongo_db()
+            # Check if tax data needs updating (e.g., based on a version or timestamp)
+            tax_version = db.tax_rates.find_one({'_id': 'version'})
+            current_tax_version = '2025-07-02'  # Update this when tax rules change
+            if not tax_version or tax_version.get('version') != current_tax_version:
+                seed_tax_data()
+                db.tax_rates.update_one(
+                    {'_id': 'version'},
+                    {'$set': {'version': current_tax_version, 'updated_at': datetime.utcnow()}},
+                    upsert=True
+                )
+                logger.info(f'Tax data seeded or updated to version {current_tax_version}')
+            else:
+                logger.info('Tax data already up-to-date')
         except Exception as e:
             logger.error(f'Failed to seed tax data: {str(e)}', exc_info=True)
     
     # Flask-Babel locale selector
     def get_locale():
-        return session.get('lang', request.accept_languages.best_match(['en', 'ha'], default='en'))
+        supported_languages = app.config.get('SUPPORTED_LANGUAGES', ['en', 'ha'])
+        return session.get('lang', request.accept_languages.best_match(supported_languages, default='en'))
     babel.locale_selector = get_locale
     
     # Configure Flask-Login
@@ -297,9 +325,9 @@ def create_app():
             with app.app_context():
                 user = get_user(get_mongo_db(), user_id)
                 if user is None:
-                    logger.warning(f'No user found for ID: {user_id}')
+                    logger.warning(f'No user found for ID: {user_id}', extra={'ip_address': request.remote_addr})
                 else:
-                    logger.info(f'User loaded: {user.username if hasattr(user, "username") else user_id}')
+                    logger.info(f'User loaded: {user.username if hasattr(user, "username") else user_id}', extra={'ip_address': request.remote_addr})
                 return user
         except Exception as e:
             logger.error(f'Error loading user {user_id}: {str(e)}', exc_info=True)
@@ -341,9 +369,12 @@ def create_app():
                 logger.warning(f'Some indexes may already exist: {str(e)}')
             
             # Initialize admin user
-            admin_email = os.environ.get('ADMIN_EMAIL', 'ficore@gmail.com')
-            admin_password = os.environ.get('ADMIN_PASSWORD', 'Admin123!')
-            admin_username = os.environ.get('ADMIN_USERNAME', 'admin')
+            admin_email = os.getenv('ADMIN_EMAIL', 'ficore@gmail.com')
+            admin_password = os.getenv('ADMIN_PASSWORD')
+            if not admin_password:
+                logger.error('ADMIN_PASSWORD environment variable is not set')
+                raise ValueError('ADMIN_PASSWORD must be set in environment variables')
+            admin_username = os.getenv('ADMIN_USERNAME', 'admin')
             admin_user = get_user_by_email(db, admin_email)
             if not admin_user:
                 user_data = {
@@ -534,6 +565,7 @@ def create_app():
                 logger=g.get('logger', logger) if has_request_context() else logger,
                 **kwargs
             )
+        supported_languages = app.config.get('SUPPORTED_LANGUAGES', ['en', 'ha'])
         return {
             'google_client_id': app.config.get('GOOGLE_CLIENT_ID', ''),
             'trans': context_trans,
@@ -548,8 +580,8 @@ def create_app():
             'current_lang': lang,
             'current_user': current_user if has_request_context() else None,
             'available_languages': [
-                {'code': 'en', 'name': trans('general_english', lang=lang)},
-                {'code': 'ha', 'name': trans('general_hausa', lang=lang)}
+                {'code': code, 'name': trans(f'general_{code}', lang=lang, default=code.capitalize())}
+                for code in supported_languages
             ]
         }
     
@@ -559,26 +591,28 @@ def create_app():
         if not request.path.startswith('/static'):
             response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, max-age=0'
         response.headers['Content-Security-Policy'] = (
-            'default-src \'self\'; '
-            'script-src \'self\' \'unsafe-inline\' https://cdn.jsdelivr.net https://code.jquery.com; '
-            'style-src \'self\' \'unsafe-inline\' https://cdn.jsdelivr.net https://fonts.googleapis.com; '
-            'img-src \'self\' data:; '
-            'connect-src \'self\'; '
-            'font-src \'self\' https://cdn.jsdelivr.net https://fonts.gstatic.com;'
+            "default-src 'self'; "
+            "script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://code.jquery.com; "
+            "style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://fonts.googleapis.com; "
+            "img-src 'self' data:; "
+            "connect-src 'self' https://api.ficore.app; "  # Restrict to app's API
+            "font-src 'self' https://cdn.jsdelivr.net https://fonts.gstatic.com;"
         )
         response.headers['X-Frame-Options'] = 'DENY'
         response.headers['X-Content-Type-Options'] = 'nosniff'
         response.headers['Strict-Transport-Security'] = 'max-age=31536000; includeSubDomains'
+        response.headers['Referrer-Policy'] = 'strict-origin-when-cross-origin'
         return response
     
     # Language switching route
     @app.route('/change-language', methods=['POST'])
+    @limiter.limit('10 per minute')
     def change_language():
         try:
             data = request.get_json()
             new_lang = data.get('language', 'en')
-            
-            if new_lang in ['en', 'ha']:
+            supported_languages = app.config.get('SUPPORTED_LANGUAGES', ['en', 'ha'])
+            if new_lang in supported_languages:
                 session['lang'] = new_lang
                 with app.app_context():
                     if current_user.is_authenticated:
@@ -591,21 +625,21 @@ def create_app():
                             logger.warning(f'Could not update user language preference: {str(e)}')
                 
                 logger.info(f'Language changed to {new_lang}', 
-                           extra={'session_id': session.get('sid', 'no-session-id')})
+                           extra={'session_id': session.get('sid', 'no-session-id'), 'ip_address': request.remote_addr})
                 
                 return jsonify({
                     'success': True, 
                     'message': trans('general_language_changed', lang=new_lang)
                 })
             else:
+                logger.warning(f'Invalid language requested: {new_lang}')
                 return jsonify({
                     'success': False, 
                     'message': trans('general_invalid_language')
                 }), 400
-                
         except Exception as e:
             logger.error(f'Error changing language: {str(e)}', 
-                        extra={'session_id': session.get('sid', 'no-session-id')})
+                        extra={'session_id': session.get('sid', 'no-session-id'), 'ip_address': request.remote_addr})
             return jsonify({
                 'success': False, 
                 'message': trans('general_error')
@@ -616,7 +650,8 @@ def create_app():
     @ensure_session_id
     def index():
         lang = session.get('lang', 'en')
-        logger.info(f'Serving index page, authenticated: {current_user.is_authenticated}, user: {current_user.username if current_user.is_authenticated and hasattr(current_user, "username") else "None"}')
+        logger.info(f'Serving index page, authenticated: {current_user.is_authenticated}, user: {current_user.username if current_user.is_authenticated and hasattr(current_user, "username") else "None"}', 
+                    extra={'ip_address': request.remote_addr})
         if request.method == 'HEAD':
             return '', 200
         if current_user.is_authenticated:
@@ -665,14 +700,16 @@ def create_app():
     @app.route('/general_dashboard')
     @ensure_session_id
     def general_dashboard():
-        logger.info(f'Redirecting to unified dashboard for {"authenticated" if current_user.is_authenticated else "anonymous"} user')
+        logger.info(f'Redirecting to unified dashboard for {"authenticated" if current_user.is_authenticated else "anonymous"} user', 
+                    extra={'ip_address': request.remote_addr})
         return redirect(url_for('dashboard_bp.index'))
     
     @app.route('/business-agent-home')
     @ensure_session_id
     def business_agent_home():
         lang = session.get('lang', 'en')
-        logger.info(f'Serving business/agent home page, authenticated: {current_user.is_authenticated}')
+        logger.info(f'Serving business/agent home page, authenticated: {current_user.is_authenticated}', 
+                    extra={'ip_address': request.remote_addr})
         if current_user.is_authenticated:
             if current_user.role == 'agent':
                 return redirect(url_for('agents_bp.agent_portal'))
@@ -724,8 +761,9 @@ def create_app():
                                  title=trans('general_terms', lang=lang)), 404
     
     @app.route('/health')
+    @limiter.limit('10 per minute')
     def health():
-        logger.info('Health check')
+        logger.info('Health check', extra={'ip_address': request.remote_addr})
         status = {'status': 'healthy'}
         try:
             with app.app_context():
@@ -738,9 +776,11 @@ def create_app():
             return jsonify(status), 500
     
     @app.route('/api/translations/<lang>')
+    @limiter.limit('10 per minute')
     def get_translations_api(lang):
         try:
-            if lang not in ['en', 'ha']:
+            supported_languages = app.config.get('SUPPORTED_LANGUAGES', ['en', 'ha'])
+            if lang not in supported_languages:
                 return jsonify({'error': trans('general_invalid_language')}), 400
             
             all_translations = get_all_translations()
@@ -752,45 +792,50 @@ def create_app():
             return jsonify({'translations': result})
         except Exception as e:
             logger.error(f'API translations error: {str(e)}', 
-                        extra={'session_id': session.get('sid', 'no-session-id')})
+                        extra={'session_id': session.get('sid', 'no-session-id'), 'ip_address': request.remote_addr})
             return jsonify({'error': trans('general_error')}), 500
     
     @app.route('/api/translate')
+    @limiter.limit('10 per minute')
     def api_translate():
         try:
             key = request.args.get('key')
             lang = request.args.get('lang', session.get('lang', 'en'))
-            
+            supported_languages = app.config.get('SUPPORTED_LANGUAGES', ['en', 'ha'])
             if not key:
                 return jsonify({'error': trans('general_missing_key')}), 400
+            if lang not in supported_languages:
+                return jsonify({'error': trans('general_invalid_language')}), 400
             
             translation = trans(key, lang=lang)
             return jsonify({'key': key, 'translation': translation, 'lang': lang})
         except Exception as e:
             logger.error(f'API translate error: {str(e)}', 
-                        extra={'session_id': session.get('sid', 'no-session-id')})
+                        extra={'session_id': session.get('sid', 'no-session-id'), 'ip_address': request.remote_addr})
             return jsonify({'error': trans('general_error')}), 500
     
     @app.route('/set_language/<lang>')
+    @limiter.limit('10 per minute')
     def set_language(lang):
-        valid_langs = ['en', 'ha']
-        new_lang = lang if lang in valid_langs else 'en'
+        supported_languages = app.config.get('SUPPORTED_LANGUAGES', ['en', 'ha'])
+        new_lang = lang if lang in supported_languages else 'en'
         try:
             session['lang'] = new_lang
             with app.app_context():
                 if current_user.is_authenticated:
                     get_mongo_db().users.update_one({'_id': current_user.id}, {'$set': {'language': new_lang}})
-            logger.info(f'Language set to {new_lang}')
+            logger.info(f'Language set to {new_lang}', extra={'ip_address': request.remote_addr})
             flash(trans('general_language_changed', default='Language updated successfully'), 'success')
         except Exception as e:
-            logger.error(f'Session operation failed: {str(e)}')
+            logger.error(f'Session operation failed: {str(e)}', extra={'ip_address': request.remote_addr})
             flash(trans('general_invalid_language', default='Invalid language'), 'danger')
         return redirect(request.referrer or url_for('index'))
     
     @app.route('/acknowledge_consent', methods=['POST'])
+    @limiter.limit('10 per minute')
     def acknowledge_consent():
         if request.method != 'POST':
-            logger.warning(f'Invalid method {request.method} for consent acknowledgement')
+            logger.warning(f'Invalid method {request.method} for consent acknowledgement', extra={'ip_address': request.remote_addr})
             return '', 400
         try:
             session['consent_acknowledged'] = {
@@ -799,9 +844,9 @@ def create_app():
                 'ip': request.remote_addr,
                 'user_agent': request.headers.get('User-Agent')
             }
-            logger.info(f'Consent acknowledged for session {session.get("sid", "no-session-id")} from IP {request.remote_addr}')
+            logger.info(f'Consent acknowledged for session {session.get("sid", "no-session-id")}', extra={'ip_address': request.remote_addr})
         except Exception as e:
-            logger.error(f'Session operation failed: {str(e)}')
+            logger.error(f'Session operation failed: {str(e)}', extra={'ip_address': request.remote_addr})
         response = make_response('', 204)
         response.headers['Cache-Control'] = 'no-store'
         response.headers['X-Content-Type-Options'] = 'nosniff'
@@ -810,6 +855,7 @@ def create_app():
     # Accounting API routes (for non-personal users)
     @app.route('/api/debt-summary')
     @login_required
+    @limiter.limit('10 per minute')
     def debt_summary():
         try:
             with app.app_context():
@@ -832,11 +878,12 @@ def create_app():
                     'totalIAmOwed': total_i_am_owed
                 })
         except Exception as e:
-            logger.error(f'Error fetching debt summary: {str(e)}')
-            return jsonify({'error': 'Failed to fetch debt summary'}), 500
+            logger.error(f'Error fetching debt summary: {str(e)}', exc_info=True, extra={'ip_address': request.remote_addr})
+            return jsonify({'error': trans('general_error', default='Failed to fetch debt summary')}), 500
     
     @app.route('/api/cashflow-summary')
     @login_required
+    @limiter.limit('10 per minute')
     def cashflow_summary():
         try:
             with app.app_context():
@@ -864,11 +911,12 @@ def create_app():
                     'totalPayments': total_payments
                 })
         except Exception as e:
-            logger.error(f'Error fetching cashflow summary: {str(e)}')
-            return jsonify({'error': 'Failed to fetch cashflow summary'}), 500
+            logger.error(f'Error fetching cashflow summary: {str(e)}', exc_info=True, extra={'ip_address': request.remote_addr})
+            return jsonify({'error': trans('general_error', default='Failed to fetch cashflow summary')}), 500
     
     @app.route('/api/inventory-summary')
     @login_required
+    @limiter.limit('10 per minute')
     def inventory_summary():
         try:
             with app.app_context():
@@ -877,14 +925,14 @@ def create_app():
                 pipeline = [
                     {'$match': {'user_id': user_id}},
                     {'$addFields': {
-                        'item_value': {
+                        'item_group': {
                             '$multiply': [
                                 '$qty',
                                 {'$ifNull': ['$buying_price', 0]}
                             ]
                         }
                     }},
-                    {'$group': {'_id': None, 'totalValue': {'$sum': '$item_value'}}}
+                    {'$group': {'_id': None, 'totalValue': {'$sum': '$item_group'}}}
                 ]
                 result = list(db.inventory.aggregate(pipeline))
                 total_value = result[0]['totalValue'] if result else 0
@@ -892,11 +940,12 @@ def create_app():
                     'totalValue': total_value
                 })
         except Exception as e:
-            logger.error(f'Error fetching inventory summary: {str(e)}')
-            return jsonify({'error': 'Failed to fetch inventory summary'}), 500
+            logger.error(f'Error fetching inventory summary: {str(e)}', exc_info=True, extra={'ip_address': request.remote_addr})
+            return jsonify({'error': trans('general_error', default='Failed to fetch inventory summary')}), 500
     
     @app.route('/api/recent-activity')
     @login_required
+    @limiter.limit('10 per minute')
     def recent_activity():
         try:
             with app.app_context():
@@ -933,11 +982,12 @@ def create_app():
                     activity['timestamp'] = activity['timestamp'].isoformat()
                 return jsonify(activities)
         except Exception as e:
-            logger.error(f'Error fetching recent activity: {str(e)}')
-            return jsonify({'error': 'Failed to fetch recent activity'}), 500
+            logger.error(f'Error fetching recent activity: {str(e)}', exc_info=True, extra={'ip_address': request.remote_addr})
+            return jsonify({'error': trans('general_error', default='Failed to fetch recent activity')}), 500
     
     @app.route('/api/notifications/count')
     @login_required
+    @limiter.limit('10 per minute')
     def notification_count():
         try:
             with app.app_context():
@@ -949,11 +999,12 @@ def create_app():
                 })
                 return jsonify({'count': count})
         except Exception as e:
-            logger.error(f'Error fetching notification count: {str(e)}')
-            return jsonify({'error': 'Failed to fetch notification count'}), 500
+            logger.error(f'Error fetching notification count: {str(e)}', exc_info=True, extra={'ip_address': request.remote_addr})
+            return jsonify({'error': trans('general_error', default='Failed to fetch notification count')}), 500
     
     @app.route('/api/notifications')
     @login_required
+    @limiter.limit('10 per minute')
     def notifications():
         try:
             with app.app_context():
@@ -977,14 +1028,14 @@ def create_app():
                 } for n in notifications]
                 return jsonify(result)
         except Exception as e:
-            logger.error(f'Error fetching notifications: {str(e)}')
-            return jsonify({'error': 'Failed to fetch notifications'}), 500
+            logger.error(f'Error fetching notifications: {str(e)}', exc_info=True, extra={'ip_address': request.remote_addr})
+            return jsonify({'error': trans('general_error', default='Failed to fetch notifications')}), 500
     
     @app.route('/feedback', methods=['GET', 'POST'])
     @ensure_session_id
     def feedback():
         lang = session.get('lang', 'en')
-        logger.info('Handling feedback')
+        logger.info('Handling feedback', extra={'ip_address': request.remote_addr})
         tool_options = [
             ['profile', trans('general_profile', default='Profile')],
             ['coins', trans('coins_dashboard', default='Coins')],
@@ -1000,7 +1051,8 @@ def create_app():
             ['net_worth', trans('net_worth_calculator', default='Net Worth')],
             ['emergency_fund', trans('emergency_fund_calculator', default='Emergency Fund')],
             ['learning', trans('learning_hub_courses', default='Learning')],
-            ['quiz', trans('quiz_personality_quiz', default='Quiz')]
+            ['quiz', trans('quiz_personality_quiz', default='Quiz')],
+            ['taxation', trans('taxation_calculator', default='Taxation')]  # Added taxation tool
         ]
         if request.method == 'POST':
             try:
@@ -1010,11 +1062,11 @@ def create_app():
                 comment = request.form.get('comment', '').strip()
                 valid_tools = [option[0] for option in tool_options]
                 if not tool_name or tool_name not in valid_tools:
-                    logger.error(f'Invalid feedback tool: {tool_name}')
+                    logger.error(f'Invalid feedback tool: {tool_name}', extra={'ip_address': request.remote_addr})
                     flash(trans('general_invalid_input', default='Please select a valid tool'), 'danger')
                     return render_template('general/feedback.html', t=trans, lang=lang, tool_options=tool_options)
-                if not rating or not rating.is_digit() or int(rating) < 1 or int(rating) > 5:
-                    logger.error(f'Invalid rating: {rating}')
+                if not rating or not rating.isdigit() or int(rating) < 1 or int(rating) > 5:
+                    logger.error(f'Invalid rating: {rating}', extra={'ip_address': request.remote_addr})
                     flash(trans('general_invalid_input', default='Please provide a rating between 1 and 5'), 'danger')
                     return render_template('general/feedback.html', t=trans, lang=lang, tool_options=tool_options)
                 with app.app_context():
@@ -1046,21 +1098,22 @@ def create_app():
                         'details': {'user_id': str(current_user.id) if current_user.is_authenticated else None, 'tool_name': tool_name},
                         'timestamp': datetime.utcnow()
                     })
-                logger.info(f'Feedback submitted: tool={tool_name}, rating={rating}, session={session.get("sid", "no-session-id")}')
+                logger.info(f'Feedback submitted: tool={tool_name}, rating={rating}', 
+                            extra={'session_id': session.get('sid', 'no-session-id'), 'ip_address': request.remote_addr})
                 flash(trans('general_thank_you', default='Thank you for your feedback!'), 'success')
                 return redirect(url_for('index'))
             except ValueError as e:
-                logger.error(f'User not found: {str(e)}')
+                logger.error(f'User not found: {str(e)}', extra={'ip_address': request.remote_addr})
                 flash(trans('general_error', default='User not found'), 'danger')
             except Exception as e:
-                logger.error(f'Error processing feedback: {str(e)}', exc_info=True)
+                logger.error(f'Error processing feedback: {str(e)}', exc_info=True, extra={'ip_address': request.remote_addr})
                 flash(trans('general_error', default='Error occurred during feedback submission'), 'danger')
                 try:
                     return render_template('general/feedback.html', t=trans, lang=lang, tool_options=tool_options), 500
                 except TemplateNotFound as e:
                     logger.error(f'Template not found: {str(e)}', exc_info=True)
                     return render_template('personal/GENERAL/error.html', t=trans, lang=lang, error=str(e)), 500
-        logger.info('Rendering feedback index template')
+        logger.info('Rendering feedback index template', extra={'ip_address': request.remote_addr})
         try:
             return render_template('general/feedback.html', 
                                  t=trans, 
@@ -1079,7 +1132,8 @@ def create_app():
     @limiter.limit('10 per minute')
     def setup_database_route():
         setup_key = request.args.get('key')
-        if setup_key != os.getenv('SETUP_KEY', 'setup-secret'):
+        if not app.config['SETUP_KEY'] or setup_key != app.config['SETUP_KEY']:
+            logger.warning(f'Invalid setup key: {setup_key}', extra={'ip_address': request.remote_addr})
             try:
                 return render_template('errors/403.html', content=trans('general_access_denied', default='Access denied')), 403
             except TemplateNotFound as e:
@@ -1089,9 +1143,11 @@ def create_app():
             with app.app_context():
                 initialize_database(app)
             flash(trans('general_success', default='Database setup successful'), 'success')
+            logger.info('Database setup completed', extra={'ip_address': request.remote_addr})
             return redirect(url_for('index'))
         except Exception as e:
             flash(trans('general_error', default='An error occurred during database setup'), 'danger')
+            logger.error(f'Database setup error: {str(e)}', exc_info=True, extra={'ip_address': request.remote_addr})
             try:
                 return render_template('errors/500.html', content=trans('general_error', default='Internal server error'), error=str(e)), 500
             except TemplateNotFound as e:
@@ -1100,6 +1156,10 @@ def create_app():
     
     @app.route('/static/<path:filename>')
     def static_files(filename):
+        # Prevent directory traversal
+        if '..' in filename or filename.startswith('/'):
+            logger.warning(f'Invalid static file path: {filename}', extra={'ip_address': request.remote_addr})
+            abort(403)
         response = send_from_directory('static', filename)
         response.headers['Cache-Control'] = 'public, max-age=31536000'
         return response
@@ -1108,8 +1168,9 @@ def create_app():
     def static_personal(filename):
         allowed_extensions = {'.css', '.js', '.png', '.jpg', '.jpeg', '.gif', '.ico', '.svg'}
         file_ext = os.path.splitext(filename)[1].lower()
-
-        if file_ext not in allowed_extensions:
+        # Prevent directory traversal
+        if '..' in filename or filename.startswith('/') or file_ext not in allowed_extensions:
+            logger.warning(f'Invalid static_personal file path or extension: {filename}', extra={'ip_address': request.remote_addr})
             abort(403)
 
         try:
@@ -1120,15 +1181,24 @@ def create_app():
                 response.headers['Cache-Control'] = 'public, max-age=604800'
             return response
         except FileNotFoundError:
+            logger.error(f'Static file not found: {filename}', extra={'ip_address': request.remote_addr})
             abort(404)
                 
     @app.route('/favicon.ico')
     def favicon():
-        return send_from_directory(app.static_folder, 'icons/favicon.ico')
+        try:
+            return send_from_directory(app.static_folder, 'icons/favicon.ico')
+        except FileNotFoundError:
+            logger.error('Favicon not found', extra={'ip_address': request.remote_addr})
+            abort(404)
     
     @app.route('/service-worker.js')
     def service_worker():
-        return app.send_static_file('js/service-worker.js')
+        try:
+            return app.send_static_file('js/service-worker.js')
+        except FileNotFoundError:
+            logger.error('Service worker file not found', extra={'ip_address': request.remote_addr})
+            abort(404)
     
     @app.route('/manifest.json')
     def manifest():
@@ -1164,7 +1234,7 @@ def create_app():
     # Error handlers
     @app.errorhandler(CSRFError)
     def handle_csrf_error(e):
-        logger.error(f'CSRF error: {str(e)}', extra={'session_id': session.get('sid', 'no-session-id')})
+        logger.error(f'CSRF error: {str(e)}', extra={'session_id': session.get('sid', 'no-session-id'), 'ip_address': request.remote_addr})
         try:
             return render_template('errors/403.html', 
                                  t=trans, 
@@ -1178,7 +1248,7 @@ def create_app():
 
     @app.errorhandler(404)
     def page_not_found(e):
-        logger.error(f'Page not found: {request.url}', extra={'session_id': session.get('sid', 'no-session-id')})
+        logger.error(f'Page not found: {request.url}', extra={'session_id': session.get('sid', 'no-session-id'), 'ip_address': request.remote_addr})
         try:
             return render_template('errors/404.html', 
                                  t=trans, 
@@ -1192,7 +1262,7 @@ def create_app():
 
     @app.errorhandler(500)
     def internal_server_error(e):
-        logger.error(f'Internal server error: {str(e)}', exc_info=True, extra={'session_id': session.get('sid', 'no-session-id')})
+        logger.error(f'Internal server error: {str(e)}', exc_info=True, extra={'session_id': session.get('sid', 'no-session-id'), 'ip_address': request.remote_addr})
         try:
             return render_template('errors/500.html', 
                                  t=trans, 
