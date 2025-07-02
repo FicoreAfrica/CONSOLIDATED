@@ -1,6 +1,6 @@
 from datetime import datetime
 from pymongo import ASCENDING, DESCENDING
-from pymongo.errors import ConnectionFailure, ServerSelectionTimeoutError, DuplicateKeyError
+from pymongo.errors import ConnectionFailure, ServerSelectionTimeoutError, DuplicateKeyError, OperationFailure
 from werkzeug.security import generate_password_hash
 from bson import ObjectId
 import os
@@ -593,6 +593,7 @@ def initialize_database(app):
                 keys = index['key']
                 options = {k: v for k, v in index.items() if k != 'key'}
                 index_key_tuple = tuple(keys)
+                index_name = '_'.join(f"{k}_{v if isinstance(v, int) else str(v).replace(' ', '_')}" for k, v in keys)
                 index_exists = False
                 for existing_index_name, existing_index_info in existing_indexes.items():
                     if tuple(existing_index_info['key']) == index_key_tuple:
@@ -600,10 +601,28 @@ def initialize_database(app):
                         if existing_options == options:
                             logger.info(f"{trans('general_index_exists', default='Index already exists on')} {collection_name}: {keys} with options {options}")
                             index_exists = True
+                        else:
+                            # Drop conflicting index
+                            try:
+                                db_instance[collection_name].drop_index(existing_index_name)
+                                logger.info(f"Dropped conflicting index {existing_index_name} on {collection_name}")
+                            except OperationFailure as e:
+                                logger.error(f"Failed to drop index {existing_index_name} on {collection_name}: {str(e)}")
+                                raise
                         break
                 if not index_exists:
-                    db_instance[collection_name].create_index(keys, **options)
-                    logger.info(f"{trans('general_index_created', default='Created index on')} {collection_name}: {keys} with options {options}")
+                    try:
+                        db_instance[collection_name].create_index(keys, name=index_name, **options)
+                        logger.info(f"{trans('general_index_created', default='Created index on')} {collection_name}: {keys} with options {options}")
+                    except OperationFailure as e:
+                        if 'IndexKeySpecsConflict' in str(e):
+                            logger.info(f"Attempting to resolve index conflict for {collection_name}: {index_name}")
+                            db_instance[collection_name].drop_index(index_name)
+                            db_instance[collection_name].create_index(keys, name=index_name, **options)
+                            logger.info(f"Recreated index on {collection_name}: {keys} with options {options}")
+                        else:
+                            logger.error(f"Failed to create index on {collection_name}: {str(e)}")
+                            raise
         
         courses_collection = db_instance.courses
         if courses_collection.count_documents({}) == 0:
