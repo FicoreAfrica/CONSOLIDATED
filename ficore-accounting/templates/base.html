@@ -50,7 +50,7 @@
                     <li class="nav-item">
                         <a class="nav-link {% if request.endpoint == 'users.signup' %}active{% endif %}" href="{{ url_for('users.signup') | e }}" data-bs-toggle="tooltip" data-bs-title="{{ t('general_signup_tooltip', default='Create a new account') | e }}" aria-current="{% if request.endpoint == 'users.signup' %}page{% endif %}">{{ t('general_signup', default='Sign Up') | e }}</a>
                     </li>
-                    <li class="nav-item dropdown">
+                    <li class="navDitem dropdown">
                         <a class="nav-link dropdown-toggle" href="#" id="languageDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false" data-bs-title="{{ t('general_language_tooltip', default='Change language') | e }}" aria-label="{{ t('general_language', default='Language') | e }}">
                             {{ session.get('lang', 'en').upper() | e }}
                         </a>
@@ -107,7 +107,9 @@
                         </a>
                     </li>
                     <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle" href="#" id="languageDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false" data-bs-title="{{ t('general_language_tooltip', default='Change language') | e }}" aria-label="{{ t('general_language', default='Language') | e }}">
+                        <a class="nav-link dropdown-toggle" href="#" id="languageDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false" data-bs-title="{{ t('general_language_tooltip', default='Change language') | e }}" aria-label
+
+="{{ t('general_language', default='Language') | e }}">
                             {{ session.get('lang', 'en').upper() | e }}
                         </a>
                         <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="languageDropdown">
@@ -146,6 +148,7 @@
         {% endwith %}
     </div>
 
+    {% block content %}
     {% if current_user.is_authenticated %}
     <div class="container-fluid">
         <div class="row">
@@ -165,17 +168,18 @@
                 </div>
             </aside>
             <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4 main-content">
-                {% block content %}{% endblock %}
+                {% block main_content %}{% endblock %}
             </main>
         </div>
     </div>
     {% else %}
     <main class="main-content">
         <div class="container">
-            {% block content %}{% endblock %}
+            {% block main_content %}{% endblock %}
         </div>
     </main>
     {% endif %}
+    {% endblock %}
 
     {% if not current_user.is_authenticated %}
     <footer class="footer mt-5" style="background: linear-gradient(90deg, #003087, #004D40); color: white;">
