@@ -1,16 +1,16 @@
-from flask import Blueprint, render_template, request, redirect, url_for, session, flash, current_app, jsonify
+from flask import Blueprint, jsonify, current_app, redirect, url_for, flash, render_template, request, session
 from flask_wtf import FlaskForm
 from flask_wtf.csrf import CSRFProtect, CSRFError
 from wtforms import StringField, SelectField, BooleanField, SubmitField, RadioField
 from wtforms.validators import DataRequired, Email, Optional, ValidationError
-from flask_login import current_user, login_required
+from flask_login import current_user
 from bson import ObjectId
 from datetime import datetime
 from translations import trans
 from mailersend_email import send_email, EMAIL_CONFIG
 from models import log_tool_usage
 from session_utils import create_anonymous_session
-from utils import requires_role, is_admin, get_mongo_db
+from utils import requires_role, is_admin, get_mongo_db, PERSONAL_TOOLS, PERSONAL_NAV, ALL_TOOLS, ADMIN_NAV
 
 quiz_bp = Blueprint(
     'quiz',
@@ -28,9 +28,9 @@ def custom_login_required(f):
     
     @wraps(f)
     def decorated_function(*args, **kwargs):
-        if current_user.is_authenticated or session.get('is_anonymous', False):
-            return f(*args, **kwargs)
-        return redirect(url_for('users.login', next=request.url))
+        if not current_user.is_authenticated and not session.get('is_anonymous', False):
+            create_anonymous_session()
+        return f(*args, **kwargs)
     return decorated_function
 
 class QuizForm(FlaskForm):
@@ -276,7 +276,9 @@ def main():
     )
 
     try:
-        filter_criteria = {'user_id': current_user.id} if current_user.is_authenticated else {'session_id': session['sid']}
+        # TEMPORARY: Allow admin to view all quiz responses during testing
+        # TODO: Restore original filter_criteria for production
+        filter_criteria = {} if is_admin() else {'user_id': current_user.id} if current_user.is_authenticated else {'session_id': session['sid']}
         
         if request.method == 'POST':
             action = request.form.get('action')
@@ -353,7 +355,7 @@ def main():
                                 'tips': quiz_result['tips'],
                                 'created_at': quiz_result['created_at'].strftime('%Y-%m-%d'),
                                 'cta_url': url_for('personal/QUIZ/quiz.main', course_id=course_id, _external=True),
-                                'unsubscribe_url': url_for('personal.quiz.unsubscribe', email=form.email.data, _external=True)
+                                'unsubscribe_url': url_for('quiz.unsubscribe', email=form.email.data, _external=True)
                             },
                             lang=lang
                         )
@@ -410,7 +412,7 @@ def main():
 
         # Cross-tool insights from net_worth_data
         cross_tool_insights = []
-        filter_kwargs_net_worth = {'user_id': current_user.id} if current_user.is_authenticated else {'session_id': session['sid']}
+        filter_kwargs_net_worth = {} if is_admin() else {'user_id': current_user.id} if current_user.is_authenticated else {'session_id': session['sid']}
         net_worth_data = get_mongo_db().net_worth_data.find(filter_kwargs_net_worth).sort('created_at', -1)
         net_worth_data = list(net_worth_data)
         if net_worth_data and latest_record and latest_record.get('score', 0) < 13:
@@ -496,6 +498,8 @@ def main():
             },
         ]
 
+        tools = PERSONAL_TOOLS if current_user.role == 'personal' else ALL_TOOLS
+        nav_items = PERSONAL_NAV if current_user.role == 'personal' else ADMIN_NAV
         current_app.logger.info(f"Rendering quiz main page with {len(records)} results for session {session['sid']}", extra={'session_id': session['sid']})
         return render_template(
             'personal/QUIZ/quiz_main.html',
@@ -513,12 +517,16 @@ def main():
             total_users=total_users,
             average_score=average_score,
             t=trans,
-            tool_title=trans('quiz_title', default='Financial Quiz', lang=lang)
+            tool_title=trans('quiz_title', default='Financial Quiz', lang=lang),
+            tools=tools,
+            nav_items=nav_items
         )
 
     except Exception as e:
         current_app.logger.error(f"Error in personal/QUIZ/quiz.main for session {session.get('sid', 'unknown')}: {str(e)}", extra={'session_id': session.get('sid', 'unknown')})
         flash(trans('quiz_error_results', default='An error occurred while loading quiz. Please try again.'), 'danger')
+        tools = PERSONAL_TOOLS if current_user.role == 'personal' else ALL_TOOLS
+        nav_items = PERSONAL_NAV if current_user.role == 'personal' else ADMIN_NAV
         return render_template(
             'personal/QUIZ/quiz_main.html',
             form=form,
@@ -544,11 +552,14 @@ def main():
             total_users=0,
             average_score=0,
             t=trans,
-            tool_title=trans('quiz_title', default='Financial Quiz', lang=lang)
+            tool_title=trans('quiz_title', default='Financial Quiz', lang=lang),
+            tools=tools,
+            nav_items=nav_items
         ), 500
 
 @quiz_bp.route('/unsubscribe/<email>')
 @custom_login_required
+@requires_role(['personal', 'admin'])
 def unsubscribe(email):
     """Unsubscribe user from quiz emails using MongoDB."""
     if 'sid' not in session:
@@ -566,11 +577,9 @@ def unsubscribe(email):
             action='unsubscribe',
             mongo=get_mongo_db()
         )
-        filter_criteria = {'email': email}
-        if current_user.is_authenticated:
-            filter_criteria['user_id'] = current_user.id
-        else:
-            filter_criteria['session_id'] = session['sid']
+        # TEMPORARY: Allow admin to unsubscribe any email during testing
+        # TODO: Restore original filter_criteria for production
+        filter_criteria = {'email': email} if is_admin() else {'email': email, 'user_id': current_user.id} if current_user.is_authenticated else {'email': email, 'session_id': session['sid']}
         
         existing_record = get_mongo_db().quiz_responses.find_one(filter_criteria)
         if not existing_record:
@@ -598,6 +607,36 @@ def unsubscribe(email):
 def handle_csrf_error(e):
     """Handle CSRF errors with user-friendly message."""
     lang = session.get('lang', 'en')
+    tools = PERSONAL_TOOLS if current_user.role == 'personal' else ALL_TOOLS
+    nav_items = PERSONAL_NAV if current_user.role == 'personal' else ADMIN_NAV
     current_app.logger.error(f"CSRF error on {request.path}: {e.description}", extra={'session_id': session.get('sid', 'unknown')})
     flash(trans('quiz_csrf_error', default='Form submission failed due to a missing security token. Please refresh and try again.'), 'danger')
-    return redirect(url_for('personal/QUIZ/quiz.main')), 400
+    return render_template(
+        'personal/QUIZ/quiz_main.html',
+        form=QuizForm(lang=lang),
+        questions=[],
+        records=[],
+        latest_record={
+            'score': 0,
+            'personality': '',
+            'description': '',
+            'badges': [],
+            'insights': [],
+            'tips': [],
+            'created_at': 'N/A',
+            'course_id': 'financial_quiz'
+        },
+        insights=[],
+        cross_tool_insights=[],
+        tips=[],
+        course_id='financial_quiz',
+        lang=lang,
+        max_score=30,
+        rank=0,
+        total_users=0,
+        average_score=0,
+        t=trans,
+        tool_title=trans('quiz_title', default='Financial Quiz', lang=lang),
+        tools=tools,
+        nav_items=nav_items
+    ), 400
