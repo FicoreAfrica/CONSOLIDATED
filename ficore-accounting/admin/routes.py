@@ -3,8 +3,8 @@ from flask_login import login_required, current_user
 from flask_wtf import FlaskForm
 from wtforms import StringField, FloatField, SelectField, validators, SubmitField
 from datetime import datetime
-from ..translations import trans
-from ..utils import trans_function, requires_role, get_mongo_db, is_admin, get_user_query, get_limiter, ALL_TOOLS, ADMIN_NAV
+from translations import trans
+from utils import trans_function, requires_role, get_mongo_db, is_admin, get_user_query, get_limiter, ALL_TOOLS, ADMIN_NAV
 from bson import ObjectId
 import logging
 import re
