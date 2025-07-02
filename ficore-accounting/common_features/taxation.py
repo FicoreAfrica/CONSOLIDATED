@@ -11,6 +11,7 @@ from bson import ObjectId
 
 taxation_bp = Blueprint('taxation_bp', __name__)
 
+# Forms
 class TaxCalculationForm(FlaskForm):
     amount = FloatField('Amount', validators=[DataRequired(), NumberRange(min=0)])
     taxpayer_type = SelectField('Taxpayer Type', choices=[
@@ -44,33 +45,85 @@ class ReminderForm(FlaskForm):
     reminder_date = DateField('Reminder Date', validators=[DataRequired()])
     submit = SubmitField('Add Reminder')
 
+# Tax Calculation Functions
+def calculate_paye(gross_income):
+    tax_brackets = [
+        (800000.0, 0.0),  # 0% up to ₦800,000
+        (3000000.0, 0.15),  # 15% from ₦800,001 to ₦3,000,000
+        (12000000.0, 0.18),  # 18% from ₦3,000,001 to ₦12,000,000
+        (float('inf'), 0.25)  # 25% above ₦12,000,000
+    ]
+    tax_due = 0.0
+    taxable_income = gross_income
+    last_limit = 0.0
+
+    for limit, rate in tax_brackets:
+        if taxable_income <= last_limit:
+            break
+        band_amount = min(taxable_income, limit) - last_limit
+        if band_amount > 0:
+            tax_due += band_amount * rate
+        if taxable_income <= limit:
+            break
+        last_limit = limit
+
+    # Add Development Levy
+    levy_rate = 0.02 if gross_income <= 5000000 else 0.04
+    tax_due += gross_income * levy_rate
+    return round(tax_due, 2)
+
+def calculate_cit(turnover):
+    if turnover <= 25000000:
+        tax = 0.0
+    elif turnover <= 100000000:
+        tax = turnover * 0.20
+    else:
+        tax = turnover * 0.30
+    # Add Tertiary Education Tax for CIT (3% for non-zero turnover)
+    tertiary_edu_tax = turnover * 0.03 if turnover > 0 else 0.0
+    # Add Development Levy
+    levy_rate = 0.02 if turnover <= 5000000 else 0.04
+    tax += tertiary_edu_tax + (turnover * levy_rate)
+    return round(tax, 2)
+
+def tax_summary(name, gross_income, turnover):
+    paye = calculate_paye(gross_income)
+    cit = calculate_cit(turnover)
+    return {
+        "name": name,
+        "gross_income": gross_income,
+        "monthly_paye": round(paye / 12, 2),
+        "annual_paye": paye,
+        "sme_turnover": turnover,
+        "sme_cit": cit
+    }
+
+# Database Seeding
 def seed_tax_data():
     db = get_mongo_db()
-    if 'tax_rates' not in db.list_collection_names():
-        db.create_collection('tax_rates')
-    if 'payment_locations' not in db.list_collection_names():
-        db.create_collection('payment_locations')
-    if 'tax_reminders' not in db.list_collection_names():
-        db.create_collection('tax_reminders')
+    # Create collections if they don't exist
+    for collection in ['tax_rates', 'payment_locations', 'tax_reminders']:
+        if collection not in db.list_collection_names():
+            db.create_collection(collection)
+
+    # Seed tax rates
     if db.tax_rates.count_documents({}) == 0:
         tax_rates = [
-            # PAYE (Personal) Progressive Rates
             {'role': 'personal', 'min_income': 0.0, 'max_income': 800000.0, 'rate': 0.0, 'description': '0% tax rate for personal income up to 800,000 NGN'},
             {'role': 'personal', 'min_income': 800001.0, 'max_income': 3000000.0, 'rate': 0.15, 'description': '15% tax rate for personal income from 800,001 to 3,000,000 NGN'},
             {'role': 'personal', 'min_income': 3000001.0, 'max_income': 12000000.0, 'rate': 0.18, 'description': '18% tax rate for personal income from 3,000,001 to 12,000,000 NGN'},
             {'role': 'personal', 'min_income': 12000001.0, 'max_income': float('inf'), 'rate': 0.25, 'description': '25% tax rate for personal income above 12,000,000 NGN'},
-            # Small Business Rates
             {'role': 'company', 'min_income': 0.0, 'max_income': 25000000.0, 'rate': 0.0, 'description': '0% for revenue up to ₦25M (Small Business)'},
             {'role': 'company', 'min_income': 25000001.0, 'max_income': 100000000.0, 'rate': 0.20, 'description': '20% for revenue between ₦25M and ₦100M (Medium Business)'},
             {'role': 'company', 'min_income': 100000001.0, 'max_income': float('inf'), 'rate': 0.30, 'description': '30% for revenue above ₦100M (Large Business)'},
-            # CIT Rates (aligned with Small Business for simplicity, expandable for Real Estate/PPT)
             {'role': 'company', 'min_income': 0.0, 'max_income': 25000000.0, 'rate': 0.0, 'description': '0% CIT for turnover ≤ ₦25M'},
             {'role': 'company', 'min_income': 25000001.0, 'max_income': 100000000.0, 'rate': 0.20, 'description': '20% CIT for turnover ₦25M - ₦100M'},
-            {'role': 'company', 'min_income': 100000001.0, 'max_income': float('inf'), 'rate': 0.30, 'description': '30% CIT for turnover > ₦100M'}
+            {'role': 'company', 'min_income': 100000001.0, 'max_income': float('inf'), 'rate': 0.30, 'description': '30% CIT for turnover > ₦100M'},
         ]
         db.tax_rates.insert_many(tax_rates)
         logging.info("Seeded tax rates")
 
+    # Seed payment locations
     if db.payment_locations.count_documents({}) == 0:
         locations = [
             {'name': 'Lagos NRS Office', 'address': '123 Broad Street, Lagos', 'contact': '+234-1-2345678'},
@@ -79,6 +132,7 @@ def seed_tax_data():
         db.payment_locations.insert_many(locations)
         logging.info("Seeded tax locations")
 
+    # Seed tax reminders
     if db.tax_reminders.count_documents({}) == 0:
         reminders = [
             {'user_id': 'admin', 'message': 'File quarterly tax return with NRS', 'reminder_date': datetime.datetime(2025, 9, 30), 'created_at': datetime.datetime.utcnow()}
@@ -86,6 +140,7 @@ def seed_tax_data():
         db.tax_reminders.insert_many(reminders)
         logging.info("Seeded reminders")
 
+# Routes
 @taxation_bp.route('/calculate', methods=['GET', 'POST'])
 @requires_role(['personal', 'trader', 'agent', 'company'])
 @login_required
@@ -103,6 +158,7 @@ def calculate_tax():
             '_id': str(rate['_id'])
         } for rate in tax_rates
     ]
+
     if request.method == 'POST':
         if form.validate_on_submit():
             amount = form.amount.data
@@ -110,60 +166,25 @@ def calculate_tax():
             business_size = form.business_size.data if taxpayer_type in ['small_business', 'cit'] else None
             logging.info(f"POST /calculate: user={current_user.username}, amount={amount}, taxpayer_type={taxpayer_type}, business_size={business_size}")
 
+            total_tax = 0.0
+            explanation = ""
+
             if taxpayer_type == 'paye':
-                remaining_amount = amount
-                total_tax = 0.0
-                tax_brackets = [
-                    (800000.0, 0.0),  # 0% up to ₦800,000
-                    (3000000.0, 0.15),  # 15% from ₦800,001 to ₦3,000,000
-                    (12000000.0, 0.18),  # 18% from ₦3,000,001 to ₦12,000,000
-                    (float('inf'), 0.25)  # 25% above ₦12,000,000
-                ]
-                for max_income, rate in tax_brackets:
-                    if remaining_amount <= 0:
-                        break
-                    taxable_amount = min(remaining_amount, max_income)
-                    if taxable_amount > 0:
-                        bracket_start = max(0, max_income - taxable_amount)
-                        if bracket_start > 0:
-                            taxable_amount -= bracket_start
-                        tax = round(taxable_amount * rate, 2)
-                        total_tax += tax
-                        remaining_amount -= taxable_amount
-                levy_rate = 0.02 if amount <= 5000000 else 0.04
-                levy = round(amount * levy_rate, 2)
-                total_tax += levy
-                explanation = "Progressive PAYE: 0% up to ₦800,000, 15% up to ₦3,000,000, 18% up to ₦12,000,000, 25% above ₦12,000,000 + {:.0%} Development Levy".format(levy_rate)
+                total_tax = calculate_paye(amount)
+                explanation = "Progressive PAYE: 0% up to ₦800,000, 15% up to ₦3,000,000, 18% up to ₦12,000,000, 25% above ₦12,000,000 + {:.0%} Development Levy".format(0.02 if amount <= 5000000 else 0.04)
 
             elif taxpayer_type == 'small_business':
+                total_tax = calculate_cit(amount)
                 if amount <= 25000000:
-                    tax = 0.0
                     explanation = "0% for revenue up to ₦25M"
-                elif 25000001 <= amount <= 100000000:
-                    tax = round(amount * 0.20, 2)
+                elif amount <= 100000000:
                     explanation = "20% for revenue between ₦25M and ₦100M"
                 else:
-                    tax = round(amount * 0.30, 2)
                     explanation = "30% for revenue above ₦100M"
-                levy_rate = 0.02 if amount <= 5000000 else 0.04
-                levy = round(amount * levy_rate, 2)
-                total_tax = tax + levy
-                explanation += f" + {levy_rate*100}% Development Levy"
+                explanation += f" + 3% Tertiary Education Tax + {0.02*100 if amount <= 5000000 else 0.04*100}% Development Levy"
 
             elif taxpayer_type == 'cit':
-                if business_size == 'small':
-                    tax = 0.0
-                    explanation = "0% for companies with turnover ≤ ₦25M"
-                elif business_size == 'medium':
-                    tax = round(amount * 0.20, 2)
-                    explanation = "20% for companies with turnover ₦25M - ₦100M"
-                elif business_size == 'large':
-                    tax = round(amount * 0.30, 2)
-                    explanation = "30% for companies with turnover > ₦100M"
-                    tertiary_edu_tax = round(amount * 0.03, 2) if amount > 0 else 0.0
-                    total_tax = tax + tertiary_edu_tax
-                    explanation += f" + 3% Tertiary Education Tax"
-                else:
+                if business_size not in ['small', 'medium', 'large']:
                     flash(trans('tax_invalid_business_size', default='Invalid business size selected'), 'warning')
                     return render_template('common_features/taxation/taxation.html',
                                          section='calculate',
@@ -171,10 +192,14 @@ def calculate_tax():
                                          tax_rates=serialized_tax_rates,
                                          t=trans,
                                          lang=session.get('lang', 'en'))
-                levy_rate = 0.02 if amount <= 5000000 else 0.04
-                levy = round(amount * levy_rate, 2)
-                total_tax += levy
-                explanation += f" + {levy_rate*100}% Development Levy"
+                total_tax = calculate_cit(amount)
+                if business_size == 'small':
+                    explanation = "0% for companies with turnover ≤ ₦25M"
+                elif business_size == 'medium':
+                    explanation = "20% for companies with turnover ₦25M - ₦100M"
+                elif business_size == 'large':
+                    explanation = "30% for companies with turnover > ₦100M"
+                explanation += f" + 3% Tertiary Education Tax + {0.02*100 if amount <= 5000000 else 0.04*100}% Development Levy"
 
             logging.info(f"Tax calculated: tax={total_tax}, explanation={explanation}")
             if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
@@ -193,6 +218,7 @@ def calculate_tax():
             flash(trans('tax_invalid_input', default='Invalid input. Please check your amount and selections.'), 'danger')
             if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
                 return jsonify({'error': trans('tax_invalid_input', default='Invalid input')}), 400
+
     return render_template('common_features/taxation/taxation.html',
                          section='calculate',
                          form=form,
@@ -355,14 +381,5 @@ def manage_tax_deadlines():
     return render_template('common_features/taxation/taxation.html',
                          section='admin_deadlines',
                          deadlines=serialized_deadlines,
-                         t=trans,
-                         lang=session.get('lang', 'en'))
-
-@taxation_bp.route('/understand_taxes', methods=['GET'])
-@requires_role(['personal', 'trader', 'agent', 'company'])
-@login_required
-def understand_taxes():
-    return render_template('common_features/taxation/taxation.html',
-                         section='understand_taxes',
                          t=trans,
                          lang=session.get('lang', 'en'))
