@@ -86,10 +86,6 @@ def seed_tax_data():
         db.tax_reminders.insert_many(reminders)
         logging.info("Seeded reminders")
 
-# Call seed_tax_data on blueprint initialization if needed
-with taxation_bp.app_context():
-    seed_tax_data()
-
 @taxation_bp.route('/calculate', methods=['GET', 'POST'])
 @requires_role(['personal', 'trader', 'agent', 'company'])
 @login_required
