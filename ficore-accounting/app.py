@@ -322,32 +322,7 @@ def create_app():
             except Exception as e:
                 logger.warning(f'Some indexes may already exist: {str(e)}')
             
-            # Initialize taxation collections
-            if 'tax_rates' not in db.list_collection_names():
-                db.create_collection('tax_rates')
-            if 'payment_locations' not in db.list_collection_names():
-                db.create_collection('payment_locations')
-            if 'tax_reminders' not in db.list_collection_names():
-                db.create_collection('tax_reminders')
-            if db.tax_rates.count_documents({}) == 0:
-                sample_rates = [
-                    {'role': 'personal', 'min_income': 0.0, 'max_income': 800000.0, 'rate': 0.0, 'description': '0% tax rate for personal income up to 800,000 NGN'},
-                    {'role': 'personal', 'min_income': 800001.0, 'max_income': 3000000.0, 'rate': 0.15, 'description': '15% tax rate for personal income from 800,001 to 3,000,000 NGN'},
-                    {'role': 'personal', 'min_income': 3000001.0, 'max_income': 12000000.0, 'rate': 0.18, 'description': '18% tax rate for personal income from 3,000,001 to 12,000,000 NGN'},
-                    {'role': 'personal', 'min_income': 12000001.0, 'max_income': float('inf'), 'rate': 0.25, 'description': '25% tax rate for personal income above 12,000,000 NGN'},
-                    {'role': 'trader', 'min_income': 0.0, 'max_income': 25000000.0, 'rate': 0.0, 'description': '0% tax rate for small business turnover up to 25,000,000 NGN (small)'},
-                    {'role': 'trader', 'min_income': 25000001.0, 'max_income': 100000000.0, 'rate': 0.25, 'description': '25% tax rate for medium business turnover between 25,000,001 and 100,000,000 NGN (medium)'},
-                    {'role': 'trader', 'min_income': 100000001.0, 'max_income': float('inf'), 'rate': 0.30, 'description': '30% tax rate for large business turnover above 100,000,000 NGN (large)'},
-                    {'role': 'agent', 'min_income': 0.0, 'max_income': 25000000.0, 'rate': 0.0, 'description': '0% tax rate for small agent income up to 25,000,000 NGN (small)'},
-                    {'role': 'agent', 'min_income': 25000001.0, 'max_income': 100000000.0, 'rate': 0.25, 'description': '25% tax rate for medium agent income between 25,000,001 and 100,000,000 NGN (medium)'},
-                    {'role': 'agent', 'min_income': 100000001.0, 'max_income': float('inf'), 'rate': 0.30, 'description': '30% tax rate for large agent income above 100,000,000 NGN (large)'}
-                ]
-                db.tax_rates.insert_many(sample_rates)
-            if db.payment_locations.count_documents({}) == 0:
-                sample_locations = [
-                    {'name': 'Gombe State IRS Office', 'address': '123 Tax Street, Gombe', 'contact': '+234 123 456 7890', 'coordinates': {'lat': 10.2896, 'lng': 11.1673}},
-                ]
-                db.payment_locations.insert_many(sample_locations)
+            # Initialize admin user
             admin_email = os.environ.get('ADMIN_EMAIL', 'ficore@gmail.com')
             admin_password = os.environ.get('ADMIN_PASSWORD', 'Admin123!')
             admin_username = os.environ.get('ADMIN_USERNAME', 'admin')
@@ -946,7 +921,7 @@ def create_app():
                 ).sort('created_at', -1).limit(3))
                 for cashflow in recent_cashflows:
                     activity_type = 'money_in' if cashflow['type'] == 'receipt' else 'money_out'
-                    description = f'{"Received" if cashflow["type"] == "receipt" else "Paid"} {cashflow["party_name"]}'
+                    description = f'{"Received" if cashflow["type"] == 'receipt' else "Paid"} {cashflow["party_name"]}'
                     activities.append({
                         'type': activity_type,
                         'description': description,
@@ -999,7 +974,7 @@ def create_app():
                     'message': n['message'],
                     'type': n['type'],
                     'timestamp': n['sent_at'].isoformat(),
-                    'read': n.get('read_status', false)
+                    'read': n.get('read_status', False)
                 } for n in notifications]
                 return jsonify(result)
         except Exception as e:
