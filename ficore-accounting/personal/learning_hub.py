@@ -707,7 +707,7 @@ def lesson_action():
                                 "lesson_title": lesson.get('title_en', ''),
                                 "completed_at": datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S'),
                                 "cta_url": url_for('personal/LEARNINGHUB/learning_hub.main', _external=True),
-                                "unsubscribe_url": url_for('personal.learning_hub.unsubscribe', email=profile['email'], _external=True)
+                                "unsubscribe_url": url_for('learning_hub.unsubscribe', email=profile['email'], _external=True)
                             },
                             lang=session.get('lang', 'en')
                         )
@@ -778,7 +778,7 @@ def quiz_action():
                             "total": len(quiz['questions']),
                             "completed_at": datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S'),
                             "cta_url": url_for('personal/LEARNINGHUB/learning_hub.main', _external=True),
-                            "unsubscribe_url": url_for('personal.learning_hub.unsubscribe', email=profile['email'], _external=True)
+                            "unsubscribe_url": url_for('learning_hub.unsubscribe', email=profile['email'], _external=True)
                         },
                         lang=session.get('lang', 'en')
                     )
