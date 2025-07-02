@@ -112,7 +112,7 @@ def agent_portal():
     except Exception as e:
         logger.error(f"Error loading agent dashboard for {current_user.id}: {str(e)}")
         flash(trans('agents_dashboard_error', default='An error occurred while loading the dashboard'), 'danger')
-        return redirect(url_for('app.index'))
+        return redirect(url_for('index'))
 
 @agents_bp.route('/register_trader', methods=['GET', 'POST'])
 @login_required
