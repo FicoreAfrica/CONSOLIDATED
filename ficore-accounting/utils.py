@@ -807,7 +807,15 @@ ALL_TOOLS = (
 )
 
 ADMIN_NAV = [
-    {"label": "Dashboard", "icon": "bi-speedometer", "url": "admin.dashboard"},
-    {"label": "Manage Users", "icon": "bi-people", "url": "admin.dashboard"},
-    {"label": "Profile", "icon": "bi-person", "url": "settings.profile"},
+    {'name': 'dashboard', 'url': 'admin.dashboard', 'label': trans('admin_dashboard', default='Dashboard')},
+    {'name': 'manage_users', 'url': 'admin.manage_users', 'label': trans('admin_manage_users', default='Manage Users')},
+    {'name': 'credit_coins', 'url': 'admin.credit_coins', 'label': trans('admin_credit_coins', default='Credit Coins')},
+    {'name': 'audit', 'url': 'admin.audit', 'label': trans('admin_view_audit_logs', default='View Audit Logs')},
+    {'name': 'manage_agents', 'url': 'admin.manage_agents', 'label': trans('admin_manage_agents', default='Manage Agents')},
+    {'name': 'manage_budgets', 'url': 'admin.admin_budgets', 'label': trans('admin_manage_budgets', default='Manage Budgets')},
+    {'name': 'manage_bills', 'url': 'admin.admin_bills', 'label': trans('admin_manage_bills', default='Manage Bills')},
+    {'name': 'manage_emergency_funds', 'url': 'admin.admin_emergency_funds', 'label': trans('admin_manage_emergency_funds', default='Manage Emergency Funds')},
+    {'name': 'manage_net_worth', 'url': 'admin.admin_net_worth', 'label': trans('admin_manage_net_worth', default='Manage Net Worth')},
+    {'name': 'manage_quiz_results', 'url': 'admin.admin_quiz_results', 'label': trans('admin_manage_quiz_results', default='Manage Quiz Results')},
+    {'name': 'manage_learning_hub', 'url': 'admin.admin_learning_hub', 'label': trans('admin_manage_learning_hub', default='Manage Learning Hub')},
 ]
