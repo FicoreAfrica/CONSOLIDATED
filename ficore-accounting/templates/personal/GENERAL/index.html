@@ -1,4 +1,4 @@
-{% extends 'base.html' %}
+{% extends 'personal/GENERAL/base.html' %}
 {% block title %}{{ t('general_welcome', default='Welcome to FiCore Africa') }}{% endblock title %}
 
 {% block content %}
@@ -16,7 +16,7 @@
                     <i class="bi bi-bell"></i>
                     <span class="notification-badge d-none" id="notificationBadge"></span>
                 </button>
-                <a href="{{ url_for('settings.profile') }}" class="profile-icon">
+                <a href="{{ url_for('settings.profile') }}" class="profile-icon" aria-label="{{ t('general_profile', default='Profile') | e }}">
                     <i class="bi bi-person-circle"></i>
                 </a>
                 <a href="{{ url_for('users.logout') }}" class="logout-icon no-js-intercept" data-bs-toggle="tooltip" data-bs-title="{{ t('general_logout', default='Logout') | e }}" aria-label="{{ t('general_logout', default='Logout') | e }}" rel="external">
@@ -32,7 +32,7 @@
                             <li><a class="dropdown-item" href="{{ url_for('set_language', lang='ha') }}">{{ t('general_hausa', default='Hausa') }}</a></li>
                         </ul>
                     </div>
-                    <button class="btn btn-outline-secondary btn-sm" id="quickDarkModeToggle" onclick="toggleDarkMode()" aria-label="{{ t('general_mode_toggle_dark', default='Toggle dark mode') }}">
+                    <button class="btn btn-outline-secondary btn-sm" id="darkModeToggle" onclick="toggleDarkMode()" aria-label="{{ t('general_mode_toggle_dark', default='Toggle dark mode') }}">
                         <i class="bi bi-moon-stars"></i>
                     </button>
                 </div>
@@ -79,7 +79,7 @@
                 </div>
             </div>
             <div class="text-center">
-                <a href="{{ url_for('personal.dashboard.index') }}" class="btn btn-outline-primary btn-sm">
+                <a href="{{ url_for('personal.index') }}" class="btn btn-outline-primary btn-sm">
                     {{ t('general_view_detailed_summary', default='View Detailed Summary') }}
                     <i class="bi bi-arrow-right ms-1"></i>
                 </a>
@@ -114,42 +114,14 @@
         <div class="quick-actions mb-4">
             <h3 class="section-title">{{ t('general_quick_actions', default='Quick Actions') }}</h3>
             <div class="actions-grid">
-                <a href="{{ url_for('personal.budget.main') }}" class="action-card">
+                {% for tool in tools %}
+                <a href="{{ url_for(tool.endpoint) | e }}" class="action-card" aria-label="{{ t(tool.label_key, default=tool.label) | e }}">
                     <div class="action-icon">
-                        <i class="bi bi-calculator"></i>
+                        <i class="{{ tool.icon }}"></i>
                     </div>
-                    <div class="action-label">{{ t('budget_budget_planner', default='Budget Planner') }}</div>
+                    <div class="action-label">{{ t(tool.label_key, default=tool.label) }}</div>
                 </a>
-                <a href="{{ url_for('personal.bill.main') }}" class="action-card">
-                    <div class="action-icon">
-                        <i class="bi bi-receipt"></i>
-                    </div>
-                    <div class="action-label">{{ t('bill_bill_planner', default='Bill Planner') }}</div>
-                </a>
-                <a href="{{ url_for('personal.net_worth.main') }}" class="action-card">
-                    <div class="action-icon">
-                        <i class="bi bi-balance-scale"></i>
-                    </div>
-                    <div class="action-label">{{ t('net_worth_net_worth_calculator', default='Net Worth Tracker') }}</div>
-                </a>
-                <a href="{{ url_for('personal.financial_health.main') }}" class="action-card">
-                    <div class="action-icon">
-                        <i class="bi bi-heartbeat"></i>
-                    </div>
-                    <div class="action-label">{{ t('financial_health_financial_health_score', default='Financial Health') }}</div>
-                </a>
-                <a href="{{ url_for('personal.emergency_fund.main') }}" class="action-card">
-                    <div class="action-icon">
-                        <i class="bi bi-shield-check"></i>
-                    </div>
-                    <div class="action-label">{{ t('emergency_fund_calculator', default='Emergency Fund') }}</div>
-                </a>
-                <a href="{{ url_for('personal.learning_hub.main') }}" class="action-card">
-                    <div class="action-icon">
-                        <i class="bi bi-book"></i>
-                    </div>
-                    <div class="action-label">{{ t('learning_hub_courses', default='Learning Hub') }}</div>
-                </a>
+                {% endfor %}
             </div>
         </div>
 
@@ -178,7 +150,7 @@
         <div class="recent-activity mb-4">
             <div class="d-flex justify-content-between align-items-center mb-3">
                 <h3 class="section-title mb-0">{{ t('general_recent_activity', default='Recent Activity') }}</h3>
-                <a href="{{ url_for('personal.dashboard.index') }}" class="btn btn-link btn-sm p-0">
+                <a href="{{ url_for('personal.index') }}" class="btn btn-link btn-sm p-0">
                     {{ t('general_view_all', default='View All') }}
                 </a>
             </div>
@@ -199,7 +171,7 @@
         <div class="navigation-cards">
             <h3 class="section-title mb-3">{{ t('general_explore_features', default='Explore Features') }}</h3>
             <div class="row g-3">
-                {% if current_user.get('is_admin', False) %}
+                {% if is_admin() %}
                 <div class="col-6 col-md-4">
                     <div class="nav-card">
                         <div class="nav-card-icon">
@@ -209,143 +181,35 @@
                             <h4>{{ t('admin_dashboard', default='Admin Dashboard') }}</h4>
                             <p>{{ t('admin_dashboard_desc', default='Manage users and settings') }}</p>
                         </div>
-                        <a href="{{ url_for('admin.dashboard') }}" class="nav-card-link"></a>
+                        <a href="{{ url_for('admin.dashboard') }}" class="nav-card-link" aria-label="{{ t('admin_dashboard', default='Admin Dashboard') }}"></a>
                     </div>
                 </div>
                 {% endif %}
+                {% for item in nav_items %}
                 <div class="col-6 col-md-4">
                     <div class="nav-card">
                         <div class="nav-card-icon">
-                            <i class="bi bi-calculator"></i>
+                            <i class="{{ item.icon }}"></i>
                         </div>
                         <div class="nav-card-content">
-                            <h4>{{ t('budget_budget_planner', default='Budget Planner') }}</h4>
-                            <p>{{ t('budget_allocate_income', default='Plan and allocate your income') }}</p>
+                            <h4>{{ t(item.label_key, default=item.label) }}</h4>
+                            <p>{{ t(item.desc_key, default=item.description) }}</p>
                         </div>
-                        <a href="{{ url_for('personal.budget.main') }}" class="nav-card-link"></a>
+                        <a href="{{ url_for(item.endpoint) | e }}" class="nav-card-link" aria-label="{{ t(item.label_key, default=item.label) | e }}"></a>
                     </div>
                 </div>
-                <div class="col-6 col-md-4">
-                    <div class="nav-card">
-                        <div class="nav-card-icon">
-                            <i class="bi bi-receipt"></i>
-                        </div>
-                        <div class="nav-card-content">
-                            <h4>{{ t('bill_bill_planner', default='Bill Planner') }}</h4>
-                            <p>{{ t('bill_manage_bills', default='Track and manage your bills') }}</p>
-                        </div>
-                        <a href="{{ url_for('personal.bill.main') }}" class="nav-card-link"></a>
-                    </div>
-                </div>
-                <div class="col-6 col-md-4">
-                    <div class="nav-card">
-                        <div class="nav-card-icon">
-                            <i class="bi bi-balance-scale"></i>
-                        </div>
-                        <div class="nav-card-content">
-                            <h4>{{ t('net_worth_net_worth_calculator', default='Net Worth Tracker') }}</h4>
-                            <p>{{ t('net_worth_track_assets', default='Track assets and liabilities') }}</p>
-                        </div>
-                        <a href="{{ url_for('personal.net_worth.main') }}" class="nav-card-link"></a>
-                    </div>
-                </div>
-                <div class="col-6 col-md-4">
-                    <div class="nav-card">
-                        <div class="nav-card-icon">
-                            <i class="bi bi-heartbeat"></i>
-                        </div>
-                        <div class="nav-card-content">
-                            <h4>{{ t('financial_health_financial_health_score', default='Financial Health') }}</h4>
-                            <p>{{ t('financial_health_evaluate_finances', default='Assess your financial health') }}</p>
-                        </div>
-                        <a href="{{ url_for('personal.financial_health.main') }}" class="nav-card-link"></a>
-                    </div>
-                </div>
-                <div class="col-6 col-md-4">
-                    <div class="nav-card">
-                        <div class="nav-card-icon">
-                            <i class="bi bi-shield-check"></i>
-                        </div>
-                        <div class="nav-card-content">
-                            <h4>{{ t('emergency_fund_calculator', default='Emergency Fund') }}</h4>
-                            <p>{{ t('emergency_fund_plan_savings', default='Plan for emergencies') }}</p>
-                        </div>
-                        <a href="{{ url_for('personal.emergency_fund.main') }}" class="nav-card-link"></a>
-                    </div>
-                </div>
-                <div class="col-6 col-md-4">
-                    <div class="nav-card">
-                        <div class="nav-card-icon">
-                            <i class="bi bi-book"></i>
-                        </div>
-                        <div class="nav-card-content">
-                            <h4>{{ t('learning_hub_courses', default='Learning Hub') }}</h4>
-                            <p>{{ t('learning_hub_dashboard', default='Improve financial literacy') }}</p>
-                        </div>
-                        <a href="{{ url_for('personal.learning_hub.main') }}" class="nav-card-link"></a>
-                    </div>
-                </div>
-                <div class="col-6 col-md-4">
-                    <div class="nav-card">
-                        <div class="nav-card-icon">
-                            <i class="bi bi-question-circle"></i>
-                        </div>
-                        <div class="nav-card-content">
-                            <h4>{{ t('quiz_personality_quiz', default='Personality Quiz') }}</h4>
-                            <p>{{ t('quiz_take_quiz', default='Discover your financial personality') }}</p>
-                        </div>
-                        <a href="{{ url_for('personal.quiz.main') }}" class="nav-card-link"></a>
-                    </div>
-                </div>
-                <div class="col-6 col-md-4">
-                    <div class="nav-card">
-                        <div class="nav-card-icon">
-                            <i class="bi bi-calculator"></i>
-                        </div>
-                        <div class="nav-card-content">
-                            <h4>{{ t('general_taxation', default='Taxation') }}</h4>
-                            <p>{{ t('general_taxation_desc', default='Calculate and manage taxes') }}</p>
-                        </div>
-                        <a href="{{ url_for('taxation_bp.calculate_tax') }}" class="nav-card-link"></a>
-                    </div>
-                </div>
-                <div class="col-6 col-md-4">
-                    <div class="nav-card">
-                        <div class="nav-card-icon">
-                            <i class="bi bi-newspaper"></i>
-                        </div>
-                        <div class="nav-card-content">
-                            <h4>{{ t('general_news', default='News') }}</h4>
-                            <p>{{ t('general_news_desc', default='Stay updated with financial news') }}</p>
-                        </div>
-                        <a href="{{ url_for('common_bp.news_list') }}" class="nav-card-link"></a>
-                    </div>
-                </div>
+                {% endfor %}
             </div>
         </div>
 
         <!-- Bottom Navigation Bar -->
         <nav class="bottom-nav fixed-bottom bg-light border-top d-flex justify-content-around align-items-center py-2">
-            <a href="{{ url_for('index') }}" class="nav-item text-center text-dark" data-bs-toggle="tooltip" data-bs-title="{{ t('general_home', default='Home') | e }}">
-                <i class="bi bi-house-door"></i>
-                <div class="nav-label">{{ t('general_home_tab', default='Home') }}</div>
+            {% for item in nav_items %}
+            <a href="{{ url_for(item.endpoint) | e }}" class="nav-item text-center text-dark" data-bs-toggle="tooltip" data-bs-title="{{ t(item.tooltip_key, default=item.label) | e }}" aria-label="{{ t(item.label_key, default=item.label) | e }}">
+                <i class="{{ item.icon }}"></i>
+                <div class="nav-label">{{ t(item.label_key, default=item.label) }}</div>
             </a>
-            <a href="{{ url_for('personal.budget.main') }}" class="nav-item text-center text-dark" data-bs-toggle="tooltip" data-bs-title="{{ t('budget_budget_planner', default='Budget Planner') | e }}">
-                <i class="bi bi-calculator"></i>
-                <div class="nav-label">{{ t('budget_budget_planner_tab', default='Budget') }}</div>
-            </a>
-            <a href="{{ url_for('personal.bill.main') }}" class="nav-item text-center text-dark" data-bs-toggle="tooltip" data-bs-title="{{ t('bill_bill_planner', default='Bill Planner') | e }}">
-                <i class="bi bi-receipt"></i>
-                <div class="nav-label">{{ t('bill_bill_planner_tab', default='Bills') }}</div>
-            </a>
-            <a href="{{ url_for('taxation_bp.calculate_tax') }}" class="nav-item text-center text-dark" data-bs-toggle="tooltip" data-bs-title="{{ t('general_taxation', default='Taxation') | e }}">
-                <i class="bi bi-calculator"></i>
-                <div class="nav-label">{{ t('general_taxation_tab', default='Taxation') }}</div>
-            </a>
-            <a href="{{ url_for('settings.profile') }}" class="nav-item text-center text-dark" data-bs-toggle="tooltip" data-bs-title="{{ t('general_profile', default='Profile') | e }}">
-                <i class="bi bi-person-circle"></i>
-                <div class="nav-label">{{ t('general_profile_tab', default='Profile') }}</div>
-            </a>
+            {% endfor %}
         </nav>
     {% else %}
         <!-- Prospective User Section -->
@@ -419,33 +283,17 @@
                     <div id="personalToolsCollapse" class="accordion-collapse collapse show" aria-labelledby="personalToolsHeading" data-bs-parent="#toolsAccordion">
                         <div class="accordion-body">
                             <div class="row g-4">
+                                {% for tool in tools %}
                                 <div class="col-md-4">
                                     <div class="card tool-card tool-personal">
                                         <div class="card-body">
-                                            <h4><i class="bi bi-calculator"></i> {{ t('budget_budget_planner', default='Budget Planner') }}</h4>
-                                            <p>{{ t('budget_allocate_income', default='Plan and allocate your income across expense categories.') }}</p>
+                                            <h4><i class="{{ tool.icon }}"></i> {{ t(tool.label_key, default=tool.label) }}</h4>
+                                            <p>{{ t(tool.desc_key, default=tool.description) }}</p>
                                             <a href="{{ url_for('users.signup', role='personal') }}" class="btn btn-primary">{{ t('general_get_started', default='Get Started') }}</a>
                                         </div>
                                     </div>
                                 </div>
-                                <div class="col-md-4">
-                                    <div class="card tool-card tool-personal">
-                                        <div class="card-body">
-                                            <h4><i class="bi bi-receipt"></i> {{ t('bill_bill_planner', default='Bill Planner') }}</h4>
-                                            <p>{{ t('bill_manage_bills', default='Track and manage your bills to stay on top of payments.') }}</p>
-                                            <a href="{{ url_for('users.signup', role='personal') }}" class="btn btn-primary">{{ t('general_get_started', default='Get Started') }}</a>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="col-md-4">
-                                    <div class="card tool-card tool-personal">
-                                        <div class="card-body">
-                                            <h4><i class="bi bi-heartbeat"></i> {{ t('financial_health_financial_health_score', default='Financial Health Score') }}</h4>
-                                            <p>{{ t('financial_health_evaluate_finances', default='Assess your income, expenses, and debt for a clear financial picture.') }}</p>
-                                            <a href="{{ url_for('users.signup', role='personal') }}" class="btn btn-primary">{{ t('general_get_started', default='Get Started') }}</a>
-                                        </div>
-                                    </div>
-                                </div>
+                                {% endfor %}
                             </div>
                         </div>
                     </div>
@@ -698,31 +546,30 @@
                         </div>
                     </div>
                 </div>
-            </div>
-        </section>
+            </section>
 
-        <!-- CTA Section -->
-        <section class="cta-section my-5 text-center">
-            <h3>{{ t('general_ready_to_start', default='Ready to Take Control of Your Finances?') }}</h3>
-            <p>{{ t('general_signup_prompt', default='Sign up today to access tools for personal finance, business management, or agent services.') }}</p>
-            <div class="d-flex justify-content-center gap-3">
-                <div class="dropdown">
-                    <button class="btn btn-primary btn-lg dropdown-toggle" type="button" id="ctaGetStartedDropdown" data-bs-toggle="dropdown" aria-expanded="false">
-                        {{ t('general_get_started', default='Get Started') }}
-                    </button>
-                    <ul class="dropdown-menu" aria-labelledby="ctaGetStartedDropdown">
-                        <li><a class="dropdown-item" href="{{ url_for('users.signup', role='personal') }}">{{ t('general_signup_personal', default='Personal Sign Up') }}</a></li>
-                        <li><a class="dropdown-item" href="{{ url_for('users.signup', role='trader') }}">{{ t('general_signup_business', default='Business Sign Up') }}</a></li>
-                        <li><a class="dropdown-item" href="{{ url_for('users.signup', role='agent') }}">{{ t('general_signup_agent', default='Agent Sign Up') }}</a></li>
-                        <li><hr class="dropdown-divider"></li>
-                        <li><a class="dropdown-item" href="{{ url_for('users.login') }}">{{ t('general_login', default='Log In') }}</a></li>
-                    </ul>
+            <!-- CTA Section -->
+            <section class="cta-section my-5 text-center">
+                <h3>{{ t('general_ready_to_start', default='Ready to Take Control of Your Finances?') }}</h3>
+                <p>{{ t('general_signup_prompt', default='Sign up today to access tools for personal finance, business management, or agent services.') }}</p>
+                <div class="d-flex justify-content-center gap-3">
+                    <div class="dropdown">
+                        <button class="btn btn-primary btn-lg dropdown-toggle" type="button" id="ctaGetStartedDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                            {{ t('general_get_started', default='Get Started') }}
+                        </button>
+                        <ul class="dropdown-menu" aria-labelledby="ctaGetStartedDropdown">
+                            <li><a class="dropdown-item" href="{{ url_for('users.signup', role='personal') }}">{{ t('general_signup_personal', default='Personal Sign Up') }}</a></li>
+                            <li><a class="dropdown-item" href="{{ url_for('users.signup', role='trader') }}">{{ t('general_signup_business', default='Business Sign Up') }}</a></li>
+                            <li><a class="dropdown-item" href="{{ url_for('users.signup', role='agent') }}">{{ t('general_signup_agent', default='Agent Sign Up') }}</a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item" href="{{ url_for('users.login') }}">{{ t('general_login', default='Log In') }}</a></li>
+                        </ul>
+                    </div>
+                    <a href="{{ url_for('personal.quiz.main') }}" class="btn btn-outline-secondary btn-lg" aria-label="{{ t('quiz_take_quiz', default='Discover Your Financial Personality') }}">{{ t('quiz_take_quiz', default='Take Our Quiz') }}</a>
                 </div>
-                <a href="{{ url_for('personal.quiz.main') }}" class="btn btn-outline-secondary btn-lg" aria-label="{{ t('quiz_take_quiz', default='Discover Your Financial Personality') }}">{{ t('quiz_take_quiz', default='Take Our Quiz') }}</a>
-            </div>
-        </section>
-    {% endif %}
-</div>
+            </section>
+        {% endif %}
+    </div>
 {% endblock content %}
 
 {% block extra_scripts %}
