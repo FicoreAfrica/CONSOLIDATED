@@ -35,7 +35,7 @@
                 <ul class="navbar-nav me-auto">
                     {% for item in nav_items %}
                     <li class="nav-item">
-                        <a class="nav-link {% if request.endpoint == item.endpoint %}active{% endif %}" href="{{ url_for(item.endpoint) | e }}" data-bs-toggle="tooltip" data-bs-title="{{ t(item.tooltip_key, default=item.label) | e }}" aria-current="{% if request.endpoint == item.endpoint %}page{% endif %}">{{ t(item.label_key, default=item.label) | e }}</a>
+                        <a class="nav-link {% if request.endpoint == item['endpoint'] %}active{% endif %}" href="{{ url_for(item['endpoint']) | e }}" data-bs-toggle="tooltip" data-bs-title="{{ t(item['tooltip_key'], default=item['label']) | e }}" aria-current="{% if request.endpoint == item['endpoint'] %}page{% endif %}">{{ t(item['label_key'], default=item['label']) | e }}</a>
                     </li>
                     {% endfor %}
                 </ul>
