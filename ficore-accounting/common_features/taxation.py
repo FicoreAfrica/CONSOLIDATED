@@ -51,20 +51,31 @@ def calculate_tax():
             amount = form.amount.data
             business_size = form.business_size.data if current_user.role in ['trader', 'agent'] else None
             logging.info(f"POST /calculate: user={current_user.username}, amount={amount}, role={current_user.role}, business_size={business_size}")
-            tax_rate_query = {
-                'role': current_user.role,
-                'min_income': {'$lte': amount},
-                'max_income': {'$gte': amount}
-            }
-            if business_size:
-                tax_rate_query['description'] = {'$regex': business_size}
-            tax_rate = db.tax_rates.find_one(tax_rate_query)
-            if tax_rate:
-                tax = round(amount * tax_rate['rate'], 2)
+            if current_user.role == 'personal':
+                # Progressive tax calculation for personal users
+                remaining_amount = amount
+                total_tax = 0.0
+                tax_brackets = [
+                    (800000.0, 0.0),  # 0% up to ₦800,000
+                    (3000000.0, 0.15),  # 15% from ₦800,001 to ₦3,000,000
+                    (12000000.0, 0.18)  # 18% from ₦3,000,001 to ₦12,000,000
+                ]
+                for max_income, rate in tax_brackets:
+                    if remaining_amount <= 0:
+                        break
+                    taxable_amount = min(remaining_amount, max_income)
+                    if taxable_amount > 0:
+                        bracket_start = max(0, max_income - taxable_amount)
+                        if bracket_start > 0:
+                            taxable_amount -= bracket_start
+                        tax = round(taxable_amount * rate, 2)
+                        total_tax += tax
+                        remaining_amount -= taxable_amount
+                # Add Development Levy (2%-4% based on income)
                 levy_rate = 0.02 if amount <= 5000000 else 0.04
                 levy = round(amount * levy_rate, 2)
-                total_tax = tax + levy
-                explanation = f"{tax_rate['description']} + {levy_rate*100}% Development Levy"
+                total_tax += levy
+                explanation = "Progressive tax: 0% up to ₦800,000, 15% up to ₦3,000,000, 18% up to ₦12,000,000 + {:.0%} Development Levy".format(levy_rate)
                 logging.info(f"Tax calculated: tax={total_tax}, explanation={explanation}")
                 if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
                     return jsonify({'tax': total_tax, 'explanation': explanation, 'amount': amount})
@@ -78,10 +89,38 @@ def calculate_tax():
                                      t=trans,
                                      lang=session.get('lang', 'en'))
             else:
-                logging.warning(f"No tax rate found for role={current_user.role}, amount={amount}, business_size={business_size}")
-                flash(trans('tax_no_rate_found', default='No tax rate found for your role and amount'), 'warning')
-                if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
-                    return jsonify({'error': trans('tax_no_rate_found', default='No tax rate found')}), 400
+                tax_rate_query = {
+                    'role': current_user.role,
+                    'min_income': {'$lte': amount},
+                    'max_income': {'$gte': amount}
+                }
+                if business_size:
+                    tax_rate_query['description'] = {'$regex': business_size}
+                tax_rate = db.tax_rates.find_one(tax_rate_query)
+                if tax_rate:
+                    tax = round(amount * tax_rate['rate'], 2)
+                    # Add Development Levy (2%-4% based on income)
+                    levy_rate = 0.02 if amount <= 5000000 else 0.04
+                    levy = round(amount * levy_rate, 2)
+                    total_tax = tax + levy
+                    explanation = f"{tax_rate['description']} + {levy_rate*100}% Development Levy"
+                    logging.info(f"Tax calculated: tax={total_tax}, explanation={explanation}")
+                    if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+                        return jsonify({'tax': total_tax, 'explanation': explanation, 'amount': amount})
+                    return render_template('common_features/taxation/taxation.html',
+                                         section='result',
+                                         tax=total_tax,
+                                         explanation=explanation,
+                                         amount=amount,
+                                         form=form,
+                                         tax_rates=serialized_tax_rates,
+                                         t=trans,
+                                         lang=session.get('lang', 'en'))
+                else:
+                    logging.warning(f"No tax rate found for role={current_user.role}, amount={amount}, business_size={business_size}")
+                    flash(trans('tax_no_rate_found', default='No tax rate found for your role and amount'), 'warning')
+                    if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+                        return jsonify({'error': trans('tax_no_rate_found', default='No tax rate found')}), 400
         else:
             logging.error(f"Form validation failed: {form.errors}")
             flash(trans('tax_invalid_input', default='Invalid input. Please check your amount.'), 'danger')
@@ -270,21 +309,28 @@ def seed_tax_data():
                 'min_income': 0.0,
                 'max_income': 800000.0,
                 'rate': 0.0,
-                'description': '0% tax rate for personal income up to 800,000 NGN (exempt)'
+                'description': '0% tax rate for personal income up to 800,000 NGN'
             },
             {
                 'role': 'personal',
                 'min_income': 800001.0,
-                'max_income': 50000000.0,
-                'rate': 0.07,
-                'description': '7% tax rate for personal income between 800,001 and 50,000,000 NGN'
+                'max_income': 3000000.0,
+                'rate': 0.15,
+                'description': '15% tax rate for personal income from 800,001 to 3,000,000 NGN'
             },
             {
                 'role': 'personal',
-                'min_income': 50000001.0,
+                'min_income': 3000001.0,
+                'max_income': 12000000.0,
+                'rate': 0.18,
+                'description': '18% tax rate for personal income from 3,000,001 to 12,000,000 NGN'
+            },
+            {
+                'role': 'personal',
+                'min_income': 12000001.0,
                 'max_income': float('inf'),
                 'rate': 0.25,
-                'description': '25% tax rate for personal income above 50,000,000 NGN'
+                'description': '25% tax rate for personal income above 12,000,000 NGN'
             },
             {
                 'role': 'trader',
