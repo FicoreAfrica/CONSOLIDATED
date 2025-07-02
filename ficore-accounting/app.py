@@ -382,7 +382,7 @@ def create_app():
     
     app.register_blueprint(users_bp, url_prefix='/users')
     logger.info('Registered users blueprint')
-    app.register_blueprint(agents_bp, url_prefix='/agents')
+    app.register_blueprint(agents, url_prefix='/agents')
     logger.info('Registered agents blueprint')
     app.register_blueprint(common_bp)
     logger.info('Registered common blueprint')
@@ -606,7 +606,7 @@ def create_app():
             return '', 200
         if current_user.is_authenticated:
             if current_user.role == 'agent':
-                return redirect(url_for('agents_bp.dashboard'))
+                return redirect(url_for('agents.dashboard'))
             elif current_user.role == 'trader':
                 return redirect(url_for('general_bp.home'))
             elif current_user.role == 'admin':
@@ -660,7 +660,7 @@ def create_app():
         logger.info(f'Serving business/agent home page, authenticated: {current_user.is_authenticated}')
         if current_user.is_authenticated:
             if current_user.role == 'agent':
-                return redirect(url_for('agents_bp.dashboard'))
+                return redirect(url_for('agents.dashboard'))
             elif current_user.role == 'trader':
                 try:
                     return render_template('general/home.html', t=trans, lang=lang, title=trans('general_business_home', lang=lang))
