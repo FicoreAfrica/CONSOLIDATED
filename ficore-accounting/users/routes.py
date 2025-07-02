@@ -1,4 +1,4 @@
-from flask import Blueprint, render_template, request, redirect, url_for, flash, current_app, jsonify, session
+from flask import Blueprint, render_template, request, redirect, url_for, flash, current_app, jsonify, session, make_response
 from flask_wtf import FlaskForm
 from wtforms import StringField, PasswordField, TextAreaField, SelectField, SubmitField, BooleanField, validators
 from flask_login import login_required, current_user, login_user, logout_user
@@ -731,13 +731,39 @@ def agent_setup_wizard():
 def logout():
     user_id = current_user.id
     lang = session.get('lang', 'en')
-    logout_user()
-    log_audit_action('logout', {'user_id': user_id})
-    logger.info(f"User {user_id} logged out")
-    flash(trans('general_logged_out', default='Logged out successfully'), 'success')
-    session.clear()
-    session['lang'] = lang
-    return redirect(url_for('users.login'))
+    sid = session.sid if hasattr(session, 'sid') else 'no-session-id'
+    logger.info(f"Before logout - User: {user_id}, Session: {dict(session)}, Authenticated: {current_user.is_authenticated}")
+    try:
+        # Clear Flask-Login session
+        logout_user()
+        # Clear session data
+        session.clear()
+        # Explicitly delete session from MongoDB if used
+        if current_app.config.get('SESSION_TYPE') == 'mongodb':
+            try:
+                db = get_mongo_db()
+                db.sessions.delete_one({'_id': sid})
+                logger.info(f"Deleted MongoDB session for user {user_id}, SID: {sid}")
+            except Exception as e:
+                logger.error(f"Failed to delete MongoDB session for SID {sid}: {str(e)}")
+        # Restore language setting
+        session['lang'] = lang
+        # Log audit action
+        log_audit_action('logout', {'user_id': user_id, 'session_id': sid})
+        logger.info(f"User {user_id} logged out successfully. After logout - Session: {dict(session)}, Authenticated: {current_user.is_authenticated}")
+        # Create response with no-cache headers
+        response = make_response(redirect(url_for('users.login')))
+        response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, max-age=0'
+        response.headers['Pragma'] = 'no-cache'
+        response.headers['Expires'] = '0'
+        flash(trans('general_logged_out', default='Logged out successfully'), 'success')
+        return response
+    except Exception as e:
+        logger.error(f"Error during logout for user {user_id}: {str(e)}")
+        flash(trans('general_error', default='An error occurred during logout'), 'danger')
+        response = make_response(redirect(url_for('users.login')))
+        response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, max-age=0'
+        return response
 
 @users_bp.route('/auth/signin')
 def signin():
