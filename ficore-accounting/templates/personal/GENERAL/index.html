@@ -19,7 +19,7 @@
                 <a href="{{ url_for('settings.profile') }}" class="profile-icon">
                     <i class="bi bi-person-circle"></i>
                 </a>
-                <a href="{{ url_for('users.logout') }}" class="logout-icon" data-bs-toggle="tooltip" data-bs-title="{{ t('general_logout', default='Logout') | e }}" aria-label="{{ t('general_logout', default='Logout') | e }}" rel="external">
+                <a href="{{ url_for('users.logout') }}" class="logout-icon no-js-intercept" data-bs-toggle="tooltip" data-bs-title="{{ t('general_logout', default='Logout') | e }}" aria-label="{{ t('general_logout', default='Logout') | e }}" rel="external">
                     <i class="bi bi-box-arrow-right"></i>
                 </a>
                 <div class="header-toggles d-flex align-items-center gap-2">
@@ -338,9 +338,9 @@
                 <i class="bi bi-receipt"></i>
                 <div class="nav-label">{{ t('bill_bill_planner_tab', default='Bills') }}</div>
             </a>
-            <a href="{{ url_for('personal.net_worth.main') }}" class="nav-item text-center text-dark" data-bs-toggle="tooltip" data-bs-title="{{ t('net_worth_net_worth_calculator', default='Net Worth Tracker') | e }}">
-                <i class="bi bi-balance-scale"></i>
-                <div class="nav-label">{{ t('net_worth_net_worth_calculator_tab', default='Net Worth') }}</div>
+            <a href="{{ url_for('taxation_bp.calculate_tax') }}" class="nav-item text-center text-dark" data-bs-toggle="tooltip" data-bs-title="{{ t('general_taxation', default='Taxation') | e }}">
+                <i class="bi bi-calculator"></i>
+                <div class="nav-label">{{ t('general_taxation_tab', default='Taxation') }}</div>
             </a>
             <a href="{{ url_for('settings.profile') }}" class="nav-item text-center text-dark" data-bs-toggle="tooltip" data-bs-title="{{ t('general_profile', default='Profile') | e }}">
                 <i class="bi bi-person-circle"></i>
@@ -729,17 +729,20 @@
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     // Initialize Bootstrap carousel for testimonials
-    const carousel = new bootstrap.Carousel(document.getElementById('testimonialCarousel'), {
-        interval: 5000,
-        ride: 'carousel'
-    });
+    const carousel = document.getElementById('testimonialCarousel');
+    if (carousel) {
+        new bootstrap.Carousel(carousel, {
+            interval: 5000,
+            ride: 'carousel'
+        });
+    }
 
     // Animate counter in Why FiCore section
     const counter = document.querySelector('.animated-counter');
     if (counter) {
         const target = parseInt(counter.dataset.count);
         let count = 0;
-        const speed = 200; // Adjust speed of animation
+        const speed = 200;
         const increment = target / speed;
 
         function updateCounter() {
@@ -757,6 +760,16 @@ document.addEventListener('DOMContentLoaded', function() {
     // Initialize tooltips for bottom navigation
     document.querySelectorAll('.bottom-nav [data-bs-toggle="tooltip"]').forEach(tooltipTriggerEl => {
         new bootstrap.Tooltip(tooltipTriggerEl);
+    });
+
+    // Navigation highlighting with startsWith
+    const currentPath = window.location.pathname;
+    const navItems = document.querySelectorAll('.bottom-nav .nav-item');
+    navItems.forEach(item => {
+        const itemHref = item.getAttribute('href');
+        if (currentPath === itemHref || currentPath.startsWith(itemHref + '/')) {
+            item.classList.add('active');
+        }
     });
 
     if (!{{ current_user.is_authenticated | tojson }}) return;
@@ -948,19 +961,7 @@ document.addEventListener('DOMContentLoaded', function() {
         return Math.floor(diffInSeconds / 86400) + ' ' + translations.days_ago;
     }
 
-    document.addEventListener('DOMContentLoaded', function() {
-        const currentPath = window.location.pathname;
-        const navItems = document.querySelectorAll('.bottom-nav .nav-item');
-
-        navItems.forEach(item => {
-            const itemHref = item.getAttribute('href');
-            // Check if the current path exactly matches the item's href
-            // Or, for broader matching (e.g., /budget/123 still highlights /budget),
-            // you might use `currentPath.startsWith(itemHref)`
-            if (currentPath === itemHref) {
-                item.classList.add('active');
-        }
-
+    // Global toggleAmountVisibility function
     window.toggleAmountVisibility = function() {
         amountsVisible = !amountsVisible;
         const icon = document.getElementById('visibilityIcon');
