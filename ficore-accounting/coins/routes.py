@@ -1,4 +1,4 @@
-from flask import Blueprint, request, render_template, redirect, url_for, flash, session, jsonify
+from flask import Blueprint, request, render_template, redirect, url_for, flash, session, jsonify, current_app
 from flask_login import login_required, current_user
 from flask_wtf import FlaskForm
 from flask_wtf.file import FileField, FileAllowed
@@ -15,12 +15,33 @@ logger = getLogger(__name__)
 
 coins_bp = Blueprint('coins', __name__, template_folder='templates/coins')
 
-# Initialize limiter later in app.py or within a function
+# Initialize limiter as None; will be set by init_coins_limiter or on-demand
 limiter = None
 
 def init_coins_limiter(app):
+    """Initialize the limiter for the coins Blueprint."""
     global limiter
-    limiter = get_limiter(app)
+    try:
+        limiter = get_limiter(app)
+        logger.info("Coins blueprint limiter initialized successfully")
+    except Exception as e:
+        logger.error(f"Failed to initialize coins limiter: {str(e)}")
+        limiter = None
+
+def ensure_limiter():
+    """Ensure limiter is initialized before route execution."""
+    global limiter
+    if limiter is None:
+        try:
+            limiter = get_limiter(current_app)
+            logger.info("Limiter initialized on-demand for coins blueprint")
+        except Exception as e:
+            logger.error(f"Failed to initialize limiter on-demand: {str(e)}")
+            # Fallback: Create a dummy limiter to avoid NoneType errors
+            from flask_limiter import Limiter
+            limiter = Limiter(lambda: None, default_limits=["1000 per day"])
+            logger.warning("Using dummy limiter as fallback")
+    return limiter
 
 class PurchaseForm(FlaskForm):
     amount = SelectField(
@@ -88,7 +109,7 @@ def credit_coins(user_id: str, amount: int, ref: str, type: str = 'purchase') ->
 @coins_bp.route('/purchase', methods=['GET', 'POST'])
 @login_required
 @requires_role(['trader', 'personal'])
-@limiter.limit("50 per hour")
+@ensure_limiter().limit("50 per hour")
 def purchase():
     """Handle coin purchase requests."""
     form = PurchaseForm()
@@ -119,7 +140,7 @@ def purchase():
 
 @coins_bp.route('/history', methods=['GET'])
 @login_required
-@limiter.limit("100 per hour")
+@ensure_limiter().limit("100 per hour")
 def history():
     """View coin transaction history."""
     try:
@@ -149,7 +170,7 @@ def history():
 @coins_bp.route('/receipt_upload', methods=['GET', 'POST'])
 @login_required
 @requires_role(['trader', 'personal'])
-@limiter.limit("10 per hour")
+@ensure_limiter().limit("10 per hour")
 def receipt_upload():
     """Handle payment receipt uploads with transaction for coin deduction."""
     form = ReceiptUploadForm()
@@ -216,7 +237,7 @@ def receipt_upload():
 
 @coins_bp.route('/balance', methods=['GET'])
 @login_required
-@limiter.limit("100 per minute")
+@ensure_limiter().limit("100 per minute")
 def get_balance():
     """API endpoint to fetch current coin balance."""
     try:
