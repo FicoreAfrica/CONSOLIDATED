@@ -307,7 +307,7 @@ def main():
 
         current_app.logger.info(f"Rendering main for session {session['sid']} {'(anonymous)' if session.get('is_anonymous') else ''}: {len(budgets_dict)} budgets found", extra={'session_id': session['sid']})
         return render_template(
-            'budget_main.html',
+            'personal/BUDGET/budget_main.html',
             form=form,
             budgets=budgets_dict,
             latest_budget=latest_budget,
@@ -323,7 +323,7 @@ def main():
         current_app.logger.error(f"Unexpected error in budget.main for session {session.get('sid', 'unknown')}: {str(e)}", extra={'session_id': session.get('sid', 'unknown')})
         flash(trans("budget_dashboard_load_error", default='Error loading budget dashboard.', lang=lang), "danger")
         return render_template(
-            'budget_main.html',
+            'personal/BUDGET/budget_main.html',
             form=form,
             budgets={},
             latest_budget={
