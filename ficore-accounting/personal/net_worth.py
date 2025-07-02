@@ -179,7 +179,7 @@ def main():
                 except Exception as e:
                     current_app.logger.error(f"Failed to save net worth data to MongoDB: {str(e)}", extra={'session_id': session['sid']})
                     flash(trans("net_worth_storage_error", default="Error saving net worth data."), "danger")
-                    return redirect(url_for('net_worth.main'))
+                    return redirect(url_for('personal/NETWORTH/net_worth.main'))
 
                 # Send email if requested
                 if form.send_email.data and form.email.data:
@@ -204,7 +204,7 @@ def main():
                                 "net_worth": net_worth_record['net_worth'],
                                 "badges": net_worth_record['badges'],
                                 "created_at": net_worth_record['created_at'].strftime('%Y-%m-%d'),
-                                "cta_url": url_for('net_worth.main', _external=True),
+                                "cta_url": url_for('personal/NETWORTH/net_worth.main', _external=True),
                                 "unsubscribe_url": url_for('personal.net_worth.unsubscribe', email=form.email.data, _external=True),
                                 "currency": net_worth_record['currency']
                             },
@@ -322,7 +322,7 @@ def main():
         )
 
     except Exception as e:
-        current_app.logger.error(f"Error in net_worth.main for session {session.get('sid', 'unknown')}: {str(e)}", extra={'session_id': session.get('sid', 'unknown')})
+        current_app.logger.error(f"Error in personal/NETWORTH/net_worth.main for session {session.get('sid', 'unknown')}: {str(e)}", extra={'session_id': session.get('sid', 'unknown')})
         flash(trans("net_worth_dashboard_load_error", default="Error loading net worth dashboard"), "danger")
         return render_template(
             'personal/NETWORTH/net_worth_main.html',
@@ -436,4 +436,4 @@ def handle_csrf_error(e):
     lang = session.get('lang', 'en')
     current_app.logger.error(f"CSRF error on {request.path}: {e.description}", extra={'session_id': session.get('sid', 'unknown')})
     flash(trans("net_worth_csrf_error", default="Form submission failed due to a missing security token. Please refresh and try again."), "danger")
-    return redirect(url_for('net_worth.main')), 400
+    return redirect(url_for('personal/NETWORTH/net_worth.main')), 400
