@@ -28,7 +28,7 @@ from utils import (
 )
 from session_utils import create_anonymous_session
 from translations import trans, get_translations, get_all_translations, get_module_translations
-from flask_login import login_required, current_user
+from flask_login import login_required, current_user, UserMixin
 from flask_wtf.csrf import CSRFError
 from jinja2.exceptions import TemplateNotFound
 import time
@@ -158,7 +158,7 @@ def setup_session(app):
             flask_session.init_app(app)
             logger.info('Session configured with filesystem fallback due to MongoDB error')
 
-class User:
+class User(UserMixin):
     def __init__(self, id, email, display_name=None, role='personal'):
         self.id = id
         self.email = email
@@ -171,23 +171,23 @@ class User:
             return user.get(key, default) if user else default
 
     @property
-    def is_authenticated(self):
-        return True
-
-    @property
     def is_active(self):
-        return True
-
-    @property
-    def is_anonymous(self):
-        return False
+        with current_app.app_context():
+            try:
+                user = get_mongo_db().users.find_one({'_id': self.id})
+                return user.get('is_active', True) if user else False
+            except Exception as e:
+                logger.error(f'Error checking active status for user {self.id}: {str(e)}')
+                return False
 
     def get_id(self):
         return str(self.id)
 
 def create_app():
     app = Flask(__name__, template_folder='templates', static_folder='static')
-    CORS(app)
+    CORS部分
+
+System: CORS(app)
     
     # Load configuration
     app.config['SECRET_KEY'] = os.getenv('SECRET_KEY')
@@ -544,7 +544,7 @@ def create_app():
     @app.after_request
     def add_security_headers(response):
         if not request.path.startswith('/static'):
-            response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, max-age=0
+            response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, max-age=0'
         response.headers['Content-Security-Policy'] = (
             'default-src \'self\'; '
             'script-src \'self\' \'unsafe-inline\' https://cdn.jsdelivr.net https://code.jquery.com; '
