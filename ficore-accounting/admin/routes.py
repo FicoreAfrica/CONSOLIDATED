@@ -5,6 +5,7 @@ from wtforms import StringField, FloatField, SelectField, validators, SubmitFiel
 from datetime import datetime
 from translations import trans
 from utils import trans_function, requires_role, get_mongo_db, is_admin, get_user_query, get_limiter, ALL_TOOLS, ADMIN_NAV
+from models import get_budgets, get_bills, get_emergency_funds, get_net_worth, get_quiz_results, get_learning_progress
 from bson import ObjectId
 import logging
 import re
@@ -67,8 +68,12 @@ def dashboard():
         inventory_count = db.inventory.count_documents({})
         coin_tx_count = db.coin_transactions.count_documents({})
         audit_log_count = db.audit_logs.count_documents({})
-        # TEMPORARY: Remove user_id filter for admin during testing
-        # TODO: Restore original filter {'role': {'$ne': 'admin'}} for production
+        budgets_count = db.budgets.count_documents({})
+        bills_count = db.bills.count_documents({})
+        emergency_funds_count = db.emergency_funds.count_documents({})
+        net_worth_count = db.net_worth_data.count_documents({})
+        quiz_results_count = db.quiz_responses.count_documents({})
+        learning_progress_count = db.learning_materials.count_documents({})
         recent_users = list(db.users.find({} if is_admin() else {'role': {'$ne': 'admin'}}).sort('created_at', -1).limit(10))
         for user in recent_users:
             user['_id'] = str(user['_id'])
@@ -80,7 +85,13 @@ def dashboard():
                 'cashflows': cashflows_count,
                 'inventory': inventory_count,
                 'coin_transactions': coin_tx_count,
-                'audit_logs': audit_log_count
+                'audit_logs': audit_log_count,
+                'budgets': budgets_count,
+                'bills': bills_count,
+                'emergency_funds': emergency_funds_count,
+                'net_worth': net_worth_count,
+                'quiz_results': quiz_results_count,
+                'learning_progress': learning_progress_count
             },
             recent_users=recent_users,
             tools=ALL_TOOLS,
@@ -101,8 +112,6 @@ def manage_users():
     """View and manage users."""
     try:
         db = get_mongo_db()
-        # TEMPORARY: Remove user_id filter for admin during testing
-        # TODO: Restore original filter {'role': {'$ne': 'admin'}} for production
         users = list(db.users.find({} if is_admin() else {'role': {'$ne': 'admin'}}).sort('created_at', -1))
         for user in users:
             user['_id'] = str(user['_id'])
@@ -120,8 +129,6 @@ def suspend_user(user_id):
     """Suspend a user account."""
     try:
         db = get_mongo_db()
-        # TEMPORARY: Allow admin to suspend any user during testing
-        # TODO: Restore original filter {'_id': user_id, 'role': {'$ne': 'admin'}} for production
         user_query = get_user_query(user_id)
         user = db.users.find_one(user_query)
         if not user:
@@ -151,8 +158,6 @@ def delete_user(user_id):
     """Delete a user and their data."""
     try:
         db = get_mongo_db()
-        # TEMPORARY: Allow admin to delete any user during testing
-        # TODO: Restore original filter {'_id': user_id, 'role': {'$ne': 'admin'}} for production
         user_query = get_user_query(user_id)
         user = db.users.find_one(user_query)
         if not user:
@@ -163,6 +168,12 @@ def delete_user(user_id):
         db.inventory.delete_many({'user_id': user_id})
         db.coin_transactions.delete_many({'user_id': user_id})
         db.audit_logs.delete_many({'details.user_id': user_id})
+        db.budgets.delete_many({'user_id': user_id})
+        db.bills.delete_many({'user_id': user_id})
+        db.emergency_funds.delete_many({'user_id': user_id})
+        db.net_worth_data.delete_many({'user_id': user_id})
+        db.quiz_responses.delete_many({'user_id': user_id})
+        db.learning_materials.delete_many({'user_id': user_id})
         result = db.users.delete_one(user_query)
         if result.deleted_count == 0:
             flash(trans('admin_user_not_deleted', default='User could not be deleted'), 'danger')
@@ -182,7 +193,7 @@ def delete_user(user_id):
 @limiter.limit("10 per hour")
 def delete_item(collection, item_id):
     """Delete an item from a collection."""
-    valid_collections = ['records', 'cashflows', 'inventory']
+    valid_collections = ['records', 'cashflows', 'inventory', 'budgets', 'bills', 'emergency_funds', 'net_worth_data', 'quiz_responses', 'learning_materials']
     if collection not in valid_collections:
         flash(trans('admin_invalid_collection', default='Invalid collection selected'), 'danger')
         return redirect(url_for('admin.dashboard'))
@@ -195,7 +206,7 @@ def delete_item(collection, item_id):
             flash(trans('admin_item_deleted', default='Item deleted successfully'), 'success')
             logger.info(f"Admin {current_user.id} deleted {collection} item {item_id}")
             log_audit_action(f'delete_{collection}_item', {'item_id': item_id, 'collection': collection})
-        return redirect(url_for('admin.dashboard'))
+        return redirect(url_for(f'admin.admin_{collection}'))
     except Exception as e:
         logger.error(f"Error deleting {collection} item {item_id}: {str(e)}")
         flash(trans('admin_database_error', default='An error occurred while accessing the database'), 'danger')
@@ -274,10 +285,8 @@ def manage_agents():
             agent_id = form.agent_id.data.strip().upper()
             status = form.status.data
             
-            # Check if agent ID already exists
             existing_agent = db.agents.find_one({'_id': agent_id})
             if existing_agent:
-                # Update existing agent status
                 result = db.agents.update_one(
                     {'_id': agent_id},
                     {'$set': {'status': status, 'updated_at': datetime.utcnow()}}
@@ -289,7 +298,6 @@ def manage_agents():
                     logger.info(f"Admin {current_user.id} updated agent {agent_id} to status {status}")
                     log_audit_action('update_agent_status', {'agent_id': agent_id, 'status': status})
             else:
-                # Create new agent ID
                 db.agents.insert_one({
                     '_id': agent_id,
                     'status': status,
@@ -308,3 +316,255 @@ def manage_agents():
         logger.error(f"Error managing agents for admin {current_user.id}: {str(e)}")
         flash(trans('admin_database_error', default='An error occurred while accessing the database'), 'danger')
         return render_template('admin/manage_agents.html', form=form, agents=[], tools=ALL_TOOLS, nav_items=ADMIN_NAV, t=trans, lang=session.get('lang', 'en'))
+
+@admin_bp.route('/budgets', methods=['GET'])
+@login_required
+@requires_role('admin')
+@limiter.limit("50 per hour")
+def admin_budgets():
+    """View all user budgets."""
+    try:
+        db = get_mongo_db()
+        budgets = list(get_budgets(db, {}))
+        for budget in budgets:
+            budget['_id'] = str(budget['_id'])
+        return render_template('admin/budgets.html', budgets=budgets, tools=ALL_TOOLS, nav_items=ADMIN_NAV, t=trans, lang=session.get('lang', 'en'))
+    except Exception as e:
+        logger.error(f"Error fetching budgets for admin: {str(e)}")
+        flash(trans('admin_database_error', default='An error occurred while accessing the database'), 'danger')
+        return render_template('admin/budgets.html', budgets=[], tools=ALL_TOOLS, nav_items=ADMIN_NAV, t=trans, lang=session.get('lang', 'en')), 500
+
+@admin_bp.route('/budgets/delete/<budget_id>', methods=['POST'])
+@login_required
+@requires_role('admin')
+@limiter.limit("10 per hour")
+def admin_delete_budget(budget_id):
+    """Delete a budget."""
+    try:
+        db = get_mongo_db()
+        result = db.budgets.delete_one({'_id': ObjectId(budget_id)})
+        if result.deleted_count == 0:
+            flash(trans('admin_item_not_found', default='Budget not found'), 'danger')
+        else:
+            flash(trans('admin_item_deleted', default='Budget deleted successfully'), 'success')
+            logger.info(f"Admin {current_user.id} deleted budget {budget_id}")
+            log_audit_action('delete_budget', {'budget_id': budget_id})
+        return redirect(url_for('admin.admin_budgets'))
+    except Exception as e:
+        logger.error(f"Error deleting budget {budget_id}: {str(e)}")
+        flash(trans('admin_database_error', default='An error occurred while accessing the database'), 'danger')
+        return redirect(url_for('admin.admin_budgets'))
+
+@admin_bp.route('/bills', methods=['GET'])
+@login_required
+@requires_role('admin')
+@limiter.limit("50 per hour")
+def admin_bills():
+    """View all user bills."""
+    try:
+        db = get_mongo_db()
+        bills = list(get_bills(db, {}))
+        for bill in bills:
+            bill['_id'] = str(bill['_id'])
+        return render_template('admin/bills.html', bills=bills, tools=ALL_TOOLS, nav_items=ADMIN_NAV, t=trans, lang=session.get('lang', 'en'))
+    except Exception as e:
+        logger.error(f"Error fetching bills for admin: {str(e)}")
+        flash(trans('admin_database_error', default='An error occurred while accessing the database'), 'danger')
+        return render_template('admin/bills.html', bills=[], tools=ALL_TOOLS, nav_items=ADMIN_NAV, t=trans, lang=session.get('lang', 'en')), 500
+
+@admin_bp.route('/bills/delete/<bill_id>', methods=['POST'])
+@login_required
+@requires_role('admin')
+@limiter.limit("10 per hour")
+def admin_delete_bill(bill_id):
+    """Delete a bill."""
+    try:
+        db = get_mongo_db()
+        result = db.bills.delete_one({'_id': ObjectId(bill_id)})
+        if result.deleted_count == 0:
+            flash(trans('admin_item_not_found', default='Bill not found'), 'danger')
+        else:
+            flash(trans('admin_item_deleted', default='Bill deleted successfully'), 'success')
+            logger.info(f"Admin {current_user.id} deleted bill {bill_id}")
+            log_audit_action('delete_bill', {'bill_id': bill_id})
+        return redirect(url_for('admin.admin_bills'))
+    except Exception as e:
+        logger.error(f"Error deleting bill {bill_id}: {str(e)}")
+        flash(trans('admin_database_error', default='An error occurred while accessing the database'), 'danger')
+        return redirect(url_for('admin.admin_bills'))
+
+@admin_bp.route('/bills/mark_paid/<bill_id>', methods=['POST'])
+@login_required
+@requires_role('admin')
+@limiter.limit("10 per hour")
+def admin_mark_bill_paid(bill_id):
+    """Mark a bill as paid."""
+    try:
+        db = get_mongo_db()
+        result = db.bills.update_one(
+            {'_id': ObjectId(bill_id)},
+            {'$set': {'status': 'paid', 'updated_at': datetime.utcnow()}}
+        )
+        if result.modified_count == 0:
+            flash(trans('admin_item_not_updated', default='Bill could not be updated'), 'danger')
+        else:
+            flash(trans('admin_bill_marked_paid', default='Bill marked as paid'), 'success')
+            logger.info(f"Admin {current_user.id} marked bill {bill_id} as paid")
+            log_audit_action('mark_bill_paid', {'bill_id': bill_id})
+        return redirect(url_for('admin.admin_bills'))
+    except Exception as e:
+        logger.error(f"Error marking bill {bill_id} as paid: {str(e)}")
+        flash(trans('admin_database_error', default='An error occurred while accessing the database'), 'danger')
+        return redirect(url_for('admin.admin_bills'))
+
+@admin_bp.route('/emergency_funds', methods=['GET'])
+@login_required
+@requires_role('admin')
+@limiter.limit("50 per hour")
+def admin_emergency_funds():
+    """View all user emergency funds."""
+    try:
+        db = get_mongo_db()
+        funds = list(get_emergency_funds(db, {}))
+        for fund in funds:
+            fund['_id'] = str(fund['_id'])
+        return render_template('admin/emergency_funds.html', funds=funds, tools=ALL_TOOLS, nav_items=ADMIN_NAV, t=trans, lang=session.get('lang', 'en'))
+    except Exception as e:
+        logger.error(f"Error fetching emergency funds for admin: {str(e)}")
+        flash(trans('admin_database_error', default='An error occurred while accessing the database'), 'danger')
+        return render_template('admin/emergency_funds.html', funds=[], tools=ALL_TOOLS, nav_items=ADMIN_NAV, t=trans, lang=session.get('lang', 'en')), 500
+
+@admin_bp.route('/emergency_funds/delete/<fund_id>', methods=['POST'])
+@login_required
+@requires_role('admin')
+@limiter.limit("10 per hour")
+def admin_delete_emergency_fund(fund_id):
+    """Delete an emergency fund."""
+    try:
+        db = get_mongo_db()
+        result = db.emergency_funds.delete_one({'_id': ObjectId(fund_id)})
+        if result.deleted_count == 0:
+            flash(trans('admin_item_not_found', default='Emergency fund not found'), 'danger')
+        else:
+            flash(trans('admin_item_deleted', default='Emergency fund deleted successfully'), 'success')
+            logger.info(f"Admin {current_user.id} deleted emergency fund {fund_id}")
+            log_audit_action('delete_emergency_fund', {'fund_id': fund_id})
+        return redirect(url_for('admin.admin_emergency_funds'))
+    except Exception as e:
+        logger.error(f"Error deleting emergency fund {fund_id}: {str(e)}")
+        flash(trans('admin_database_error', default='An error occurred while accessing the database'), 'danger')
+        return redirect(url_for('admin.admin_emergency_funds'))
+
+@admin_bp.route('/net_worth', methods=['GET'])
+@login_required
+@requires_role('admin')
+@limiter.limit("50 per hour")
+def admin_net_worth():
+    """View all user net worth records."""
+    try:
+        db = get_mongo_db()
+        net_worths = list(get_net_worth(db, {}))
+        for nw in net_worths:
+            nw['_id'] = str(nw['_id'])
+        return render_template('admin/net_worth.html', net_worths=net_worths, tools=ALL_TOOLS, nav_items=ADMIN_NAV, t=trans, lang=session.get('lang', 'en'))
+    except Exception as e:
+        logger.error(f"Error fetching net worth for admin: {str(e)}")
+        flash(trans('admin_database_error', default='An error occurred while accessing the database'), 'danger')
+        return render_template('admin/net_worth.html', net_worths=[], tools=ALL_TOOLS, nav_items=ADMIN_NAV, t=trans, lang=session.get('lang', 'en')), 500
+
+@admin_bp.route('/net_worth/delete/<nw_id>', methods=['POST'])
+@login_required
+@requires_role('admin')
+@limiter.limit("10 per hour")
+def admin_delete_net_worth(nw_id):
+    """Delete a net worth record."""
+    try:
+        db = get_mongo_db()
+        result = db.net_worth_data.delete_one({'_id': ObjectId(nw_id)})
+        if result.deleted_count == 0:
+            flash(trans('admin_item_not_found', default='Net worth record not found'), 'danger')
+        else:
+            flash(trans('admin_item_deleted', default='Net worth record deleted successfully'), 'success')
+            logger.info(f"Admin {current_user.id} deleted net worth record {nw_id}")
+            log_audit_action('delete_net_worth', {'nw_id': nw_id})
+        return redirect(url_for('admin.admin_net_worth'))
+    except Exception as e:
+        logger.error(f"Error deleting net worth record {nw_id}: {str(e)}")
+        flash(trans('admin_database_error', default='An error occurred while accessing the database'), 'danger')
+        return redirect(url_for('admin.admin_net_worth'))
+
+@admin_bp.route('/quiz_results', methods=['GET'])
+@login_required
+@requires_role('admin')
+@limiter.limit("50 per hour")
+def admin_quiz_results():
+    """View all user quiz results."""
+    try:
+        db = get_mongo_db()
+        quiz_results = list(get_quiz_results(db, {}))
+        for result in quiz_results:
+            result['_id'] = str(result['_id'])
+        return render_template('admin/quiz_results.html', quiz_results=quiz_results, tools=ALL_TOOLS, nav_items=ADMIN_NAV, t=trans, lang=session.get('lang', 'en'))
+    except Exception as e:
+        logger.error(f"Error fetching quiz results for admin: {str(e)}")
+        flash(trans('admin_database_error', default='An error occurred while accessing the database'), 'danger')
+        return render_template('admin/quiz_results.html', quiz_results=[], tools=ALL_TOOLS, nav_items=ADMIN_NAV, t=trans, lang=session.get('lang', 'en')), 500
+
+@admin_bp.route('/quiz_results/delete/<result_id>', methods=['POST'])
+@login_required
+@requires_role('admin')
+@limiter.limit("10 per hour")
+def admin_delete_quiz_result(result_id):
+    """Delete a quiz result."""
+    try:
+        db = get_mongo_db()
+        result = db.quiz_responses.delete_one({'_id': ObjectId(result_id)})
+        if result.deleted_count == 0:
+            flash(trans('admin_item_not_found', default='Quiz result not found'), 'danger')
+        else:
+            flash(trans('admin_item_deleted', default='Quiz result deleted successfully'), 'success')
+            logger.info(f"Admin {current_user.id} deleted quiz result {result_id}")
+            log_audit_action('delete_quiz_result', {'result_id': result_id})
+        return redirect(url_for('admin.admin_quiz_results'))
+    except Exception as e:
+        logger.error(f"Error deleting quiz result {result_id}: {str(e)}")
+        flash(trans('admin_database_error', default='An error occurred while accessing the database'), 'danger')
+        return redirect(url_for('admin.admin_quiz_results'))
+
+@admin_bp.route('/learning_hub', methods=['GET'])
+@login_required
+@requires_role('admin')
+@limiter.limit("50 per hour")
+def admin_learning_hub():
+    """View all user learning hub progress."""
+    try:
+        db = get_mongo_db()
+        progress = list(get_learning_progress(db, {}))
+        for p in progress:
+            p['_id'] = str(p['_id'])
+        return render_template('admin/learning_hub.html', progress=progress, tools=ALL_TOOLS, nav_items=ADMIN_NAV, t=trans, lang=session.get('lang', 'en'))
+    except Exception as e:
+        logger.error(f"Error fetching learning progress for admin: {str(e)}")
+        flash(trans('admin_database_error', default='An error occurred while accessing the database'), 'danger')
+        return render_template('admin/learning_hub.html', progress=[], tools=ALL_TOOLS, nav_items=ADMIN_NAV, t=trans, lang=session.get('lang', 'en')), 500
+
+@admin_bp.route('/learning_hub/delete/<progress_id>', methods=['POST'])
+@login_required
+@requires_role('admin')
+@limiter.limit("10 per hour")
+def admin_delete_learning_progress(progress_id):
+    """Delete a learning progress record."""
+    try:
+        db = get_mongo_db()
+        result = db.learning_materials.delete_one({'_id': ObjectId(progress_id)})
+        if result.deleted_count == 0:
+            flash(trans('admin_item_not_found', default='Learning progress not found'), 'danger')
+        else:
+            flash(trans('admin_item_deleted', default='Learning progress deleted successfully'), 'success')
+            logger.info(f"Admin {current_user.id} deleted learning progress {progress_id}")
+            log_audit_action('delete_learning_progress', {'progress_id': progress_id})
+        return redirect(url_for('admin.admin_learning_hub'))
+    except Exception as e:
+        logger.error(f"Error deleting learning progress {progress_id}: {str(e)}")
+        flash(trans('admin_database_error', default='An error occurred while accessing the database'), 'danger')
+        return redirect(url_for('admin.admin_learning_hub'))
