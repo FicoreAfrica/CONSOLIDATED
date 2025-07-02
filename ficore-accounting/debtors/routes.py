@@ -1,20 +1,18 @@
 from flask import Blueprint, render_template, redirect, url_for, flash, request, jsonify, Response, session
 from flask_login import login_required, current_user
-from translations import trans
-from utils import trans_function, requires_role, check_coin_balance, format_currency, format_date, get_mongo_db, is_admin, get_user_query
-from bson import ObjectId
-from datetime import datetime, timedelta
 from flask_wtf import FlaskForm
 from wtforms import StringField, FloatField, TextAreaField, SubmitField
 from wtforms.validators import DataRequired, Optional
+from bson import ObjectId
+from datetime import datetime, timedelta
 import logging
 import io
 import os
 import requests
 import re
 import urllib.parse
-from ..utils import BUSINESS_TOOLS, BUSINESS_NAV, ALL_TOOLS, ADMIN_NAV
-from ..translations import trans
+from utils import BUSINESS_TOOLS, BUSINESS_NAV, ALL_TOOLS, ADMIN_NAV, trans_function, requires_role, check_coin_balance, format_currency, format_date, get_mongo_db, is_admin, get_user_query
+from translations import trans
 
 logger = logging.getLogger(__name__)
 
@@ -36,7 +34,9 @@ def index():
         db = get_mongo_db()
         query = {'type': 'debtor'} if is_admin() else {'user_id': str(current_user.id), 'type': 'debtor'}
         debtors = list(db.records.find(query).sort('created_at', -1))
-        return render_template('debtors/index.html', debtors=debtors, format_currency=format_currency, format_date=format_date, t=trans, lang=session.get('lang', 'en'))
+        tools = BUSINESS_TOOLS if current_user.role == 'trader' else ALL_TOOLS
+        nav_items = BUSINESS_NAV if current_user.role == 'trader' else ADMIN_NAV
+        return render_template('debtors/index.html', debtors=debtors, tools=tools, nav_items=nav_items, format_currency=format_currency, format_date=format_date, t=trans, lang=session.get('lang', 'en'))
     except Exception as e:
         logger.error(f"Error fetching debtors for user {current_user.id}: {str(e)}")
         flash(trans('debtors_fetch_error', default='An error occurred'), 'danger')
@@ -75,7 +75,9 @@ def view_page(id):
         if not debtor:
             flash(trans('debtors_record_not_found', default='Record not found'), 'danger')
             return redirect(url_for('debtors.index'))
-        return render_template('debtors/view.html', debtor=debtor, format_currency=format_currency, format_date=format_date, t=trans, lang=session.get('lang', 'en'))
+        tools = BUSINESS_TOOLS if current_user.role == 'trader' else ALL_TOOLS
+        nav_items = BUSINESS_NAV if current_user.role == 'trader' else ADMIN_NAV
+        return render_template('debtors/view.html', debtor=debtor, tools=tools, nav_items=nav_items, format_currency=format_currency, format_date=format_date, t=trans, lang=session.get('lang', 'en'))
     except Exception as e:
         logger.error(f"Error rendering debtor view page {id} for user {current_user.id}: {str(e)}")
         flash(trans('debtors_view_error', default='An error occurred'), 'danger')
@@ -121,15 +123,6 @@ def share(id):
     except Exception as e:
         logger.error(f"Error sharing IOU for debtor {id}: {str(e)}")
         return jsonify({'success': False, 'message': trans('debtors_share_error', default='An error occurred')}), 500
-
-@general_bp.route('/home')
-@login_required
-def home():
-    if current_user.role not in ['trader', 'admin']:
-        return redirect(url_for('app.index'))
-    tools = BUSINESS_TOOLS if current_user.role == 'trader' else ALL_TOOLS
-    nav_items = BUSINESS_NAV if current_user.role == 'trader' else ADMIN_NAV
-    return render_template('general/home.html', tools=tools, nav_items=nav_items, t=trans, lang=session.get('lang', 'en'))
 
 @debtors_bp.route('/send_reminder', methods=['POST'])
 @login_required
@@ -202,15 +195,6 @@ def send_reminder():
     except Exception as e:
         logger.error(f"Error sending reminder: {str(e)}")
         return jsonify({'success': False, 'message': trans('debtors_reminder_error', default='An error occurred')}), 500
-
-@creditors_bp.route('/')
-@login_required
-def index():
-    if current_user.role not in ['trader', 'admin']:
-        return redirect(url_for('app.index'))
-    tools = BUSINESS_TOOLS if current_user.role == 'trader' else ALL_TOOLS
-    nav_items = BUSINESS_NAV if current_user.role == 'trader' else ADMIN_NAV
-    return render_template('debtors/index.html', tools=tools, nav_items=nav_items, t=trans, lang=session.get('lang', 'en'))
 
 @debtors_bp.route('/generate_iou/<id>')
 @login_required
@@ -327,7 +311,9 @@ def add():
         except Exception as e:
             logger.error(f"Error creating debtor for user {current_user.id}: {str(e)}")
             flash(trans('debtors_create_error', default='An error occurred'), 'danger')
-    return render_template('debtors/add.html', form=form, t=trans, lang=session.get('lang', 'en'))
+    tools = BUSINESS_TOOLS if current_user.role == 'trader' else ALL_TOOLS
+    nav_items = BUSINESS_NAV if current_user.role == 'trader' else ADMIN_NAV
+    return render_template('debtors/add.html', form=form, tools=tools, nav_items=nav_items, t=trans, lang=session.get('lang', 'en'))
 
 @debtors_bp.route('/edit/<id>', methods=['GET', 'POST'])
 @login_required
@@ -365,7 +351,9 @@ def edit(id):
             except Exception as e:
                 logger.error(f"Error updating debtor {id} for user {current_user.id}: {str(e)}")
                 flash(trans('debtors_edit_error', default='An error occurred'), 'danger')
-        return render_template('debtors/edit.html', form=form, debtor=debtor, t=trans, lang=session.get('lang', 'en'))
+        tools = BUSINESS_TOOLS if current_user.role == 'trader' else ALL_TOOLS
+        nav_items = BUSINESS_NAV if current_user.role == 'trader' else ADMIN_NAV
+        return render_template('debtors/edit.html', form=form, debtor=debtor, tools=tools, nav_items=nav_items, t=trans, lang=session.get('lang', 'en'))
     except Exception as e:
         logger.error(f"Error fetching debtor {id} for user {current_user.id}: {str(e)}")
         flash(trans('debtors_record_not_found', default='Record not found'), 'danger')
@@ -388,57 +376,3 @@ def delete(id):
         logger.error(f"Error deleting debtor {id} for user {current_user.id}: {str(e)}")
         flash(trans('debtors_delete_error', default='An error occurred'), 'danger')
     return redirect(url_for('debtors.index'))
-
-def send_sms_reminder(recipient, message):
-    """Send SMS reminder using Africa's Talking API."""
-    try:
-        api_key = os.getenv('AFRICAS_TALKING_API_KEY')
-        username = os.getenv('AFRICAS_TALKING_USERNAME', 'sandbox')
-        
-        if not api_key:
-            logger.warning("Africa's Talking API key not configured")
-            return False, {'error': 'SMS service not configured'}
-        
-        headers = {
-            "Accept": "application/json",
-            "Content-Type": "application/x-www-form-urlencoded",
-            "apikey": api_key
-        }
-        
-        if not recipient.startswith('+') and not recipient.startswith('234'):
-            if recipient.startswith('0'):
-                recipient = '234' + recipient[1:]
-            else:
-                recipient = '234' + recipient
-        
-        payload = {
-            "username": username,
-            "to": recipient,
-            "message": message
-        }
-        
-        response = requests.post(
-            "https://api.africastalking.com/version1/messaging",
-            headers=headers,
-            data=payload,
-            timeout=30
-        )
-        
-        response.raise_for_status()
-        result = response.json()
-        
-        if result and result.get('SMSMessageData', {}).get('Recipients'):
-            recipients = result['SMSMessageData']['Recipients']
-            if recipients and recipients[0].get('status') == 'Success':
-                return True, result
-        
-        return False, result
-        
-    except Exception as e:
-        logger.error(f"Error sending SMS: {str(e)}")
-        return False, {'error': str(e)}
-
-def send_whatsapp_reminder(recipient, message):
-    """Send WhatsApp reminder (placeholder for future implementation)."""
-    logger.info(f"WhatsApp reminder would be sent to {recipient}: {message}")
-    return True, {'status': 'WhatsApp integration pending'}
