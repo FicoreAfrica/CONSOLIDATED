@@ -608,7 +608,7 @@ System: CORS(app)
             return '', 200
         if current_user.is_authenticated:
             if current_user.role == 'agent':
-                return redirect(url_for('agents_bp.dashboard'))
+                return redirect(url_for('agents.dashboard'))
             elif current_user.role == 'trader':
                 return redirect(url_for('general_bp.home'))
             elif current_user.role == 'admin':
@@ -662,7 +662,7 @@ System: CORS(app)
         logger.info(f'Serving business/agent home page, authenticated: {current_user.is_authenticated}')
         if current_user.is_authenticated:
             if current_user.role == 'agent':
-                return redirect(url_for('agents_bp.dashboard'))
+                return redirect(url_for('agents.dashboard'))
             elif current_user.role == 'trader':
                 try:
                     return render_template('general/home.html', t=trans, lang=lang, title=trans('general_business_home', lang=lang))
