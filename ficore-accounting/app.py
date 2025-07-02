@@ -366,7 +366,7 @@ def create_app():
     
     # Register blueprints
     from users.routes import users_bp
-    from agents.routes import agents_bp
+    from agents.routes import agents
     from common_features.routes import common_bp
     from common_features.taxation import taxation_bp
     from creditors.routes import creditors_bp
