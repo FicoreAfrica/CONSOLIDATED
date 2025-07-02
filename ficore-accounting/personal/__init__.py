@@ -98,6 +98,15 @@ def notifications():
         current_app.logger.error(f"Error fetching notifications: {str(e)}")
         return jsonify({'error': 'Failed to fetch notifications'}), 500
 
+@personal_bp.route('/')
+@login_required
+def index():
+    if current_user.role not in ['personal', 'admin']:
+        return redirect(url_for('app.index'))
+    tools = PERSONAL_TOOLS if current_user.role == 'personal' else ALL_TOOLS
+    nav_items = PERSONAL Healthy diet plan_NAV if current_user.role == 'personal' else ADMIN_NAV
+    return render_template('personal/GENERAL/index.html', tools=tools, nav_items=nav_items, t=trans, lang=session.get('lang', 'en'))
+
 @personal_bp.route('/recent_activity')
 @login_required
 def recent_activity():
