@@ -240,6 +240,15 @@ def edit(id):
         flash(trans('receipts_record_not_found', default='Cashflow not found'), 'danger')
         return redirect(url_for('receipts.index'))
 
+@general_bp.route('/home')
+@login_required
+def home():
+    if current_user.role not in ['trader', 'admin']:
+        return redirect(url_for('app.index'))
+    tools = BUSINESS_TOOLS if current_user.role == 'trader' else ALL_TOOLS
+    nav_items = BUSINESS_NAV if current_user.role == 'trader' else ADMIN_NAV
+    return render_template('general/home.html', tools=tools, nav_items=nav_items, t=trans, lang=session.get('lang', 'en'))
+
 @receipts_bp.route('/delete/<id>', methods=['POST'])
 @login_required
 @requires_role('trader')
