@@ -255,6 +255,13 @@ def audit():
         flash(trans('admin_database_error', default='An error occurred while accessing the database'), 'danger')
         return render_template('admin/audit.html', logs=[], t=trans, lang=session.get('lang', 'en')), 500
 
+@admin_bp.route('/dashboard')
+@login_required
+def dashboard():
+    if current_user.role != 'admin':
+        return redirect(url_for('app.index'))
+    return render_template('admin/dashboard.html', tools=ALL_TOOLS, nav_items=ADMIN_NAV, t=trans, lang=session.get('lang', 'en'))
+
 @admin_bp.route('/manage_agents', methods=['GET', 'POST'])
 @login_required
 @requires_role('admin')
