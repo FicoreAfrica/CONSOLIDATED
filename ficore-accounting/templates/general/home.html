@@ -26,8 +26,8 @@
                             {{ t('general_language', default='Language') | e }}: {{ session.get('lang', 'en') | upper | e }}
                         </button>
                         <ul class="dropdown-menu" aria-labelledby="languageDropdown">
-                            <li><a class="dropdown-item" href="{{ url_for('app.set_language', lang='en') | e }}">{{ t('general_english', default='English') | e }}</a></li>
-                            <li><a class="dropdown-item" href="{{ url_for('app.set_language', lang='ha') | e }}">{{ t('general_hausa', default='Hausa') | e }}</a></li>
+                            <li><a class="dropdown-item" href="{{ url_for('set_language', lang='en') | e }}">{{ t('general_english', default='English') | e }}</a></li>
+                            <li><a class="dropdown-item" href="{{ url_for('set_language', lang='ha') | e }}">{{ t('general_hausa', default='Hausa') | e }}</a></li>
                         </ul>
                     </div>
                     <button class="btn btn-outline-secondary btn-sm" id="quickDarkModeToggle" onclick="toggleDarkMode()" aria-label="{{ t('general_mode_toggle_dark', default='Toggle dark mode') | e }}">
@@ -362,7 +362,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     function loadNotifications() {
-        fetch('{{ url_for("app.notification_count") | e }}')
+        fetch('{{ url_for("notification_count") | e }}')
             .then(response => response.json())
             .then(data => {
                 const count = data.count || 0;
@@ -378,7 +378,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 console.error('Error loading notification count:', error);
             });
 
-        fetch('{{ url_for("app.notifications") | e }}')
+        fetch('{{ url_for("notifications") | e }}')
             .then(response => response.json())
             .then(notifications => {
                 const notificationList = document.getElementById('notificationList');
@@ -416,7 +416,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     function loadRecentActivity() {
-        fetch('{{ url_for("app.recent_activity") | e }}')
+        fetch('{{ url_for("recent_activity") | e }}')
             .then(response => response.json())
             .then(activities => {
                 const activityList = document.getElementById('recentActivityList');
