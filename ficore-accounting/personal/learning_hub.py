@@ -706,7 +706,7 @@ def lesson_action():
                                 "course_title": course.get('title_en', ''),
                                 "lesson_title": lesson.get('title_en', ''),
                                 "completed_at": datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S'),
-                                "cta_url": url_for('personal.learning_hub.main', _external=True),
+                                "cta_url": url_for('personal/LEARNINGHUB/learning_hub.main', _external=True),
                                 "unsubscribe_url": url_for('personal.learning_hub.unsubscribe', email=profile['email'], _external=True)
                             },
                             lang=session.get('lang', 'en')
@@ -777,7 +777,7 @@ def quiz_action():
                             "score": score,
                             "total": len(quiz['questions']),
                             "completed_at": datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S'),
-                            "cta_url": url_for('personal.learning_hub.main', _external=True),
+                            "cta_url": url_for('personal/LEARNINGHUB/learning_hub.main', _external=True),
                             "unsubscribe_url": url_for('personal.learning_hub.unsubscribe', email=profile['email'], _external=True)
                         },
                         lang=session.get('lang', 'en')
@@ -829,17 +829,17 @@ def profile():
             
             current_app.logger.info(f"Profile saved for user {current_user.id if current_user.is_authenticated else 'anonymous'}", extra={'session_id': session.get('sid', 'no-session-id')})
             flash(trans('learning_hub_profile_saved', default='Profile saved successfully', lang=lang), 'success')
-            return redirect(url_for('personal.learning_hub.main'))
+            return redirect(url_for('personal/LEARNINGHUB/learning_hub.main'))
         
         elif request.method == 'POST':
             flash(trans('learning_hub_profile_failed', default='Failed to save profile', lang=lang), 'danger')
         
-        return redirect(url_for('personal.learning_hub.main'))
+        return redirect(url_for('personal/LEARNINGHUB/learning_hub.main'))
         
     except Exception as e:
         current_app.logger.error(f"Error in profile page: {str(e)}", extra={'session_id': session.get('sid', 'no-session-id')})
         flash(trans("learning_hub_error_loading", default="Error loading profile", lang=lang), "danger")
-        return redirect(url_for('personal.learning_hub.main')), 500
+        return redirect(url_for('personal/LEARNINGHUB/learning_hub.main')), 500
 
 @learning_hub_bp.route('/unsubscribe/<email>')
 @custom_login_required
@@ -873,12 +873,12 @@ def unsubscribe(email):
             current_app.logger.warning(f"Failed to unsubscribe email {email}: No matching profile or already unsubscribed", extra={'session_id': session.get('sid', 'no-session-id')})
             flash(trans("learning_hub_unsubscribe_failed", default="Failed to unsubscribe. Email not found or already unsubscribed.", lang=lang), "danger")
         
-        return redirect(url_for('personal.learning_hub.main'))
+        return redirect(url_for('personal/LEARNINGHUB/learning_hub.main'))
         
     except Exception as e:
         current_app.logger.error(f"Error in unsubscribe: {str(e)}", extra={'session_id': session.get('sid', 'no-session-id')})
         flash(trans("learning_hub_unsubscribe_error", default="Error processing unsubscribe request", lang=lang), "danger")
-        return redirect(url_for('personal.learning_hub.main')), 500
+        return redirect(url_for('personal/LEARNINGHUB/learning_hub.main')), 500
 
 @learning_hub_bp.route('/static/uploads/<path:filename>')
 @custom_login_required
@@ -906,7 +906,7 @@ def serve_uploaded_file(filename):
     except Exception as e:
         current_app.logger.error(f"Error serving uploaded file {filename}: {str(e)}", extra={'session_id': session.get('sid', 'no-session-id')})
         flash(trans("learning_hub_file_not_found", default="File not found", lang=session.get('lang', 'en')), "danger")
-        return redirect(url_for('personal.learning_hub.main')), 404
+        return redirect(url_for('personal/LEARNINGHUB/learning_hub.main')), 404
 
 @learning_hub_bp.errorhandler(404)
 def handle_not_found(e):
@@ -919,7 +919,7 @@ def handle_not_found(e):
     lang = session.get('lang', 'en')
     current_app.logger.error(f"404 error on {request.path}: {str(e)}", extra={'session_id': session.get('sid', 'no-session-id')})
     flash(trans("learning_hub_not_found", default="The requested page was not found. Please check the URL or return to the main page.", lang=lang), "danger")
-    return redirect(url_for('personal.learning_hub.main')), 404
+    return redirect(url_for('personal/LEARNINGHUB/learning_hub.main')), 404
 
 @learning_hub_bp.errorhandler(CSRFError)
 def handle_csrf_error(e):
@@ -932,29 +932,29 @@ def handle_csrf_error(e):
     lang = session.get('lang', 'en')
     current_app.logger.error(f"CSRF error on {request.path}: {e.description}", extra={'session_id': session.get('sid', 'no-session-id')})
     flash(trans("learning_hub_csrf_error", default="Form submission failed due to a missing security token. Please refresh and try again.", lang=lang), "danger")
-    return redirect(url_for('personal.learning_hub.main')), 400
+    return redirect(url_for('personal/LEARNINGHUB/learning_hub.main')), 400
 
 # Legacy route redirects for backward compatibility
 @learning_hub_bp.route('/courses')
 @custom_login_required
 def courses():
     """Redirect to main page with courses tab."""
-    return redirect(url_for('personal.learning_hub.main') + '#courses')
+    return redirect(url_for('personal/LEARNINGHUB/learning_hub.main') + '#courses')
 
 @learning_hub_bp.route('/courses/<course_id>')
 @custom_login_required
 def course_overview(course_id):
     """Redirect to main page and load course overview."""
-    return redirect(url_for('personal.learning_hub.main') + f'#course-{course_id}')
+    return redirect(url_for('personal/LEARNINGHUB/learning_hub.main') + f'#course-{course_id}')
 
 @learning_hub_bp.route('/courses/<course_id>/lesson/<lesson_id>')
 @custom_login_required
 def lesson(course_id, lesson_id):
     """Redirect to main page and load lesson."""
-    return redirect(url_for('personal.learning_hub.main') + f'#lesson-{course_id}-{lesson_id}')
+    return redirect(url_for('personal/LEARNINGHUB/learning_hub.main') + f'#lesson-{course_id}-{lesson_id}')
 
 @learning_hub_bp.route('/courses/<course_id>/quiz/<quiz_id>')
 @custom_login_required
 def quiz(course_id, quiz_id):
     """Redirect to main page and load quiz."""
-    return redirect(url_for('personal.learning_hub.main') + f'#quiz-{course_id}-{quiz_id}')
+    return redirect(url_for('personal/LEARNINGHUB/learning_hub.main') + f'#quiz-{course_id}-{quiz_id}')
