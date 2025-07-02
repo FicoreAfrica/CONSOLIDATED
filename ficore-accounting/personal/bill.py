@@ -4,13 +4,13 @@ from flask_wtf.csrf import CSRFProtect, CSRFError
 from wtforms import StringField, FloatField, SelectField, BooleanField, IntegerField, DateField
 from wtforms.validators import DataRequired, NumberRange, Email, Optional
 from flask_login import current_user, login_required
-from ..mailersend_email import send_email, EMAIL_CONFIG
+from mailersend_email import send_email, EMAIL_CONFIG
 from datetime import datetime, date, timedelta
 from translations import trans
 from pymongo.errors import DuplicateKeyError
 from bson import ObjectId
-from ..utils import requires_role, is_admin, get_mongo_db, PERSONAL_TOOLS, PERSONAL_NAV, ALL_TOOLS, ADMIN_NAV
-from ..models import log_tool_usage
+from utils import requires_role, is_admin, get_mongo_db, PERSONAL_TOOLS, PERSONAL_NAV, ALL_TOOLS, ADMIN_NAV
+from models import log_tool_usage
 
 bill_bp = Blueprint('bill', __name__, template_folder='templates/personal/BILL')
 
