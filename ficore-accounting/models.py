@@ -9,6 +9,8 @@ import uuid
 import time
 from translations import trans
 from utils import get_mongo_db  # Import get_mongo_db from utils.py
+from functools import lru_cache
+import traceback
 
 logger = logging.getLogger('ficore_app')
 
@@ -697,7 +699,7 @@ def create_user(db, user_data):
         
         db.users.insert_one(user_doc)
         logger.info(f"{trans('general_user_created', default='Created user with ID')}: {user_id}")
-        
+        get_user.cache_clear()  # Clear cache after user creation
         return User(
             id=user_id,
             email=user_doc['email'],
@@ -717,8 +719,10 @@ def create_user(db, user_data):
         logger.error(f"{trans('general_user_creation_error', default='Error creating user')}: {str(e)}")
         raise
 
+@lru_cache(maxsize=128)
 def get_user_by_email(db, email):
     try:
+        logger.debug(f"Calling get_user_by_email for email: {email}, stack: {''.join(traceback.format_stack()[-5:])}")
         user_doc = db.users.find_one({'email': email.lower()})
         if user_doc:
             return User(
@@ -735,11 +739,13 @@ def get_user_by_email(db, email):
             )
         return None
     except Exception as e:
-        logger.error(f"{trans('general_user_fetch_error', default='Error getting user by email')} {email}: {str(e)}")
+        logger.error(f"{trans('general_user_fetch_error', default='Error getting user by email')} {email}: {str(e)}", exc_info=True)
         raise
 
+@lru_cache(maxsize=128)
 def get_user(db, user_id):
     try:
+        logger.debug(f"Calling get_user for user_id: {user_id}, stack: {''.join(traceback.format_stack()[-5:])}")
         user_doc = db.users.find_one({'_id': user_id})
         if user_doc:
             return User(
@@ -756,7 +762,7 @@ def get_user(db, user_id):
             )
         return None
     except Exception as e:
-        logger.error(f"{trans('general_user_fetch_error', default='Error getting user by ID')} {user_id}: {str(e)}")
+        logger.error(f"{trans('general_user_fetch_error', default='Error getting user by ID')} {user_id}: {str(e)}", exc_info=True)
         raise
 
 def get_agent(db, agent_id):
