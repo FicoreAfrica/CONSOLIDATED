@@ -168,7 +168,7 @@ def main():
                 except Exception as e:
                     current_app.logger.error(f"Failed to save budget to MongoDB for session {session['sid']}: {str(e)}", extra={'session_id': session['sid']})
                     flash(trans("budget_storage_error", default='Error saving budget.', lang=lang), "danger")
-                    return render_template('budget/main.html', form=form, budgets={}, latest_budget={}, categories={}, tips=[], insights=[], t=trans, lang=lang, tool_title=trans('budget_title', default='Budget Planner', lang=lang), tools=tools, nav_items=nav_items)
+                    return render_template('personal/BUDGET/budget_main.html', form=form, budgets={}, latest_budget={}, categories={}, tips=[], insights=[], t=trans, lang=lang, tool_title=trans('budget_title', default='Budget Planner', lang=lang), tools=tools, nav_items=nav_items)
                 if form.send_email.data and form.email.data:
                     try:
                         config = EMAIL_CONFIG["budget"]
@@ -277,7 +277,7 @@ def main():
             if latest_budget.get('savings_goal', 0) == 0:
                 insights.append(trans("budget_insight_set_savings_goal", default='Set a savings goal to build financial security.', lang=lang))
         return render_template(
-            'budget/main.html',
+            'personal/BUDGET/budget_main.html',
             form=form,
             budgets=budgets_dict,
             latest_budget=latest_budget,
@@ -294,7 +294,7 @@ def main():
         current_app.logger.error(f"Unexpected error in budget.main for session {session.get('sid', 'unknown')}: {str(e)}", extra={'session_id': session.get('sid', 'unknown')})
         flash(trans("budget_dashboard_load_error", default='Error loading budget dashboard.', lang=lang), "danger")
         return render_template(
-            'budget/main.html',
+            'personal/BUDGET/budget_main.html',
             form=form,
             budgets={},
             latest_budget={
