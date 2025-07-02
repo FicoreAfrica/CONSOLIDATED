@@ -107,6 +107,15 @@ def add():
             flash(trans('inventory_add_error', default='An error occurred'), 'danger')
     return render_template('inventory/add.html', form=form, t=trans, lang=session.get('lang', 'en'))
 
+@creditors_bp.route('/')
+@login_required
+def index():
+    if current_user.role not in ['trader', 'admin']:
+        return redirect(url_for('app.index'))
+    tools = BUSINESS_TOOLS if current_user.role == 'trader' else ALL_TOOLS
+    nav_items = BUSINESS_NAV if current_user.role == 'trader' else ADMIN_NAV
+    return render_template('inventory/index.html', tools=tools, nav_items=nav_items, t=trans, lang=session.get('lang', 'en'))
+
 @inventory_bp.route('/edit/<id>', methods=['GET', 'POST'])
 @login_required
 @requires_role('trader')
