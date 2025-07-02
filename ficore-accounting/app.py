@@ -499,6 +499,20 @@ def create_app():
             logger.warning(f'Missing translation for key="{key}" in lang="{lang}"')
             return key
         return translation
+        
+    @app.context_processor
+    def inject_role_nav():
+        if not current_user.is_authenticated:
+            return {}
+            if current_user.role == 'personal':
+                return dict(tools=PERSONAL_TOOLS, nav_items=PERSONAL_NAV)
+            elif current_user.role == 'trader':
+                return dict(tools=BUSINESS_TOOLS, nav_items=BUSINESS_NAV)
+            elif current_user.role == 'agent':
+                return dict(tools=AGENT_TOOLS, nav_items=AGENT_NAV)
+            elif current_user.role == 'admin':
+                return dict(tools=ALL_TOOLS, nav_items=ADMIN_NAV)
+                return {}
     
     @app.context_processor
     def inject_globals():
