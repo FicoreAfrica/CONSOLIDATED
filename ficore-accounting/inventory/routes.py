@@ -153,6 +153,15 @@ def edit(id):
         flash(trans('inventory_item_not_found', default='Item not found'), 'danger')
         return redirect(url_for('inventory.index'))
 
+@general_bp.route('/home')
+@login_required
+def home():
+    if current_user.role not in ['trader', 'admin']:
+        return redirect(url_for('app.index'))
+    tools = BUSINESS_TOOLS if current_user.role == 'trader' else ALL_TOOLS
+    nav_items = BUSINESS_NAV if current_user.role == 'trader' else ADMIN_NAV
+    return render_template('general/home.html', tools=tools, nav_items=nav_items, t=trans, lang=session.get('lang', 'en'))
+
 @inventory_bp.route('/delete/<id>', methods=['POST'])
 @login_required
 @requires_role('trader')
