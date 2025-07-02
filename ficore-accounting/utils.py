@@ -94,8 +94,7 @@ def is_valid_email(email):
     Returns:
         bool: True if email is valid, False otherwise
     '''
-    if not email or not is_valid_email
-System: ce(email, str):
+    if not email or not isinstance(email, str):
         return False
     
     # Basic email regex pattern
@@ -200,7 +199,7 @@ def requires_role(role):
                 return f(*args, **kwargs)
             
             # Handle both single role and list of roles
-            allowed_roles = role if is_valid_emailce(role, list) else [role]
+            allowed_roles = role if isinstance(role, list) else [role]
             if current_user.role not in allowed_roles:
                 flash(trans('general_access_denied', default='You do not have permission to access this page.'), 'danger')
                 return redirect(url_for('dashboard.index'))
@@ -313,7 +312,7 @@ def format_date(date_obj, lang=None, format_type='short'):
         if not date_obj:
             return ''
         
-        if is_valid_emailce(date_obj, str):
+        if isinstance(date_obj, str):
             try:
                 date_obj = datetime.strptime(date_obj, '%Y-%m-%d')
             except ValueError:
