@@ -1,4 +1,3 @@
-```python
 import re
 import logging
 import uuid
@@ -829,5 +828,3 @@ __all__ = [
     'ALL_TOOLS',
     'ADMIN_NAV'
 ]
-
-```
