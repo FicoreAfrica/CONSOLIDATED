@@ -1,7 +1,7 @@
 from flask import Blueprint, render_template, redirect, url_for, flash, request, Response, jsonify, session
 from flask_login import login_required, current_user
-from translations import trans
-from utils import trans_function, requires_role, check_coin_balance, format_currency, format_date, get_mongo_db, is_admin, get_user_query
+from ..translations import trans
+from ..utils import trans_function, requires_role, check_coin_balance, format_currency, format_date, get_mongo_db, is_admin, get_user_query, BUSINESS_TOOLS, BUSINESS_NAV, ALL_TOOLS, ADMIN_NAV
 from bson import ObjectId
 from datetime import datetime
 from flask_wtf import FlaskForm
@@ -9,8 +9,6 @@ from wtforms import StringField, DateField, FloatField, SelectField, SubmitField
 from wtforms.validators import DataRequired, Optional
 import logging
 import io
-from ..utils import BUSINESS_TOOLS, BUSINESS_NAV, ALL_TOOLS, ADMIN_NAV
-from ..translations import trans
 
 logger = logging.getLogger(__name__)
 
@@ -39,7 +37,9 @@ def index():
         # TODO: Restore original user_id filter for production
         query = {'type': 'payment'} if is_admin() else {'user_id': str(current_user.id), 'type': 'payment'}
         payments = list(db.cashflows.find(query).sort('created_at', -1))
-        return render_template('payments/index.html', payments=payments, format_currency=format_currency, format_date=format_date, t=trans, lang=session.get('lang', 'en'))
+        tools = BUSINESS_TOOLS if current_user.role == 'trader' else ALL_TOOLS
+        nav_items = BUSINESS_NAV if current_user.role == 'trader' else ADMIN_NAV
+        return render_template('payments/index.html', payments=payments, format_currency=format_currency, format_date=format_date, tools=tools, nav_items=nav_items, t=trans, lang=session.get('lang', 'en'))
     except Exception as e:
         logger.error(f"Error fetching payments for user {current_user.id}: {str(e)}")
         flash(trans('payments_fetch_error', default='An error occurred'), 'danger')
@@ -60,7 +60,8 @@ def view(id):
         # Convert ObjectId to string for JSON serialization
         payment['_id'] = str(payment['_id'])
         payment['created_at'] = payment['created_at'].isoformat() if payment.get('created_at') else None
-        
+        tools = BUSINESS_TOOLS if current_user.role == 'trader' else ALL_TOOLS
+        nav_items = BUSINESS_NAV if current_user.role == 'trader' else ADMIN_NAV
         return jsonify(payment)
     except Exception as e:
         logger.error(f"Error fetching payment {id} for user {current_user.id}: {str(e)}")
@@ -132,6 +133,8 @@ def generate_pdf(id):
             })
         
         buffer.seek(0)
+        tools = BUSINESS_TOOLS if current_user.role == 'trader' else ALL_TOOLS
+        nav_items = BUSINESS_NAV if current_user.role == 'trader' else ADMIN_NAV
         return Response(
             buffer.getvalue(),
             mimetype='application/pdf',
@@ -144,24 +147,6 @@ def generate_pdf(id):
         logger.error(f"Error generating PDF for payment {id}: {str(e)}")
         flash(trans('payments_pdf_generation_error', default='An error occurred'), 'danger')
         return redirect(url_for('payments.index'))
-
-@general_bp.route('/home')
-@login_required
-def home():
-    if current_user.role not in ['trader', 'admin']:
-        return redirect(url_for('app.index'))
-    tools = BUSINESS_TOOLS if current_user.role == 'trader' else ALL_TOOLS
-    nav_items = BUSINESS_NAV if current_user.role == 'trader' else ADMIN_NAV
-    return render_template('general/home.html', tools=tools, nav_items=nav_items, t=trans, lang=session.get('lang', 'en'))
-
-@creditors_bp.route('/')
-@login_required
-def index():
-    if current_user.role not in ['trader', 'admin']:
-        return redirect(url_for('app.index'))
-    tools = BUSINESS_TOOLS if current_user.role == 'trader' else ALL_TOOLS
-    nav_items = BUSINESS_NAV if current_user.role == 'trader' else ADMIN_NAV
-    return render_template('payments/index.html', tools=tools, nav_items=nav_items, t=trans, lang=session.get('lang', 'en'))
 
 @payments_bp.route('/add', methods=['GET', 'POST'])
 @login_required
@@ -210,7 +195,9 @@ def add():
         except Exception as e:
             logger.error(f"Error adding payment for user {current_user.id}: {str(e)}")
             flash(trans('payments_add_error', default='An error occurred'), 'danger')
-    return render_template('payments/add.html', form=form, t=trans, lang=session.get('lang', 'en'))
+    tools = BUSINESS_TOOLS if current_user.role == 'trader' else ALL_TOOLS
+    nav_items = BUSINESS_NAV if current_user.role == 'trader' else ADMIN_NAV
+    return render_template('payments/add.html', form=form, tools=tools, nav_items=nav_items, t=trans, lang=session.get('lang', 'en'))
 
 @payments_bp.route('/edit/<id>', methods=['GET', 'POST'])
 @login_required
@@ -254,7 +241,9 @@ def edit(id):
             except Exception as e:
                 logger.error(f"Error updating payment {id} for user {current_user.id}: {str(e)}")
                 flash(trans('payments_edit_error', default='An error occurred'), 'danger')
-        return render_template('payments/edit.html', form=form, payment=payment, t=trans, lang=session.get('lang', 'en'))
+        tools = BUSINESS_TOOLS if current_user.role == 'trader' else ALL_TOOLS
+        nav_items = BUSINESS_NAV if current_user.role == 'trader' else ADMIN_NAV
+        return render_template('payments/edit.html', form=form, payment=payment, tools=tools, nav_items=nav_items, t=trans, lang=session.get('lang', 'en'))
     except Exception as e:
         logger.error(f"Error fetching payment {id} for user {current_user.id}: {str(e)}")
         flash(trans('payments_record_not_found', default='Cashflow not found'), 'danger')
