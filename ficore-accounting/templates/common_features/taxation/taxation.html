@@ -58,7 +58,7 @@
             </div>
             <div class="form-group">
                 {{ form.taxpayer_type.label(class="form-label") }}
-                {{ form.taxpayer_type(class="form-control") }}
+                {{ form.taxpayer_type(class="form-control", **{'data-validate': 'true'}) }}
                 {% if form.taxpayer_type.errors %}
                     <div class="text-danger">
                         {% for error in form.taxpayer_type.errors %}
@@ -67,30 +67,28 @@
                     </div>
                 {% endif %}
             </div>
-            {% if role in ['trader', 'agent'] %}
-                <div class="form-group">
-                    {{ form.business_size.label(class="form-label") }}
-                    {{ form.business_size(class="form-control") }}
-                    {% if form.business_size.errors %}
-                        <div class="text-danger">
-                            {% for error in form.business_size.errors %}
-                                {{ error }}<br>
-                            {% endfor %}
-                        </div>
-                    {% endif %}
-                </div>
-            {% endif %}
+            <div class="form-group" id="business_size_group" style="display: none;">
+                {{ form.business_size.label(class="form-label") }}
+                {{ form.business_size(class="form-control", **{'data-validate': 'true'}) }}
+                {% if form.business_size.errors %}
+                    <div class="text-danger">
+                        {% for error in form.business_size.errors %}
+                            {{ error }}<br>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+            </div>
             {{ form.submit(class="btn btn-primary") }}
         </form>
         <div id="taxResult" class="mt-3"></div>
-        <a href="{{ url_for('taxation_bp.understand_taxes') }}" class="btn btn-info mt-3" style="font-size: 1.2em; padding: 10px 20px;">Understand Your Taxes</a>
+        <a href="{{ url_for('taxation_bp.understand_taxes') }}" class="btn btn-info mt-3" style="font-size: 1.2em; padding: 10px 20px;">{{ t('tax_understand_taxes', default='Understand Your Taxes') }}</a>
 
     {% elif section == 'result' %}
         <h1>{{ t('tax_calculation_result', default='Tax Calculation Result') }}</h1>
-        <p>{{ t('tax_for_amount_of', default='For an amount of') }} {{ amount }}, {{ t('tax_your_tax_obligation_is', default='your tax obligation is') }} {{ tax }} (including Development Levy).</p>
+        <p>{{ t('tax_for_amount_of', default='For an amount of') }} ₦{{ amount | round(2) }}, {{ t('tax_your_tax_obligation_is', default='your tax obligation is') }} ₦{{ tax | round(2) }}.</p>
         <p>{{ t('tax_explanation', default='Explanation') }}: {{ explanation }}</p>
         <a href="{{ url_for('taxation_bp.calculate_tax') }}" class="btn btn-secondary">{{ t('tax_back_to_calculator', default='Back to Calculator') }}</a>
-        <a href="{{ url_for('taxation_bp.understand_taxes') }}" class="btn btn-info mt-3" style="font-size: 1.2em; padding: 10px 20px;">Understand Your Taxes</a>
+        <a href="{{ url_for('taxation_bp.understand_taxes') }}" class="btn btn-info mt-3" style="font-size: 1.2em; padding: 10px 20px;">{{ t('tax_understand_taxes', default='Understand Your Taxes') }}</a>
 
     {% elif section == 'payment_info' %}
         <h1>{{ t('tax_payment_information', default='Tax Payment Information') }}</h1>
@@ -104,7 +102,7 @@
         {% else %}
             <p>{{ t('tax_no_locations_found', default='No payment locations found.') }}</p>
         {% endif %}
-        <a href="{{ url_for('taxation_bp.understand_taxes') }}" class="btn btn-info mt-3" style="font-size: 1.2em; padding: 10px 20px;">Understand Your Taxes</a>
+        <a href="{{ url_for('taxation_bp.understand_taxes') }}" class="btn btn-info mt-3" style="font-size: 1.2em; padding: 10px 20px;">{{ t('tax_understand_taxes', default='Understand Your Taxes') }}</a>
 
     {% elif section == 'reminders' %}
         <h1>{{ t('tax_your_tax_reminders', default='Your Tax Reminders') }}</h1>
@@ -144,7 +142,7 @@
             </div>
             {{ form.submit(class="btn btn-primary") }}
         </form>
-        <a href="{{ url_for('taxation_bp.understand_taxes') }}" class="btn btn-info mt-3" style="font-size: 1.2em; padding: 10px 20px;">Understand Your Taxes</a>
+        <a href="{{ url_for('taxation_bp.understand_taxes') }}" class="btn btn-info mt-3" style="font-size: 1.2em; padding: 10px 20px;">{{ t('tax_understand_taxes', default='Understand Your Taxes') }}</a>
 
     {% elif section == 'admin_rates' %}
         <h1>{{ t('tax_manage_rates_admin', default='Manage Tax Rates (Admin)') }}</h1>
@@ -223,8 +221,8 @@
                     {% for rate in rates %}
                         <tr>
                             <td>{{ rate.role }}</td>
-                            <td>{{ rate.min_income }}</td>
-                            <td>{{ rate.max_income }}</td>
+                            <td>{{ rate.min_income | round(2) }}</td>
+                            <td>{{ rate.max_income | round(2) if rate.max_income != float('inf') else '∞' }}</td>
                             <td>{{ (rate.rate * 100)|round(2) }}%</td>
                             <td>{{ rate.description }}</td>
                         </tr>
@@ -232,7 +230,7 @@
                 </tbody>
             </table>
         {% endif %}
-        <a href="{{ url_for('taxation_bp.understand_taxes') }}" class="btn btn-info mt-3" style="font-size: 1.2em; padding: 10px 20px;">Understand Your Taxes</a>
+        <a href="{{ url_for('taxation_bp.understand_taxes') }}" class="btn btn-info mt-3" style="font-size: 1.2em; padding: 10px 20px;">{{ t('tax_understand_taxes', default='Understand Your Taxes') }}</a>
 
     {% elif section == 'admin_locations' %}
         <h1>{{ t('tax_manage_locations_admin', default='Manage Payment Locations (Admin)') }}</h1>
@@ -260,7 +258,7 @@
                 {% endfor %}
             </ul>
         {% endif %}
-        <a href="{{ url_for('taxation_bp.understand_taxes') }}" class="btn btn-info mt-3" style="font-size: 1.2em; padding: 10px 20px;">Understand Your Taxes</a>
+        <a href="{{ url_for('taxation_bp.understand_taxes') }}" class="btn btn-info mt-3" style="font-size: 1.2em; padding: 10px 20px;">{{ t('tax_understand_taxes', default='Understand Your Taxes') }}</a>
 
     {% elif section == 'admin_deadlines' %}
         <h1>{{ t('tax_manage_deadlines_admin', default='Manage Tax Deadlines (Admin)') }}</h1>
@@ -280,11 +278,11 @@
             <h2>{{ t('tax_existing_deadlines', default='Existing Deadlines') }}</h2>
             <ul>
                 {% for deadline in deadlines %}
-                    <li>{{ deadline.description }} - {{ t('tax_due_on', default='Due on') }} {{ deadline.deadline_date }}</li>
+                    <li>{{ deadline.description }} - {{ t('tax_due_on', default='Due on') }} {{ deadline.deadline_date.strftime('%Y-%m-%d') }}</li>
                 {% endfor %}
             </ul>
         {% endif %}
-        <a href="{{ url_for('taxation_bp.understand_taxes') }}" class="btn btn-info mt-3" style="font-size: 1.2em; padding: 10px 20px;">Understand Your Taxes</a>
+        <a href="{{ url_for('taxation_bp.understand_taxes') }}" class="btn btn-info mt-3" style="font-size: 1.2em; padding: 10px 20px;">{{ t('tax_understand_taxes', default='Understand Your Taxes') }}</a>
 
     {% elif section == 'understand_taxes' %}
         <h1>{{ t('tax_understand_your_taxes', default='Understand Your Taxes') }}</h1>
@@ -318,32 +316,81 @@
             const csrfToken = document.querySelector('input[name="csrf_token"]').value;
             const taxForm = document.getElementById('taxForm');
             const amountInput = document.querySelector('input[name="amount"]');
+            const taxpayerTypeInput = document.querySelector('select[name="taxpayer_type"]');
+            const businessSizeGroup = document.getElementById('business_size_group');
             const taxResult = document.getElementById('taxResult');
             const taxRates = {{ tax_rates | tojson }};
 
+            // Show/hide business size field based on taxpayer type
+            taxpayerTypeInput.addEventListener('change', () => {
+                const taxpayerType = taxpayerTypeInput.value;
+                businessSizeGroup.style.display = (taxpayerType === 'small_business' || taxpayerType === 'cit') ? 'block' : 'none';
+            });
+
+            // Real-time tax preview
             amountInput.addEventListener('input', () => {
                 const amount = parseFloat(amountInput.value);
+                const taxpayerType = taxpayerTypeInput.value;
                 let preview = '';
                 if (!isNaN(amount) && amount >= 0) {
-                    const rate = taxRates.find(r => amount >= r.min_income && amount <= r.max_income);
-                    if (rate) {
-                        const tax = (amount * rate.rate).toFixed(2);
+                    if (taxpayerType === 'paye') {
+                        let total_tax = 0.0;
+                        let taxable_amount = amount;
+                        let last_limit = 0.0;
+                        const tax_brackets = [
+                            { limit: 800000.0, rate: 0.0 },
+                            { limit: 3000000.0, rate: 0.15 },
+                            { limit: 12000000.0, rate: 0.18 },
+                            { limit: Infinity, rate: 0.25 }
+                        ];
+                        for (let bracket of tax_brackets) {
+                            if (taxable_amount <= last_limit) break;
+                            let band_amount = Math.min(taxable_amount, bracket.limit) - last_limit;
+                            if (band_amount > 0) {
+                                total_tax += band_amount * bracket.rate;
+                            }
+                            if (taxable_amount <= bracket.limit) break;
+                            last_limit = bracket.limit;
+                        }
                         const levy_rate = amount <= 5000000 ? 0.02 : 0.04;
-                        const levy = (amount * levy_rate).toFixed(2);
-                        const total_tax = (parseFloat(tax) + parseFloat(levy)).toFixed(2);
-                        preview = `<div class="alert alert-info">{{ t('tax_estimated_tax', default='Estimated tax') }}: ${total_tax} (${rate.description} + ${levy_rate*100}% Development Levy)</div>`;
-                    } else {
-                        preview = `<div class="alert alert-warning">{{ t('tax_no_rate_found', default='No tax rate found for this amount') }}</div>`;
+                        total_tax += amount * levy_rate;
+                        preview = `<div class="alert alert-info">{{ t('tax_estimated_tax', default='Estimated tax') }}: ₦${total_tax.toFixed(2)} (Progressive PAYE + ${levy_rate*100}% Development Levy)</div>`;
+                    } else if (taxpayerType === 'small_business' || taxpayerType === 'cit') {
+                        let tax = 0.0;
+                        let explanation = '';
+                        if (amount <= 25000000) {
+                            tax = 0.0;
+                            explanation = '0% for revenue up to ₦25M';
+                        } else if (amount <= 100000000) {
+                            tax = amount * 0.20;
+                            explanation = '20% for revenue between ₦25M and ₦100M';
+                        } else {
+                            tax = amount * 0.30;
+                            explanation = '30% for revenue above ₦100M';
+                        }
+                        const levy_rate = amount <= 5000000 ? 0.02 : 0.04;
+                        const tertiary_edu_tax = amount * 0.03;
+                        tax += tertiary_edu_tax + (amount * levy_rate);
+                        preview = `<div class="alert alert-info">{{ t('tax_estimated_tax', default='Estimated tax') }}: ₦${tax.toFixed(2)} (${explanation} + 3% Tertiary Education Tax + ${levy_rate*100}% Development Levy)</div>`;
                     }
+                } else {
+                    preview = `<div class="alert alert-warning">{{ t('tax_no_rate_found', default='No tax rate found for this amount') }}</div>`;
                 }
                 taxResult.innerHTML = preview;
             });
 
+            // AJAX form submission
             taxForm.addEventListener('submit', async (e) => {
                 e.preventDefault();
                 const amount = parseFloat(amountInput.value);
+                const taxpayerType = taxpayerTypeInput.value;
+                const businessSize = document.querySelector('select[name="business_size"]').value;
                 if (isNaN(amount) || amount < 0) {
                     taxResult.innerHTML = '<div class="alert alert-danger">{{ t('tax_invalid_input', default='Invalid input. Amount must be a positive number.') }}</div>';
+                    return;
+                }
+                if ((taxpayerType === 'small_business' || taxpayerType === 'cit') && !businessSize) {
+                    taxResult.innerHTML = '<div class="alert alert-danger">{{ t('tax_invalid_business_size', default='Invalid business size selected') }}</div>';
                     return;
                 }
                 try {
@@ -354,14 +401,19 @@
                             'X-Requested-With': 'XMLHttpRequest',
                             'X-CSRF-Token': csrfToken
                         },
-                        body: JSON.stringify({ amount, csrf_token: csrfToken })
+                        body: JSON.stringify({
+                            amount,
+                            taxpayer_type: taxpayerType,
+                            business_size: businessSize,
+                            csrf_token: csrfToken
+                        })
                     });
                     const result = await response.json();
                     if (response.ok) {
                         taxResult.innerHTML = `
                             <div class="alert alert-success">
-                                {{ t('tax_for_amount_of', default='For an amount of') }} ${result.amount}, 
-                                {{ t('tax_your_tax_obligation_is', default='your tax obligation is') }} ${result.tax}.<br>
+                                {{ t('tax_for_amount_of', default='For an amount of') }} ₦${result.amount.toFixed(2)}, 
+                                {{ t('tax_your_tax_obligation_is', default='your tax obligation is') }} ₦${result.tax.toFixed(2)}.<br>
                                 {{ t('tax_explanation', default='Explanation') }}: ${result.explanation}
                             </div>
                         `;
