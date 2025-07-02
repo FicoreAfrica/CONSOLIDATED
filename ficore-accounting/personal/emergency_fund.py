@@ -337,7 +337,7 @@ def main():
 
         current_app.logger.info(f"Rendering main template for session {session['sid']} {'(anonymous)' if session.get('is_anonymous') else ''}", extra={'session_id': session['sid']})
         return render_template(
-            'emergency_fund_main.html',
+            'personal/EMERGENCYFUND/emergency_fund_main.html',
             form=form,
             records=records,
             latest_record=latest_record,
@@ -358,7 +358,7 @@ def main():
         current_app.logger.error(f"Error in emergency_fund.main for session {session.get('sid', 'unknown')}: {str(e)}", extra={'session_id': session.get('sid', 'unknown')})
         flash(trans('emergency_fund_load_dashboard_error', default='Error loading emergency fund dashboard.'), 'danger')
         return render_template(
-            'emergency_fund_main.html',
+            'personal/EMERGENCYFUND/emergency_fund_main.html',
             form=form,
             records=[],
             latest_record={
