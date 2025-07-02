@@ -10,7 +10,7 @@ from datetime import datetime
 from bson import ObjectId
 from models import log_tool_usage
 from session_utils import create_anonymous_session
-from utils import requires_role, is_admin, get_mongo_db
+from ..utils import requires_role, is_admin, get_mongo_db, PERSONAL_TOOLS, PERSONAL_NAV, ALL_TOOLS, ADMIN_NAV
 
 net_worth_bp = Blueprint(
     'net_worth',
@@ -120,7 +120,9 @@ def main():
     )
 
     try:
-        filter_criteria = {'user_id': current_user.id} if current_user.is_authenticated else {'session_id': session['sid']}
+        # TEMPORARY: Allow admin to view all records during testing
+        # TODO: Restore original filter_criteria for production
+        filter_criteria = {} if is_admin() else {'user_id': current_user.id} if current_user.is_authenticated else {'session_id': session['sid']}
         
         if request.method == 'POST':
             action = request.form.get('action')
@@ -169,7 +171,7 @@ def main():
                     'net_worth': net_worth,
                     'badges': badges,
                     'created_at': datetime.utcnow(),
-                    'currency': 'NGN'  # Added currency field
+                    'currency': 'NGN'
                 }
                 
                 try:
@@ -205,7 +207,7 @@ def main():
                                 "badges": net_worth_record['badges'],
                                 "created_at": net_worth_record['created_at'].strftime('%Y-%m-%d'),
                                 "cta_url": url_for('personal/NETWORTH/net_worth.main', _external=True),
-                                "unsubscribe_url": url_for('personal.net_worth.unsubscribe', email=form.email.data, _external=True),
+                                "unsubscribe_url": url_for('net_worth.unsubscribe', email=form.email.data, _external=True),
                                 "currency": net_worth_record['currency']
                             },
                             lang=lang
@@ -299,6 +301,8 @@ def main():
             if latest_health.get('savings_rate', 0) > 0:
                 cross_tool_insights.append(trans('net_worth_cross_tool_savings_rate', default='Your financial health score indicates a positive savings rate of {rate}%, which can help improve your net worth.', lang=lang, rate=latest_health['savings_rate']))
 
+        tools = PERSONAL_TOOLS if current_user.role == 'personal' else ALL_TOOLS
+        nav_items = PERSONAL_NAV if current_user.role == 'personal' else ADMIN_NAV
         current_app.logger.info(f"Rendering net worth main page with {len(records)} records for session {session['sid']}", extra={'session_id': session['sid']})
         return render_template(
             'personal/NETWORTH/net_worth_main.html',
@@ -318,12 +322,16 @@ def main():
             average_net_worth=average_net_worth,
             t=trans,
             lang=lang,
-            tool_title=trans('net_worth_title', default='Net Worth Calculator', lang=lang)
+            tool_title=trans('net_worth_title', default='Net Worth Calculator', lang=lang),
+            tools=tools,
+            nav_items=nav_items
         )
 
     except Exception as e:
         current_app.logger.error(f"Error in personal/NETWORTH/net_worth.main for session {session.get('sid', 'unknown')}: {str(e)}", extra={'session_id': session.get('sid', 'unknown')})
         flash(trans("net_worth_dashboard_load_error", default="Error loading net worth dashboard"), "danger")
+        tools = PERSONAL_TOOLS if current_user.role == 'personal' else ALL_TOOLS
+        nav_items = PERSONAL_NAV if current_user.role == 'personal' else ADMIN_NAV
         return render_template(
             'personal/NETWORTH/net_worth_main.html',
             form=form,
@@ -353,15 +361,20 @@ def main():
             average_net_worth=0,
             t=trans,
             lang=lang,
-            tool_title=trans('net_worth_title', default='Net Worth Calculator', lang=lang)
+            tool_title=trans('net_worth_title', default='Net Worth Calculator', lang=lang),
+            tools=tools,
+            nav_items=nav_items
         ), 500
 
 @net_worth_bp.route('/summary')
 @login_required
+@requires_role(['personal', 'admin'])
 def summary():
     """Return the latest net worth for the current user."""
     try:
-        filter_criteria = {'user_id': current_user.id}
+        # TEMPORARY: Allow admin to view all records during testing
+        # TODO: Restore original filter_criteria for production
+        filter_criteria = {} if is_admin() else {'user_id': current_user.id}
         net_worth_collection = get_mongo_db().net_worth_data
         
         # Get the latest net worth record
@@ -385,6 +398,7 @@ def summary():
 
 @net_worth_bp.route('/unsubscribe/<email>')
 @custom_login_required
+@requires_role(['personal', 'admin'])
 def unsubscribe(email):
     """Unsubscribe user from net worth emails using MongoDB."""
     if 'sid' not in session:
@@ -402,17 +416,15 @@ def unsubscribe(email):
             action='unsubscribe',
             mongo=get_mongo_db()
         )
-        filter_criteria = {'email': email}
-        if current_user.is_authenticated:
-            filter_criteria['user_id'] = current_user.id
-        else:
-            filter_criteria['session_id'] = session['sid']
+        # TEMPORARY: Allow admin to unsubscribe any email during testing
+        # TODO: Restore original filter_criteria for production
+        filter_criteria = {'email': email} if is_admin() else {'email': email, 'user_id': current_user.id} if current_user.is_authenticated else {'email': email, 'session_id': session['sid']}
         
         existing_record = get_mongo_db().net_worth_data.find_one(filter_criteria)
         if not existing_record:
             current_app.logger.warning(f"No matching record found for email {email} to unsubscribe for session {session['sid']}", extra={'session_id': session['sid']})
             flash(trans("net_worth_unsubscribe_failed", default="No matching email found or already unsubscribed"), "danger")
-            return redirect(url_for('personal.index'))
+            return redirect(url_for('app.index'))
 
         result = get_mongo_db().net_worth_data.update_many(
             filter_criteria,
@@ -424,11 +436,11 @@ def unsubscribe(email):
         else:
             current_app.logger.warning(f"No records updated for email {email} during unsubscribe for session {session['sid']}", extra={'session_id': session['sid']})
             flash(trans("net_worth_unsubscribe_failed", default="Failed to unsubscribe. Email not found or already unsubscribed."), "danger")
-        return redirect(url_for('personal.index'))
+        return redirect(url_for('app.index'))
     except Exception as e:
         current_app.logger.error(f"Error in net_worth.unsubscribe for session {session.get('sid', 'unknown')}: {str(e)}", extra={'session_id': session.get('sid', 'unknown')})
         flash(trans("net_worth_unsubscribe_error", default="Error processing unsubscribe request"), "danger")
-        return redirect(url_for('personal.index'))
+        return redirect(url_for('app.index'))
 
 @net_worth_bp.errorhandler(CSRFError)
 def handle_csrf_error(e):
