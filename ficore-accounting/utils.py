@@ -10,6 +10,7 @@ from pymongo import MongoClient
 from pymongo.errors import ConnectionFailure
 from translations import trans
 from flask import url_for
+import requests
 
 # Flask extensions - defined here to avoid having too many files
 from flask_login import LoginManager
@@ -450,6 +451,94 @@ def log_user_action(action, details=None, user_id=None):
     except Exception as e:
         logger.error(f"{trans('general_user_action_log_error', default='Error logging user action')}: {str(e)}", exc_info=True)
 
+def send_sms_reminder(recipient, message):
+    '''
+    Send an SMS reminder to the specified recipient.
+    
+    Args:
+        recipient: Phone number of the recipient
+        message: Message to send
+    
+    Returns:
+        tuple: (success, api_response)
+    '''
+    try:
+        # Sanitize phone number
+        recipient = re.sub(r'\D', '', recipient)
+        if recipient.startswith('0'):
+            recipient = '234' + recipient[1:]
+        elif not recipient.startswith('+'):
+            recipient = '234' + recipient
+        
+        # Placeholder for SMS API integration
+        # Replace with actual SMS provider (e.g., Twilio, Africa's Talking)
+        sms_api_url = current_app.config.get('SMS_API_URL', 'https://api.smsprovider.com/send')
+        sms_api_key = current_app.config.get('SMS_API_KEY', '')
+        
+        payload = {
+            'to': f'+{recipient}',
+            'message': message,
+            'api_key': sms_api_key
+        }
+        
+        response = requests.post(sms_api_url, json=payload, timeout=10)
+        response_data = response.json()
+        
+        if response.status_code == 200 and response_data.get('success', False):
+            logger.info(f"SMS sent to {recipient}")
+            return True, response_data
+        else:
+            logger.error(f"Failed to send SMS to {recipient}: {response_data}")
+            return False, response_data
+            
+    except Exception as e:
+        logger.error(f"Error sending SMS to {recipient}: {str(e)}", exc_info=True)
+        return False, {'error': str(e)}
+
+def send_whatsapp_reminder(recipient, message):
+    '''
+    Send a WhatsApp reminder to the specified recipient.
+    
+    Args:
+        recipient: Phone number of the recipient
+        message: Message to send
+    
+    Returns:
+        tuple: (success, api_response)
+    '''
+    try:
+        # Sanitize phone number
+        recipient = re.sub(r'\D', '', recipient)
+        if recipient.startswith('0'):
+            recipient = '234' + recipient[1:]
+        elif not recipient.startswith('+'):
+            recipient = '234' + recipient
+        
+        # Placeholder for WhatsApp API integration
+        # Replace with actual WhatsApp provider (e.g., WhatsApp Business API)
+        whatsapp_api_url = current_app.config.get('WHATSAPP_API_URL', 'https://api.whatsapp.com/send')
+        whatsapp_api_key = current_app.config.get('WHATSAPP_API_KEY', '')
+        
+        payload = {
+            'phone': f'+{recipient}',
+            'text': message,
+            'api_key': whatsapp_api_key
+        }
+        
+        response = requests.post(whatsapp_api_url, json=payload, timeout=10)
+        response_data = response.json()
+        
+        if response.status_code == 200 and response_data.get('success', False):
+            logger.info(f"WhatsApp message sent to {recipient}")
+            return True, response_data
+        else:
+            logger.error(f"Failed to send WhatsApp message to {recipient}: {response_data}")
+            return False, response_data
+            
+    except Exception as e:
+        logger.error(f"Error sending WhatsApp message to {recipient}: {str(e)}", exc_info=True)
+        return False, {'error': str(e)}
+
 # Data conversion functions for backward compatibility
 def to_dict_financial_health(record):
     '''Convert financial health record to dictionary.'''
@@ -641,6 +730,8 @@ __all__ = [
     'validate_required_fields',
     'get_user_language',
     'log_user_action',
+    'send_sms_reminder',
+    'send_whatsapp_reminder',
     'to_dict_financial_health',
     'to_dict_budget',
     'to_dict_bill',
@@ -656,7 +747,6 @@ __all__ = [
 
 # Personal role tools and navigation
 PERSONAL_TOOLS = [
-    
     {"label": "Emergency Fund", "icon": "bi-shield", "url": "personal.emergency_fund.main"},
     {"label": "Financial Health", "icon": "bi-heart", "url": "personal.health_score.main"},
     {"label": "Learning Hub", "icon": "bi-book", "url": "personal.learning_hub.main"},
@@ -696,13 +786,13 @@ BUSINESS_NAV = [
 
 # Agent role tools and navigation
 AGENT_TOOLS = [
-    {"label": "Agent Portal", "icon": "bi-person-workspace", "url": "agents.agent_portal"},
+    {"label": "Agent Portal", "icon": "bi-person-workspace", "url": "agents_bp.agent_portal"},
     {"label": "Coins", "icon": "bi-coin", "url": "coins.history"},
 ]
 
 AGENT_NAV = [
-    {"label": "Agent Portal", "icon": "bi-person-workspace", "url": "agents.agent_portal"},
-    "label": "My Activity", "icon": "bi-person-workspace", "url": "agents.my_activity"},
+    {"label": "Agent Portal", "icon": "bi-person-workspace", "url": "agents_bp.agent_portal"},
+    {"label": "My Activity", "icon": "bi-person-workspace", "url": "agents_bp.my_activity"},
     {"label": "Profile", "icon": "bi-person", "url": "settings.profile"},
 ]
 
