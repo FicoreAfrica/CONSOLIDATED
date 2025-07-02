@@ -328,7 +328,7 @@ def main():
                 except Exception as e:
                     current_app.logger.error(f"Failed to save quiz result to MongoDB: {str(e)}", extra={'session_id': session['sid']})
                     flash(trans('quiz_storage_error', default='Error saving quiz results.'), 'danger')
-                    return redirect(url_for('personal.quiz.main', course_id=course_id))
+                    return redirect(url_for('personal/QUIZ/quiz.main', course_id=course_id))
 
                 # Send email if user opted in
                 if form.send_email.data and form.email.data:
@@ -352,7 +352,7 @@ def main():
                                 'insights': quiz_result['insights'],
                                 'tips': quiz_result['tips'],
                                 'created_at': quiz_result['created_at'].strftime('%Y-%m-%d'),
-                                'cta_url': url_for('personal.quiz.main', course_id=course_id, _external=True),
+                                'cta_url': url_for('personal/QUIZ/quiz.main', course_id=course_id, _external=True),
                                 'unsubscribe_url': url_for('personal.quiz.unsubscribe', email=form.email.data, _external=True)
                             },
                             lang=lang
@@ -517,7 +517,7 @@ def main():
         )
 
     except Exception as e:
-        current_app.logger.error(f"Error in quiz.main for session {session.get('sid', 'unknown')}: {str(e)}", extra={'session_id': session.get('sid', 'unknown')})
+        current_app.logger.error(f"Error in personal/QUIZ/quiz.main for session {session.get('sid', 'unknown')}: {str(e)}", extra={'session_id': session.get('sid', 'unknown')})
         flash(trans('quiz_error_results', default='An error occurred while loading quiz. Please try again.'), 'danger')
         return render_template(
             'personal/QUIZ/quiz_main.html',
@@ -600,4 +600,4 @@ def handle_csrf_error(e):
     lang = session.get('lang', 'en')
     current_app.logger.error(f"CSRF error on {request.path}: {e.description}", extra={'session_id': session.get('sid', 'unknown')})
     flash(trans('quiz_csrf_error', default='Form submission failed due to a missing security token. Please refresh and try again.'), 'danger')
-    return redirect(url_for('personal.quiz.main')), 400
+    return redirect(url_for('personal/QUIZ/quiz.main')), 400
