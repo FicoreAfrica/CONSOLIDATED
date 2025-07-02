@@ -153,7 +153,7 @@ def main():
                 if income <= 0:
                     current_app.logger.error(f"Income is zero or negative for session {session['sid']}", extra={'session_id': session['sid']})
                     flash(trans("financial_health_income_zero_error", default='Income must be greater than zero.'), "danger")
-                    return redirect(url_for('financial_health.main'))
+                    return redirect(url_for('personal/HEALTHSCORE/financial_health.main'))
 
                 debt_to_income = (debt / income * 100) if income > 0 else 0
                 savings_rate = ((income - expenses) / income * 100) if income > 0 else 0
@@ -219,7 +219,7 @@ def main():
                 except Exception as e:
                     current_app.logger.error(f"Failed to save financial health data to MongoDB: {str(e)}", extra={'session_id': session['sid']})
                     flash(trans("financial_health_storage_error", default='Error saving financial health score.'), "danger")
-                    return redirect(url_for('financial_health.main'))
+                    return redirect(url_for('personal/HEALTHSCORE/financial_health.main'))
 
                 # Send email if requested
                 if form.send_email.data and form.email.data:
@@ -246,7 +246,7 @@ def main():
                                 "interest_burden": interest_burden,
                                 "badges": badges,
                                 "created_at": record_data['created_at'].strftime('%Y-%m-%d'),
-                                "cta_url": url_for('financial_health.main', _external=True),
+                                "cta_url": url_for('personal/HEALTHSCORE/financial_health.main', _external=True),
                                 "unsubscribe_url": url_for('financial_health.unsubscribe', email=form.email.data, _external=True)
                             },
                             lang=lang
@@ -365,7 +365,7 @@ def main():
         )
 
     except Exception as e:
-        current_app.logger.error(f"Error in financial_health.main for session {session.get('sid', 'unknown')}: {str(e)}", extra={'session_id': session.get('sid', 'unknown')})
+        current_app.logger.error(f"Error in personal/HEALTHSCORE/financial_health.main for session {session.get('sid', 'unknown')}: {str(e)}", extra={'session_id': session.get('sid', 'unknown')})
         flash(trans("financial_health_dashboard_load_error", default='Error loading financial health dashboard.'), "danger")
         return render_template(
             'health_score_main.html',
@@ -469,4 +469,4 @@ def handle_csrf_error(e):
     lang = session.get('lang', 'en')
     current_app.logger.error(f"CSRF error on {request.path}: {e.description}", extra={'session_id': session.get('sid', 'unknown')})
     flash(trans('financial_health_csrf_error', default='Form submission failed due to a missing security token. Please refresh and try again.'), 'danger')
-    return redirect(url_for('financial_health.main')), 400
+    return redirect(url_for('personal/HEALTHSCORE/financial_health.main')), 400
