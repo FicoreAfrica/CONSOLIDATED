@@ -425,6 +425,15 @@ def my_activity():
         flash(trans('agents_activity_load_error', default='An error occurred while loading activity log'), 'danger')
         return redirect(url_for('agents.dashboard'))
 
+@agents_bp.route('/')
+@login_required
+def agent_portal():
+    if current_user.role not in ['agent', 'admin']:
+        return redirect(url_for('app.index'))
+    tools = AGENT_TOOLS if current_user.role == 'agent' else ALL_TOOLS
+    nav_items = AGENT_NAV if current_user.role == 'agent' else ADMIN_NAV
+    return render_template('agents/agent_portal.html', tools=tools, nav_items=nav_items, t=trans, lang=session.get('lang', 'en'))
+
 @agents.route('/api/search_traders')
 @login_required
 @requires_role('agent')
