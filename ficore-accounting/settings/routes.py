@@ -1,7 +1,7 @@
 from flask import Blueprint, render_template, redirect, url_for, flash, request, session, jsonify
 from flask_login import login_required, current_user
 from translations import trans
-from utils import trans_function, requires_role, is_valid_email, format_currency, get_mongo_db, is_admin, get_user_query
+from utils import trans_function, requires_role, is_valid_email, format_currency, get_mongo_db, is_admin, get_user_query, PERSONAL_TOOLS, PERSONAL_NAV, BUSINESS_TOOLS, BUSINESS_NAV, AGENT_TOOLS, AGENT_NAV, ALL_TOOLS, ADMIN_NAV
 from bson import ObjectId
 from datetime import datetime
 from flask_wtf import FlaskForm
@@ -25,7 +25,6 @@ class ProfileForm(FlaskForm):
         validators.Optional(),
         validators.Length(max=20, message=trans('general_phone_length', default='Phone number too long'))
     ], render_kw={'class': 'form-control'})
-    # Personal user fields
     first_name = StringField(trans('general_first_name', default='First Name'), [
         validators.Optional(),
         validators.Length(max=50, message=trans('general_first_name_length', default='First name too long'))
@@ -38,7 +37,6 @@ class ProfileForm(FlaskForm):
         validators.Optional(),
         validators.Length(max=500, message=trans('general_address_length', default='Address too long'))
     ], render_kw={'class': 'form-control'})
-    # Trader user fields
     business_name = StringField(trans('general_business_name', default='Business Name'), [
         validators.Optional(),
         validators.Length(max=100, message=trans('general_business_name_length', default='Business name too long'))
@@ -55,7 +53,6 @@ class ProfileForm(FlaskForm):
         validators.Optional(),
         validators.Length(max=200, message=trans('general_products_services_length', default='Products/Services description too long'))
     ], render_kw={'class': 'form-control'})
-    # Agent user fields
     agent_name = StringField(trans('agents_agent_name', default='Agent Name'), [
         validators.Optional(),
         validators.Length(max=100, message=trans('agents_agent_name_length', default='Agent name too long'))
@@ -91,11 +88,13 @@ class LanguageForm(FlaskForm):
 def index():
     """Display settings overview."""
     try:
-        return render_template('settings/index.html', user=current_user, t=trans, lang=session.get('lang', 'en'))
+        tools = PERSONAL_TOOLS if current_user.role == 'personal' else BUSINESS_TOOLS if current_user.role == 'trader' else AGENT_TOOLS if current_user.role == 'agent' else ALL_TOOLS
+        nav_items = PERSONAL_NAV if current_user.role == 'personal' else BUSINESS_NAV if current_user.role == 'trader' else AGENT_NAV if current_user.role == 'agent' else ADMIN_NAV
+        return render_template('settings/index.html', user=current_user, t=trans, lang=session.get('lang', 'en'), tools=tools, nav_items=nav_items)
     except Exception as e:
         logger.error(f"Error loading settings for user {current_user.id}: {str(e)}")
         flash(trans('general_something_went_wrong', default='An error occurred'), 'danger')
-        return redirect(url_for('dashboard.index'))
+        return redirect(url_for('app.index'))
 
 @settings_bp.route('/profile', methods=['GET', 'POST'])
 @login_required
@@ -106,14 +105,10 @@ def profile():
         user_id = request.args.get('user_id', current_user.id) if is_admin() and request.args.get('user_id') else current_user.id
         user_query = get_user_query(user_id)
         user = db.users.find_one(user_query)
-        
         if not user:
             flash(trans('general_user_not_found', default='User not found'), 'danger')
-            return redirect(url_for('dashboard.index'))
-        
+            return redirect(url_for('app.index'))
         form = ProfileForm()
-        
-        # Pre-populate form with current user data on GET request
         if request.method == 'GET':
             form.full_name.data = user.get('display_name', user.get('_id', ''))
             form.email.data = user.get('email', '')
@@ -132,15 +127,11 @@ def profile():
                 form.agent_id.data = user['agent_details'].get('agent_id', '')
                 form.area.data = user['agent_details'].get('area', '')
                 form.agent_role.data = user['agent_details'].get('role', '')
-        
         if form.validate_on_submit():
             try:
-                # Check if email already exists for another user
                 if form.email.data != user['email'] and db.users.find_one({'email': form.email.data}):
                     flash(trans('general_email_exists', default='Email already in use'), 'danger')
-                    return render_template('settings/profile.html', form=form, user=user, t=trans, lang=session.get('lang', 'en'))
-                
-                # Prepare update data
+                    return render_template('settings/profile.html', form=form, user=user, t=trans, lang=session.get('lang', 'en'), tools=tools, nav_items=nav_items)
                 update_data = {
                     'display_name': form.full_name.data,
                     'email': form.email.data,
@@ -148,8 +139,6 @@ def profile():
                     'updated_at': datetime.utcnow(),
                     'setup_complete': True
                 }
-                
-                # Update details based on user role
                 if user.get('role') == 'personal' and (form.first_name.data or form.last_name.data or form.personal_address.data):
                     update_data['personal_details'] = {
                         'first_name': form.first_name.data or '',
@@ -174,18 +163,13 @@ def profile():
                         'phone': form.phone.data or '',
                         'email': form.email.data or ''
                     }
-                
                 db.users.update_one(user_query, {'$set': update_data})
-                
                 flash(trans('general_profile_updated', default='Profile updated successfully'), 'success')
                 logger.info(f"Profile updated for user: {user_id}")
                 return redirect(url_for('settings.profile'))
-                
             except Exception as e:
                 logger.error(f"Error updating profile for user {user_id}: {str(e)}")
                 flash(trans('general_something_went_wrong', default='An error occurred'), 'danger')
-        
-        # Prepare user data for template
         user_display = {
             '_id': str(user['_id']),
             'email': user.get('email', ''),
@@ -201,13 +185,13 @@ def profile():
             'settings': user.get('settings', {}),
             'security_settings': user.get('security_settings', {})
         }
-        
-        return render_template('settings/profile.html', form=form, user=user_display, t=trans, lang=session.get('lang', 'en'))
-        
+        tools = PERSONAL_TOOLS if current_user.role == 'personal' else BUSINESS_TOOLS if current_user.role == 'trader' else AGENT_TOOLS if current_user.role == 'agent' else ALL_TOOLS
+        nav_items = PERSONAL_NAV if current_user.role == 'personal' else BUSINESS_NAV if current_user.role == 'trader' else AGENT_NAV if current_user.role == 'agent' else ADMIN_NAV
+        return render_template('settings/profile.html', form=form, user=user_display, t=trans, lang=session.get('lang', 'en'), tools=tools, nav_items=nav_items)
     except Exception as e:
         logger.error(f"Error in profile settings for user {current_user.id}: {str(e)}")
         flash(trans('general_something_went_wrong', default='An error occurred'), 'danger')
-        return redirect(url_for('settings.index'))
+        return redirect(url_for('app.index'))
 
 @settings_bp.route('/notifications', methods=['GET', 'POST'])
 @login_required
@@ -218,12 +202,10 @@ def notifications():
         user_id = request.args.get('user_id', current_user.id) if is_admin() and request.args.get('user_id') else current_user.id
         user_query = get_user_query(user_id)
         user = db.users.find_one(user_query)
-        
         form = NotificationForm(data={
             'email_notifications': user.get('email_notifications', True),
             'sms_notifications': user.get('sms_notifications', False)
         })
-        
         if form.validate_on_submit():
             try:
                 update_data = {
@@ -237,11 +219,13 @@ def notifications():
             except Exception as e:
                 logger.error(f"Error updating notifications for user {current_user.id}: {str(e)}")
                 flash(trans('general_something_went_wrong', default='An error occurred'), 'danger')
-        return render_template('settings/notifications.html', form=form, t=trans, lang=session.get('lang', 'en'))
+        tools = PERSONAL_TOOLS if current_user.role == 'personal' else BUSINESS_TOOLS if current_user.role == 'trader' else AGENT_TOOLS if current_user.role == 'agent' else ALL_TOOLS
+        nav_items = PERSONAL_NAV if current_user.role == 'personal' else BUSINESS_NAV if current_user.role == 'trader' else AGENT_NAV if current_user.role == 'agent' else ADMIN_NAV
+        return render_template('settings/notifications.html', form=form, t=trans, lang=session.get('lang', 'en'), tools=tools, nav_items=nav_items)
     except Exception as e:
         logger.error(f"Error in notification settings for user {current_user.id}: {str(e)}")
         flash(trans('general_something_went_wrong', default='An error occurred'), 'danger')
-        return redirect(url_for('settings.index'))
+        return redirect(url_for('app.index'))
 
 @settings_bp.route('/language', methods=['GET', 'POST'])
 @login_required
@@ -252,9 +236,7 @@ def language():
         user_id = request.args.get('user_id', current_user.id) if is_admin() and request.args.get('user_id') else current_user.id
         user_query = get_user_query(user_id)
         user = db.users.find_one(user_query)
-        
         form = LanguageForm(data={'language': user.get('language', 'en')})
-        
         if form.validate_on_submit():
             try:
                 session['lang'] = form.language.data
@@ -267,11 +249,13 @@ def language():
             except Exception as e:
                 logger.error(f"Error updating language for user {current_user.id}: {str(e)}")
                 flash(trans('general_something_went_wrong', default='An error occurred'), 'danger')
-        return render_template('settings/language.html', form=form, t=trans, lang=session.get('lang', 'en'))
+        tools = PERSONAL_TOOLS if current_user.role == 'personal' else BUSINESS_TOOLS if current_user.role == 'trader' else AGENT_TOOLS if current_user.role == 'agent' else ALL_TOOLS
+        nav_items = PERSONAL_NAV if current_user.role == 'personal' else BUSINESS_NAV if current_user.role == 'trader' else AGENT_NAV if current_user.role == 'agent' else ADMIN_NAV
+        return render_template('settings/language.html', form=form, t=trans, lang=session.get('lang', 'en'), tools=tools, nav_items=nav_items)
     except Exception as e:
         logger.error(f"Error in language settings for user {current_user.id}: {str(e)}")
         flash(trans('general_something_went_wrong', default='An error occurred'), 'danger')
-        return redirect(url_for('settings.index'))
+        return redirect(url_for('app.index'))
 
 @settings_bp.route('/api/update-user-setting', methods=['POST'])
 @login_required
@@ -281,23 +265,16 @@ def update_user_setting():
         data = request.get_json()
         setting_name = data.get('setting')
         value = data.get('value')
-        
         if setting_name not in ['showKoboToggle', 'incognitoModeToggle', 'appSoundsToggle', 
                                'fingerprintPasswordToggle', 'fingerprintPinToggle', 'hideSensitiveDataToggle']:
             return jsonify({"success": False, "message": trans('general_invalid_setting', default='Invalid setting name.')}), 400
-        
         db = get_mongo_db()
         user_query = get_user_query(str(current_user.id))
         user = db.users.find_one(user_query)
-        
         if not user:
             return jsonify({"success": False, "message": trans('general_user_not_found', default='User not found.')}), 404
-        
-        # Initialize settings if they don't exist
         settings = user.get('settings', {})
         security_settings = user.get('security_settings', {})
-        
-        # Map toggle IDs to actual settings
         if setting_name == 'showKoboToggle':
             settings['show_kobo'] = value
         elif setting_name == 'incognitoModeToggle':
@@ -310,18 +287,13 @@ def update_user_setting():
             security_settings['fingerprint_pin'] = value
         elif setting_name == 'hideSensitiveDataToggle':
             security_settings['hide_sensitive_data'] = value
-        
-        # Update user document
         update_data = {
             'settings': settings,
             'security_settings': security_settings,
             'updated_at': datetime.utcnow()
         }
-        
         db.users.update_one(user_query, {'$set': update_data})
-        
         return jsonify({"success": True, "message": trans('general_setting_updated', default='Setting updated successfully.')})
-        
     except Exception as e:
         logger.error(f"Error updating user setting: {str(e)}")
         return jsonify({"success": False, "message": trans('general_setting_update_error', default='An error occurred while updating the setting.')}), 500
