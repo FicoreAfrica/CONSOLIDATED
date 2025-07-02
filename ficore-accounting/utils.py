@@ -9,6 +9,7 @@ from flask_limiter.util import get_remote_address
 from pymongo import MongoClient
 from pymongo.errors import ConnectionFailure
 from translations import trans
+from flask import url_for
 
 # Flask extensions - defined here to avoid having too many files
 from flask_login import LoginManager
@@ -651,4 +652,72 @@ __all__ = [
     'to_dict_tax_rate',
     'to_dict_payment_location',
     'to_dict_tax_reminder'
+]
+
+# Personal role tools and navigation
+PERSONAL_TOOLS = [
+    
+    {"label": "Emergency Fund", "icon": "bi-shield", "url": "personal.emergency_fund_main"},
+    {"label": "Financial Health", "icon": "bi-heart", "url": "personal.health_score_main"},
+    {"label": "Learning Hub", "icon": "bi-book", "url": "personal.learning_hub_main"},
+    {"label": "Net Worth", "icon": "bi-wallet", "url": "personal.net_worth_main"},
+    {"label": "Quiz", "icon": "bi-question-circle", "url": "personal.quiz_main"},
+    {"label": "Taxation", "icon": "bi-calculator", "url": "taxation_bp.calculate_tax"},
+    {"label": "News", "icon": "bi-newspaper", "url": "common_bp.news_list"},
+]
+
+PERSONAL_NAV = [
+    {"label": "Home", "icon": "bi-house", "url": "personal.index"},
+    {"label": "Budget", "icon": "bi-wallet", "url": "personal.budget_main"},
+    {"label": "Bills", "icon": "bi-receipt", "url": "personal.bill_main"},
+    {"label": "Learning Hub", "icon": "bi-book", "url": "personal.learning_hub_main"},
+    {"label": "Profile", "icon": "bi-person", "url": "settings.profile"},
+]
+
+# Trader role tools and navigation
+BUSINESS_TOOLS = [
+    {"label": "Inventory", "icon": "bi-box", "url": "inventory.index"},
+    {"label": "I Owe", "icon": "bi-person-lines", "url": "creditors.index"},
+    {"label": "They Owe", "icon": "bi-person-plus", "url": "debtors.index"},
+    {"label": "MoneyIn", "icon": "bi-person-plus", "url": "receipts.index"},
+    {"label": "MoneyOut", "icon": "bi-person-minus", "url": "payments.index"},
+    {"label": "Reports", "icon": "bi-bar-chart", "url": "reports.index"},
+    {"label": "Coins", "icon": "bi-coin", "url": "coins.history"},
+]
+
+BUSINESS_NAV = [
+    {"label": "Home", "icon": "bi-house", "url": "general_bp.home"},
+    {"label": "They Owe", "icon": "bi-person-plus", "url": "debtors.index"},
+    {"label": "MoneyIn", "icon": "bi-person-plus", "url": "receipts.index"},
+    {"label": "Inventory", "icon": "bi-box", "url": "inventory.index"},
+    {"label": "Taxation", "icon": "bi-calculator", "url": "taxation_bp.calculate_tax"},
+    {"label": "Profile", "icon": "bi-person", "url": "settings.profile"},
+]
+
+# Agent role tools and navigation
+AGENT_TOOLS = [
+    {"label": "Agent Portal", "icon": "bi-person-workspace", "url": "agents.agent_portal"},
+    {"label": "Coins", "icon": "bi-coin", "url": "coins.history"},
+]
+
+AGENT_NAV = [
+    {"label": "Agent Portal", "icon": "bi-person-workspace", "url": "agents.agent_portal"},
+    "label": "My Activity", "icon": "bi-person-workspace", "url": "agents.my_activity"},
+    {"label": "Profile", "icon": "bi-person", "url": "settings.profile"},
+]
+
+# Admin role tools and navigation (union of all tools)
+ALL_TOOLS = (
+    PERSONAL_TOOLS +
+    BUSINESS_TOOLS +
+    AGENT_TOOLS +
+    [
+        {"label": "Management", "icon": "bi-people", "url": "admin.dashboard"},
+    ]
+)
+
+ADMIN_NAV = [
+    {"label": "Dashboard", "icon": "bi-speedometer", "url": "admin.dashboard"},
+    {"label": "Manage Users", "icon": "bi-people", "url": "admin.dashboard"},
+    {"label": "Profile", "icon": "bi-person", "url": "settings.profile"},
 ]
