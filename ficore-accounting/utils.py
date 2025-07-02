@@ -657,11 +657,11 @@ __all__ = [
 # Personal role tools and navigation
 PERSONAL_TOOLS = [
     
-    {"label": "Emergency Fund", "icon": "bi-shield", "url": "personal.emergency_fund_main"},
-    {"label": "Financial Health", "icon": "bi-heart", "url": "personal.health_score_main"},
-    {"label": "Learning Hub", "icon": "bi-book", "url": "personal.learning_hub_main"},
-    {"label": "Net Worth", "icon": "bi-wallet", "url": "personal.net_worth_main"},
-    {"label": "Quiz", "icon": "bi-question-circle", "url": "personal.quiz_main"},
+    {"label": "Emergency Fund", "icon": "bi-shield", "url": "personal.emergency_fund.main"},
+    {"label": "Financial Health", "icon": "bi-heart", "url": "personal.health_score.main"},
+    {"label": "Learning Hub", "icon": "bi-book", "url": "personal.learning_hub.main"},
+    {"label": "Net Worth", "icon": "bi-wallet", "url": "personal.net_worth.main"},
+    {"label": "Quiz", "icon": "bi-question-circle", "url": "personal.quiz.main"},
     {"label": "Taxation", "icon": "bi-calculator", "url": "taxation_bp.calculate_tax"},
     {"label": "News", "icon": "bi-newspaper", "url": "common_bp.news_list"},
 ]
