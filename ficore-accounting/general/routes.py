@@ -1,7 +1,7 @@
 from flask import Blueprint, render_template, redirect, url_for, flash, session
 from flask_login import login_required, current_user
-from ..utils import BUSINESS_TOOLS, BUSINESS_NAV, ALL_TOOLS, ADMIN_NAV, trans_function
-from ..translations import trans
+from utils import BUSINESS_TOOLS, BUSINESS_NAV, ALL_TOOLS, ADMIN_NAV, trans_function
+from translations import trans
 
 general_bp = Blueprint('general_bp', __name__, url_prefix='/general')
 
