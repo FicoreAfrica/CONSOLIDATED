@@ -177,7 +177,7 @@ def register_trader():
             
             flash(trans('agents_trader_registered_success', default=f'Trader registered successfully. Temporary password: {temp_password}'), 'success')
             logger.info(f"Agent {current_user.id} registered trader {username}")
-            return redirect(url_for('agents_bp.dashboard'))
+            return redirect(url_for('agents.dashboard'))
             
         except Exception as e:
             logger.error(f"Error registering trader by agent {current_user.id}: {str(e)}")
@@ -260,7 +260,7 @@ def assist_trader_records(trader_id):
         
         if not trader:
             flash(trans('agents_trader_not_found', default='Trader not found'), 'danger')
-            return redirect(url_for('agents_bp.dashboard'))
+            return redirect(url_for('agents.dashboard'))
         
         # Mark agent as assisting this trader
         db.users.update_one(
@@ -300,7 +300,7 @@ def assist_trader_records(trader_id):
     except Exception as e:
         logger.error(f"Error accessing trader records for agent {current_user.id}: {str(e)}")
         flash(trans('agents_records_access_error', default='An error occurred'), 'danger')
-        return redirect(url_for('agents_bp.dashboard'))
+        return redirect(url_for('agents.dashboard'))
 
 @agents_bp.route('/generate_trader_report/<trader_id>')
 @login_required
@@ -313,7 +313,7 @@ def generate_trader_report(trader_id):
         
         if not trader:
             flash(trans('agents_trader_not_found', default='Trader not found'), 'danger')
-            return redirect(url_for('agents_bp.dashboard'))
+            return redirect(url_for('agents.dashboard'))
         
         # Calculate financial summary
         total_debtors = db.records.aggregate([
@@ -370,7 +370,7 @@ def generate_trader_report(trader_id):
     except Exception as e:
         logger.error(f"Error generating trader report for agent {current_user.id}: {str(e)}")
         flash(trans('agents_report_generation_error', default='An error occurred'), 'danger')
-        return redirect(url_for('agents_bp.dashboard'))
+        return redirect(url_for('agents.dashboard'))
 
 @agents_bp.route('/my_activity')
 @login_required
@@ -414,7 +414,7 @@ def my_activity():
     except Exception as e:
         logger.error(f"Error loading agent activity for {current_user.id}: {str(e)}")
         flash(trans('agents_activity_load_error', default='An error occurred'), 'danger')
-        return redirect(url_for('agents_bp.dashboard'))
+        return redirect(url_for('agents.dashboard'))
 
 @agents_bp.route('/api/search_traders')
 @login_required
