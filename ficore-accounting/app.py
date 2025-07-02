@@ -36,6 +36,7 @@ import time
 from pymongo import MongoClient
 import certifi
 from common_features.taxation import seed_tax_data
+from coins.routes import coins_bp, init_coins_limiter  # Added import for init_coins_limiter
 
 # Load environment variables
 load_dotenv()
@@ -411,6 +412,7 @@ def create_app():
     from settings.routes import settings_bp
     from personal import personal_bp
     from general.routes import general_bp
+    from admin.routes import admin_bp  # Ensure admin_bp is imported
     
     app.register_blueprint(users_bp, url_prefix='/users')
     logger.info('Registered users blueprint')
@@ -421,9 +423,9 @@ def create_app():
     app.register_blueprint(taxation_bp)
     logger.info('Registered taxation blueprint')
     try:
-        from coins.routes import coins_bp
         app.register_blueprint(coins_bp, url_prefix='/coins')
-        logger.info('Registered coins blueprint')
+        init_coins_limiter(app)  # Initialize coins limiter after registration
+        logger.info('Registered coins blueprint and initialized limiter')
     except Exception as e:
         logger.warning(f'Could not import coins blueprint: {str(e)}')
     app.register_blueprint(creditors_bp, url_prefix='/creditors')
@@ -443,7 +445,6 @@ def create_app():
     app.register_blueprint(settings_bp, url_prefix='/settings')
     logger.info('Registered settings blueprint')
     try:
-        from admin.routes import admin_bp
         app.register_blueprint(admin_bp, url_prefix='/admin')
         logger.info('Registered admin blueprint')
     except Exception as e:
