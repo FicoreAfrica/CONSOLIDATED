@@ -1,7 +1,7 @@
 from flask import Blueprint, jsonify, current_app, redirect, url_for, flash, render_template, request, session
 from flask_login import current_user, login_required
-from ..utils import requires_role, is_admin, get_mongo_db, PERSONAL_TOOLS, PERSONAL_NAV, ALL_TOOLS, ADMIN_NAV
-from ..translations import trans
+from utils import requires_role, is_admin, get_mongo_db, PERSONAL_TOOLS, PERSONAL_NAV, ALL_TOOLS, ADMIN_NAV
+from translations import trans
 from datetime import datetime
 from bson import ObjectId
 
@@ -41,9 +41,18 @@ def index():
             title=trans('general_welcome', default='Welcome')
         )
     except Exception as e:
-        current_app.logger.error(f"Error rendering personal index: {str(e)}")
+        current_app.logger.error(f"Error rendering personal index: {str(e)}", extra={'session_id': session.get('sid', 'unknown')})
         flash(trans('general_error', default='An error occurred'), 'danger')
-        return redirect(url_for('app.index'))
+        tools = PERSONAL_TOOLS if current_user.role == 'personal' else ALL_TOOLS
+        nav_items = PERSONAL_NAV if current_user.role == 'personal' else ADMIN_NAV
+        return render_template(
+            'personal/GENERAL/index.html',
+            tools=tools,
+            nav_items=nav_items,
+            t=trans,
+            lang=session.get('lang', 'en'),
+            title=trans('general_welcome', default='Welcome')
+        ), 500
 
 @personal_bp.route('/notification_count')
 @login_required
@@ -52,12 +61,14 @@ def notification_count():
     """Return the count of unread notifications for the current user."""
     try:
         db = get_mongo_db()
-        user_id = current_user.id
-        query = {'user_id': user_id, 'read_status': False} if not is_admin() else {'read_status': False}
+        # TEMPORARY: Allow admin to view all unread notifications during testing
+        # TODO: Restore original query for production
+        query = {'read_status': False} if is_admin() else {'user_id': current_user.id, 'read_status': False}
         count = db.reminder_logs.count_documents(query)
+        current_app.logger.info(f"Fetched notification count {count} for user {current_user.id}", extra={'session_id': session.get('sid', 'unknown')})
         return jsonify({'count': count})
     except Exception as e:
-        current_app.logger.error(f"Error fetching notification count: {str(e)}")
+        current_app.logger.error(f"Error fetching notification count: {str(e)}", extra={'session_id': session.get('sid', 'unknown')})
         return jsonify({'error': trans('general_something_went_wrong', default='Failed to fetch notification count')}), 500
 
 @personal_bp.route('/notifications')
@@ -67,8 +78,9 @@ def notifications():
     """Return the list of recent notifications for the current user."""
     try:
         db = get_mongo_db()
-        user_id = current_user.id
-        query = {'user_id': user_id} if not is_admin() else {}
+        # TEMPORARY: Allow admin to view all notifications during testing
+        # TODO: Restore original query for production
+        query = {} if is_admin() else {'user_id': current_user.id}
         notifications = list(db.reminder_logs.find(query).sort('sent_at', -1).limit(10))
         notification_ids = [n['notification_id'] for n in notifications if not n.get('read_status', False)]
         if notification_ids:
@@ -83,9 +95,10 @@ def notifications():
             'timestamp': n['sent_at'].isoformat(),
             'read': n.get('read_status', False)
         } for n in notifications]
+        current_app.logger.info(f"Fetched {len(result)} notifications for user {current_user.id}", extra={'session_id': session.get('sid', 'unknown')})
         return jsonify(result)
     except Exception as e:
-        current_app.logger.error(f"Error fetching notifications: {str(e)}")
+        current_app.logger.error(f"Error fetching notifications: {str(e)}", extra={'session_id': session.get('sid', 'unknown')})
         return jsonify({'error': trans('general_something_went_wrong', default='Failed to fetch notifications')}), 500
 
 @personal_bp.route('/recent_activity')
@@ -95,8 +108,9 @@ def recent_activity():
     """Return recent activity across all personal finance tools for the current user."""
     try:
         db = get_mongo_db()
-        user_id = current_user.id
-        query = {'user_id': user_id} if not is_admin() else {}
+        # TEMPORARY: Allow admin to view all activities during testing
+        # TODO: Restore original query for production
+        query = {} if is_admin() else {'user_id': current_user.id}
         activities = []
 
         # Fetch recent bills
@@ -180,10 +194,25 @@ def recent_activity():
                 }
             })
 
+        # Fetch recent learning hub progress
+        learning_hub_progress = db.learning_materials.find(query).sort('updated_at', -1).limit(5)
+        for progress in learning_hub_progress:
+            if progress.get('course_id'):
+                activities.append({
+                    'type': 'learning_hub',
+                    'description': trans('recent_activity_learning_hub_progress', default='Progress in course: {course_id}', course_id=progress['course_id']),
+                    'timestamp': progress['updated_at'].isoformat(),
+                    'details': {
+                        'course_id': progress['course_id'],
+                        'lessons_completed': len(progress.get('lessons_completed', [])),
+                        'current_lesson': progress.get('current_lesson', 'N/A')
+                    }
+                })
+
         activities.sort(key=lambda x: x['timestamp'], reverse=True)
         activities = activities[:10]
-        current_app.logger.info(f"Fetched {len(activities)} recent activities for user {user_id}")
+        current_app.logger.info(f"Fetched {len(activities)} recent activities for user {current_user.id}", extra={'session_id': session.get('sid', 'unknown')})
         return jsonify(activities)
     except Exception as e:
-        current_app.logger.error(f"Error in personal.recent_activity: {str(e)}")
+        current_app.logger.error(f"Error in personal.recent_activity: {str(e)}", extra={'session_id': session.get('sid', 'unknown')})
         return jsonify({'error': trans('general_something_went_wrong', default='Failed to fetch recent activity')}), 500
