@@ -33,6 +33,7 @@
             </button>
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav me-auto">
+                    {# This loop correctly displays nav_items (PERSONAL_NAV) in the top bar #}
                     {% for item in nav_items %}
                     <li class="nav-item">
                         <a class="nav-link {% if request.endpoint == item.get('endpoint', '') %}active{% endif %}" href="{{ url_for(item.get('endpoint', '')) | e }}" data-bs-toggle="tooltip" data-bs-title="{{ t(item.get('tooltip_key', ''), default=item.get('label', '')) | e }}" aria-current="{% if request.endpoint == item.get('endpoint', '') %}page{% endif %}">{{ t(item.get('label_key', ''), default=item.get('label', '')) | e }}</a>
@@ -90,10 +91,12 @@
                         <a class="nav-link {% if request.endpoint == 'personal.index' %}active{% endif %}" href="{{ url_for('personal.index') | e }}" data-bs-toggle="tooltip" data-bs-title="{{ t('general_home_tooltip', default='Go to homepage') | e }}" aria-current="{% if request.endpoint == 'personal.index' %}page{% endif %}">{{ t('general_home', default='Home') | e }}</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link {% if request.endpoint == 'about' %}active{% endif %}" href="{{ url_for('general_bp.about') | e }}" data-bs-toggle="tooltip" data-bs-title="{{ t('general_about_tooltip', default='Learn more about Ficore') | e }}" aria-current="{% if request.endpoint == 'about' %}page{% endif %}">{{ t('general_about', default='About') | e }}</a>
+                        {# Corrected url_for to include blueprint prefix #}
+                        <a class="nav-link {% if request.endpoint == 'general_bp.about' %}active{% endif %}" href="{{ url_for('general_bp.about') | e }}" data-bs-toggle="tooltip" data-bs-title="{{ t('general_about_tooltip', default='Learn more about Ficore') | e }}" aria-current="{% if request.endpoint == 'general_bp.about' %}page{% endif %}">{{ t('general_about', default='About') | e }}</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link {% if request.endpoint == 'contact' %}active{% endif %}" href="{{ url_for('general_bp.contact') | e }}" data-bs-toggle="tooltip" data-bs-title="{{ t('general_contact_tooltip', default='Get in touch') | e }}" aria-current="{% if request.endpoint == 'contact' %}page{% endif %}">{{ t('general_contact', default='Contact') | e }}</a>
+                        {# Corrected url_for to include blueprint prefix #}
+                        <a class="nav-link {% if request.endpoint == 'general_bp.contact' %}active{% endif %}" href="{{ url_for('general_bp.contact') | e }}" data-bs-toggle="tooltip" data-bs-title="{{ t('general_contact_tooltip', default='Get in touch') | e }}" aria-current="{% if request.endpoint == 'general_bp.contact' %}page{% endif %}">{{ t('general_contact', default='Contact') | e }}</a>
                     </li>
                 </ul>
                 <ul class="navbar-nav ms-auto align-items-center header-actions">
@@ -152,16 +155,35 @@
         </div>
     </main>
 
+    {# ADDED NEW FIXED BOTTOM NAV FOR AUTHENTICATED USERS #}
+    {% if current_user.is_authenticated %}
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark fixed-bottom d-lg-none mobile-bottom-nav"> {# d-lg-none hides on large screens, mobile-bottom-nav for custom styling #}
+        <div class="container-fluid d-flex justify-content-around align-items-center">
+            {# Prioritize 'nav_items' if available (passed from route), otherwise fallback to 'PERSONAL_NAV' #}
+            {% set bottom_nav_data = nav_items if nav_items is defined and nav_items else PERSONAL_NAV %}
+            {% for item in bottom_nav_data %}
+                <a class="nav-link text-center flex-fill py-2" href="{{ url_for(item.get('endpoint', '#')) | e }}">
+                    <i class="{{ item.get('icon', '') | e }} d-block fs-5 mb-1"></i> {# Larger icon, block display, margin-bottom #}
+                    <small>{{ t(item.get('label_key', ''), default=item.get('label', '')) | e }}</small>
+                </a>
+            {% endfor %}
+        </div>
+    </nav>
+    {% endif %}
+
     {% if not current_user.is_authenticated %}
     <footer class="footer mt-5 py-4" style="background: linear-gradient(90deg, #003087, #004D40); color: white;" role="contentinfo">
         <div class="container text-center">
             <p>{{ t('general_about_ficore_africa', default='About Ficore Africa') | e }}: {{ t('general_empowering_financial_growth', default='Empowering financial growth across Africa since 2025') | e }}</p>
             <p class="footer-disclaimer"><i class="fas fa-shield-alt me-1" aria-hidden="true"></i> {{ t('general_disclaimer', default='Ficore is not a bank and does not hold or move funds.') | e }} <a href="{{ url_for('general_bp.about') | e }}" class="text-white text-decoration-underline">{{ t('general_learn_more', default='Learn more') | e }}</a></p>
             <div class="footer-links mt-3 d-flex flex-wrap justify-content-center gap-3">
-                <a href="{{ url_for('general_bp.terms') | e }}" class="text-white">{{ t('general_general_bp.terms_of_service', default='general_bp.terms of Service') | e }}</a>
-                <a href="{{ url_for('privacy') | e }}" class="text-white">{{ t('general_privacy_policy', default='Privacy Policy') | e }}</a>
+                {# Corrected url_for to include blueprint prefix #}
+                <a href="{{ url_for('general_bp.terms') | e }}" class="text-white">{{ t('general_terms_of_service', default='Terms of Service') | e }}</a>
+                {# Corrected url_for to include blueprint prefix #}
+                <a href="{{ url_for('general_bp.privacy') | e }}" class="text-white">{{ t('general_privacy_policy', default='Privacy Policy') | e }}</a>
                 <a href="mailto:support@ficoreafrica.com" class="text-white"><i class="fas fa-envelope me-1" aria-hidden="true"></i> {{ t('general_contact_us', default='Contact Us') | e }}</a>
-                <a href="{{ url_for('feedback') | e }}" class="text-white"><i class="fas fa-comment me-1" aria-hidden="true"></i> {{ t('general_provide_feedback', default='Provide Feedback') | e }}</a>
+                {# Corrected url_for to include blueprint prefix #}
+                <a href="{{ url_for('general_bp.feedback') | e }}" class="text-white"><i class="fas fa-comment me-1" aria-hidden="true"></i> {{ t('general_provide_feedback', default='Provide Feedback') | e }}</a>
                 <a href="{{ url_for('users.login') | e }}" class="text-white"><i class="fas fa-sign-in-alt me-1" aria-hidden="true"></i> {{ t('general_login', default='Login') | e }}</a>
             </div>
             <div class="social-icons d-flex justify-content-center gap-3 mt-3">
