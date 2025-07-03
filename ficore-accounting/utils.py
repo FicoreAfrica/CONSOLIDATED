@@ -728,6 +728,12 @@ PERSONAL_NAV = [
     {"endpoint": "settings.profile", "label": "Profile", "label_key": "profile_settings", "tooltip_key": "profile_tooltip", "icon": "bi-person"},
 ]
 
+PERSONAL_EXPLORE_FEATURES = [
+    {"endpoint": "personal.budget_main", "label": "Budget", "label_key": "budget_budget_planner", "tooltip_key": "budget_tooltip", "icon": "bi-wallet"},
+    {"endpoint": "personal.emergency_fund.main", "label": "Emergency Fund", "label_key": "emergency_fund_calculator", "tooltip_key": "emergency_fund_tooltip", "icon": "bi-shield"},
+    {"endpoint": "personal.learning_hub.main", "label": "Learning Hub", "label_key": "learning_hub_courses", "tooltip_key": "learning_tooltip", "icon": "bi-book"},
+]
+
 # Trader role tools and navigation
 BUSINESS_TOOLS = [
     {"endpoint": "inventory.index", "label": "Inventory", "label_key": "inventory_dashboard", "tooltip_key": "inventory_tooltip", "icon": "bi-box"},
@@ -748,6 +754,12 @@ BUSINESS_NAV = [
     {"endpoint": "settings.profile", "label": "Profile", "label_key": "profile_settings", "tooltip_key": "profile_tooltip", "icon": "bi-person"},
 ]
 
+BUSINESS_EXPLORE_FEATURES = [
+    {"endpoint": "inventory.index", "label": "Inventory", "label_key": "inventory_dashboard", "tooltip_key": "inventory_tooltip", "icon": "bi-box"},
+    {"endpoint": "debtors.index", "label": "They Owe", "label_key": "debtors_dashboard", "tooltip_key": "debtors_tooltip", "icon": "bi-person-plus"},
+    {"endpoint": "reports.index", "label": "Reports", "label_key": "reports_dashboard", "tooltip_key": "reports_tooltip", "icon": "bi-bar-chart"},
+]
+
 # Agent role tools and navigation
 AGENT_TOOLS = [
     {"endpoint": "agents_bp.agent_portal", "label": "Agent Portal", "label_key": "agents_dashboard", "tooltip_key": "agents_tooltip", "icon": "bi-person-workspace"},
@@ -758,6 +770,11 @@ AGENT_NAV = [
     {"endpoint": "agents_bp.agent_portal", "label": "Agent Portal", "label_key": "agents_dashboard", "tooltip_key": "agents_tooltip", "icon": "bi-person-workspace"},
     {"endpoint": "agents_bp.my_activity", "label": "My Activity", "label_key": "agents_my_activity", "tooltip_key": "agents_my_activity_tooltip", "icon": "bi-person-workspace"},
     {"endpoint": "settings.profile", "label": "Profile", "label_key": "profile_settings", "tooltip_key": "profile_tooltip", "icon": "bi-person"},
+]
+
+AGENT_EXPLORE_FEATURES = [
+    {"endpoint": "agents_bp.agent_portal", "label": "Agent Portal", "label_key": "agents_dashboard", "tooltip_key": "agents_tooltip", "icon": "bi-person-workspace"},
+    {"endpoint": "coins.history", "label": "Coins", "label_key": "coins_dashboard", "tooltip_key": "coins_tooltip", "icon": "bi-coin"},
 ]
 
 # Admin role tools and navigation
@@ -782,6 +799,12 @@ ADMIN_NAV = [
     {"endpoint": "admin.admin_net_worth", "label": "Manage Net Worth", "label_key": "admin_manage_net_worth", "tooltip_key": "admin_manage_net_worth_tooltip", "icon": "bi-wallet"},
     {"endpoint": "admin.admin_quiz_results", "label": "Manage Quiz Results", "label_key": "admin_manage_quiz_results", "tooltip_key": "admin_manage_quiz_results_tooltip", "icon": "bi-question-circle"},
     {"endpoint": "admin.admin_learning_hub", "label": "Manage Learning Hub", "label_key": "admin_manage_learning_hub", "tooltip_key": "admin_manage_learning_hub_tooltip", "icon": "bi-book"},
+]
+
+ADMIN_EXPLORE_FEATURES = [
+    {"endpoint": "admin.dashboard", "label": "Dashboard", "label_key": "admin_dashboard", "tooltip_key": "admin_dashboard_tooltip", "icon": "bi-speedometer"},
+    {"endpoint": "admin.manage_users", "label": "Manage Users", "label_key": "admin_manage_users", "tooltip_key": "admin_manage_users_tooltip", "icon": "bi-people"},
+    {"endpoint": "admin.manage_agents", "label": "Manage Agents", "label_key": "admin_manage_agents", "tooltip_key": "admin_manage_agents_tooltip", "icon": "bi-person-workspace"},
 ]
 
 # Export all functions for backward compatibility
@@ -820,10 +843,14 @@ __all__ = [
     'to_dict_tax_reminder',
     'PERSONAL_TOOLS',
     'PERSONAL_NAV',
+    'PERSONAL_EXPLORE_FEATURES',
     'BUSINESS_TOOLS',
     'BUSINESS_NAV',
+    'BUSINESS_EXPLORE_FEATURES',
     'AGENT_TOOLS',
     'AGENT_NAV',
+    'AGENT_EXPLORE_FEATURES',
     'ALL_TOOLS',
-    'ADMIN_NAV'
+    'ADMIN_NAV',
+    'ADMIN_EXPLORE_FEATURES'
 ]
