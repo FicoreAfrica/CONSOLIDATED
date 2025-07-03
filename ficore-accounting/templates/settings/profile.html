@@ -54,7 +54,7 @@
     </div>
 
     <div class="d-grid mb-4">
-        <button class="btn btn-outline-primary" onclick="location.href='{{ url_for('feedback') }}'">
+        <button class="btn btn-outline-primary" onclick="location.href='{{ url_for('general_bp.feedback') }}'">
             <i class="bi bi-chat-dots me-2"></i> {{ t('settings_provide_feedback', default='Provide Feedback') }}
         </button>
     </div>
@@ -286,15 +286,15 @@
     <section class="profile-section mb-4">
         <h2>{{ t('general_about', default='About') }}</h2>
         <div class="card card-body">
-            <a href="{{ url_for('contact') }}" class="list-item">
+            <a href="{{ url_for('general_bp.contact') }}" class="list-item">
                 <i class="bi bi-headset icon-left"></i> {{ t('settings_support', default='Support (Our contacts)') }}
                 <i class="bi bi-chevron-right icon-right"></i>
             </a>
-            <a href="{{ url_for('feedback') }}" class="list-item">
+            <a href="{{ url_for('general_bp.feedback') }}" class="list-item">
                 <i class="bi bi-star icon-left"></i> {{ t('settings_rate_app', default='Rate the app (Tell us about your experience)') }}
                 <i class="bi bi-chevron-right icon-right"></i>
             </a>
-            <a href="{{ url_for('about') }}" class="list-item">
+            <a href="{{ url_for('general_bp.about') }}" class="list-item">
                 <i class="bi bi-info-circle icon-left"></i> {{ t('settings_about_ficore', default='About FiCore') }}
                 <i class="bi bi-chevron-right icon-right"></i>
             </a>
