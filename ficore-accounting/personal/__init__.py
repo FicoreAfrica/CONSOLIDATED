@@ -5,7 +5,7 @@ from translations import trans
 from datetime import datetime
 from bson import ObjectId
 
-personal_bp = Blueprint('personal', __name__, url_prefix='/personal', template_folder='templates')
+personal_bp = Blueprint('personal', __name__, url_prefix='/personal', template_folder='templates/personal')
 
 # Register all personal finance sub-blueprints
 from personal.bill import bill_bp
@@ -23,6 +23,19 @@ personal_bp.register_blueprint(financial_health_bp)
 personal_bp.register_blueprint(learning_hub_bp)
 personal_bp.register_blueprint(net_worth_bp)
 personal_bp.register_blueprint(quiz_bp)
+
+def init_app(app):
+    """Initialize all personal finance sub-blueprints."""
+    try:
+        # Initialize each sub-blueprint
+        for blueprint in [bill_bp, budget_bp, emergency_fund_bp, financial_health_bp, learning_hub_bp, net_worth_bp, quiz_bp]:
+            if hasattr(blueprint, 'init_app'):
+                blueprint.init_app(app)
+                current_app.logger.info(f"Initialized {blueprint.name} blueprint", extra={'session_id': 'no-request-context'})
+        current_app.logger.info("Personal finance blueprints initialized successfully", extra={'session_id': 'no-request-context'})
+    except Exception as e:
+        current_app.logger.error(f"Error initializing personal finance blueprints: {str(e)}", extra={'session_id': 'no-request-context'})
+        raise
 
 @personal_bp.route('/')
 @login_required
@@ -61,8 +74,6 @@ def notification_count():
     """Return the count of unread notifications for the current user."""
     try:
         db = get_mongo_db()
-        # TEMPORARY: Allow admin to view all unread notifications during testing
-        # TODO: Restore original query for production
         query = {'read_status': False} if is_admin() else {'user_id': current_user.id, 'read_status': False}
         count = db.reminder_logs.count_documents(query)
         current_app.logger.info(f"Fetched notification count {count} for user {current_user.id}", extra={'session_id': session.get('sid', 'unknown')})
@@ -78,8 +89,6 @@ def notifications():
     """Return the list of recent notifications for the current user."""
     try:
         db = get_mongo_db()
-        # TEMPORARY: Allow admin to view all notifications during testing
-        # TODO: Restore original query for production
         query = {} if is_admin() else {'user_id': current_user.id}
         notifications = list(db.reminder_logs.find(query).sort('sent_at', -1).limit(10))
         notification_ids = [n['notification_id'] for n in notifications if not n.get('read_status', False)]
@@ -108,8 +117,6 @@ def recent_activity():
     """Return recent activity across all personal finance tools for the current user."""
     try:
         db = get_mongo_db()
-        # TEMPORARY: Allow admin to view all activities during testing
-        # TODO: Restore original query for production
         query = {} if is_admin() else {'user_id': current_user.id}
         activities = []
 
