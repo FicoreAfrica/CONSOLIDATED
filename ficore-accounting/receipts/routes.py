@@ -57,7 +57,7 @@ def index():
     except Exception as e:
         logger.error(f"Error fetching receipts for user {current_user.id}: {str(e)}")
         flash(trans('receipts_fetch_error', default='An error occurred'), 'danger')
-        return redirect(url_for('app.index'))
+        return redirect(url_for('index'))
 
 @receipts_bp.route('/view/<id>')
 @login_required
@@ -91,7 +91,7 @@ def generate_pdf(id):
         receipt = db.cashflows.find_one(query)
         if not receipt:
             flash(trans('receipts_record_not_found', default='Record not found'), 'danger')
-            return redirect(url_for('app.index'))
+            return redirect(url_for('index'))
         if not is_admin() and not check_coin_balance(1):
             flash(trans('receipts_insufficient_coins', default='Insufficient coins to generate receipt'), 'danger')
             return redirect(url_for('coins.purchase'))
@@ -138,7 +138,7 @@ def generate_pdf(id):
     except Exception as e:
         logger.error(f"Error generating PDF for receipt {id}: {str(e)}")
         flash(trans('receipts_pdf_generation_error', default='An error occurred'), 'danger')
-        return redirect(url_for('app.index'))
+        return redirect(url_for('index'))
 
 @receipts_bp.route('/add', methods=['GET', 'POST'])
 @login_required
@@ -203,7 +203,7 @@ def edit(id):
         receipt = db.cashflows.find_one(query)
         if not receipt:
             flash(trans('receipts_record_not_found', default='Cashflow not found'), 'danger')
-            return redirect(url_for('app.index'))
+            return redirect(url_for('index'))
         form = ReceiptForm(data={
             'party_name': receipt['party_name'],
             'date': receipt['created_at'],
@@ -244,7 +244,7 @@ def edit(id):
     except Exception as e:
         logger.error(f"Error fetching receipt {id} for user {current_user.id}: {str(e)}")
         flash(trans('receipts_record_not_found', default='Cashflow not found'), 'danger')
-        return redirect(url_for('app.index'))
+        return redirect(url_for('index'))
 
 @receipts_bp.route('/delete/<id>', methods=['POST'])
 @login_required
@@ -263,4 +263,4 @@ def delete(id):
     except Exception as e:
         logger.error(f"Error deleting receipt {id} for user {current_user.id}: {str(e)}")
         flash(trans('receipts_delete_error', default='An error occurred'), 'danger')
-        return redirect(url_for('app.index'))
+        return redirect(url_for('index'))
