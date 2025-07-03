@@ -158,7 +158,7 @@
             <p>{{ t('general_about_ficore_africa', default='About Ficore Africa') | e }}: {{ t('general_empowering_financial_growth', default='Empowering financial growth across Africa since 2025') | e }}</p>
             <p class="footer-disclaimer"><i class="fas fa-shield-alt me-1" aria-hidden="true"></i> {{ t('general_disclaimer', default='Ficore is not a bank and does not hold or move funds.') | e }} <a href="{{ url_for('general_bp.about') | e }}" class="text-white text-decoration-underline">{{ t('general_learn_more', default='Learn more') | e }}</a></p>
             <div class="footer-links mt-3 d-flex flex-wrap justify-content-center gap-3">
-                <a href="{{ url_for('terms') | e }}" class="text-white">{{ t('general_terms_of_service', default='Terms of Service') | e }}</a>
+                <a href="{{ url_for('general_bp.terms') | e }}" class="text-white">{{ t('general_general_bp.terms_of_service', default='general_bp.terms of Service') | e }}</a>
                 <a href="{{ url_for('privacy') | e }}" class="text-white">{{ t('general_privacy_policy', default='Privacy Policy') | e }}</a>
                 <a href="mailto:support@ficoreafrica.com" class="text-white"><i class="fas fa-envelope me-1" aria-hidden="true"></i> {{ t('general_contact_us', default='Contact Us') | e }}</a>
                 <a href="{{ url_for('feedback') | e }}" class="text-white"><i class="fas fa-comment me-1" aria-hidden="true"></i> {{ t('general_provide_feedback', default='Provide Feedback') | e }}</a>
