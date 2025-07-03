@@ -22,6 +22,8 @@ taxation_bp = Blueprint('taxation_bp', __name__, template_folder='templates/taxa
 # Forms
 class TaxCalculationForm(FlaskForm):
     amount = FloatField('Amount', validators=[DataRequired(message=trans('tax_amount_required', default='Amount is required')), NumberRange(min=0, message=trans('tax_amount_non_negative', default='Amount must be non-negative'))], render_kw={'class': 'form-control'})
+    pension = FloatField('Pension Contribution', validators=[NumberRange(min=0, message=trans('tax_pension_non_negative', default='Pension contribution must be non-negative'))], default=0, render_kw={'class': 'form-control'})
+    rent_relief = FloatField('Rent Relief', validators=[NumberRange(min=0, message=trans('tax_rent_relief_non_negative', default='Rent relief must be non-negative'))], default=0, render_kw={'class': 'form-control'})
     taxpayer_type = SelectField('Taxpayer Type', choices=[
         ('paye', trans('tax_paye', default='PAYE (Personal)')),
         ('small_business', trans('tax_small_business', default='Small Business')),
@@ -43,6 +45,10 @@ class TaxCalculationForm(FlaskForm):
         ('baby_products', trans('tax_baby_products', default='Baby Products')),
         ('other', trans('tax_other', default='Other'))
     ], render_kw={'class': 'form-select'})
+    tax_year = SelectField('Tax Year', choices=[
+        ('2025', '2025'),
+        ('2026', '2026')
+    ], validators=[DataRequired(message=trans('tax_year_required', default='Tax year is required'))], render_kw={'class': 'form-select'})
     is_business_vat = BooleanField('Business VAT Credit', render_kw={'class': 'form-check-input'})
     submit = SubmitField(trans('tax_calculate', default='Calculate Tax'), render_kw={'class': 'btn btn-primary w-100'})
 
@@ -66,34 +72,53 @@ class ReminderForm(FlaskForm):
     submit = SubmitField(trans('tax_add_reminder', default='Add Reminder'), render_kw={'class': 'btn btn-primary w-100'})
 
 # Tax Calculation Functions
-def calculate_paye_tax(amount):
-    taxable_income = amount
-    if amount <= 1000000:
-        taxable_income = max(0, amount - 200000)  # Apply rent relief
-    tax = 0
-    if taxable_income <= 800000:
-        tax = 0
-    elif taxable_income <= 3000000:
-        tax += (taxable_income - 800000) * 0.15
-    elif taxable_income <= 12000000:
-        tax += 2200000 * 0.15
-        tax += (taxable_income - 3000000) * 0.18
-    elif taxable_income <= 25000000:
-        tax += 2200000 * 0.15
-        tax += 9000000 * 0.18
-        tax += (taxable_income - 12000000) * 0.21
-    elif taxable_income <= 50000000:
-        tax += 2200000 * 0.15
-        tax += 9000000 * 0.18
-        tax += 13000000 * 0.21
-        tax += (taxable_income - 25000000) * 0.23
+def calculate_paye_2025(taxable_income):
+    brackets = [
+        (300000, 0.07),
+        (300000, 0.11),
+        (500000, 0.15),
+        (500000, 0.19),
+        (float('inf'), 0.21)
+    ]
+    tax_due = 0
+    for limit, rate in brackets:
+        if taxable_income > limit:
+            tax_due += limit * rate
+            taxable_income -= limit
+        else:
+            tax_due += taxable_income * rate
+            break
+    return round(tax_due, 2), trans('tax_paye_explanation_2025', default="PAYE 2025: 7% up to ₦300,000, 11% next ₦300,000, 15% next ₦500,000, 19% next ₦500,000, 21% above ₦1,600,000, with 20% relief and ₦200,000 CRA")
+
+def calculate_paye_2026(taxable_income):
+    brackets = [
+        (800000, 0.0),
+        (2200000, 0.15),
+        (9000000, 0.18),
+        (13000000, 0.21),
+        (25000000, 0.23),
+        (float('inf'), 0.25)
+    ]
+    tax_due = 0
+    for limit, rate in brackets:
+        if taxable_income > limit:
+            tax_due += limit * rate
+            taxable_income -= limit
+        else:
+            tax_due += taxable_income * rate
+            break
+    return round(tax_due, 2), trans('tax_paye_explanation_2026', default="PAYE 2026: 0% up to ₦800,000, 15% next ₦2,200,000, 18% next ₦9,000,000, 21% next ₦13,000,000, 23% next ₦25,000,000, 25% above ₦50,000,000")
+
+def calculate_paye_tax(year, gross, pension, rent_relief):
+    year = int(year)
+    if year >= 2026:
+        taxable = max(0, gross - pension - rent_relief)
+        return calculate_paye_2026(taxable)
     else:
-        tax += 2200000 * 0.15
-        tax += 9000000 * 0.18
-        tax += 13000000 * 0.21
-        tax += 25000000 * 0.23
-        tax += (taxable_income - 50000000) * 0.25
-    return round(tax, 2), trans('tax_paye_explanation', default="Progressive PAYE: 0% up to ₦800,000, 15% up to ₦3M, 18% up to ₦12M, 21% up to ₦25M, 23% up to ₦50M, 25% above ₦50M" + (" + ₦200,000 rent relief" if amount <= 1000000 else ""))
+        relief = (gross - pension) * 0.2
+        cra = 200000
+        taxable = max(0, gross - pension - relief - cra)
+        return calculate_paye_2025(taxable)
 
 def calculate_vat(amount, category, is_business=False):
     exempt_categories = ["food", "healthcare", "education", "rent", "power", "baby_products"]
@@ -107,28 +132,46 @@ def calculate_vat(amount, category, is_business=False):
         explanation = trans('tax_vat_reclaimed', default="Input VAT reclaimed for business")
     return round(vat_due, 2), explanation
 
-def calculate_cit(turnover):
-    current_year = datetime.datetime.now().year
-    if turnover <= 50000000:
-        tax = 0.0
-        explanation = trans('tax_cit_explanation_small', default="0% CIT for turnover ≤ ₦50M, simplified return, no audit")
-        simplified_return = True
-        audit_required = False
-    else:
-        rate = 0.275 if current_year == 2025 else 0.25
-        tax = turnover * rate
-        explanation = trans('tax_cit_explanation_large', default=f"{rate*100}% CIT for turnover > ₦50M")
-        simplified_return = False
-        audit_required = True
+def calculate_cit(turnover, tax_year):
+    tax_year = int(tax_year)
+    if tax_year <= 2025:
+        if turnover <= 25000000:
+            tax = 0.0
+            explanation = trans('tax_cit_explanation_small_2025', default="0% CIT for turnover ≤ ₦25M in 2025, simplified return, no audit")
+            simplified_return = True
+            audit_required = False
+        elif turnover <= 100000000:
+            tax = turnover * 0.25
+            explanation = trans('tax_cit_explanation_medium_2025', default="25% CIT for turnover ₦25M+ to ₦100M in 2025")
+            simplified_return = False
+            audit_required = True
+        else:
+            tax = turnover * 0.30
+            explanation = trans('tax_cit_explanation_large_2025', default="30% CIT for turnover > ₦100M in 2025")
+            simplified_return = False
+            audit_required = True
+    else:  # 2026 onward
+        if turnover <= 50000000:
+            tax = 0.0
+            explanation = trans('tax_cit_explanation_small', default="0% CIT for turnover ≤ ₦50M, simplified return, no audit")
+            simplified_return = True
+            audit_required = False
+        else:
+            tax = turnover * 0.30
+            explanation = trans('tax_cit_explanation_large', default="30% CIT for turnover > ₦50M")
+            simplified_return = False
+            audit_required = True
     return round(tax, 2), explanation, simplified_return, audit_required
 
-def tax_summary(name, gross_income, turnover, vat_amount, vat_category, is_business_vat):
-    paye, paye_explanation = calculate_paye_tax(gross_income)
-    cit, cit_explanation, simplified_return, audit_required = calculate_cit(turnover)
+def tax_summary(name, gross_income, pension, rent_relief, turnover, vat_amount, vat_category, is_business_vat, tax_year):
+    paye, paye_explanation = calculate_paye_tax(tax_year, gross_income, pension, rent_relief)
+    cit, cit_explanation, simplified_return, audit_required = calculate_cit(turnover, tax_year)
     vat, vat_explanation = calculate_vat(vat_amount, vat_category, is_business_vat)
     return {
         "name": name,
         "gross_income": gross_income,
+        "pension": pension,
+        "rent_relief": rent_relief,
         "monthly_paye": round(paye / 12, 2),
         "annual_paye": paye,
         "paye_explanation": paye_explanation,
@@ -151,14 +194,22 @@ def seed_tax_data():
 
     if db.tax_rates.count_documents({}) == 0:
         tax_rates = [
-            {'role': 'personal', 'min_income': 0.0, 'max_income': 800000.0, 'rate': 0.0, 'description': trans('tax_rate_personal_0', default='0% tax rate for personal income up to ₦800,000 (with ₦200,000 rent relief if income ≤ ₦1M)')},
-            {'role': 'personal', 'min_income': 800001.0, 'max_income': 3000000.0, 'rate': 0.15, 'description': trans('tax_rate_personal_15', default='15% tax rate for personal income from ₦800,001 to ₦3,000,000')},
-            {'role': 'personal', 'min_income': 3000001.0, 'max_income': 12000000.0, 'rate': 0.18, 'description': trans('tax_rate_personal_18', default='18% tax rate for personal income from ₦3,000,001 to ₦12,000,000')},
-            {'role': 'personal', 'min_income': 12000001.0, 'max_income': 25000000.0, 'rate': 0.21, 'description': trans('tax_rate_personal_21', default='21% tax rate for personal income from ₦12,000,001 to ₦25,000,000')},
-            {'role': 'personal', 'min_income': 25000001.0, 'max_income': 50000000.0, 'rate': 0.23, 'description': trans('tax_rate_personal_23', default='23% tax rate for personal income from ₦25,000,001 to ₦50,000,000')},
-            {'role': 'personal', 'min_income': 50000001.0, 'max_income': float('inf'), 'rate': 0.25, 'description': trans('tax_rate_personal_25', default='25% tax rate for personal income above ₦50,000,000')},
-            {'role': 'company', 'min_income': 0.0, 'max_income': 50000000.0, 'rate': 0.0, 'description': trans('tax_rate_cit_small', default='0% CIT for turnover ≤ ₦50M, simplified return, no audit')},
-            {'role': 'company', 'min_income': 50000001.0, 'max_income': float('inf'), 'rate': 0.25, 'description': trans('tax_rate_cit_large_2026', default='25% CIT for turnover > ₦50M (2026 onward)')}
+            {'role': 'personal', 'min_income': 0.0, 'max_income': 300000.0, 'rate': 0.07, 'description': trans('tax_rate_personal_7_2025', default='7% PAYE for income up to ₦300,000 in 2025, with 20% relief and ₦200,000 CRA'), 'year': 2025},
+            {'role': 'personal', 'min_income': 300001.0, 'max_income': 600000.0, 'rate': 0.11, 'description': trans('tax_rate_personal_11_2025', default='11% PAYE for income ₦300,001 to ₦600,000 in 2025'), 'year': 2025},
+            {'role': 'personal', 'min_income': 600001.0, 'max_income': 1100000.0, 'rate': 0.15, 'description': trans('tax_rate_personal_15_2025', default='15% PAYE for income ₦600,001 to ₦1,100,000 in 2025'), 'year': 2025},
+            {'role': 'personal', 'min_income': 1100001.0, 'max_income': 1600000.0, 'rate': 0.19, 'description': trans('tax_rate_personal_19_2025', default='19% PAYE for income ₦1,100,001 to ₦1,600,000 in 2025'), 'year': 2025},
+            {'role': 'personal', 'min_income': 1600001.0, 'max_income': float('inf'), 'rate': 0.21, 'description': trans('tax_rate_personal_21_2025', default='21% PAYE for income above ₦1,600,000 in 2025'), 'year': 2025},
+            {'role': 'personal', 'min_income': 0.0, 'max_income': 800000.0, 'rate': 0.0, 'description': trans('tax_rate_personal_0_2026', default='0% PAYE for income up to ₦800,000 in 2026'), 'year': 2026},
+            {'role': 'personal', 'min_income': 800001.0, 'max_income': 3000000.0, 'rate': 0.15, 'description': trans('tax_rate_personal_15_2026', default='15% PAYE for income ₦800,001 to ₦3,000,000 in 2026'), 'year': 2026},
+            {'role': 'personal', 'min_income': 3000001.0, 'max_income': 12000000.0, 'rate': 0.18, 'description': trans('tax_rate_personal_18_2026', default='18% PAYE for income ₦3,000,001 to ₦12,000,000 in 2026'), 'year': 2026},
+            {'role': 'personal', 'min_income': 12000001.0, 'max_income': 25000000.0, 'rate': 0.21, 'description': trans('tax_rate_personal_21_2026', default='21% PAYE for income ₦12,000,001 to ₦25,000,000 in 2026'), 'year': 2026},
+            {'role': 'personal', 'min_income': 25000001.0, 'max_income': 50000000.0, 'rate': 0.23, 'description': trans('tax_rate_personal_23_2026', default='23% PAYE for income ₦25,000,001 to ₦50,000,000 in 2026'), 'year': 2026},
+            {'role': 'personal', 'min_income': 50000001.0, 'max_income': float('inf'), 'rate': 0.25, 'description': trans('tax_rate_personal_25_2026', default='25% PAYE for income above ₦50,000,000 in 2026'), 'year': 2026},
+            {'role': 'company', 'min_income': 0.0, 'max_income': 25000000.0, 'rate': 0.0, 'description': trans('tax_rate_cit_small_2025', default='0% CIT for turnover ≤ ₦25M in 2025, simplified return, no audit'), 'year': 2025},
+            {'role': 'company', 'min_income': 25000001.0, 'max_income': 100000000.0, 'rate': 0.25, 'description': trans('tax_rate_cit_medium_2025', default='25% CIT for turnover ₦25M+ to ₦100M in 2025'), 'year': 2025},
+            {'role': 'company', 'min_income': 100000001.0, 'max_income': float('inf'), 'rate': 0.30, 'description': trans('tax_rate_cit_large_2025', default='30% CIT for turnover > ₦100M in 2025'), 'year': 2025},
+            {'role': 'company', 'min_income': 0.0, 'max_income': 50000000.0, 'rate': 0.0, 'description': trans('tax_rate_cit_small', default='0% CIT for turnover ≤ ₦50M, simplified return, no audit'), 'year': 2026},
+            {'role': 'company', 'min_income': 50000001.0, 'max_income': float('inf'), 'rate': 0.30, 'description': trans('tax_rate_cit_large', default='30% CIT for turnover > ₦50M'), 'year': 2026}
         ]
         db.tax_rates.insert_many(tax_rates)
         logger.info("Seeded tax rates")
@@ -203,7 +254,8 @@ def calculate_tax():
             'max_income': rate['max_income'],
             'rate': rate['rate'],
             'description': rate['description'],
-            '_id': str(rate['_id'])
+            '_id': str(rate['_id']),
+            'year': rate.get('year', '')
         } for rate in tax_rates
     ]
     serialized_vat_rules = [
@@ -218,11 +270,14 @@ def calculate_tax():
     if request.method == 'POST':
         if form.validate_on_submit():
             amount = form.amount.data
+            pension = form.pension.data
+            rent_relief = form.rent_relief.data
             taxpayer_type = form.taxpayer_type.data
             business_size = form.business_size.data if taxpayer_type in ['small_business', 'cit'] else None
             vat_category = form.vat_category.data if taxpayer_type == 'vat' else None
             is_business_vat = form.is_business_vat.data if taxpayer_type == 'vat' else False
-            logger.info(f"POST /calculate: user={current_user.id}, amount={amount}, taxpayer_type={taxpayer_type}, business_size={business_size}, vat_category={vat_category}, is_business_vat={is_business_vat}")
+            tax_year = form.tax_year.data
+            logger.info(f"POST /calculate: user={current_user.id}, amount={amount}, pension={pension}, rent_relief={rent_relief}, taxpayer_type={taxpayer_type}, business_size={business_size}, vat_category={vat_category}, is_business_vat={is_business_vat}, tax_year={tax_year}")
 
             total_tax = 0.0
             explanation = ""
@@ -230,7 +285,7 @@ def calculate_tax():
             audit_required = False
 
             if taxpayer_type == 'paye':
-                total_tax, explanation = calculate_paye_tax(amount)
+                total_tax, explanation = calculate_paye_tax(tax_year, amount, pension, rent_relief)
             elif taxpayer_type == 'small_business' or taxpayer_type == 'cit':
                 if business_size not in ['small', 'large']:
                     flash(trans('tax_invalid_business_size', default='Invalid business size selected'), 'warning')
@@ -248,9 +303,9 @@ def calculate_tax():
                         tools=tools,
                         nav_items=nav_items,
                         bottom_nav_items=bottom_nav_items,
-                        policy_notice=trans('tax_policy_notice', default='New tax laws effective 1 January 2026: Rent relief of ₦200,000 for income ≤ ₦1M, VAT exemptions for essentials, 0% CIT for small businesses ≤ ₦50M with simplified returns, 25% CIT for large businesses, VAT credits for businesses.')
+                        policy_notice=trans('tax_policy_notice', default='New tax laws effective 1 January 2026: Rent relief of ₦200,000 for income ≤ ₦1M, VAT exemptions for essentials, 0% CIT for small businesses ≤ ₦50M with simplified returns, 30% CIT for large businesses, VAT credits for businesses.')
                     )
-                total_tax, explanation, simplified_return, audit_required = calculate_cit(amount)
+                total_tax, explanation, simplified_return, audit_required = calculate_cit(amount, tax_year)
             elif taxpayer_type == 'vat':
                 if not vat_category:
                     flash(trans('tax_invalid_vat_category', default='VAT category required'), 'warning')
@@ -268,7 +323,7 @@ def calculate_tax():
                         tools=tools,
                         nav_items=nav_items,
                         bottom_nav_items=bottom_nav_items,
-                        policy_notice=trans('tax_policy_notice', default='New tax laws effective 1 January 2026: Rent relief of ₦200,000 for income ≤ ₦1M, VAT exemptions for essentials, 0% CIT for small businesses ≤ ₦50M with simplified returns, 25% CIT for large businesses, VAT credits for businesses.')
+                        policy_notice=trans('tax_policy_notice', default='New tax laws effective 1 January 2026: Rent relief of ₦200,000 for income ≤ ₦1M, VAT exemptions for essentials, 0% CIT for small businesses ≤ ₦50M with simplified returns, 30% CIT for large businesses, VAT credits for businesses.')
                     )
                 total_tax, explanation = calculate_vat(amount, vat_category, is_business_vat)
 
@@ -278,6 +333,8 @@ def calculate_tax():
                     'tax': total_tax,
                     'explanation': explanation,
                     'amount': amount,
+                    'pension': pension,
+                    'rent_relief': rent_relief,
                     'simplified_return': simplified_return,
                     'audit_required': audit_required
                 })
@@ -290,6 +347,8 @@ def calculate_tax():
                 tax=total_tax,
                 explanation=explanation,
                 amount=amount,
+                pension=pension,
+                rent_relief=rent_relief,
                 simplified_return=simplified_return,
                 audit_required=audit_required,
                 form=form,
@@ -300,7 +359,7 @@ def calculate_tax():
                 tools=tools,
                 nav_items=nav_items,
                 bottom_nav_items=bottom_nav_items,
-                policy_notice=trans('tax_policy_notice', default='New tax laws effective 1 January 2026: Rent relief of ₦200,000 for income ≤ ₦1M, VAT exemptions for essentials, 0% CIT for small businesses ≤ ₦50M with simplified returns, 25% CIT for large businesses, VAT credits for businesses.')
+                policy_notice=trans('tax_policy_notice', default='New tax laws effective 1 January 2026: Rent relief of ₦200,000 for income ≤ ₦1M, VAT exemptions for essentials, 0% CIT for small businesses ≤ ₦50M with simplified returns, 30% CIT for large businesses, VAT credits for businesses.')
             )
         else:
             logger.error(f"Form validation failed: user={current_user.id}, errors={form.errors}")
@@ -323,7 +382,7 @@ def calculate_tax():
         tools=tools,
         nav_items=nav_items,
         bottom_nav_items=bottom_nav_items,
-        policy_notice=trans('tax_policy_notice', default='New tax laws effective 1 January 2026: Rent relief of ₦200,000 for income ≤ ₦1M, VAT exemptions for essentials, 0% CIT for small businesses ≤ ₦50M with simplified returns, 25% CIT for large businesses, VAT credits for businesses.')
+        policy_notice=trans('tax_policy_notice', default='New tax laws effective 1 January 2026: Rent relief of ₦200,000 for income ≤ ₦1M, VAT exemptions for essentials, 0% CIT for small businesses ≤ ₦50M with simplified returns, 30% CIT for large businesses, VAT credits for businesses.')
     )
 
 @taxation_bp.route('/payment_info', methods=['GET'])
@@ -352,7 +411,7 @@ def payment_info():
         tools=tools,
         nav_items=nav_items,
         bottom_nav_items=bottom_nav_items,
-        policy_notice=trans('tax_policy_notice', default='New tax laws effective 1 January 2026: Rent relief of ₦200,000 for income ≤ ₦1M, VAT exemptions for essentials, 0% CIT for small businesses ≤ ₦50M with simplified returns, 25% CIT for large businesses, VAT credits for businesses.')
+        policy_notice=trans('tax_policy_notice', default='New tax laws effective 1 January 2026: Rent relief of ₦200,000 for income ≤ ₦1M, VAT exemptions for essentials, 0% CIT for small businesses ≤ ₦50M with simplified returns, 30% CIT for large businesses, VAT credits for businesses.')
     )
 
 @taxation_bp.route('/reminders', methods=['GET', 'POST'])
@@ -395,7 +454,7 @@ def reminders():
         tools=tools,
         nav_items=nav_items,
         bottom_nav_items=bottom_nav_items,
-        policy_notice=trans('tax_policy_notice', default='New tax laws effective 1 January 2026: Rent relief of ₦200,000 for income ≤ ₦1M, VAT exemptions for essentials, 0% CIT for small businesses ≤ ₦50M with simplified returns, 25% CIT for large businesses, VAT credits for businesses.')
+        policy_notice=trans('tax_policy_notice', default='New tax laws effective 1 January 2026: Rent relief of ₦200,000 for income ≤ ₦1M, VAT exemptions for essentials, 0% CIT for small businesses ≤ ₦50M with simplified returns, 30% CIT for large businesses, VAT credits for businesses.')
     )
 
 @taxation_bp.route('/admin/rates', methods=['GET', 'POST'])
@@ -425,7 +484,8 @@ def manage_tax_rates():
             'max_income': rate['max_income'],
             'rate': rate['rate'],
             'description': rate['description'],
-            '_id': str(rate['_id'])
+            '_id': str(rate['_id']),
+            'year': rate.get('year', '')
         } for rate in rates
     ]
     serialized_vat_rules = [
@@ -447,7 +507,7 @@ def manage_tax_rates():
         tools=ALL_TOOLS,
         nav_items=ADMIN_EXPLORE_FEATURES,
         bottom_nav_items=ADMIN_NAV,
-        policy_notice=trans('tax_policy_notice', default='New tax laws effective 1 January 2026: Rent relief of ₦200,000 for income ≤ ₦1M, VAT exemptions for essentials, 0% CIT for small businesses ≤ ₦50M with simplified returns, 25% CIT for large businesses, VAT credits for businesses.')
+        policy_notice=trans('tax_policy_notice', default='New tax laws effective 1 January 2026: Rent relief of ₦200,000 for income ≤ ₦1M, VAT exemptions for essentials, 0% CIT for small businesses ≤ ₦50M with simplified returns, 30% CIT for large businesses, VAT credits for businesses.')
     )
 
 @taxation_bp.route('/admin/locations', methods=['GET', 'POST'])
@@ -489,7 +549,7 @@ def manage_payment_locations():
         tools=ALL_TOOLS,
         nav_items=ADMIN_EXPLORE_FEATURES,
         bottom_nav_items=ADMIN_NAV,
-        policy_notice=trans('tax_policy_notice', default='New tax laws effective 1 January 2026: Rent relief of ₦200,000 for income ≤ ₦1M, VAT exemptions for essentials, 0% CIT for small businesses ≤ ₦50M with simplified returns, 25% CIT for large businesses, VAT credits for businesses.')
+        policy_notice=trans('tax_policy_notice', default='New tax laws effective 1 January 2026: Rent relief of ₦200,000 for income ≤ ₦1M, VAT exemptions for essentials, 0% CIT for small businesses ≤ ₦50M with simplified returns, 30% CIT for large businesses, VAT credits for businesses.')
     )
 
 @taxation_bp.route('/admin/deadlines', methods=['GET', 'POST'])
@@ -533,5 +593,5 @@ def manage_tax_deadlines():
         tools=ALL_TOOLS,
         nav_items=ADMIN_EXPLORE_FEATURES,
         bottom_nav_items=ADMIN_NAV,
-        policy_notice=trans('tax_policy_notice', default='New tax laws effective 1 January 2026: Rent relief of ₦200,000 for income ≤ ₦1M, VAT exemptions for essentials, 0% CIT for small businesses ≤ ₦50M with simplified returns, 25% CIT for large businesses, VAT credits for businesses.')
+        policy_notice=trans('tax_policy_notice', default='New tax laws effective 1 January 2026: Rent relief of ₦200,000 for income ≤ ₦1M, VAT exemptions for essentials, 0% CIT for small businesses ≤ ₦50M with simplified returns, 30% CIT for large businesses, VAT credits for businesses.')
     )
