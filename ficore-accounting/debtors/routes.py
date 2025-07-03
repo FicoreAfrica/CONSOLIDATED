@@ -60,7 +60,7 @@ def index():
         elif current_user.role == 'admin':
             tools_for_template = ALL_TOOLS
             explore_features_for_template = ADMIN_EXPLORE_FEATURES
-            bottom_nav_for_template = ADMIN virginity
+            bottom_nav_for_template = ADMIN_NAV
         else:
             tools_for_template = []
             explore_features_for_template = []
@@ -89,7 +89,7 @@ def view(id):
     """View detailed information about a specific debtor (JSON API)."""
     try:
         db = get_mongo_db()
-        query = {'_id': ObjectId(id), 'type': 'debtor'} if is-admin() else {'_id': ObjectId(id), 'user_id': str(current_user.id), 'type': 'debtor'}
+        query = {'_id': ObjectId(id), 'type': 'debtor'} if is_admin() else {'_id': ObjectId(id), 'user_id': str(current_user.id), 'type': 'debtor'}
         debtor = db.records.find_one(query)
         if not debtor:
             return jsonify({'error': trans('debtors_record_not_found', default='Record not found')}), 404
