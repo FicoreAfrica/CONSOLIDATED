@@ -36,7 +36,7 @@ from jinja2.exceptions import TemplateNotFound
 import time
 from pymongo import MongoClient
 import certifi
-from common_features.taxation import seed_tax_data
+from common.taxation import seed_tax_data
 from coins.routes import coins_bp, init_coins_limiter
 
 # Load environment variables
@@ -398,8 +398,8 @@ def create_app():
     # Register blueprints
     from users.routes import users_bp
     from agents.routes import agents_bp
-    from common_features.routes import common_bp
-    from common_features.taxation import taxation_bp
+    from common.routes import common_bp
+    from common.taxation import taxation_bp
     from creditors.routes import creditors_bp
     from dashboard.routes import dashboard_bp
     from debtors.routes import debtors_bp
