@@ -1,7 +1,7 @@
 from flask import Blueprint, render_template, redirect, url_for, flash, request, session, jsonify
 from flask_login import login_required, current_user
 from translations import trans
-from utils import trans_function, requires_role, is_valid_email, format_currency, get_mongo_db, is_admin, get_user_query, PERSONAL_TOOLS, PERSONAL_NAV, BUSINESS_TOOLS, BUSINESS_NAV, AGENT_TOOLS, AGENT_NAV, ALL_TOOLS, ADMIN_NAV
+from utils import trans_function, requires_role, is_valid_email, format_currency, get_mongo_db, is_admin, get_user_query, PERSONAL_TOOLS, PERSONAL_NAV, PERSONAL_EXPLORE_FEATURES, BUSINESS_TOOLS, BUSINESS_NAV, BUSINESS_EXPLORE_FEATURES, AGENT_TOOLS, AGENT_NAV, AGENT_EXPLORE_FEATURES, ALL_TOOLS, ADMIN_NAV, ADMIN_EXPLORE_FEATURES
 from bson import ObjectId
 from datetime import datetime
 from flask_wtf import FlaskForm
@@ -83,14 +83,34 @@ class LanguageForm(FlaskForm):
     ], validators=[validators.DataRequired(message=trans('general_language_required', default='Language is required'))], render_kw={'class': 'form-select'})
     submit = SubmitField(trans('general_save', default='Save'), render_kw={'class': 'btn btn-primary w-100'})
 
+def get_role_based_nav():
+    """Helper function to determine role-based navigation data."""
+    if current_user.role == 'personal':
+        return PERSONAL_TOOLS, PERSONAL_EXPLORE_FEATURES, PERSONAL_NAV
+    elif current_user.role == 'trader':
+        return BUSINESS_TOOLS, BUSINESS_EXPLORE_FEATURES, BUSINESS_NAV
+    elif current_user.role == 'agent':
+        return AGENT_TOOLS, AGENT_EXPLORE_FEATURES, AGENT_NAV
+    elif current_user.role == 'admin':
+        return ALL_TOOLS, ADMIN_EXPLORE_FEATURES, ADMIN_NAV
+    else:
+        return [], [], []  # Fallback for unexpected roles
+
 @settings_bp.route('/')
 @login_required
 def index():
     """Display settings overview."""
     try:
-        tools = PERSONAL_TOOLS if current_user.role == 'personal' else BUSINESS_TOOLS if current_user.role == 'trader' else AGENT_TOOLS if current_user.role == 'agent' else ALL_TOOLS
-        nav_items = PERSONAL_NAV if current_user.role == 'personal' else BUSINESS_NAV if current_user.role == 'trader' else AGENT_NAV if current_user.role == 'agent' else ADMIN_NAV
-        return render_template('settings/index.html', user=current_user, t=trans, lang=session.get('lang', 'en'), tools=tools, nav_items=nav_items)
+        tools, explore_features, bottom_nav = get_role_based_nav()
+        return render_template(
+            'settings/index.html',
+            user=current_user,
+            t=trans,
+            lang=session.get('lang', 'en'),
+            tools=tools,
+            nav_items=explore_features,
+            bottom_nav_items=bottom_nav
+        )
     except Exception as e:
         logger.error(f"Error loading settings for user {current_user.id}: {str(e)}")
         flash(trans('general_something_went_wrong', default='An error occurred'), 'danger')
@@ -131,7 +151,17 @@ def profile():
             try:
                 if form.email.data != user['email'] and db.users.find_one({'email': form.email.data}):
                     flash(trans('general_email_exists', default='Email already in use'), 'danger')
-                    return render_template('settings/profile.html', form=form, user=user, t=trans, lang=session.get('lang', 'en'), tools=tools, nav_items=nav_items)
+                    tools, explore_features, bottom_nav = get_role_based_nav()
+                    return render_template(
+                        'settings/profile.html',
+                        form=form,
+                        user=user,
+                        t=trans,
+                        lang=session.get('lang', 'en'),
+                        tools=tools,
+                        nav_items=explore_features,
+                        bottom_nav_items=bottom_nav
+                    )
                 update_data = {
                     'display_name': form.full_name.data,
                     'email': form.email.data,
@@ -185,9 +215,17 @@ def profile():
             'settings': user.get('settings', {}),
             'security_settings': user.get('security_settings', {})
         }
-        tools = PERSONAL_TOOLS if current_user.role == 'personal' else BUSINESS_TOOLS if current_user.role == 'trader' else AGENT_TOOLS if current_user.role == 'agent' else ALL_TOOLS
-        nav_items = PERSONAL_NAV if current_user.role == 'personal' else BUSINESS_NAV if current_user.role == 'trader' else AGENT_NAV if current_user.role == 'agent' else ADMIN_NAV
-        return render_template('settings/profile.html', form=form, user=user_display, t=trans, lang=session.get('lang', 'en'), tools=tools, nav_items=nav_items)
+        tools, explore_features, bottom_nav = get_role_based_nav()
+        return render_template(
+            'settings/profile.html',
+            form=form,
+            user=user_display,
+            t=trans,
+            lang=session.get('lang', 'en'),
+            tools=tools,
+            nav_items=explore_features,
+            bottom_nav_items=bottom_nav
+        )
     except Exception as e:
         logger.error(f"Error in profile settings for user {current_user.id}: {str(e)}")
         flash(trans('general_something_went_wrong', default='An error occurred'), 'danger')
@@ -219,9 +257,16 @@ def notifications():
             except Exception as e:
                 logger.error(f"Error updating notifications for user {current_user.id}: {str(e)}")
                 flash(trans('general_something_went_wrong', default='An error occurred'), 'danger')
-        tools = PERSONAL_TOOLS if current_user.role == 'personal' else BUSINESS_TOOLS if current_user.role == 'trader' else AGENT_TOOLS if current_user.role == 'agent' else ALL_TOOLS
-        nav_items = PERSONAL_NAV if current_user.role == 'personal' else BUSINESS_NAV if current_user.role == 'trader' else AGENT_NAV if current_user.role == 'agent' else ADMIN_NAV
-        return render_template('settings/notifications.html', form=form, t=trans, lang=session.get('lang', 'en'), tools=tools, nav_items=nav_items)
+        tools, explore_features, bottom_nav = get_role_based_nav()
+        return render_template(
+            'settings/notifications.html',
+            form=form,
+            t=trans,
+            lang=session.get('lang', 'en'),
+            tools=tools,
+            nav_items=explore_features,
+            bottom_nav_items=bottom_nav
+        )
     except Exception as e:
         logger.error(f"Error in notification settings for user {current_user.id}: {str(e)}")
         flash(trans('general_something_went_wrong', default='An error occurred'), 'danger')
@@ -249,9 +294,16 @@ def language():
             except Exception as e:
                 logger.error(f"Error updating language for user {current_user.id}: {str(e)}")
                 flash(trans('general_something_went_wrong', default='An error occurred'), 'danger')
-        tools = PERSONAL_TOOLS if current_user.role == 'personal' else BUSINESS_TOOLS if current_user.role == 'trader' else AGENT_TOOLS if current_user.role == 'agent' else ALL_TOOLS
-        nav_items = PERSONAL_NAV if current_user.role == 'personal' else BUSINESS_NAV if current_user.role == 'trader' else AGENT_NAV if current_user.role == 'agent' else ADMIN_NAV
-        return render_template('settings/language.html', form=form, t=trans, lang=session.get('lang', 'en'), tools=tools, nav_items=nav_items)
+        tools, explore_features, bottom_nav = get_role_based_nav()
+        return render_template(
+            'settings/language.html',
+            form=form,
+            t=trans,
+            lang=session.get('lang', 'en'),
+            tools=tools,
+            nav_items=explore_features,
+            bottom_nav_items=bottom_nav
+        )
     except Exception as e:
         logger.error(f"Error in language settings for user {current_user.id}: {str(e)}")
         flash(trans('general_something_went_wrong', default='An error occurred'), 'danger')
@@ -266,7 +318,7 @@ def update_user_setting():
         setting_name = data.get('setting')
         value = data.get('value')
         if setting_name not in ['showKoboToggle', 'incognitoModeToggle', 'appSoundsToggle', 
-                               'fingerprintPasswordToggle', 'fingerprintPinToggle', 'hideSensitiveDataToggle']:
+                               ' FingerprintPasswordToggle', 'fingerprintPinToggle', 'hideSensitiveDataToggle']:
             return jsonify({"success": False, "message": trans('general_invalid_setting', default='Invalid setting name.')}), 400
         db = get_mongo_db()
         user_query = get_user_query(str(current_user.id))
