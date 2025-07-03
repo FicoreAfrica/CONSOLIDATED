@@ -1290,7 +1290,7 @@ GENERAL_TRANSLATIONS = {
         'general_feedback_desc': 'Raba raayin ku don taimaka mana inganta',
         'general_owed_to_you': 'Kuna Bin Bashi',
         'general_you_owe': 'Ana Binku Bashi',
-        'general_balanced': 'Daidaitacce',
+        'general_balanced': 'Daidaito',
         'general_notifications_feature_coming_soon': 'Fasalolin Sanarwa Zai Zo Nan Ba da Jimawa Ba',
         'general_start_by_adding_debt': 'Fara da Ƙara Bashi',
                 # general module (Hausa)
