@@ -9,7 +9,13 @@ import logging
 import io
 import re
 import urllib.parse
-from utils import BUSINESS_TOOLS, BUSINESS_NAV, ALL_TOOLS, ADMIN_NAV, trans_function, requires_role, check_coin_balance, format_currency, format_date, get_mongo_db, is_admin, get_user_query
+from utils import (
+    PERSONAL_TOOLS, PERSONAL_NAV, PERSONAL_EXPLORE_FEATURES,
+    BUSINESS_TOOLS, BUSINESS_NAV, BUSINESS_EXPLORE_FEATURES,
+    AGENT_TOOLS, AGENT_NAV, AGENT_EXPLORE_FEATURES,
+    ALL_TOOLS, ADMIN_NAV, ADMIN_EXPLORE_FEATURES,
+    trans_function, requires_role, check_coin_balance, format_currency, format_date, get_mongo_db, is_admin, get_user_query
+)
 from translations import trans
 
 logger = logging.getLogger(__name__)
@@ -45,9 +51,32 @@ def index():
         # TODO: Restore original user_id filter {'user_id': str(current_user.id), 'type': 'creditor'} for production
         query = {'type': 'creditor'} if is_admin() else {'user_id': str(current_user.id), 'type': 'creditor'}
         creditors = list(db.records.find(query).sort('created_at', -1))
-        tools = BUSINESS_TOOLS if current_user.role == 'trader' else ALL_TOOLS
-        nav_items = BUSINESS_NAV if current_user.role == 'trader' else ADMIN_NAV
-        return render_template('creditors/index.html', creditors=creditors, tools=tools, nav_items=nav_items, format_currency=format_currency, format_date=format_date, t=trans, lang=session.get('lang', 'en'))
+        
+        # Role-based navigation data
+        if current_user.role == 'trader':
+            tools_for_template = BUSINESS_TOOLS
+            explore_features_for_template = BUSINESS_EXPLORE_FEATURES
+            bottom_nav_for_template = BUSINESS_NAV
+        elif current_user.role == 'admin':
+            tools_for_template = ALL_TOOLS
+            explore_features_for_template = ADMIN_EXPLORE_FEATURES
+            bottom_nav_for_template = ADMIN_NAV
+        else:
+            tools_for_template = []
+            explore_features_for_template = []
+            bottom_nav_for_template = []
+
+        return render_template(
+            'creditors/index.html',
+            creditors=creditors,
+            tools=tools_for_template,
+            nav_items=explore_features_for_template,
+            bottom_nav_items=bottom_nav_for_template,
+            format_currency=format_currency,
+            format_date=format_date,
+            t=trans,
+            lang=session.get('lang', 'en')
+        )
     except Exception as e:
         logger.error(f"Error fetching creditors for user {current_user.id}: {str(e)}")
         flash(trans('creditors_fetch_error', default='An error occurred'), 'danger')
@@ -90,9 +119,32 @@ def view_page(id):
         if not creditor:
             flash(trans('creditors_record_not_found', default='Record not found'), 'danger')
             return redirect(url_for('creditors.index'))
-        tools = BUSINESS_TOOLS if current_user.role == 'trader' else ALL_TOOLS
-        nav_items = BUSINESS_NAV if current_user.role == 'trader' else ADMIN_NAV
-        return render_template('creditors/view.html', creditor=creditor, tools=tools, nav_items=nav_items, format_currency=format_currency, format_date=format_date, t=trans, lang=session.get('lang', 'en'))
+        
+        # Role-based navigation data
+        if current_user.role == 'trader':
+            tools_for_template = BUSINESS_TOOLS
+            explore_features_for_template = BUSINESS_EXPLORE_FEATURES
+            bottom_nav_for_template = BUSINESS_NAV
+        elif current_user.role == 'admin':
+            tools_for_template = ALL_TOOLS
+            explore_features_for_template = ADMIN_EXPLORE_FEATURES
+            bottom_nav_for_template = ADMIN_NAV
+        else:
+            tools_for_template = []
+            explore_features_for_template = []
+            bottom_nav_for_template = []
+
+        return render_template(
+            'creditors/view.html',
+            creditor=creditor,
+            tools=tools_for_template,
+            nav_items=explore_features_for_template,
+            bottom_nav_items=bottom_nav_for_template,
+            format_currency=format_currency,
+            format_date=format_date,
+            t=trans,
+            lang=session.get('lang', 'en')
+        )
     except Exception as e:
         logger.error(f"Error rendering creditor view page {id} for user {current_user.id}: {str(e)}")
         flash(trans('creditors_view_error', default='An error occurred'), 'danger')
@@ -332,9 +384,30 @@ def add():
         except Exception as e:
             logger.error(f"Error creating creditor for user {current_user.id}: {str(e)}")
             flash(trans('creditors_create_error', default='An error occurred'), 'danger')
-    tools = BUSINESS_TOOLS if current_user.role == 'trader' else ALL_TOOLS
-    nav_items = BUSINESS_NAV if current_user.role == 'trader' else ADMIN_NAV
-    return render_template('creditors/add.html', form=form, tools=tools, nav_items=nav_items, t=trans, lang=session.get('lang', 'en'))
+    
+    # Role-based navigation data
+    if current_user.role == 'trader':
+        tools_for_template = BUSINESS_TOOLS
+        explore_features_for_template = BUSINESS_EXPLORE_FEATURES
+        bottom_nav_for_template = BUSINESS_NAV
+    elif current_user.role == 'admin':
+        tools_for_template = ALL_TOOLS
+        explore_features_for_template = ADMIN_EXPLORE_FEATURES
+        bottom_nav_for_template = ADMIN_NAV
+    else:
+        tools_for_template = []
+        explore_features_for_template = []
+        bottom_nav_for_template = []
+
+    return render_template(
+        'creditors/add.html',
+        form=form,
+        tools=tools_for_template,
+        nav_items=explore_features_for_template,
+        bottom_nav_items=bottom_nav_for_template,
+        t=trans,
+        lang=session.get('lang', 'en')
+    )
 
 @creditors_bp.route('/edit/<id>', methods=['GET', 'POST'])
 @login_required
@@ -374,9 +447,31 @@ def edit(id):
             except Exception as e:
                 logger.error(f"Error updating creditor {id} for user {current_user.id}: {str(e)}")
                 flash(trans('creditors_edit_error', default='An error occurred'), 'danger')
-        tools = BUSINESS_TOOLS if current_user.role == 'trader' else ALL_TOOLS
-        nav_items = BUSINESS_NAV if current_user.role == 'trader' else ADMIN_NAV
-        return render_template('creditors/edit.html', form=form, creditor=creditor, tools=tools, nav_items=nav_items, t=trans, lang=session.get('lang', 'en'))
+        
+        # Role-based navigation data
+        if current_user.role == 'trader':
+            tools_for_template = BUSINESS_TOOLS
+            explore_features_for_template = BUSINESS_EXPLORE_FEATURES
+            bottom_nav_for_template = BUSINESS_NAV
+        elif current_user.role == 'admin':
+            tools_for_template = ALL_TOOLS
+            explore_features_for_template = ADMIN_EXPLORE_FEATURES
+            bottom_nav_for_template = ADMIN_NAV
+        else:
+            tools_for_template = []
+            explore_features_for_template = []
+            bottom_nav_for_template = []
+
+        return render_template(
+            'creditors/edit.html',
+            form=form,
+            creditor=creditor,
+            tools=tools_for_template,
+            nav_items=explore_features_for_template,
+            bottom_nav_items=bottom_nav_for_template,
+            t=trans,
+            lang=session.get('lang', 'en')
+        )
     except Exception as e:
         logger.error(f"Error fetching creditor {id} for user {current_user.id}: {str(e)}")
         flash(trans('creditors_record_not_found', default='Record not found'), 'danger')
