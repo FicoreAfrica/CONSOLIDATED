@@ -15,6 +15,7 @@
         .form-control:invalid ~ .invalid-feedback,
         .form-select:invalid ~ .invalid-feedback { display: block; }
         canvas#progressChart { max-height: 400px; width: 100%; }
+        .coins-display { font-weight: 600; color: #FFD700; }
     </style>
 {% endblock %}
 {% block content %}
@@ -86,7 +87,15 @@
                                     </div>
                                     <div class="card-body">
                                         <p class="card-text">{{ t(course.desc_key, default=course.description_en, lang=lang) }}</p>
-                                        
+                                        <small class="text-muted">
+                                            <i class="fas fa-clock me-1"></i>
+                                            {{ t('learning_hub_estimated_time', default='Estimated Time: ') }}
+                                            {% if course.id == 'tax_reforms_2025' %}
+                                                4–6 {{ t('learning_hub_minutes', default='minutes') }}
+                                            {% else %}
+                                                {{ t('learning_hub_variable_time', default='Variable') }}
+                                            {% endif %}
+                                        </small>
                                         {% set lessons_total = course.modules | sum(attribute='lessons | length') %}
                                         {% if lessons_total %}
                                             <div class="mb-3">
@@ -145,7 +154,7 @@
             {% if current_user.is_authenticated or session.get('is_anonymous', False) %}
                 {% if progress %}
                     <div class="row mb-4">
-                        <div class="col-md-4">
+                        <div class="col-md-3">
                             <div class="card bg-primary text-white">
                                 <div class="card-body text-center">
                                     <h6>{{ t('learning_hub_courses_started', default='Courses Started') }}</h6>
@@ -153,7 +162,7 @@
                                 </div>
                             </div>
                         </div>
-                        <div class="col-md-4">
+                        <div class="col-md-3">
                             <div class="card bg-success text-white">
                                 <div class="card-body text-center">
                                     <h6>{{ t('learning_hub_lessons_completed', default='Lessons Completed') }}</h6>
@@ -161,11 +170,19 @@
                                 </div>
                             </div>
                         </div>
-                        <div class="col-md-4">
+                        <div class="col-md-3">
                             <div class="card bg-info text-white">
                                 <div class="card-body text-center">
                                     <h6>{{ t('learning_hub_certificates_earned', default='Certificates Earned') }}</h6>
                                     <h3>{{ certificates_earned }}</h3>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="card bg-warning text-white">
+                                <div class="card-body text-center">
+                                    <h6>{{ t('learning_hub_coins_earned', default='Coins Earned') }}</h6>
+                                    <h3 class="coins-display">{{ total_coins_earned }}</h3>
                                 </div>
                             </div>
                         </div>
@@ -198,6 +215,9 @@
                                         <h6 class="mb-0">{{ t(course.title_key, default=course.title_en, lang=lang) }}</h6>
                                         <small class="text-muted">
                                             {{ summary.completed }} / {{ summary.total }} {{ t('learning_hub_lessons', default='lessons') }}
+                                            {% if summary.coins_earned %}
+                                                | <span class="coins-display"><i class="fas fa-coins me-1"></i>{{ summary.coins_earned }} {{ t('learning_hub_coins', default='coins') }}</span>
+                                            {% endif %}
                                         </small>
                                     </div>
                                     <div class="progress">
@@ -388,7 +408,7 @@
             </div>
             <div class="modal-body" id="lessonModalBody"></div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-primary mark-complete" style="display: none;">
+                <button type="button" class="btn btn-primary mark-complete" style="display: none;" data-course-id="" data-lesson-id="">
                     <i class="fas fa-check me-1"></i> {{ t('learning_hub_mark_complete', default='Mark as Complete') }}
                 </button>
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
@@ -409,7 +429,7 @@
             </div>
             <div class="modal-body" id="quizModalBody"></div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-primary submit-quiz" style="display: none;">
+                <button type="button" class="btn btn-primary submit-quiz" style="display: none;" data-course-id="" data-quiz-id="">
                     <i class="fas fa-check me-1"></i> {{ t('learning_hub_submit_quiz', default='Submit Quiz') }}
                 </button>
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
@@ -585,7 +605,7 @@ document.addEventListener('DOMContentLoaded', function() {
                                     <embed src="{{ url_for('personal.learning_hub.serve_uploaded_file', filename='') }}${lesson.content_path}" type="application/pdf" width="100%" height="600px" />
                                 `;
                             } else {
-                                contentHtml = `<p>${lesson.content_en}</p>`;
+                                contentHtml = `<div class="lesson-content">${lesson.content_en}</div>`;
                             }
                             
                             if (lesson.quiz_id) {
@@ -598,7 +618,11 @@ document.addEventListener('DOMContentLoaded', function() {
                             
                             lessonModalBody.innerHTML = contentHtml;
                             markCompleteBtn.style.display = lessonData.progress.lessons_completed.includes(lesson.id) ? 'none' : 'inline-block';
+                            markCompleteBtn.setAttribute('data-course-id', courseId);
+                            markCompleteBtn.setAttribute('data-lesson-id', lessonId);
                             markCompleteBtn.onclick = function() {
+                                const courseId = this.getAttribute('data-course-id');
+                                const lessonId = this.getAttribute('data-lesson-id');
                                 fetch('{{ url_for("personal.learning_hub.lesson_action") }}', {
                                     method: 'POST',
                                     headers: {
@@ -609,7 +633,7 @@ document.addEventListener('DOMContentLoaded', function() {
                                 })
                                 .then(res => res.json())
                                 .then(actionData => {
-                                    alert(actionData.message);
+                                    alert(`${actionData.message}\n${actionData.coins_earned ? `{{ t('learning_hub_coins_earned', default='Coins Earned') | escape }}: ${actionData.coins_earned}` : ''}`);
                                     if (actionData.success) {
                                         lessonModal.hide();
                                         modal.hide();
@@ -623,6 +647,7 @@ document.addEventListener('DOMContentLoaded', function() {
                             document.querySelectorAll('.load-quiz').forEach(quizBtn => {
                                 quizBtn.addEventListener('click', function() {
                                     const quizId = this.getAttribute('data-quiz-id');
+                                    const courseId = this.getAttribute('data-course-id');
                                     fetch('{{ url_for("personal.learning_hub.get_quiz_data") }}?course_id=' + courseId + '&quiz_id=' + quizId, {
                                         headers: { 'X-Requested-With': 'XMLHttpRequest' }
                                     })
@@ -656,6 +681,8 @@ document.addEventListener('DOMContentLoaded', function() {
                                         quizHtml += '</form>';
                                         quizModalBody.innerHTML = quizHtml;
                                         submitQuizBtn.style.display = quizData.progress.quiz_scores[quiz.id] ? 'none' : 'inline-block';
+                                        submitQuizBtn.setAttribute('data-course-id', courseId);
+                                        submitQuizBtn.setAttribute('data-quiz-id', quizId);
                                         submitQuizBtn.onclick = function() {
                                             const form = document.getElementById('quizForm');
                                             if (!form.checkValidity()) {
@@ -673,7 +700,7 @@ document.addEventListener('DOMContentLoaded', function() {
                                             })
                                             .then(res => res.json())
                                             .then(quizActionData => {
-                                                alert(`${quizActionData.message}\n{{ t('learning_hub_score', default='Score') | escape }}: ${quizActionData.score}/${quizActionData.total}`);
+                                                alert(`${quizActionData.message}\n{{ t('learning_hub_score', default='Score') | escape }}: ${quizActionData.score}/${quizActionData.total}${quizActionData.coins_earned ? `\n{{ t('learning_hub_coins_earned', default='Coins Earned') | escape }}: ${quizActionData.coins_earned}` : ''}`);
                                                 if (quizActionData.success) {
                                                     quizModal.hide();
                                                     lessonModal.hide();
@@ -721,3 +748,4 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 });
 </script>
+{% endblock %}
