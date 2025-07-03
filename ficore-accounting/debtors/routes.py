@@ -468,7 +468,7 @@ def edit(id):
         flash(trans('debtors_record_not_found', default='Record not found'), 'danger')
         return redirect(url_for('debtors.index'))
 
-@debtors_bp.route('/delete/<id>',-methods=['POST'])
+@debtors_bp.route('/delete/<id>', methods=['POST'])
 @login_required
 @requires_role('trader')
 def delete(id):
