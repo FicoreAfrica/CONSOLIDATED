@@ -112,7 +112,7 @@ def main():
         form_data['first_name'] = current_user.username
     form = BudgetForm(data=form_data)
     tools = PERSONAL_TOOLS if current_user.role == 'personal' else ALL_TOOLS
-    nav_items = PERSONAL_NAV if current_user.role == 'personal' else ADMIN_NAV
+    bottom_nav_items = PERSONAL_NAV if current_user.role == 'personal' else ADMIN_NAV
     explore_features = PERSONAL_EXPLORE_FEATURES if current_user.role == 'personal' else []
     log_tool_usage(
         get_mongo_db(),
@@ -181,7 +181,7 @@ def main():
                         lang=lang,
                         tool_title=trans('budget_title', default='Budget Planner', lang=lang),
                         tools=tools,
-                        nav_items=nav_items,
+                        bottom_nav_items=bottom_nav_items,
                         explore_features=explore_features
                     )
                 if form.send_email.data and form.email.data:
@@ -303,7 +303,7 @@ def main():
             lang=lang,
             tool_title=trans('budget_title', default='Budget Planner', lang=lang),
             tools=tools,
-            nav_items=nav_items,
+            bottom_nav_items=bottom_nav_items,
             explore_features=explore_features
         )
     except Exception as e:
@@ -338,7 +338,7 @@ def main():
             lang=lang,
             tool_title=trans('budget_title', default='Budget Planner', lang=lang),
             tools=tools,
-            nav_items=nav_items,
+            bottom_nav_items=bottom_nav_items,
             explore_features=explore_features
         ), 500
 
