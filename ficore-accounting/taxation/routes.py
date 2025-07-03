@@ -267,6 +267,11 @@ def calculate_tax():
         } for rule in vat_rules
     ]
 
+    # Define navigation based on user role
+    tools = PERSONAL_TOOLS if current_user.role == 'personal' else BUSINESS_TOOLS if current_user.role == 'trader' else AGENT_TOOLS if current_user.role == 'agent' else ALL_TOOLS
+    nav_items = PERSONAL_EXPLORE_FEATURES if current_user.role == 'personal' else BUSINESS_EXPLORE_FEATURES if current_user.role == 'trader' else AGENT_EXPLORE_FEATURES if current_user.role == 'agent' else ADMIN_EXPLORE_FEATURES
+    bottom_nav_items = PERSONAL_NAV if current_user.role == 'personal' else BUSINESS_NAV if current_user.role == 'trader' else AGENT_NAV if current_user.role == 'agent' else ADMIN_NAV
+
     if request.method == 'POST':
         if form.validate_on_submit():
             amount = form.amount.data
@@ -289,9 +294,6 @@ def calculate_tax():
             elif taxpayer_type == 'small_business' or taxpayer_type == 'cit':
                 if business_size not in ['small', 'large']:
                     flash(trans('tax_invalid_business_size', default='Invalid business size selected'), 'warning')
-                    tools = PERSONAL_TOOLS if current_user.role == 'personal' else BUSINESS_TOOLS if current_user.role == 'trader' else AGENT_TOOLS if current_user.role == 'agent' else ALL_TOOLS
-                    nav_items = PERSONAL_EXPLORE_FEATURES if current_user.role == 'personal' else BUSINESS_EXPLORE_FEATURES if current_user.role == 'trader' else AGENT_EXPLORE_FEATURES if current_user.role == 'agent' else ADMIN_EXPLORE_FEATURES
-                    bottom_nav_items = PERSONAL_NAV if current_user.role == 'personal' else BUSINESS_NAV if current_user.role == 'trader' else AGENT_NAV if current_user.role == 'agent' else ADMIN_NAV
                     return render_template(
                         'taxation/taxation.html',
                         section='calculate',
@@ -309,9 +311,6 @@ def calculate_tax():
             elif taxpayer_type == 'vat':
                 if not vat_category:
                     flash(trans('tax_invalid_vat_category', default='VAT category required'), 'warning')
-                    tools = PERSONAL_TOOLS if current_user.role == 'personal' else BUSINESS_TOOLS if current_user.role == 'trader' else AGENT_TOOLS if current_user.role == 'agent' else ALL_TOOLS
-                    nav_items = PERSONAL_EXPLORE_FEATURES if current_user.role == 'personal' else BUSINESS_EXPLORE_FEATURES if current_user.role == 'trader' else AGENT_EXPLORE_FEATURES if current_user.role == 'agent' else ADMIN_EXPLORE_FEATURES
-                    bottom_nav_items = PERSONAL_NAV if current_user.role == 'personal' else BUSINESS_NAV if current_user.role == 'trader' else AGENT_NAV if current_user.role == 'agent' else ADMIN_NAV
                     return render_template(
                         'taxation/taxation.html',
                         section='calculate',
@@ -338,9 +337,6 @@ def calculate_tax():
                     'simplified_return': simplified_return,
                     'audit_required': audit_required
                 })
-            tools = PERSONAL_TOOLS if current_user.role == 'personal' else BUSINESS_TOOLS if current_user.role == 'trader' else AGENT_TOOLS if current_user.role == 'agent' else ALL_TOOLS
-            nav_items = PERSONAL_EXPLORE_FEATURES if current_user.role == 'personal' else BUSINESS_EXPLORE_FEATURES if current_user.role == 'trader' else AGENT_EXPLORE_FEATURES if current_user.role == 'agent' else ADMIN_EXPLORE_FEATURES
-            bottom_nav_items = PERSONAL_NAV if current_user.role == 'personal' else BUSINESS_NAV if current_user.role == 'trader' else AGENT_NAV if current_user.role == 'agent' else ADMIN_NAV
             return render_template(
                 'taxation/taxation.html',
                 section='result',
@@ -367,9 +363,6 @@ def calculate_tax():
             if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
                 return jsonify({'error': trans('tax_invalid_input', default='Invalid input')}), 400
 
-    tools = PERSONAL_TOOLS if current_user.role == 'personal' else BUSINESS_TOOLS if current_user.role == 'trader' else AGENT_TOOLS if current_user.role == 'agent' else ALL_TOOLS
-    nav_items = PERSONAL_EXPLORE_FEATURES if current_user.role == 'personal' else BUSINESS_EXPLORE_FEATURES if current_user.role == 'trader' else AGENT_EXPLORE_FEATURES if current_user.role == 'agent' else ADMIN_EXPLORE_FEATURES
-    bottom_nav_items = PERSONAL_NAV if current_user.role == 'personal' else BUSINESS_NAV if current_user.role == 'trader' else AGENT_NAV if current_user.role == 'agent' else ADMIN_NAV
     return render_template(
         'taxation/taxation.html',
         section='calculate',
@@ -491,7 +484,7 @@ def manage_tax_rates():
     serialized_vat_rules = [
         {
             'category': rule['category'],
-            'vat_exempt': rule['vat_exempt'],
+            'vat_exempt': role['vat_exempt'],
             'description': rule['description'],
             '_id': str(rule['_id'])
         } for rule in vat_rules
