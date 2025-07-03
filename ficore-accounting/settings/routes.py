@@ -114,7 +114,7 @@ def index():
     except Exception as e:
         logger.error(f"Error loading settings for user {current_user.id}: {str(e)}")
         flash(trans('general_something_went_wrong', default='An error occurred'), 'danger')
-        return redirect(url_for('app.index'))
+        return redirect(url_for('index'))
 
 @settings_bp.route('/profile', methods=['GET', 'POST'])
 @login_required
@@ -127,7 +127,7 @@ def profile():
         user = db.users.find_one(user_query)
         if not user:
             flash(trans('general_user_not_found', default='User not found'), 'danger')
-            return redirect(url_for('app.index'))
+            return redirect(url_for('index'))
         form = ProfileForm()
         if request.method == 'GET':
             form.full_name.data = user.get('display_name', user.get('_id', ''))
@@ -229,7 +229,7 @@ def profile():
     except Exception as e:
         logger.error(f"Error in profile settings for user {current_user.id}: {str(e)}")
         flash(trans('general_something_went_wrong', default='An error occurred'), 'danger')
-        return redirect(url_for('app.index'))
+        return redirect(url_for('index'))
 
 @settings_bp.route('/notifications', methods=['GET', 'POST'])
 @login_required
@@ -270,7 +270,7 @@ def notifications():
     except Exception as e:
         logger.error(f"Error in notification settings for user {current_user.id}: {str(e)}")
         flash(trans('general_something_went_wrong', default='An error occurred'), 'danger')
-        return redirect(url_for('app.index'))
+        return redirect(url_for('index'))
 
 @settings_bp.route('/language', methods=['GET', 'POST'])
 @login_required
@@ -307,7 +307,7 @@ def language():
     except Exception as e:
         logger.error(f"Error in language settings for user {current_user.id}: {str(e)}")
         flash(trans('general_something_went_wrong', default='An error occurred'), 'danger')
-        return redirect(url_for('app.index'))
+        return redirect(url_for('index'))
 
 @settings_bp.route('/api/update-user-setting', methods=['POST'])
 @login_required
