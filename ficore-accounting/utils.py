@@ -53,6 +53,15 @@ class SessionAdapter(logging.LoggerAdapter):
 
 logger = SessionAdapter(root_logger, {})
 
+def get_limiter():
+    '''
+    Return the initialized Flask-Limiter instance.
+    
+    Returns:
+        Limiter: The configured Flask-Limiter instance
+    '''
+    return limiter
+
 def create_anonymous_session():
     '''Create a guest session for anonymous access.'''
     try:
@@ -780,6 +789,7 @@ ADMIN_EXPLORE_FEATURES = [
 # Export all functions for backward compatibility
 __all__ = [
     'login_manager', 'flask_session', 'csrf', 'babel', 'compress', 'limiter',
+    'get_limiter',
     'create_anonymous_session',
     'trans_function',
     'is_valid_email',
