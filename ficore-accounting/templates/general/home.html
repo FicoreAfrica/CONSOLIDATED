@@ -4,14 +4,37 @@
 {% block content %}
 <div class="container">
     {% if current_user.is_authenticated %}
-        {# The top-header elements (notification, profile, logout, language, dark mode) are now handled by the base.html navbar. #}
-        {# Only keep the welcome section specific to this page. #}
         <div class="top-header d-flex justify-content-between align-items-center mb-4">
             <div class="welcome-section">
                 <h2 class="welcome-text mb-0">{{ t('general_hello_user', default='Hello') | e }}, {{ current_user.display_name | default(current_user.id) | e }}!</h2>
                 <small class="text-muted">{{ t('general_welcome_back', default='Welcome back to Ficore Records') | e }}</small>
             </div>
-            {# The header-actions (notification bell, profile icon, logout, language, dark mode toggle) are moved to base.html's navbar. #}
+            <div class="header-actions d-flex align-items-center gap-3">
+                <button class="notification-bell btn btn-link text-dark" id="notificationBell" data-bs-toggle="modal" data-bs-target="#notificationModal" data-bs-title="{{ t('general_notifications_tooltip', default='View notifications') | e }}" aria-label="{{ t('general_notifications', default='Notifications') | e }}">
+                    <i class="bi bi-bell"></i>
+                    <span class="notification-badge d-none" id="notificationBadge"></span>
+                </button>
+                <a href="{{ url_for('settings.profile') | e }}" class="profile-icon" data-bs-toggle="tooltip" data-bs-title="{{ t('general_profile', default='Profile') | e }}">
+                    <i class="bi bi-person-circle"></i>
+                </a>
+                <a href="{{ url_for('users.logout') | e }}" class="logout-icon no-js-intercept" data-bs-toggle="tooltip" data-bs-title="{{ t('general_logout', default='Logout') | e }}" aria-label="{{ t('general_logout', default='Logout') | e }}" rel="external">
+                    <i class="bi bi-box-arrow-right"></i>
+                </a>
+                <div class="header-toggles d-flex align-items-center gap-2">
+                    <div class="dropdown">
+                        <button class="btn btn-outline-secondary btn-sm dropdown-toggle" type="button" id="languageDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                            {{ t('general_language', default='Language') | e }}: {{ session.get('lang', 'en') | upper | e }}
+                        </button>
+                        <ul class="dropdown-menu" aria-labelledby="languageDropdown">
+                            <li><a class="dropdown-item" href="{{ url_for('set_language', lang='en') | e }}">{{ t('general_english', default='English') | e }}</a></li>
+                            <li><a class="dropdown-item" href="{{ url_for('set_language', lang='ha') | e }}">{{ t('general_hausa', default='Hausa') | e }}</a></li>
+                        </ul>
+                    </div>
+                    <button class="btn btn-outline-secondary btn-sm" id="quickDarkModeToggle" onclick="toggleDarkMode()" aria-label="{{ t('general_mode_toggle_dark', default='Toggle dark mode') | e }}">
+                        <i class="bi bi-moon-stars"></i>
+                    </button>
+                </div>
+            </div>
         </div>
 
         <div class="financial-summary mb-4">
@@ -142,7 +165,7 @@
                             <h4>{{ t(item.get('label', ''), default=item.get('label', '')) | e }}</h4>
                             <p>{{ t(item.get('description', ''), default=item.get('label', '') + '_desc') | e }}</p>
                         </div>
-                        <a href="{{ url_for(item.get('endpoint', '#')) | e }}" class="nav-card-link"></a> {# Use url_for with endpoint #}
+                        <a href="{{ url_for(item.get('endpoint', '#')) | e }}" class="nav-card-link"></a>
                     </div>
                 </div>
                 {% endfor %}
@@ -235,8 +258,12 @@
 {% block extra_scripts %}
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    // This script block runs only if current_user is authenticated, due to the outer Jinja2 if-block.
-    // The top-level check `if (!{{ current_user.is_authenticated | tojson }}) return;` is removed.
+    // These scripts run only if current_user is authenticated due to the outer Jinja2 if-block.
+
+    // Initialize tooltips for the prominent header actions
+    document.querySelectorAll('.header-actions [data-bs-toggle="tooltip"]').forEach(tooltipTriggerEl => {
+        new bootstrap.Tooltip(tooltipTriggerEl);
+    });
 
     let amountsVisible = true;
 
@@ -255,8 +282,9 @@ document.addEventListener('DOMContentLoaded', function() {
         check_back_later: '{{ t("general_check_back_later", default="Check back later") | e }}'
     };
 
-    // Load financial data and recent activity (notifications handled by base.html)
+    // Load financial data, notifications, and recent activity
     loadFinancialSummary();
+    loadNotifications(); // Re-enable notification loading for the home page bell
     loadRecentActivity();
 
     function loadFinancialSummary() {
@@ -314,8 +342,64 @@ document.addEventListener('DOMContentLoaded', function() {
         document.getElementById('inventoryValue').dataset.originalText = '₦' + formatCurrency(inventoryData.totalValue || 0);
     }
 
-    // Removed direct calls to loadNotifications() as base.html handles it for the modal.
-    // Also removed `loadNotificationCount()` as it's initiated in base.html.
+    function loadNotifications() {
+        // This function populates the notification modal content which is likely in base.html
+        // And updates the badge on the notification bell.
+        fetch('{{ url_for("notification_count") | e }}')
+            .then(response => response.json())
+            .then(data => {
+                const count = data.count || 0;
+                const badge = document.getElementById('notificationBadge');
+                if (badge) { // Ensure badge exists on this page
+                    if (count > 0) {
+                        badge.textContent = count;
+                        badge.classList.remove('d-none');
+                    } else {
+                        badge.classList.add('d-none');
+                    }
+                }
+            })
+            .catch(error => {
+                console.error('Error loading notification count:', error);
+            });
+
+        fetch('{{ url_for("notifications") | e }}')
+            .then(response => response.json())
+            .then(notifications => {
+                // Assuming the notification modal's body has the ID 'notificationBody' (from base.html)
+                const notificationList = document.getElementById('notificationBody'); 
+                if (notificationList) {
+                    if (notifications && notifications.length > 0) {
+                        notificationList.innerHTML = notifications.map(notification => `
+                            <div class="notification-item">
+                                <div class="notification-icon">
+                                    <i class="bi bi-bell ${notification.read ? 'text-muted' : 'text-primary'}"></i>
+                                </div>
+                                <div class="notification-content">
+                                    <div class="notification-description">${notification.message}</div>
+                                    <div class="notification-time text-muted">${formatTimeAgo(notification.timestamp)}</div>
+                                </div>
+                            </div>
+                        `).join('');
+                    } else {
+                        notificationList.innerHTML = `
+                            <div class="notification-item">
+                                <div class="notification-icon">
+                                    <i class="bi bi-bell text-muted"></i>
+                                </div>
+                                <div class="notification-content">
+                                    <div class="notification-description">${translations.no_notifications}</div>
+                                    <div class="notification-time text-muted">${translations.check_back_later}</div>
+                                </div>
+                            </div>
+                        `;
+                    }
+                }
+            })
+            .catch(error => {
+                console.error('Error loading notifications:', error);
+            });
+    }
 
     function loadRecentActivity() {
         fetch('{{ url_for("recent_activity") | e }}')
@@ -398,7 +482,7 @@ document.addEventListener('DOMContentLoaded', function() {
         return Math.floor(diffInSeconds / 86400) + ' ' + translations.days_ago;
     }
 
-    // Global toggleAmountVisibility function (remains here as it's dashboard specific)
+    // Global toggleAmountVisibility function
     window.toggleAmountVisibility = function() {
         amountsVisible = !amountsVisible;
         const icon = document.getElementById('visibilityIcon');
