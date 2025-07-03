@@ -9,7 +9,14 @@ import logging
 import uuid
 from datetime import datetime, timedelta
 from translations import trans
-from utils import trans_function, requires_role, check_coin_balance, format_currency, format_date, is_valid_email, get_mongo_db, is_admin, get_mail, get_limiter
+from utils import (
+    trans_function, requires_role, check_coin_balance, format_currency, format_date,
+    is_valid_email, get_mongo_db, is_admin, get_mail, get_limiter,
+    PERSONAL_TOOLS, PERSONAL_NAV, PERSONAL_EXPLORE_FEATURES,
+    BUSINESS_TOOLS, BUSINESS_NAV, BUSINESS_EXPLORE_FEATURES,
+    AGENT_TOOLS, AGENT_NAV, AGENT_EXPLORE_FEATURES,
+    ALL_TOOLS, ADMIN_NAV, ADMIN_EXPLORE_FEATURES
+)
 import re
 import random
 from itsdangerous import URLSafeTimedSerializer
@@ -358,7 +365,15 @@ def login():
         for field, errors in form.errors.items():
             for error in errors:
                 flash(f"{field}: {error}", 'danger')
-    return render_template('users/login.html', form=form, t=trans, lang=session.get('lang', 'en'))
+    return render_template(
+        'users/login.html',
+        form=form,
+        t=trans,
+        lang=session.get('lang', 'en'),
+        tools=None,
+        nav_items=None,
+        bottom_nav_items=None
+    )
 
 @users_bp.route('/verify_2fa', methods=['GET', 'POST'])
 @limiter.limit("50/hour")
@@ -401,12 +416,20 @@ def verify_2fa():
         except errors.PyMongoError as e:
             logger.error(f"MongoDB error during 2FA verification: {str(e)}")
             flash(trans('general_database_error', default='An error occurred while accessing the database. Please try again later.'), 'danger')
-            return render_template('users/verify_2fa.html', form=form, t=trans, lang=session.get('lang', 'en')), 500
+            return render_template('users/verify_2fa.html', form=form, t=trans, lang=session.get('lang', 'en'), tools=None, nav_items=None, bottom_nav_items=None), 500
     else:
         for field, errors in form.errors.items():
             for error in errors:
                 flash(f"{field}: {error}", 'danger')
-    return render_template('users/verify_2fa.html', form=form, t=trans, lang=session.get('lang', 'en'))
+    return render_template(
+        'users/verify_2fa.html',
+        form=form,
+        t=trans,
+        lang=session.get('lang', 'en'),
+        tools=None,
+        nav_items=None,
+        bottom_nav_items=None
+    )
 
 @users_bp.route('/signup', methods=['GET', 'POST'])
 @limiter.limit("50/hour")
@@ -430,20 +453,20 @@ def signup():
                 if not agent_id:
                     form.agent_id.errors.append(trans('agents_agent_id_required', default='Agent ID is required for Agent role'))
                     logger.warning(f"Signup failed for {username}: Agent ID is required")
-                    return render_template('users/signup.html', form=form, t=trans, lang=session.get('lang', 'en'))
+                    return render_template('users/signup.html', form=form, t=trans, lang=session.get('lang', 'en'), tools=None, nav_items=None, bottom_nav_items=None)
                 if not validate_agent_id(agent_id):
                     form.agent_id.errors.append(trans('agents_agent_id_invalid', default='Invalid or already used Agent ID'))
                     logger.warning(f"Signup failed for {username}: Invalid or already used Agent ID {agent_id}")
-                    return render_template('users/signup.html', form=form, t=trans, lang=session.get('lang', 'en'))
+                    return render_template('users/signup.html', form=form, t=trans, lang=session.get('lang', 'en'), tools=None, nav_items=None, bottom_nav_items=None)
 
             if db.users.find_one({'_id': username}):
                 flash(trans('general_username_exists', default='Username already exists'), 'danger')
                 logger.warning(f"Signup failed: Username {username} already exists")
-                return render_template('users/signup.html', form=form, t=trans, lang=session.get('lang', 'en'))
+                return render_template('users/signup.html', form=form, t=trans, lang=session.get('lang', 'en'), tools=None, nav_items=None, bottom_nav_items=None)
             if db.users.find_one({'email': email}):
                 flash(trans('general_email_exists', default='Email already exists'), 'danger')
                 logger.warning(f"Signup failed: Email {email} already exists")
-                return render_template('users/signup.html', form=form, t=trans, lang=session.get('lang', 'en'))
+                return render_template('users/signup.html', form=form, t=trans, lang=session.get('lang', 'en'), tools=None, nav_items=None, bottom_nav_items=None)
 
             user_data = {
                 '_id': username,
@@ -467,7 +490,7 @@ def signup():
             if not result.inserted_id:
                 flash(trans('general_database_error', default='An error occurred while creating your account. Please try again later.'), 'danger')
                 logger.error(f"Failed to insert user: {username}")
-                return render_template('users/signup.html', form=form, t=trans, lang=session.get('lang', 'en'))
+                return render_template('users/signup.html', form=form, t=trans, lang=session.get('lang', 'en'), tools=None, nav_items=None, bottom_nav_items=None)
 
             db.coin_transactions.insert_one({
                 'user_id': username,
@@ -495,12 +518,20 @@ def signup():
         except Exception as e:
             logger.error(f"Unexpected error during signup for {username}: {str(e)}")
             flash(trans('general_database_error', default='An error occurred while accessing the database. Please try again later.'), 'danger')
-            return render_template('users/signup.html', form=form, t=trans, lang=session.get('lang', 'en')), 500
+            return render_template('users/signup.html', form=form, t=trans, lang=session.get('lang', 'en'), tools=None, nav_items=None, bottom_nav_items=None), 500
     else:
         for field, errors in form.errors.items():
             for error in errors:
                 flash(f"{field}: {error}", 'danger')
-    return render_template('users/signup.html', form=form, t=trans, lang=session.get('lang', 'en'))
+    return render_template(
+        'users/signup.html',
+        form=form,
+        t=trans,
+        lang=session.get('lang', 'en'),
+        tools=None,
+        nav_items=None,
+        bottom_nav_items=None
+    )
 
 @users_bp.route('/forgot_password', methods=['GET', 'POST'])
 @limiter.limit("50/hour")
@@ -517,7 +548,7 @@ def forgot_password():
             if not user:
                 flash(trans('general_email_not_found', default='No user found with this email'), 'danger')
                 logger.warning(f"No user found with email: {email}")
-                return render_template('users/forgot_password.html', form=form, t=trans, lang=session.get('lang', 'en'))
+                return render_template('users/forgot_password.html', form=form, t=trans, lang=session.get('lang', 'en'), tools=None, nav_items=None, bottom_nav_items=None)
             reset_token = URLSafeTimedSerializer(current_app.config['SECRET_KEY']).dumps(email, salt='reset-salt')
             expiry = datetime.utcnow() + timedelta(minutes=15)
             db.users.update_one(
@@ -535,16 +566,24 @@ def forgot_password():
             log_audit_action('forgot_password', {'email': email})
             logger.info(f"Password reset email sent to {email}")
             flash(trans('general_reset_email_sent', default='Password reset email sent'), 'success')
-            return render_template('users/forgot_password.html', form=form, t=trans, lang=session.get('lang', 'en'))
+            return render_template('users/forgot_password.html', form=form, t=trans, lang=session.get('lang', 'en'), tools=None, nav_items=None, bottom_nav_items=None)
         except Exception as e:
             logger.error(f"Error during forgot password for {email}: {str(e)}")
             flash(trans('general_email_send_error', default='An error occurred while sending the reset email'), 'danger')
-            return render_template('users/forgot_password.html', form=form, t=trans, lang=session.get('lang', 'en')), 500
+            return render_template('users/forgot_password.html', form=form, t=trans, lang=session.get('lang', 'en'), tools=None, nav_items=None, bottom_nav_items=None), 500
     else:
         for field, errors in form.errors.items():
             for error in errors:
                 flash(f"{field}: {error}", 'danger')
-    return render_template('users/forgot_password.html', form=form, t=trans, lang=session.get('lang', 'en'))
+    return render_template(
+        'users/forgot_password.html',
+        form=form,
+        t=trans,
+        lang=session.get('lang', 'en'),
+        tools=None,
+        nav_items=None,
+        bottom_nav_items=None
+    )
 
 @users_bp.route('/reset_password', methods=['GET', 'POST'])
 @limiter.limit("50/hour")
@@ -567,7 +606,7 @@ def reset_password():
             if not user:
                 flash(trans('general_invalid_email', default='No user found with this email'), 'danger')
                 logger.warning(f"No user found with email: {email}")
-                return render_template('users/reset_password.html', form=form, token=token, t=trans, lang=session.get('lang', 'en'))
+                return render_template('users/reset_password.html', form=form, token=token, t=trans, lang=session.get('lang', 'en'), tools=None, nav_items=None, bottom_nav_items=None)
             db.users.update_one(
                 {'_id': user['_id']},
                 {'$set': {'password': generate_password_hash(form.password.data)},
@@ -580,12 +619,21 @@ def reset_password():
         except errors.PyMongoError as e:
             logger.error(f"MongoDB error during password reset for {email}: {str(e)}")
             flash(trans('general_database_error', default='An error occurred while accessing the database. Please try again later.'), 'danger')
-            return render_template('users/reset_password.html', form=form, token=token, t=trans, lang=session.get('lang', 'en')), 500
+            return render_template('users/reset_password.html', form=form, token=token, t=trans, lang=session.get('lang', 'en'), tools=None, nav_items=None, bottom_nav_items=None), 500
     else:
         for field, errors in form.errors.items():
             for error in errors:
                 flash(f"{field}: {error}", 'danger')
-    return render_template('users/reset_password.html', form=form, token=token, t=trans, lang=session.get('lang', 'en'))
+    return render_template(
+        'users/reset_password.html',
+        form=form,
+        token=token,
+        t=trans,
+        lang=session.get('lang', 'en'),
+        tools=None,
+        nav_items=None,
+        bottom_nav_items=None
+    )
 
 @users_bp.route('/setup_wizard', methods=['GET', 'POST'])
 @login_required
@@ -626,12 +674,28 @@ def setup_wizard():
         except errors.PyMongoError as e:
             logger.error(f"MongoDB error during business setup for {user_id}: {str(e)}")
             flash(trans('general_database_error', default='An error occurred while accessing the database. Please try again later.'), 'danger')
-            return render_template('users/setup.html', form=form, t=trans, lang=session.get('lang', 'en')), 500
+            return render_template(
+                'users/setup.html',
+                form=form,
+                t=trans,
+                lang=session.get('lang', 'en'),
+                tools=BUSINESS_TOOLS,
+                nav_items=BUSINESS_EXPLORE_FEATURES,
+                bottom_nav_items=BUSINESS_NAV
+            ), 500
     else:
         for field, errors in form.errors.items():
             for error in errors:
                 flash(f"{field}: {error}", 'danger')
-    return render_template('users/setup.html', form=form, t=trans, lang=session.get('lang', 'en'))
+    return render_template(
+        'users/setup.html',
+        form=form,
+        t=trans,
+        lang=session.get('lang', 'en'),
+        tools=BUSINESS_TOOLS,
+        nav_items=BUSINESS_EXPLORE_FEATURES,
+        bottom_nav_items=BUSINESS_NAV
+    )
 
 @users_bp.route('/personal_setup_wizard', methods=['GET', 'POST'])
 @login_required
@@ -671,12 +735,28 @@ def personal_setup_wizard():
         except errors.PyMongoError as e:
             logger.error(f"MongoDB error during personal setup for {user_id}: {str(e)}")
             flash(trans('general_database_error', default='An error occurred while accessing the database. Please try again later.'), 'danger')
-            return render_template('users/personal_setup.html', form=form, t=trans, lang=session.get('lang', 'en')), 500
+            return render_template(
+                'users/personal_setup.html',
+                form=form,
+                t=trans,
+                lang=session.get('lang', 'en'),
+                tools=PERSONAL_TOOLS,
+                nav_items=PERSONAL_EXPLORE_FEATURES,
+                bottom_nav_items=PERSONAL_NAV
+            ), 500
     else:
         for field, errors in form.errors.items():
             for error in errors:
                 flash(f"{field}: {error}", 'danger')
-    return render_template('users/personal_setup.html', form=form, t=trans, lang=session.get('lang', 'en'))
+    return render_template(
+        'users/personal_setup.html',
+        form=form,
+        t=trans,
+        lang=session.get('lang', 'en'),
+        tools=PERSONAL_TOOLS,
+        nav_items=PERSONAL_EXPLORE_FEATURES,
+        bottom_nav_items=PERSONAL_NAV
+    )
 
 @users_bp.route('/agent_setup_wizard', methods=['GET', 'POST'])
 @login_required
@@ -718,12 +798,28 @@ def agent_setup_wizard():
         except errors.PyMongoError as e:
             logger.error(f"MongoDB error during agent setup for {user_id}: {str(e)}")
             flash(trans('general_database_error', default='An error occurred while accessing the database. Please try again later.'), 'danger')
-            return render_template('users/agent_setup.html', form=form, t=trans, lang=session.get('lang', 'en')), 500
+            return render_template(
+                'users/agent_setup.html',
+                form=form,
+                t=trans,
+                lang=session.get('lang', 'en'),
+                tools=AGENT_TOOLS,
+                nav_items=AGENT_EXPLORE_FEATURES,
+                bottom_nav_items=AGENT_NAV
+            ), 500
     else:
         for field, errors in form.errors.items():
             for error in errors:
                 flash(f"{field}: {error}", 'danger')
-    return render_template('users/agent_setup.html', form=form, t=trans, lang=session.get('lang', 'en'))
+    return render_template(
+        'users/agent_setup.html',
+        form=form,
+        t=trans,
+        lang=session.get('lang', 'en'),
+        tools=AGENT_TOOLS,
+        nav_items=AGENT_EXPLORE_FEATURES,
+        bottom_nav_items=AGENT_NAV
+    )
 
 @users_bp.route('/logout')
 @login_required
