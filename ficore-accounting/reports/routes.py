@@ -1,7 +1,12 @@
 from flask import Blueprint, render_template, Response, flash, request, session
 from flask_login import login_required, current_user
 from translations import trans
-from utils import trans_function, requires_role, check_coin_balance, format_currency, format_date, get_mongo_db, is_admin, get_user_query
+from utils import (
+    trans_function, requires_role, check_coin_balance, format_currency, format_date,
+    get_mongo_db, is_admin, get_user_query,
+    BUSINESS_TOOLS, BUSINESS_NAV, BUSINESS_EXPLORE_FEATURES,
+    ALL_TOOLS, ADMIN_NAV, ADMIN_EXPLORE_FEATURES
+)
 from bson import ObjectId
 from datetime import datetime
 from reportlab.lib.pagesizes import A4
@@ -35,7 +40,17 @@ reports_bp = Blueprint('reports', __name__, url_prefix='/reports')
 def index():
     """Display report selection page."""
     try:
-        return render_template('reports/index.html', t=trans, lang=session.get('lang', 'en'))
+        tools = BUSINESS_TOOLS if current_user.role == 'trader' else ALL_TOOLS
+        nav_items = BUSINESS_EXPLORE_FEATURES if current_user.role == 'trader' else ADMIN_EXPLORE_FEATURES
+        bottom_nav_items = BUSINESS_NAV if current_user.role == 'trader' else ADMIN_NAV
+        return render_template(
+            'reports/index.html',
+            t=trans,
+            lang=session.get('lang', 'en'),
+            tools=tools,
+            nav_items=nav_items,
+            bottom_nav_items=bottom_nav_items
+        )
     except Exception as e:
         logger.error(f"Error loading reports index for user {current_user.id}: {str(e)}")
         flash(trans('reports_load_error', default='An error occurred'), 'danger')
@@ -92,7 +107,21 @@ def profit_loss():
     else:
         db = get_mongo_db()
         cashflows = list(db.cashflows.find(query).sort('created_at', -1))
-    return render_template('reports/profit_loss.html', form=form, cashflows=cashflows, format_currency=format_currency, format_date=format_date, t=trans, lang=session.get('lang', 'en'))
+    tools = BUSINESS_TOOLS if current_user.role == 'trader' else ALL_TOOLS
+    nav_items = BUSINESS_EXPLORE_FEATURES if current_user.role == 'trader' else ADMIN_EXPLORE_FEATURES
+    bottom_nav_items = BUSINESS_NAV if current_user.role == 'trader' else ADMIN_NAV
+    return render_template(
+        'reports/profit_loss.html',
+        form=form,
+        cashflows=cashflows,
+        format_currency=format_currency,
+        format_date=format_date,
+        t=trans,
+        lang=session.get('lang', 'en'),
+        tools=tools,
+        nav_items=nav_items,
+        bottom_nav_items=bottom_nav_items
+    )
 
 @reports_bp.route('/inventory', methods=['GET', 'POST'])
 @login_required
@@ -141,7 +170,20 @@ def inventory():
     else:
         db = get_mongo_db()
         items = list(db.inventory.find(query).sort('item_name', 1))
-    return render_template('reports/inventory.html', form=form, items=items, format_currency=format_currency, t=trans, lang=session.get('lang', 'en'))
+    tools = BUSINESS_TOOLS if current_user.role == 'trader' else ALL_TOOLS
+    nav_items = BUSINESS_EXPLORE_FEATURES if current_user.role == 'trader' else ADMIN_EXPLORE_FEATURES
+    bottom_nav_items = BUSINESS_NAV if current_user.role == 'trader' else ADMIN_NAV
+    return render_template(
+        'reports/inventory.html',
+        form=form,
+        items=items,
+        format_currency=format_currency,
+        t=trans,
+        lang=session.get('lang', 'en'),
+        tools=tools,
+        nav_items=nav_items,
+        bottom_nav_items=bottom_nav_items
+    )
 
 def generate_profit_loss_pdf(cashflows):
     """Generate PDF for profit/loss report."""
