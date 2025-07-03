@@ -2466,3 +2466,15 @@ h2.card-title {
         font-size: 3rem;
     }
 }
+.mobile-bottom-nav .nav-item.active,
+.mobile-bottom-nav .nav-item.active i {
+    color: #ff9800 !important; /* Material Orange, or your preferred orange */
+    font-weight: 700;
+}
+.mobile-bottom-nav .nav-link {
+    min-height: 56px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
