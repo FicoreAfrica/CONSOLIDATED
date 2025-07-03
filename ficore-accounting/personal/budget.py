@@ -11,7 +11,7 @@ from translations import trans
 from bson import ObjectId
 from models import log_tool_usage
 from session_utils import create_anonymous_session
-from utils import requires_role, is_admin, get_mongo_db, PERSONAL_TOOLS, PERSONAL_NAV, ALL_TOOLS, ADMIN_NAV
+from utils import requires_role, is_admin, get_mongo_db, PERSONAL_TOOLS, PERSONAL_NAV, PERSONAL_EXPLORE_FEATURES, ALL_TOOLS, ADMIN_NAV
 
 budget_bp = Blueprint(
     'budget',
@@ -113,6 +113,7 @@ def main():
     form = BudgetForm(data=form_data)
     tools = PERSONAL_TOOLS if current_user.role == 'personal' else ALL_TOOLS
     nav_items = PERSONAL_NAV if current_user.role == 'personal' else ADMIN_NAV
+    explore_features = PERSONAL_EXPLORE_FEATURES if current_user.role == 'personal' else []
     log_tool_usage(
         get_mongo_db(),
         tool_name='budget',
@@ -168,7 +169,21 @@ def main():
                 except Exception as e:
                     current_app.logger.error(f"Failed to save budget to MongoDB for session {session['sid']}: {str(e)}", extra={'session_id': session['sid']})
                     flash(trans("budget_storage_error", default='Error saving budget.', lang=lang), "danger")
-                    return render_template('personal/BUDGET/budget_main.html', form=form, budgets={}, latest_budget={}, categories={}, tips=[], insights=[], t=trans, lang=lang, tool_title=trans('budget_title', default='Budget Planner', lang=lang), tools=tools, nav_items=nav_items)
+                    return render_template(
+                        'personal/BUDGET/budget_main.html',
+                        form=form,
+                        budgets={},
+                        latest_budget={},
+                        categories={},
+                        tips=[],
+                        insights=[],
+                        t=trans,
+                        lang=lang,
+                        tool_title=trans('budget_title', default='Budget Planner', lang=lang),
+                        tools=tools,
+                        nav_items=nav_items,
+                        explore_features=explore_features
+                    )
                 if form.send_email.data and form.email.data:
                     try:
                         config = EMAIL_CONFIG["budget"]
@@ -288,7 +303,8 @@ def main():
             lang=lang,
             tool_title=trans('budget_title', default='Budget Planner', lang=lang),
             tools=tools,
-            nav_items=nav_items
+            nav_items=nav_items,
+            explore_features=explore_features
         )
     except Exception as e:
         current_app.logger.error(f"Unexpected error in budget.main for session {session.get('sid', 'unknown')}: {str(e)}", extra={'session_id': session.get('sid', 'unknown')})
@@ -322,7 +338,8 @@ def main():
             lang=lang,
             tool_title=trans('budget_title', default='Budget Planner', lang=lang),
             tools=tools,
-            nav_items=nav_items
+            nav_items=nav_items,
+            explore_features=explore_features
         ), 500
 
 @budget_bp.route('/summary')
@@ -351,4 +368,4 @@ def handle_csrf_error(e):
     lang = session.get('lang', 'en')
     current_app.logger.error(f"CSRF error on {request.path}: {e.description}", extra={'session_id': session.get('sid', 'unknown')})
     flash(trans('budget_csrf_error', default='Form submission failed due to a missing security token. Please refresh and try again.', lang=lang), 'danger')
-    return redirect(url_for('app.index')), 400
+    return redirect(url_for('index')), 400
