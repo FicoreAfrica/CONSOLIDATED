@@ -123,7 +123,7 @@
 }
 
 /* General Transitions and Scroll Behavior */
-body, .navbar, .header-message, .consent-banner, .btn, .hero, .card, .journey-strip, .journey-step,
+body, .navbar, .header-message, .consent-banner, .btn, .hero, .card, .journey-step,
 .tool-group, .accordion-button, .accordion-item, .tool-header-container, .progress, .badge,
 .testimonials-section, .recommended-learning, .faq-section, .why-section, .footer-disclaimer,
 .social-icons a, .insights-box, .course-link, .list-group-item, .alert-success, .alert-danger,
@@ -2296,27 +2296,6 @@ h2.card-title {
     }
     .card-text {
         font-size: 1rem;
-    }
-    .journey-strip {
-        padding: 2rem;
-        max-width: 1200px;
-        margin-left: auto;
-        margin-right: auto;
-    }
-    .journey-steps {
-        flex-wrap: nowrap;
-        gap: 2rem;
-        max-width: 1000px;
-    }
-    .journey-step {
-        flex: 1 1 auto;
-        max-width: 200px;
-        font-size: 1rem;
-    }
-    .step-badge {
-        width: 3rem;
-        height: 3rem;
-        font-size: 1.2rem;
     }
     .tool-group {
         padding: 1rem;
