@@ -11,7 +11,7 @@ from datetime import datetime, timedelta
 from translations import trans
 from utils import (
     trans_function, requires_role, check_coin_balance, format_currency, format_date,
-    is_valid_email, get_mongo_db, is_admin, get_mail, get_limiter,
+    is_valid_email, get_mongo_db, is_admin, get_mail, limiter,
     PERSONAL_TOOLS, PERSONAL_NAV, PERSONAL_EXPLORE_FEATURES,
     BUSINESS_TOOLS, BUSINESS_NAV, BUSINESS_EXPLORE_FEATURES,
     AGENT_TOOLS, AGENT_NAV, AGENT_EXPLORE_FEATURES,
