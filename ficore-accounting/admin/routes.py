@@ -21,8 +21,6 @@ logger = logging.getLogger(__name__)
 admin_bp = Blueprint('admin', __name__, template_folder='templates/admin')
 
 # Initialize limiter
-limiter = get_limiter(current_app)
-
 AGENT_ID_REGEX = re.compile(r'^[A-Z0-9]{8}$')  # Agent ID: 8 alphanumeric characters
 
 class CreditForm(FlaskForm):
