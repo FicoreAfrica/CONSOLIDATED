@@ -201,16 +201,6 @@
                 {% endfor %}
             </div>
         </div>
-
-        <!-- Bottom Navigation Bar -->
-        <nav class="bottom-nav fixed-bottom bg-light border-top d-flex justify-content-around align-items-center py-2">
-            {% for item in nav_items %}
-            <a href="{{ url_for(item.get('endpoint', '')) | e }}" class="nav-item text-center text-dark" data-bs-toggle="tooltip" data-bs-title="{{ t(item.get('tooltip_key', item.get('label_key', '')), default=item.get('label', '')) | e }}" aria-label="{{ t(item.get('label_key', ''), default=item.get('label', '')) | e }}">
-                <i class="{{ item.get('icon', '') | e }}"></i>
-                <div class="nav-label">{{ t(item.get('label_key', ''), default=item.get('label', '')) | e }}</div>
-            </a>
-            {% endfor %}
-        </nav>
     {% else %}
         <!-- Prospective User Section -->
         <!-- Hero Section -->
@@ -604,21 +594,6 @@ document.addEventListener('DOMContentLoaded', function() {
         updateCounter();
     }
 
-    // Initialize tooltips for bottom navigation
-    document.querySelectorAll('.bottom-nav [data-bs-toggle="tooltip"]').forEach(tooltipTriggerEl => {
-        new bootstrap.Tooltip(tooltipTriggerEl);
-    });
-
-    // Navigation highlighting with startsWith
-    const currentPath = window.location.pathname;
-    const navItems = document.querySelectorAll('.bottom-nav .nav-item');
-    navItems.forEach(item => {
-        const itemHref = item.getAttribute('href');
-        if (currentPath === itemHref || currentPath.startsWith(itemHref + '/')) {
-            item.classList.add('active');
-        }
-    });
-
     if (!{{ current_user.is_authenticated | tojson }}) return;
 
     let amountsVisible = true;
@@ -638,7 +613,6 @@ document.addEventListener('DOMContentLoaded', function() {
     // Load financial data, recent activity, and notifications
     loadFinancialSummary();
     loadRecentActivity();
-    loadNotifications();
 
     function loadFinancialSummary() {
         Promise.all([
@@ -675,58 +649,6 @@ document.addEventListener('DOMContentLoaded', function() {
 
         document.getElementById('emergencyFund').textContent = '₦' + formatCurrency(emergencyFund);
         document.getElementById('emergencyFund').dataset.originalText = '₦' + formatCurrency(emergencyFund);
-    }
-
-    function loadNotifications() {
-        fetch('{{ url_for("personal.notification_count") | e }}')
-            .then(response => response.json())
-            .then(data => {
-                const count = data.count || 0;
-                const badge = document.getElementById('notificationBadge');
-                if (count > 0) {
-                    badge.textContent = count;
-                    badge.classList.remove('d-none');
-                } else {
-                    badge.classList.add('d-none');
-                }
-            })
-            .catch(error => {
-                console.error('Error loading notification count:', error);
-            });
-
-        fetch('{{ url_for("personal.notifications") | e }}')
-            .then(response => response.json())
-            .then(notifications => {
-                const notificationList = document.getElementById('notificationList');
-                if (notifications && notifications.length > 0) {
-                    notificationList.innerHTML = notifications.map(notification => `
-                        <div class="notification-item">
-                            <div class="notification-icon">
-                                <i class="bi bi-bell ${notification.read ? 'text-muted' : 'text-primary'}"></i>
-                            </div>
-                            <div class="notification-content">
-                                <div class="notification-description">${notification.message}</div>
-                                <div class="notification-time text-muted">${formatTimeAgo(notification.timestamp)}</div>
-                            </div>
-                        </div>
-                    `).join('');
-                } else {
-                    notificationList.innerHTML = `
-                        <div class="notification-item">
-                            <div class="notification-icon">
-                                <i class="bi bi-bell text-muted"></i>
-                            </div>
-                            <div class="notification-content">
-                                <div class="notification-description">${translations.no_notifications}</div>
-                                <div class="notification-time text-muted">${translations.check_back_later}</div>
-                            </div>
-                        </div>
-                    `;
-                }
-            })
-            .catch(error => {
-                console.error('Error loading notifications:', error);
-            });
     }
 
     function loadRecentActivity() {
