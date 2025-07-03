@@ -307,13 +307,15 @@ def initialize_database(app):
                             'min_income': {'bsonType': 'number'},
                             'max_income': {'bsonType': 'number'},
                             'rate': {'bsonType': 'number', 'minimum': 0, 'maximum': 1},
-                            'description': {'bsonType': 'string'}
+                            'description': {'bsonType': 'string'},
+                            'session_id': {'bsonType': ['string', 'null']}
                         }
                     }
                 },
                 'indexes': [
                     {'key': [('role', ASCENDING)]},
-                    {'key': [('min_income', ASCENDING)]}
+                    {'key': [('min_income', ASCENDING)]},
+                    {'key': [('session_id', ASCENDING)]}
                 ]
             },
             'payment_locations': {
@@ -346,16 +348,19 @@ def initialize_database(app):
                         'required': ['user_id', 'tax_type', 'due_date', 'amount', 'status', 'created_at'],
                         'properties': {
                             'user_id': {'bsonType': 'string'},
+                            'session_id': {'bsonType': ['string', 'null']},
                             'tax_type': {'bsonType': 'string'},
                             'due_date': {'bsonType': 'date'},
                             'amount': {'bsonType': 'number', 'minimum': 0},
                             'status': {'enum': ['pending', 'paid', 'overdue']},
-                            'created_at': {'bsonType': 'date'}
+                            'created_at': {'bsonType': 'date'},
+                            'updated_at': {'bsonType': ['date', 'null']}
                         }
                     }
                 },
                 'indexes': [
                     {'key': [('user_id', ASCENDING)]},
+                    {'key': [('session_id', ASCENDING)]},
                     {'key': [('due_date', ASCENDING)]}
                 ]
             },
@@ -376,6 +381,7 @@ def initialize_database(app):
                 },
                 'indexes': [
                     {'key': [('user_id', ASCENDING)]},
+                    {'key': [('session_id', ASCENDING)]},
                     {'key': [('timestamp', DESCENDING)]}
                 ]
             },
@@ -409,12 +415,14 @@ def initialize_database(app):
                             'source_type': {'bsonType': 'string'},
                             'published_at': {'bsonType': 'date'},
                             'is_verified': {'bsonType': 'bool'},
-                            'is_active': {'bsonType': 'bool'}
+                            'is_active': {'bsonType': 'bool'},
+                            'session_id': {'bsonType': ['string', 'null']}
                         }
                     }
                 },
                 'indexes': [
-                    {'key': [('published_at', DESCENDING)]}
+                    {'key': [('published_at', DESCENDING)]},
+                    {'key': [('session_id', ASCENDING)]}
                 ]
             },
             'financial_health_scores': {
@@ -424,6 +432,7 @@ def initialize_database(app):
                         'required': ['user_id', 'score', 'status', 'created_at'],
                         'properties': {
                             'user_id': {'bsonType': 'string'},
+                            'session_id': {'bsonType': ['string', 'null']},
                             'score': {'bsonType': 'number', 'minimum': 0, 'maximum': 100},
                             'status': {'bsonType': 'string'},
                             'debt_to_income': {'bsonType': 'number'},
@@ -436,6 +445,7 @@ def initialize_database(app):
                 },
                 'indexes': [
                     {'key': [('user_id', ASCENDING)]},
+                    {'key': [('session_id', ASCENDING)]},
                     {'key': [('created_at', DESCENDING)]}
                 ]
             },
@@ -446,6 +456,7 @@ def initialize_database(app):
                         'required': ['user_id', 'income', 'fixed_expenses', 'variable_expenses', 'created_at'],
                         'properties': {
                             'user_id': {'bsonType': 'string'},
+                            'session_id': {'bsonType': ['string', 'null']},
                             'income': {'bsonType': 'number', 'minimum': 0},
                             'fixed_expenses': {'bsonType': 'number', 'minimum': 0},
                             'variable_expenses': {'bsonType': 'number', 'minimum': 0},
@@ -463,6 +474,7 @@ def initialize_database(app):
                 },
                 'indexes': [
                     {'key': [('user_id', ASCENDING)]},
+                    {'key': [('session_id', ASCENDING)]},
                     {'key': [('created_at', DESCENDING)]}
                 ]
             },
@@ -473,6 +485,7 @@ def initialize_database(app):
                         'required': ['user_id', 'bill_name', 'amount', 'due_date', 'status'],
                         'properties': {
                             'user_id': {'bsonType': 'string'},
+                            'session_id': {'bsonType': ['string', 'null']},
                             'bill_name': {'bsonType': 'string'},
                             'amount': {'bsonType': 'number', 'minimum': 0},
                             'due_date': {'bsonType': 'date'},
@@ -488,6 +501,7 @@ def initialize_database(app):
                 },
                 'indexes': [
                     {'key': [('user_id', ASCENDING)]},
+                    {'key': [('session_id', ASCENDING)]},
                     {'key': [('due_date', ASCENDING)]},
                     {'key': [('status', ASCENDING)]}
                 ]
@@ -499,6 +513,7 @@ def initialize_database(app):
                         'required': ['user_id', 'total_assets', 'total_liabilities', 'net_worth', 'created_at'],
                         'properties': {
                             'user_id': {'bsonType': 'string'},
+                            'session_id': {'bsonType': ['string', 'null']},
                             'cash_savings': {'bsonType': 'number', 'minimum': 0},
                             'investments': {'bsonType': 'number', 'minimum': 0},
                             'property': {'bsonType': 'number', 'minimum': 0},
@@ -513,6 +528,7 @@ def initialize_database(app):
                 },
                 'indexes': [
                     {'key': [('user_id', ASCENDING)]},
+                    {'key': [('session_id', ASCENDING)]},
                     {'key': [('created_at', DESCENDING)]}
                 ]
             },
@@ -523,6 +539,7 @@ def initialize_database(app):
                         'required': ['user_id', 'monthly_expenses', 'current_savings', 'target_amount', 'created_at'],
                         'properties': {
                             'user_id': {'bsonType': 'string'},
+                            'session_id': {'bsonType': ['string', 'null']},
                             'monthly_expenses': {'bsonType': 'number', 'minimum': 0},
                             'monthly_income': {'bsonType': 'number', 'minimum': 0},
                             'current_savings': {'bsonType': 'number', 'minimum': 0},
@@ -541,6 +558,7 @@ def initialize_database(app):
                 },
                 'indexes': [
                     {'key': [('user_id', ASCENDING)]},
+                    {'key': [('session_id', ASCENDING)]},
                     {'key': [('created_at', DESCENDING)]}
                 ]
             },
@@ -551,6 +569,7 @@ def initialize_database(app):
                         'required': ['user_id', 'course_id', 'lessons_completed'],
                         'properties': {
                             'user_id': {'bsonType': 'string'},
+                            'session_id': {'bsonType': ['string', 'null']},
                             'course_id': {'bsonType': 'string'},
                             'lessons_completed': {'bsonType': 'array'},
                             'quiz_scores': {'bsonType': ['object', 'null']},
@@ -559,7 +578,8 @@ def initialize_database(app):
                     }
                 },
                 'indexes': [
-                    {'key': [('user_id', ASCENDING), ('course_id', ASCENDING)]}
+                    {'key': [('user_id', ASCENDING), ('course_id', ASCENDING)]},
+                    {'key': [('session_id', ASCENDING), ('course_id', ASCENDING)]}
                 ]
             },
             'quiz_responses': {
@@ -569,6 +589,7 @@ def initialize_database(app):
                         'required': ['user_id', 'personality', 'score', 'created_at'],
                         'properties': {
                             'user_id': {'bsonType': 'string'},
+                            'session_id': {'bsonType': ['string', 'null']},
                             'personality': {'bsonType': 'string'},
                             'score': {'bsonType': 'number', 'minimum': 0, 'maximum': 100},
                             'badges': {'bsonType': ['array', 'null']},
@@ -580,6 +601,7 @@ def initialize_database(app):
                 },
                 'indexes': [
                     {'key': [('user_id', ASCENDING)]},
+                    {'key': [('session_id', ASCENDING)]},
                     {'key': [('created_at', DESCENDING)]}
                 ]
             }
@@ -968,6 +990,33 @@ def create_tax_reminder(db, reminder_data):
         logger.error(f"{trans('general_tax_reminder_creation_error', default='Error creating tax reminder')}: {str(e)}")
         raise
 
+def update_tax_reminder(db, reminder_id, update_data):
+    """
+    Update a tax reminder in the tax_reminders collection.
+    
+    Args:
+        db: MongoDB database instance
+        reminder_id: The ID of the tax reminder to update
+        update_data: Dictionary containing fields to update (e.g., status, amount, due_date)
+    
+    Returns:
+        bool: True if updated, False if not found or no changes made
+    """
+    try:
+        update_data['updated_at'] = datetime.utcnow()
+        result = db.tax_reminders.update_one(
+            {'_id': ObjectId(reminder_id)},
+            {'$set': update_data}
+        )
+        if result.modified_count > 0:
+            logger.info(f"{trans('general_tax_reminder_updated', default='Updated tax reminder with ID')}: {reminder_id}")
+            return True
+        logger.info(f"{trans('general_tax_reminder_no_change', default='No changes made to tax reminder with ID')}: {reminder_id}")
+        return False
+    except Exception as e:
+        logger.error(f"{trans('general_tax_reminder_update_error', default='Error updating tax reminder with ID')} {reminder_id}: {str(e)}")
+        raise
+
 # Data conversion functions for backward compatibility
 def to_dict_financial_health(record):
     """Convert financial health record to dictionary."""
@@ -1078,4 +1127,47 @@ def to_dict_quiz_result(record):
         'insights': record.get('insights', []),
         'tips': record.get('tips', []),
         'created_at': record.get('created_at')
+    }
+
+def to_dict_news_article(record):
+    """Convert news article record to dictionary."""
+    if not record:
+        return {'title': None, 'content': None}
+    return {
+        'id': str(record.get('_id', '')),
+        'title': record.get('title', ''),
+        'content': record.get('content', ''),
+        'source_type': record.get('source_type', ''),
+        'published_at': record.get('published_at'),
+        'is_verified': record.get('is_verified', False),
+        'is_active': record.get('is_active', True)
+    }
+
+def to_dict_tax_rate(record):
+    """Convert tax rate record to dictionary."""
+    if not record:
+        return {'role': None, 'rate': None}
+    return {
+        'id': str(record.get('_id', '')),
+        'role': record.get('role', ''),
+        'min_income': record.get('min_income', 0),
+        'max_income': record.get('max_income', 0),
+        'rate': record.get('rate', 0),
+        'description': record.get('description', '')
+    }
+
+def to_dict_tax_reminder(record):
+    """Convert tax reminder record to dictionary."""
+    if not record:
+        return {'tax_type': None, 'amount': None}
+    return {
+        'id': str(record.get('_id', '')),
+        'user_id': record.get('user_id', ''),
+        'session_id': record.get('session_id'),
+        'tax_type': record.get('tax_type', ''),
+        'due_date': record.get('due_date'),
+        'amount': record.get('amount', 0),
+        'status': record.get('status', ''),
+        'created_at': record.get('created_at'),
+        'updated_at': record.get('updated_at')
     }
