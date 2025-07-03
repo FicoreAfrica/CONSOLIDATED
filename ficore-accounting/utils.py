@@ -717,7 +717,7 @@ PERSONAL_TOOLS = [
     {"endpoint": "personal.net_worth.main", "label": "Net Worth", "label_key": "net_worth_calculator", "tooltip_key": "net_worth_tooltip", "icon": "bi-cash-stack"},
     {"endpoint": "personal.quiz.main", "label": "Quiz", "label_key": "quiz_personality_quiz", "tooltip_key": "quiz_tooltip", "icon": "bi-question-circle"},
     {"endpoint": "taxation_bp.calculate_tax", "label": "Taxation", "label_key": "taxation_calculator", "tooltip_key": "taxation_tooltip", "icon": "bi-calculator"},
-    {"endpoint": "common_bp.news_list", "label": "News", "label_key": "news_list", "tooltip_key": "news_tooltip", "icon": "bi-newspaper"},
+    {"endpoint": "news_bp.news_list", "label": "News", "label_key": "news_list", "tooltip_key": "news_tooltip", "icon": "bi-newspaper"},
 ]
 
 PERSONAL_NAV = [
@@ -742,7 +742,7 @@ BUSINESS_TOOLS = [
     {"endpoint": "payments.index", "label": "MoneyOut", "label_key": "payments_dashboard", "tooltip_key": "payments_tooltip", "icon": "bi-person-minus"},
     {"endpoint": "reports.index", "label": "Reports", "label_key": "reports_dashboard", "tooltip_key": "reports_tooltip", "icon": "bi-bar-chart"},
     {"endpoint": "coins.history", "label": "Coins", "label_key": "coins_dashboard", "tooltip_key": "coins_tooltip", "icon": "bi-coin"},
-    {"endpoint": "common_bp.news_list", "label": "News", "label_key": "news_list", "tooltip_key": "news_tooltip", "icon": "bi-newspaper"},
+    {"endpoint": "news_bp.news_list", "label": "News", "label_key": "news_list", "tooltip_key": "news_tooltip", "icon": "bi-newspaper"},
 ]
 
 BUSINESS_NAV = [
@@ -763,7 +763,7 @@ BUSINESS_EXPLORE_FEATURES = [
 AGENT_TOOLS = [
     {"endpoint": "agents_bp.agent_portal", "label": "Agent Portal", "label_key": "agents_dashboard", "tooltip_key": "agents_tooltip", "icon": "bi-person-workspace"},
     {"endpoint": "coins.history", "label": "Coins", "label_key": "coins_dashboard", "tooltip_key": "coins_tooltip", "icon": "bi-coin"},
-    {"endpoint": "common_bp.news_list", "label": "News", "label_key": "news_list", "tooltip_key": "news_tooltip", "icon": "bi-newspaper"},
+    {"endpoint": "news_bp.news_list", "label": "News", "label_key": "news_list", "tooltip_key": "news_tooltip", "icon": "bi-newspaper"},
 ]
 
 AGENT_NAV = [
