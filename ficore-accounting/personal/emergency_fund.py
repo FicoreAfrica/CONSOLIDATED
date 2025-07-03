@@ -132,7 +132,7 @@ def main():
         form_data['first_name'] = current_user.username
     form = EmergencyFundForm(data=form_data)
     tools = PERSONAL_TOOLS if current_user.role == 'personal' else ALL_TOOLS
-    nav_items = PERSONAL_NAV if current_user.role == 'personal' else ADMIN_NAV
+    bottom_nav_items = PERSONAL_NAV if current_user.role == 'personal' else ADMIN_NAV
     log_tool_usage(
         tool_name='emergency_fund',
         user_id=current_user.id if current_user.is_authenticated else None,
@@ -217,7 +217,7 @@ def main():
                         lang=lang,
                         tool_title=trans('emergency_fund_title', default='Emergency Fund Calculator', lang=lang),
                         tools=tools,
-                        nav_items=nav_items
+                        bottom_nav_items=bottom_nav_items
                     )
                 if form.email_opt_in.data and form.email.data:
                     try:
@@ -339,7 +339,7 @@ def main():
             lang=lang,
             tool_title=trans('emergency_fund_title', default='Emergency Fund Calculator', lang=lang),
             tools=tools,
-            nav_items=nav_items
+            bottom_nav_items=bottom_nav_items
         )
     except Exception as e:
         current_app.logger.error(f"Error in emergency_fund.main for session {session.get('sid', 'unknown')}: {str(e)}", extra={'session_id': session['sid']})
@@ -375,7 +375,7 @@ def main():
             lang=lang,
             tool_title=trans('emergency_fund_title', default='Emergency Fund Calculator', lang=lang),
             tools=tools,
-            nav_items=nav_items
+            bottom_nav_items=bottom_nav_items
         ), 500
 
 @emergency_fund_bp.route('/summary')
@@ -411,7 +411,7 @@ def unsubscribe(email):
     session.modified = True
     lang = session.get('lang', 'en')
     tools = PERSONAL_TOOLS if current_user.role == 'personal' else ALL_TOOLS
-    nav_items = PERSONAL_NAV if current_user.role == 'personal' else ADMIN_NAV
+    bottom_nav_items = PERSONAL_NAV if current_user.role == 'personal' else ADMIN_NAV
     try:
         log_tool_usage(
             tool_name='emergency_fund',
@@ -443,6 +443,40 @@ def unsubscribe(email):
 def handle_csrf_error(e):
     """Handle CSRF errors with user-friendly message."""
     lang = session.get('lang', 'en')
+    tools = PERSONAL_TOOLS if current_user.role == 'personal' else ALL_TOOLS
+    bottom_nav_items = PERSONAL_NAV if current_user.role == 'personal' else ADMIN_NAV
     current_app.logger.error(f"CSRF error on {request.path}: {e.description}", extra={'session_id': session.get('sid', 'unknown')})
     flash(trans('emergency_fund_csrf_error', default='Form submission failed due to a missing security token. Please refresh and try again.'), 'danger')
-    return redirect(url_for('personal.index')), 400
+    return render_template(
+        'personal/emergency_fund/emergency_fund_main.html',
+        form=EmergencyFundForm(),
+        records=[],
+        latest_record={
+            'monthly_expenses': format_currency(0),
+            'monthly_income': 'N/A',
+            'current_savings': format_currency(0),
+            'risk_tolerance_level': '',
+            'dependents': 0,
+            'timeline': 0,
+            'recommended_months': 0,
+            'target_amount': format_currency(0),
+            'savings_gap': format_currency(0),
+            'monthly_savings': format_currency(0),
+            'percent_of_income': 'N/A',
+            'badges': [],
+            'created_at': 'N/A'
+        },
+        insights=[],
+        cross_tool_insights=[],
+        tips=[
+            trans('emergency_fund_tip_automate_savings', default='Automate your savings to build your fund consistently.', lang=lang),
+            trans('budget_tip_ajo_savings', default='Contribute to ajo savings for financial discipline.', lang=lang),
+            trans('emergency_fund_tip_track_expenses', default='Track expenses to find extra savings opportunities.', lang=lang),
+            trans('budget_tip_monthly_savings', default='Set a monthly savings goal to stay on track.', lang=lang)
+        ],
+        t=trans,
+        lang=lang,
+        tool_title=trans('emergency_fund_title', default='Emergency Fund Calculator', lang=lang),
+        tools=tools,
+        bottom_nav_items=bottom_nav_items
+    ), 400
