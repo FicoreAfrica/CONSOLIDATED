@@ -10,16 +10,15 @@ from mailersend_email import send_email, EMAIL_CONFIG
 from translations import trans
 from models import log_tool_usage
 from session_utils import create_anonymous_session
-from utils import requires_role, is_admin, get_mongo_db, PERSONAL_TOOLS, PERSONAL_NAV, ALL_TOOLS, ADMIN_NAV
+from utils import requires_role, is_admin, get_mongo_db, PERSONAL_TOOLS, PERSONAL_NAV, ALL_TOOLS, ADMIN_NAV, format_currency
 
 financial_health_bp = Blueprint(
     'financial_health',
     __name__,
-    template_folder='templates/personal/HEALTHSCORE',
-    url_prefix='/HEALTHSCORE'
+    template_folder='templates/personal/health_score',
+    url_prefix='/health_score'
 )
 
-# Initialize CSRF protection
 csrf = CSRFProtect()
 
 def custom_login_required(f):
@@ -96,7 +95,6 @@ class FinancialHealthForm(FlaskForm):
     submit = SubmitField(trans('financial_health_submit', default='Submit'))
 
     def validate_email(self, field):
-        """Custom email validation, required only if send_email is checked."""
         if self.send_email.data and not field.data:
             current_app.logger.warning(f"Email required for notifications for session {session.get('sid', 'no-session-id')}", extra={'session_id': session.get('sid', 'no-session-id')})
             raise ValidationError(trans('general_email_required', default='Valid email is required for notifications'))
@@ -113,7 +111,6 @@ def main():
     session.modified = True
     lang = session.get('lang', 'en')
     
-    # Initialize form with user data
     form_data = {}
     if current_user.is_authenticated:
         form_data['email'] = current_user.email
@@ -131,8 +128,6 @@ def main():
     )
 
     try:
-        # TEMPORARY: Allow admin to view all records during testing
-        # TODO: Restore original filter_criteria for production
         filter_criteria = {} if is_admin() else {'user_id': current_user.id} if current_user.is_authenticated else {'session_id': session['sid']}
         
         if request.method == 'POST':
@@ -155,7 +150,7 @@ def main():
                 if income <= 0:
                     current_app.logger.error(f"Income is zero or negative for session {session['sid']}", extra={'session_id': session['sid']})
                     flash(trans("financial_health_income_zero_error", default='Income must be greater than zero.'), "danger")
-                    return redirect(url_for('personal/HEALTHSCORE/personal/HEALTHSCORE/financial_health.main'))
+                    return redirect(url_for('financial_health.main'))
 
                 debt_to_income = (debt / income * 100) if income > 0 else 0
                 savings_rate = ((income - expenses) / income * 100) if income > 0 else 0
@@ -221,9 +216,8 @@ def main():
                 except Exception as e:
                     current_app.logger.error(f"Failed to save financial health data to MongoDB: {str(e)}", extra={'session_id': session['sid']})
                     flash(trans("financial_health_storage_error", default='Error saving financial health score.'), "danger")
-                    return redirect(url_for('personal/HEALTHSCORE/personal/HEALTHSCORE/financial_health.main'))
+                    return redirect(url_for('financial_health.main'))
 
-                # Send email if requested
                 if form.send_email.data and form.email.data:
                     try:
                         config = EMAIL_CONFIG["financial_health"]
@@ -239,16 +233,16 @@ def main():
                                 "first_name": form.first_name.data,
                                 "score": score,
                                 "status": status,
-                                "income": income,
-                                "expenses": expenses,
-                                "debt": debt,
-                                "interest_rate": interest_rate,
-                                "debt_to_income": debt_to_income,
-                                "savings_rate": savings_rate,
-                                "interest_burden": interest_burden,
+                                "income": format_currency(income),
+                                "expenses": format_currency(expenses),
+                                "debt": format_currency(debt),
+                                "interest_rate": f"{interest_rate:.2f}%",
+                                "debt_to_income": f"{debt_to_income:.2f}%",
+                                "savings_rate": f"{savings_rate:.2f}%",
+                                "interest_burden": f"{interest_burden:.2f}%",
                                 "badges": badges,
                                 "created_at": record_data['created_at'].strftime('%Y-%m-%d'),
-                                "cta_url": url_for('personal/HEALTHSCORE/personal/HEALTHSCORE/financial_health.main', _external=True),
+                                "cta_url": url_for('financial_health.main', _external=True),
                                 "unsubscribe_url": url_for('financial_health.unsubscribe', email=form.email.data, _external=True)
                             },
                             lang=lang
@@ -258,7 +252,6 @@ def main():
                         current_app.logger.error(f"Failed to send email: {str(e)}", extra={'session_id': session['sid']})
                         flash(trans("general_email_send_failed", default='Failed to send email.'), "warning")
 
-        # Get financial health data for display
         collection = get_mongo_collection()
         stored_records = list(collection.find(filter_criteria).sort('created_at', -1))
         
@@ -271,13 +264,13 @@ def main():
                 'first_name': record.get('first_name'),
                 'email': record.get('email'),
                 'user_type': record.get('user_type'),
-                'income': record.get('income', 0),
-                'expenses': record.get('expenses', 0),
-                'debt': record.get('debt', 0),
-                'interest_rate': record.get('interest_rate', 0),
-                'debt_to_income': record.get('debt_to_income', 0),
-                'savings_rate': record.get('savings_rate', 0),
-                'interest_burden': record.get('interest_burden', 0),
+                'income': format_currency(record.get('income', 0)),
+                'expenses': format_currency(record.get('expenses', 0)),
+                'debt': format_currency(record.get('debt', 0)),
+                'interest_rate': f"{record.get('interest_rate', 0):.2f}%",
+                'debt_to_income': f"{record.get('debt_to_income', 0):.2f}%",
+                'savings_rate': f"{record.get('savings_rate', 0):.2f}%",
+                'interest_burden': f"{record.get('interest_burden', 0):.2f}%",
                 'score': record.get('score', 0),
                 'status': record.get('status', 'Unknown'),
                 'status_key': record.get('status_key', 'unknown'),
@@ -290,13 +283,13 @@ def main():
         latest_record = records[0][1] if records else {
             'score': 0,
             'status': 'Unknown',
-            'savings_rate': 0,
-            'income': 0,
-            'expenses': 0,
-            'debt': 0,
-            'interest_rate': 0,
-            'debt_to_income': 0,
-            'interest_burden': 0,
+            'savings_rate': '0.00%',
+            'income': format_currency(0),
+            'expenses': format_currency(0),
+            'debt': format_currency(0),
+            'interest_rate': '0.00%',
+            'debt_to_income': '0.00%',
+            'interest_burden': '0.00%',
             'badges': [],
             'created_at': 'N/A'
         }
@@ -316,13 +309,13 @@ def main():
         insights = []
         cross_tool_insights = []
         if latest_record and latest_record['score'] > 0:
-            if latest_record.get('debt_to_income', 0) > 40:
+            if float(latest_record['debt_to_income'].replace('%', '')) > 40:
                 insights.append(trans("financial_health_insight_high_debt", default='Your debt-to-income ratio is high. Consider reducing debt.', lang=lang))
-            if latest_record.get('savings_rate', 0) < 0:
+            if float(latest_record['savings_rate'].replace('%', '')) < 0:
                 insights.append(trans("financial_health_insight_negative_savings", default='Your expenses exceed your income. Review your budget.', lang=lang))
-            elif latest_record.get('savings_rate', 0) >= 20:
+            elif float(latest_record['savings_rate'].replace('%', '')) >= 20:
                 insights.append(trans("financial_health_insight_good_savings", default='Great job maintaining a strong savings rate!', lang=lang))
-            if latest_record.get('interest_burden', 0) > 10:
+            if float(latest_record['interest_burden'].replace('%', '')) > 10:
                 insights.append(trans("financial_health_insight_high_interest", default='High interest burden detected. Consider refinancing.', lang=lang))
             if total_users >= 5:
                 if rank <= total_users * 0.1:
@@ -334,7 +327,6 @@ def main():
             else:
                 insights.append(trans("financial_health_insight_not_enough_users", default='Not enough users for ranking comparison.', lang=lang))
         
-        # Cross-tool insights from budgets
         filter_kwargs_budget = {'user_id': current_user.id} if current_user.is_authenticated else {'session_id': session['sid']}
         budget_data = get_mongo_db().budgets.find(filter_kwargs_budget).sort('created_at', -1)
         budget_data = list(budget_data)
@@ -343,12 +335,12 @@ def main():
             if latest_budget.get('income') and latest_budget.get('fixed_expenses'):
                 savings_possible = latest_budget['income'] - latest_budget['fixed_expenses']
                 if savings_possible > 0:
-                    cross_tool_insights.append(trans('financial_health_cross_tool_savings_possible', default='Your budget shows {amount:,.2f} available for savings monthly.', lang=lang, amount=savings_possible))
+                    cross_tool_insights.append(trans('financial_health_cross_tool_savings_possible', default='Your budget shows {amount} available for savings monthly.', lang=lang, amount=format_currency(savings_possible)))
 
         tools = PERSONAL_TOOLS if current_user.role == 'personal' else ALL_TOOLS
         nav_items = PERSONAL_NAV if current_user.role == 'personal' else ADMIN_NAV
         return render_template(
-            'personal/HEALTHSCORE/health_score_main.html',
+            'personal/health_score/health_score_main.html',
             form=form,
             records=records,
             latest_record=latest_record,
@@ -371,24 +363,24 @@ def main():
         )
 
     except Exception as e:
-        current_app.logger.error(f"Error in personal/HEALTHSCORE/personal/HEALTHSCORE/financial_health.main for session {session.get('sid', 'unknown')}: {str(e)}", extra={'session_id': session.get('sid', 'unknown')})
+        current_app.logger.error(f"Error in financial_health.main for session {session.get('sid', 'unknown')}: {str(e)}", extra={'session_id': session.get('sid', 'unknown')})
         flash(trans("financial_health_dashboard_load_error", default='Error loading financial health dashboard.'), "danger")
         tools = PERSONAL_TOOLS if current_user.role == 'personal' else ALL_TOOLS
         nav_items = PERSONAL_NAV if current_user.role == 'personal' else ADMIN_NAV
         return render_template(
-            'personal/HEALTHSCORE/health_score_main.html',
+            'personal/health_score/health_score_main.html',
             form=form,
             records=[],
             latest_record={
                 'score': 0,
                 'status': 'Unknown',
-                'savings_rate': 0,
-                'income': 0,
-                'expenses': 0,
-                'debt': 0,
-                'interest_rate': 0,
-                'debt_to_income': 0,
-                'interest_burden': 0,
+                'savings_rate': '0.00%',
+                'income': format_currency(0),
+                'expenses': format_currency(0),
+                'debt': format_currency(0),
+                'interest_rate': '0.00%',
+                'debt_to_income': '0.00%',
+                'interest_burden': '0.00%',
                 'badges': [],
                 'created_at': 'N/A'
             },
@@ -416,12 +408,9 @@ def main():
 def summary():
     """Return the latest financial health score for the current user."""
     try:
-        # TEMPORARY: Allow admin to view all records during testing
-        # TODO: Restore original filter_criteria for production
         filter_criteria = {} if is_admin() else {'user_id': current_user.id}
         collection = get_mongo_collection()
         
-        # Get the latest financial health record
         latest_record = collection.find(filter_criteria).sort('created_at', -1).limit(1)
         latest_record = list(latest_record)
         
@@ -459,8 +448,6 @@ def unsubscribe(email):
             action='unsubscribe',
             mongo=get_mongo_db()
         )
-        # TEMPORARY: Allow admin to unsubscribe any email during testing
-        # TODO: Restore original filter_kwargs for production
         filter_kwargs = {'email': email} if is_admin() else {'email': email, 'user_id': current_user.id} if current_user.is_authenticated else {'email': email, 'session_id': session['sid']}
         result = get_mongo_collection().update_many(
             filter_kwargs,
@@ -472,11 +459,11 @@ def unsubscribe(email):
         else:
             current_app.logger.warning(f"No records found to unsubscribe email {email} for session {session['sid']}", extra={'session_id': session['sid']})
             flash(trans("financial_health_unsubscribe_error", default='No email notifications found for this email.'), "danger")
-        return redirect(url_for('index'))
+        return redirect(url_for('personal.index'))
     except Exception as e:
-        current_app.logger.error(f"Error in financial_health.unsubscribe for session {session.get('sid', 'unknown')}: {str(e)}", extra={'session_id': session.get('sid', 'unknown')})
+        current_app.logger.error(f"Error in financial_health.unsubscribe for session {session.get('sid', 'unknown')}: {str(e)}", extra={'session_id': session['sid']})
         flash(trans("financial_health_unsubscribe_error", default='Error unsubscribing from email notifications.'), "danger")
-        return redirect(url_for('index'))
+        return redirect(url_for('personal.index'))
 
 @financial_health_bp.errorhandler(CSRFError)
 def handle_csrf_error(e):
@@ -484,4 +471,4 @@ def handle_csrf_error(e):
     lang = session.get('lang', 'en')
     current_app.logger.error(f"CSRF error on {request.path}: {e.description}", extra={'session_id': session.get('sid', 'unknown')})
     flash(trans('financial_health_csrf_error', default='Form submission failed due to a missing security token. Please refresh and try again.'), 'danger')
-    return redirect(url_for('personal/HEALTHSCORE/personal/HEALTHSCORE/financial_health.main')), 400
+    return redirect(url_for('financial_health.main')), 400
