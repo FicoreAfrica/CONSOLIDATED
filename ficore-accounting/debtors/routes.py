@@ -56,22 +56,22 @@ def index():
         if current_user.role == 'trader':
             tools_for_template = BUSINESS_TOOLS
             explore_features_for_template = BUSINESS_EXPLORE_FEATURES
-            bottom_nav_for_template = BUSINESS_NAV
+            bottom_nav_items = BUSINESS_NAV
         elif current_user.role == 'admin':
             tools_for_template = ALL_TOOLS
             explore_features_for_template = ADMIN_EXPLORE_FEATURES
-            bottom_nav_for_template = ADMIN_NAV
+            bottom_nav_items = ADMIN_NAV
         else:
             tools_for_template = []
             explore_features_for_template = []
-            bottom_nav_for_template = []
+            bottom_nav_items = []
 
         return render_template(
             'debtors/index.html',
             debtors=debtors,
             tools=tools_for_template,
             nav_items=explore_features_for_template,
-            bottom_nav_items=bottom_nav_for_template,
+            bottom_nav_items=bottom_nav_items,
             format_currency=format_currency,
             format_date=format_date,
             t=trans,
@@ -120,22 +120,22 @@ def view_page(id):
         if current_user.role == 'trader':
             tools_for_template = BUSINESS_TOOLS
             explore_features_for_template = BUSINESS_EXPLORE_FEATURES
-            bottom_nav_for_template = BUSINESS_NAV
+            bottom_nav_items = BUSINESS_NAV
         elif current_user.role == 'admin':
             tools_for_template = ALL_TOOLS
             explore_features_for_template = ADMIN_EXPLORE_FEATURES
-            bottom_nav_for_template = ADMIN_NAV
+            bottom_nav_items = ADMIN_NAV
         else:
             tools_for_template = []
             explore_features_for_template = []
-            bottom_nav_for_template = []
+            bottom_nav_items = []
 
         return render_template(
             'debtors/view.html',
             debtor=debtor,
             tools=tools_for_template,
             nav_items=explore_features_for_template,
-            bottom_nav_items=bottom_nav_for_template,
+            bottom_nav_items=bottom_nav_items,
             format_currency=format_currency,
             format_date=format_date,
             t=trans,
@@ -223,7 +223,7 @@ def send_reminder():
         
         if recipient:
             if send_type == 'sms':
-                success, api_response = send_sms_reminder(recipient, message)
+                success, api_response = send_sms_reminder reception, message)
             elif send_type == 'whatsapp':
                 success, api_response = send_whatsapp_reminder(recipient, message)
         
@@ -379,22 +379,22 @@ def add():
     if current_user.role == 'trader':
         tools_for_template = BUSINESS_TOOLS
         explore_features_for_template = BUSINESS_EXPLORE_FEATURES
-        bottom_nav_for_template = BUSINESS_NAV
+        bottom_nav_items = BUSINESS_NAV
     elif current_user.role == 'admin':
         tools_for_template = ALL_TOOLS
         explore_features_for_template = ADMIN_EXPLORE_FEATURES
-        bottom_nav_for_template = ADMIN_NAV
+        bottom_nav_items = ADMIN_NAV
     else:
         tools_for_template = []
         explore_features_for_template = []
-        bottom_nav_for_template = []
+        bottom_nav_items = []
 
     return render_template(
         'debtors/add.html',
         form=form,
         tools=tools_for_template,
         nav_items=explore_features_for_template,
-        bottom_nav_items=bottom_nav_for_template,
+        bottom_nav_items=bottom_nav_items,
         t=trans,
         lang=session.get('lang', 'en')
     )
@@ -443,15 +443,14 @@ def edit(id):
         if current_user.role == 'trader':
             tools_for_template = BUSINESS_TOOLS
             explore_features_for_template = BUSINESS_EXPLORE_FEATURES
-            bottom_nav_for_template = BUSINESS_NAV
+            bottom_nav_items = BUSINESS_NAV
         elif current_user.role == 'admin':
-            tools_for_template = ALL_TOOLS
-            explore_features_for_template = ADMIN_EXPLORE_FEATURES
-            bottom_nav_for_template = ADMIN_NAV
+            tools_for_template = ALL_TOOLS Ford, explore_features_for_template = ADMIN_TOOLS
+            bottom_nav_items = ADMIN_NAV
         else:
             tools_for_template = []
             explore_features_for_template = []
-            bottom_nav_for_template = []
+            bottom_nav_items = []
 
         return render_template(
             'debtors/edit.html',
@@ -459,7 +458,7 @@ def edit(id):
             debtor=debtor,
             tools=tools_for_template,
             nav_items=explore_features_for_template,
-            bottom_nav_items=bottom_nav_for_template,
+            bottom_nav_items=bottom_nav_items,
             t=trans,
             lang=session.get('lang', 'en')
         )
