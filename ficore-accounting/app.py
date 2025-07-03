@@ -38,7 +38,7 @@ from pymongo import MongoClient
 import certifi
 from news.routes import seed_news
 from taxation.routes import seed_tax_data
-from coins.routes import coins_bp, init_coins_limiter
+from coins.routes import coins_bp
 
 # Load environment variables
 load_dotenv()
@@ -401,7 +401,6 @@ def create_app():
     logger.info('Registered taxation blueprint')
     try:
         app.register_blueprint(coins_bp, url_prefix='/coins')
-        init_coins_limiter(app)
         logger.info('Registered coins blueprint and initialized limiter')
     except Exception as e:
         logger.warning(f'Could not import coins blueprint: {str(e)}')
