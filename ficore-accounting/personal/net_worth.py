@@ -115,6 +115,9 @@ def main():
         mongo=get_mongo_db()
     )
 
+    tools = PERSONAL_TOOLS if current_user.role == 'personal' else ALL_TOOLS
+    bottom_nav_items = PERSONAL_NAV if current_user.role == 'personal' else ADMIN_NAV
+
     try:
         filter_criteria = {} if is_admin() else {'user_id': current_user.id} if current_user.is_authenticated else {'session_id': session['sid']}
         
@@ -295,8 +298,6 @@ def main():
                     rate=f"{latest_health['savings_rate']:.2f}"
                 ))
 
-        tools = PERSONAL_TOOLS if current_user.role == 'personal' else ALL_TOOLS
-        nav_items = PERSONAL_NAV if current_user.role == 'personal' else ADMIN_NAV
         current_app.logger.info(f"Rendering net worth main page with {len(records)} records for session {session['sid']}", extra={'session_id': session['sid']})
         return render_template(
             'personal/net_worth/net_worth_main.html',
@@ -318,14 +319,12 @@ def main():
             lang=lang,
             tool_title=trans('net_worth_title', default='Net Worth Calculator', lang=lang),
             tools=tools,
-            nav_items=nav_items
+            bottom_nav_items=bottom_nav_items
         )
 
     except Exception as e:
-        current_app.logger.error(f"Error in net_worth.main for session {session.get('sid', 'unknown')}: {str(e)}", extra={'session_id': session.get('sid', 'unknown')})
+        current_app.logger.error(f"Error in net_worth.main for session {session.get('sid', 'unknown')}: {str(e)}", extra={'session_id': session['sid']})
         flash(trans("net_worth_dashboard_load_error", default="Error loading net worth dashboard"), "danger")
-        tools = PERSONAL_TOOLS if current_user.role == 'personal' else ALL_TOOLS
-        nav_items = PERSONAL_NAV if current_user.role == 'personal' else ADMIN_NAV
         return render_template(
             'personal/net_worth/net_worth_main.html',
             form=form,
@@ -357,7 +356,7 @@ def main():
             lang=lang,
             tool_title=trans('net_worth_title', default='Net Worth Calculator', lang=lang),
             tools=tools,
-            nav_items=nav_items
+            bottom_nav_items=bottom_nav_items
         ), 500
 
 @net_worth_bp.route('/summary')
@@ -396,6 +395,9 @@ def unsubscribe(email):
     session.modified = True
     lang = session.get('lang', 'en')
     
+    tools = PERSONAL_TOOLS if current_user.role == 'personal' else ALL_TOOLS
+    bottom_nav_items = PERSONAL_NAV if current_user.role == 'personal' else ADMIN_NAV
+    
     try:
         log_tool_usage(
             tool_name='net_worth',
@@ -424,7 +426,7 @@ def unsubscribe(email):
             flash(trans("net_worth_unsubscribe_failed", default="Failed to unsubscribe. Email not found or already unsubscribed."), "danger")
         return redirect(url_for('personal.index'))
     except Exception as e:
-        current_app.logger.error(f"Error in net_worth.unsubscribe for session {session.get('sid', 'unknown')}: {str(e)}", extra={'session_id': session.get('sid', 'unknown')})
+        current_app.logger.error(f"Error in net_worth.unsubscribe for session {session.get('sid', 'unknown')}: {str(e)}", extra={'session_id': session['sid']})
         flash(trans("net_worth_unsubscribe_error", default="Error processing unsubscribe request"), "danger")
         return redirect(url_for('personal.index'))
 
@@ -433,7 +435,7 @@ def handle_csrf_error(e):
     """Handle CSRF errors with user-friendly message."""
     lang = session.get('lang', 'en')
     tools = PERSONAL_TOOLS if current_user.role == 'personal' else ALL_TOOLS
-    nav_items = PERSONAL_NAV if current_user.role == 'personal' else ADMIN_NAV
+    bottom_nav_items = PERSONAL_NAV if current_user.role == 'personal' else ADMIN_NAV
     current_app.logger.error(f"CSRF error on {request.path}: {e.description}", extra={'session_id': session.get('sid', 'unknown')})
     flash(trans("net_worth_csrf_error", default="Form submission failed due to a missing security token. Please refresh and try again."), "danger")
     return render_template(
@@ -467,5 +469,5 @@ def handle_csrf_error(e):
         lang=lang,
         tool_title=trans('net_worth_title', default='Net Worth Calculator', lang=lang),
         tools=tools,
-        nav_items=nav_items
+        bottom_nav_items=bottom_nav_items
     ), 400
