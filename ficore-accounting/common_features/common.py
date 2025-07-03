@@ -1,13 +1,21 @@
 from flask import Blueprint, render_template, redirect, url_for, flash, request, session, jsonify
 from flask_login import login_required, current_user
 from translations import trans
-from utils import requires_role, get_mongo_db
+from utils import (
+    requires_role, get_mongo_db,
+    PERSONAL_TOOLS, PERSONAL_NAV, PERSONAL_EXPLORE_FEATURES,
+    BUSINESS_TOOLS, BUSINESS_NAV, BUSINESS_EXPLORE_FEATURES,
+    AGENT_TOOLS, AGENT_NAV, AGENT_EXPLORE_FEATURES,
+    ALL_TOOLS, ADMIN_NAV, ADMIN_EXPLORE_FEATURES
+)
 import bleach
 import datetime
 import logging
 from bson import ObjectId
 
-common_bp = Blueprint('common_bp', __name__)
+logger = logging.getLogger(__name__)
+
+common_bp = Blueprint('common_bp', __name__, template_folder='templates/common_features')
 
 # Sanitize HTML inputs to prevent XSS
 def sanitize_input(text):
@@ -33,8 +41,10 @@ def news_list():
         query['category'] = category
     
     articles = list(db.news.find(query).sort('published_at', -1))
+    for article in articles:
+        article['_id'] = str(article['_id'])
     categories = db.news.distinct('category')
-    logging.info(f"News list queried: search={search_query}, category={category}, articles={len(articles)}")
+    logger.info(f"News list queried: user={current_user.id}, search={search_query}, category={category}, articles={len(articles)}")
     
     if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
         return jsonify([{
@@ -45,12 +55,20 @@ def news_list():
             'content': article['content'][:100] + '...' if len(article['content']) > 100 else article['content']
         } for article in articles])
     
-    return render_template('common_features/news.html',
-                         section='list',
-                         articles=articles,
-                         categories=categories,
-                         t=trans,
-                         lang=session.get('lang', 'en'))
+    tools = PERSONAL_TOOLS if current_user.role == 'personal' else BUSINESS_TOOLS if current_user.role == 'trader' else AGENT_TOOLS if current_user.role == 'agent' else ALL_TOOLS
+    nav_items = PERSONAL_EXPLORE_FEATURES if current_user.role == 'personal' else BUSINESS_EXPLORE_FEATURES if current_user.role == 'trader' else AGENT_EXPLORE_FEATURES if current_user.role == 'agent' else ADMIN_EXPLORE_FEATURES
+    bottom_nav_items = PERSONAL_NAV if current_user.role == 'personal' else BUSINESS_NAV if current_user.role == 'trader' else AGENT_NAV if current_user.role == 'agent' else ADMIN_NAV
+    return render_template(
+        'common_features/news.html',
+        section='list',
+        articles=articles,
+        categories=categories,
+        t=trans,
+        lang=session.get('lang', 'en'),
+        tools=tools,
+        nav_items=nav_items,
+        bottom_nav_items=bottom_nav_items
+    )
 
 @common_bp.route('/news/<article_id>', methods=['GET'])
 @requires_role(['personal', 'trader', 'agent', 'admin'])
@@ -59,20 +77,30 @@ def news_detail(article_id):
     db = get_mongo_db()
     try:
         article = db.news.find_one({'_id': ObjectId(article_id), 'is_active': True})
-    except:
+    except Exception as e:
+        logger.error(f"Error fetching news article {article_id}: {str(e)}")
         article = None
     
     if not article:
-        logging.warning(f"News article not found: id={article_id}")
+        logger.warning(f"News article not found: id={article_id}")
         flash(trans('news_article_not_found', default='Article not found'), 'danger')
         return redirect(url_for('common_bp.news_list'))
     
-    logging.info(f"News detail viewed: id={article_id}, title={article['title']}")
-    return render_template('common_features/news.html',
-                         section='detail',
-                         article=article,
-                         t=trans,
-                         lang=session.get('lang', 'en'))
+    article['_id'] = str(article['_id'])
+    logger.info(f"News detail viewed: id={article_id}, title={article['title']}, user={current_user.id}")
+    tools = PERSONAL_TOOLS if current_user.role == 'personal' else BUSINESS_TOOLS if current_user.role == 'trader' else AGENT_TOOLS if current_user.role == 'agent' else ALL_TOOLS
+    nav_items = PERSONAL_EXPLORE_FEATURES if current_user.role == 'personal' else BUSINESS_EXPLORE_FEATURES if current_user.role == 'trader' else AGENT_EXPLORE_FEATURES if current_user.role == 'agent' else ADMIN_EXPLORE_FEATURES
+    bottom_nav_items = PERSONAL_NAV if current_user.role == 'personal' else BUSINESS_NAV if current_user.role == 'trader' else AGENT_NAV if current_user.role == 'agent' else ADMIN_NAV
+    return render_template(
+        'common_features/news.html',
+        section='detail',
+        article=article,
+        t=trans,
+        lang=session.get('lang', 'en'),
+        tools=tools,
+        nav_items=nav_items,
+        bottom_nav_items=bottom_nav_items
+    )
 
 @common_bp.route('/admin/news_management', methods=['GET', 'POST'])
 @requires_role('admin')
@@ -87,7 +115,7 @@ def news_management():
         is_active = 'is_active' in request.form
         
         if not title or not content:
-            logging.error(f"News creation failed: title={title}, content={content}")
+            logger.error(f"News creation failed: title={title}, content={content}, user={current_user.id}")
             flash(trans('news_title_content_required', default='Title and content are required'), 'danger')
         else:
             sanitized_content = sanitize_input(content)
@@ -101,16 +129,23 @@ def news_management():
                 'created_by': current_user.id
             }
             db.news.insert_one(article)
-            logging.info(f"News article created: title={title}")
+            logger.info(f"News article created: title={title}, user={current_user.id}")
             flash(trans('news_article_added', default='News article added successfully'), 'success')
             return redirect(url_for('common_bp.news_management'))
     
     articles = list(db.news.find().sort('published_at', -1))
-    return render_template('common_features/news.html',
-                         section='admin',
-                         articles=articles,
-                         t=trans,
-                         lang=session.get('lang', 'en'))
+    for article in articles:
+        article['_id'] = str(article['_id'])
+    return render_template(
+        'common_features/news.html',
+        section='admin',
+        articles=articles,
+        t=trans,
+        lang=session.get('lang', 'en'),
+        tools=ALL_TOOLS,
+        nav_items=ADMIN_EXPLORE_FEATURES,
+        bottom_nav_items=ADMIN_NAV
+    )
 
 @common_bp.route('/admin/news_management/edit/<article_id>', methods=['GET', 'POST'])
 @requires_role('admin')
@@ -119,11 +154,12 @@ def edit_news(article_id):
     db = get_mongo_db()
     try:
         article = db.news.find_one({'_id': ObjectId(article_id)})
-    except:
+    except Exception as e:
+        logger.error(f"Error fetching news article for edit {article_id}: {str(e)}")
         article = None
     
     if not article:
-        logging.warning(f"Edit news article not found: id={article_id}")
+        logger.warning(f"Edit news article not found: id={article_id}, user={current_user.id}")
         flash(trans('news_article_not_found', default='Article not found'), 'danger')
         return redirect(url_for('common_bp.news_management'))
     
@@ -135,7 +171,7 @@ def edit_news(article_id):
         is_active = 'is_active' in request.form
         
         if not title or not content:
-            logging.error(f"News update failed: title={title}, content={content}")
+            logger.error(f"News update failed: title={title}, content={content}, user={current_user.id}")
             flash(trans('news_title_content_required', default='Title and content are required'), 'danger')
         else:
             sanitized_content = sanitize_input(content)
@@ -150,15 +186,21 @@ def edit_news(article_id):
                     'updated_at': datetime.datetime.utcnow()
                 }}
             )
-            logging.info(f"News article updated: id={article_id}, title={title}")
+            logger.info(f"News article updated: id={article_id}, title={title}, user={current_user.id}")
             flash(trans('news_article_updated', default='News article updated successfully'), 'success')
             return redirect(url_for('common_bp.news_management'))
     
-    return render_template('common_features/news.html',
-                         section='edit',
-                         article=article,
-                         t=trans,
-                         lang=session.get('lang', 'en'))
+    article['_id'] = str(article['_id'])
+    return render_template(
+        'common_features/news.html',
+        section='edit',
+        article=article,
+        t=trans,
+        lang=session.get('lang', 'en'),
+        tools=ALL_TOOLS,
+        nav_items=ADMIN_EXPLORE_FEATURES,
+        bottom_nav_items=ADMIN_NAV
+    )
 
 @common_bp.route('/admin/news_management/delete/<article_id>', methods=['POST'])
 @requires_role('admin')
@@ -168,13 +210,13 @@ def delete_news(article_id):
     try:
         result = db.news.delete_one({'_id': ObjectId(article_id)})
         if result.deleted_count > 0:
-            logging.info(f"News article deleted: id={article_id}")
+            logger.info(f"News article deleted: id={article_id}, user={current_user.id}")
             flash(trans('news_article_deleted', default='News article deleted successfully'), 'success')
         else:
-            logging.warning(f"News article not found for deletion: id={article_id}")
+            logger.warning(f"News article not found for deletion: id={article_id}, user={current_user.id}")
             flash(trans('news_article_not_found', default='Article not found'), 'danger')
-    except:
-        logging.error(f"Error deleting news article: id={article_id}")
+    except Exception as e:
+        logger.error(f"Error deleting news article: id={article_id}, user={current_user.id}, error={str(e)}")
         flash(trans('news_error', default='Error deleting article'), 'danger')
     return redirect(url_for('common_bp.news_management'))
 
@@ -233,4 +275,4 @@ def seed_news():
             }
         ]
         db.news.insert_many(articles)
-        logging.info("Seeded initial news articles")
+        logger.info("Seeded initial news articles")
