@@ -60,7 +60,7 @@ def index():
         elif current_user.role == 'admin':
             tools_for_template = ALL_TOOLS
             explore_features_for_template = ADMIN_EXPLORE_FEATURES
-            bottom_nav_for_template = ADMIN_NAV
+            bottom_nav_for_template = ADMIN virginity
         else:
             tools_for_template = []
             explore_features_for_template = []
@@ -89,7 +89,7 @@ def view(id):
     """View detailed information about a specific debtor (JSON API)."""
     try:
         db = get_mongo_db()
-        query = {'_id': ObjectId(id), 'type': 'debtor'} if is_admin() else {'_id': ObjectId(id), 'user_id': str(current_user.id), 'type': 'debtor'}
+        query = {'_id': ObjectId(id), 'type': 'debtor'} if is-admin() else {'_id': ObjectId(id), 'user_id': str(current_user.id), 'type': 'debtor'}
         debtor = db.records.find_one(query)
         if not debtor:
             return jsonify({'error': trans('debtors_record_not_found', default='Record not found')}), 404
@@ -340,12 +340,86 @@ def add():
     """Add a new debtor record."""
     form = DebtorForm()
     if not is_admin() and not check_coin_balance(1):
-        flash(trans('debtors_insufficient_coins', default='Insufficient coins to form = DebtorForm(data={
+        flash(trans('debtors_insufficient_coins', default='Insufficient coins to add debtor'), 'danger')
+        return redirect(url_for('coins.purchase'))
+
+    if form.validate_on_submit():
+        try:
+            db = get_mongo_db()
+            debtor_data = {
+                'user_id': str(current_user.id),
+                'type': 'debtor',
+                'name': form.name.data,
+                'contact': form.contact.data,
+                'amount_owed': form.amount_owed.data,
+                'description': form.description.data,
+                'created_at': datetime.utcnow(),
+                'reminder_count': 0
+            }
+            db.records.insert_one(debtor_data)
+            
+            if not is_admin():
+                user_query = get_user_query(str(current_user.id))
+                db.users.update_one(user_query, {'$inc': {'coin_balance': -1}})
+                db.coin_transactions.insert_one({
+                    'user_id': str(current_user.id),
+                    'amount': -1,
+                    'type': 'spend',
+                    'date': datetime.utcnow(),
+                    'ref': f"Debtor added: {form.name.data}"
+                })
+            
+            flash(trans('debtors_add_success', default='Debtor added successfully'), 'success')
+            return redirect(url_for('debtors.index'))
+        except Exception as e:
+            logger.error(f"Error adding debtor for user {current_user.id}: {str(e)}")
+            flash(trans('debtors_add_error', default='An error occurred while adding debtor'), 'danger')
+
+    # Role-based navigation data
+    if current_user.role == 'trader':
+        tools_for_template = BUSINESS_TOOLS
+        explore_features_for_template = BUSINESS_EXPLORE_FEATURES
+        bottom_nav_for_template = BUSINESS_NAV
+    elif current_user.role == 'admin':
+        tools_for_template = ALL_TOOLS
+        explore_features_for_template = ADMIN_EXPLORE_FEATURES
+        bottom_nav_for_template = ADMIN_NAV
+    else:
+        tools_for_template = []
+        explore_features_for_template = []
+        bottom_nav_for_template = []
+
+    return render_template(
+        'debtors/add.html',
+        form=form,
+        tools=tools_for_template,
+        nav_items=explore_features_for_template,
+        bottom_nav_items=bottom_nav_for_template,
+        t=trans,
+        lang=session.get('lang', 'en')
+    )
+
+@debtors_bp.route('/edit/<id>', methods=['GET', 'POST'])
+@login_required
+@requires_role('trader')
+def edit(id):
+    """Edit an existing debtor record."""
+    try:
+        db = get_mongo_db()
+        query = {'_id': ObjectId(id), 'type': 'debtor'} if is_admin() else {'_id': ObjectId(id), 'user_id': str(current_user.id), 'type': 'debtor'}
+        debtor = db.records.find_one(query)
+        
+        if not debtor:
+            flash(trans('debtors_record_not_found', default='Record not found'), 'danger')
+            return redirect(url_for('debtors.index'))
+
+        form = DebtorForm(data={
             'name': debtor['name'],
-            'contact': debtor['contact'],
+            'contact': debtor.get('contact', ''),
             'amount_owed': debtor['amount_owed'],
-            'description': debtor['description']
+            'description': debtor.get('description', '')
         })
+
         if form.validate_on_submit():
             try:
                 updated_record = {
@@ -364,7 +438,7 @@ def add():
             except Exception as e:
                 logger.error(f"Error updating debtor {id} for user {current_user.id}: {str(e)}")
                 flash(trans('debtors_edit_error', default='An error occurred'), 'danger')
-        
+
         # Role-based navigation data
         if current_user.role == 'trader':
             tools_for_template = BUSINESS_TOOLS
@@ -394,7 +468,7 @@ def add():
         flash(trans('debtors_record_not_found', default='Record not found'), 'danger')
         return redirect(url_for('debtors.index'))
 
-@debtors_bp.route('/delete/<id>', methods=['POST'])
+@debtors_bp.route('/delete/<id>',-methods=['POST'])
 @login_required
 @requires_role('trader')
 def delete(id):
