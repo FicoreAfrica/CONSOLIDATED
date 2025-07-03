@@ -157,6 +157,7 @@ courses_data = {
                         "content_key": "learning_hub_lesson_savings_strategies_content",
                         "content_en": "Learn proven strategies for building your savings effectively, including the 50/30/20 rule, automatic savings, and emergency fund planning.",
                         "quiz_id": None
+
                     },
                     {
                         "id": "savings_basics-module-1-lesson-2",
@@ -766,7 +767,7 @@ def main():
                 flash(trans('learning_hub_upload_failed', default='Failed to upload content'), 'danger')
         
         tools = PERSONAL_TOOLS if current_user.role == 'personal' else ALL_TOOLS
-        nav_items = PERSONAL_NAV if current_user.role == 'personal' else ADMIN_NAV
+        bottom_nav_items = PERSONAL_NAV if current_user.role == 'personal' else ADMIN_NAV
         current_app.logger.info(f"Rendering main learning hub page", extra={'session_id': session.get('sid', 'no-session-id')})
         
         return render_template(
@@ -787,7 +788,7 @@ def main():
             lang=lang,
             tool_title=trans('learning_hub_title', default='Learning Hub', lang=lang),
             tools=tools,
-            nav_items=nav_items,
+            bottom_nav_items=bottom_nav_items,
             role_filter=role_filter
         )
         
@@ -795,7 +796,7 @@ def main():
         current_app.logger.error(f"Error rendering main learning hub page: {str(e)}", extra={'session_id': session.get('sid', 'no-session-id')})
         flash(trans("learning_hub_error_loading", default="Error loading learning hub", lang=lang), "danger")
         tools = PERSONAL_TOOLS if current_user.role == 'personal' else ALL_TOOLS
-        nav_items = PERSONAL_NAV if current_user.role == 'personal' else ADMIN_NAV
+        bottom_nav_items = PERSONAL_NAV if current_user.role == 'personal' else ADMIN_NAV
         return render_template(
             'personal/learning_hub/learning_hub_main.html',
             courses={},
@@ -814,7 +815,7 @@ def main():
             lang=lang,
             tool_title=trans('learning_hub_title', default='Learning Hub', lang=lang),
             tools=tools,
-            nav_items=nav_items,
+            bottom_nav_items=bottom_nav_items,
             role_filter='all'
         ), 500
 
@@ -1209,7 +1210,7 @@ def profile():
             flash(trans('learning_hub_profile_failed', default='Failed to save profile', lang=lang), 'danger')
         
         tools = PERSONAL_TOOLS if current_user.role == 'personal' else ALL_TOOLS
-        nav_items = PERSONAL_NAV if current_user.role == 'personal' else ADMIN_NAV
+        bottom_nav_items = PERSONAL_NAV if current_user.role == 'personal' else ADMIN_NAV
         return render_template(
             'personal/learning_hub/learning_hub_profile.html',
             profile_form=profile_form,
@@ -1217,14 +1218,14 @@ def profile():
             lang=lang,
             tool_title=trans('learning_hub_profile_title', default='Learning Hub Profile', lang=lang),
             tools=tools,
-            nav_items=nav_items
+            bottom_nav_items=bottom_nav_items
         )
         
     except Exception as e:
         current_app.logger.error(f"Error in profile page: {str(e)}", extra={'session_id': session.get('sid', 'no-session-id')})
         flash(trans("learning_hub_error_loading", default="Error loading profile", lang=lang), "danger")
         tools = PERSONAL_TOOLS if current_user.role == 'personal' else ALL_TOOLS
-        nav_items = PERSONAL_NAV if current_user.role == 'personal' else ADMIN_NAV
+        bottom_nav_items = PERSONAL_NAV if current_user.role == 'personal' else ADMIN_NAV
         return render_template(
             'personal/learning_hub/learning_hub_profile.html',
             profile_form=LearningHubProfileForm(),
@@ -1232,7 +1233,7 @@ def profile():
             lang=lang,
             tool_title=trans('learning_hub_profile_title', default='Learning Hub Profile', lang=lang),
             tools=tools,
-            nav_items=nav_items
+            bottom_nav_items=bottom_nav_items
         ), 500
 
 @learning_hub_bp.route('/unsubscribe/<email>')
@@ -1314,7 +1315,7 @@ def handle_not_found(e):
     
     lang = session.get('lang', 'en')
     tools = PERSONAL_TOOLS if current_user.role == 'personal' else ALL_TOOLS
-    nav_items = PERSONAL_NAV if current_user.role == 'personal' else ADMIN_NAV
+    bottom_nav_items = PERSONAL_NAV if current_user.role == 'personal' else ADMIN_NAV
     current_app.logger.error(f"404 error on {request.path}: {str(e)}", extra={'session_id': session.get('sid', 'no-session-id')})
     flash(trans("learning_hub_not_found", default="The requested page was not found. Please check the URL or return to the main page.", lang=lang), "danger")
     return render_template(
@@ -1335,7 +1336,7 @@ def handle_not_found(e):
         lang=lang,
         tool_title=trans('learning_hub_title', default='Learning Hub', lang=lang),
         tools=tools,
-        nav_items=nav_items,
+        bottom_nav_items=bottom_nav_items,
         role_filter='all'
     ), 404
 
@@ -1349,7 +1350,7 @@ def handle_csrf_error(e):
     
     lang = session.get('lang', 'en')
     tools = PERSONAL_TOOLS if current_user.role == 'personal' else ALL_TOOLS
-    nav_items = PERSONAL_NAV if current_user.role == 'personal' else ADMIN_NAV
+    bottom_nav_items = PERSONAL_NAV if current_user.role == 'personal' else ADMIN_NAV
     current_app.logger.error(f"CSRF error on {request.path}: {e.description}", extra={'session_id': session.get('sid', 'no-session-id')})
     flash(trans("learning_hub_csrf_error", default="Form submission failed due to a missing security token. Please refresh and try again.", lang=lang), "danger")
     return render_template(
@@ -1370,7 +1371,7 @@ def handle_csrf_error(e):
         lang=lang,
         tool_title=trans('learning_hub_title', default='Learning Hub', lang=lang),
         tools=tools,
-        nav_items=nav_items,
+        bottom_nav_items=bottom_nav_items,
         role_filter='all'
     ), 400
 
