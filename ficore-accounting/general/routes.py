@@ -12,7 +12,7 @@ from jinja2.exceptions import TemplateNotFound
 from datetime import datetime
 from models import create_feedback
 from flask_wtf.csrf import CSRFError
-from flask import current_app # Added to resolve current_app not defined in error handling
+from flask import current_app
 
 general_bp = Blueprint('general_bp', __name__, url_prefix='/general')
 
@@ -28,21 +28,21 @@ def home():
     if current_user.role == 'trader':
         tools_for_template = BUSINESS_TOOLS
         explore_features_for_template = BUSINESS_EXPLORE_FEATURES
-        bottom_nav_for_template = BUSINESS_NAV
+        bottom_nav_items = BUSINESS_NAV
     elif current_user.role == 'admin':
         tools_for_template = ALL_TOOLS
         explore_features_for_template = ADMIN_EXPLORE_FEATURES
-        bottom_nav_for_template = ADMIN_NAV
+        bottom_nav_items = ADMIN_NAV
     else:
         tools_for_template = []
         explore_features_for_template = []
-        bottom_nav_for_template = []
+        bottom_nav_items = []
 
     return render_template(
         'general/home.html',
         tools=tools_for_template,
         nav_items=explore_features_for_template,
-        bottom_nav_items=bottom_nav_for_template,
+        bottom_nav_items=bottom_nav_items,
         t=trans,
         lang=session.get('lang', 'en'),
         title=trans('general_business_home', lang=session.get('lang', 'en'))
@@ -56,33 +56,33 @@ def about():
         if current_user.role == 'personal':
             tools_for_template = PERSONAL_TOOLS
             explore_features_for_template = PERSONAL_EXPLORE_FEATURES
-            bottom_nav_for_template = PERSONAL_NAV
+            bottom_nav_items = PERSONAL_NAV
         elif current_user.role == 'trader':
             tools_for_template = BUSINESS_TOOLS
             explore_features_for_template = BUSINESS_EXPLORE_FEATURES
-            bottom_nav_for_template = BUSINESS_NAV
+            bottom_nav_items = BUSINESS_NAV
         elif current_user.role == 'agent':
             tools_for_template = AGENT_TOOLS
             explore_features_for_template = AGENT_EXPLORE_FEATURES
-            bottom_nav_for_template = AGENT_NAV
+            bottom_nav_items = AGENT_NAV
         elif current_user.role == 'admin':
             tools_for_template = ALL_TOOLS
             explore_features_for_template = ADMIN_EXPLORE_FEATURES
-            bottom_nav_for_template = ADMIN_NAV
+            bottom_nav_items = ADMIN_NAV
         else:
             tools_for_template = []
             explore_features_for_template = []
-            bottom_nav_for_template = []
+            bottom_nav_items = []
     else:
         tools_for_template = []
         explore_features_for_template = []
-        bottom_nav_for_template = []
+        bottom_nav_items = []
 
     return render_template(
         'general/about.html',
         tools=tools_for_template,
         nav_items=explore_features_for_template,
-        bottom_nav_items=bottom_nav_for_template,
+        bottom_nav_items=bottom_nav_items,
         t=trans,
         lang=session.get('lang', 'en'),
         title=trans('general_about', lang=session.get('lang', 'en'))
@@ -96,33 +96,33 @@ def contact():
         if current_user.role == 'personal':
             tools_for_template = PERSONAL_TOOLS
             explore_features_for_template = PERSONAL_EXPLORE_FEATURES
-            bottom_nav_for_template = PERSONAL_NAV
+            bottom_nav_items = PERSONAL_NAV
         elif current_user.role == 'trader':
             tools_for_template = BUSINESS_TOOLS
             explore_features_for_template = BUSINESS_EXPLORE_FEATURES
-            bottom_nav_for_template = BUSINESS_NAV
+            bottom_nav_items = BUSINESS_NAV
         elif current_user.role == 'agent':
             tools_for_template = AGENT_TOOLS
             explore_features_for_template = AGENT_EXPLORE_FEATURES
-            bottom_nav_for_template = AGENT_NAV
+            bottom_nav_items = AGENT_NAV
         elif current_user.role == 'admin':
             tools_for_template = ALL_TOOLS
             explore_features_for_template = ADMIN_EXPLORE_FEATURES
-            bottom_nav_for_template = ADMIN_NAV
+            bottom_nav_items = ADMIN_NAV
         else:
             tools_for_template = []
             explore_features_for_template = []
-            bottom_nav_for_template = []
+            bottom_nav_items = []
     else:
         tools_for_template = []
         explore_features_for_template = []
-        bottom_nav_for_template = []
+        bottom_nav_items = []
 
     return render_template(
         'general/contact.html',
         tools=tools_for_template,
         nav_items=explore_features_for_template,
-        bottom_nav_items=bottom_nav_for_template,
+        bottom_nav_items=bottom_nav_items,
         t=trans,
         lang=session.get('lang', 'en'),
         title=trans('general_contact', lang=session.get('lang', 'en'))
@@ -184,7 +184,6 @@ def feedback():
         ['receipts', trans('receipts_dashboard', default='Receipts')],
         ['payment', trans('payments_dashboard', default='Payments')],
         ['inventory', trans('inventory_dashboard', default='Inventory')],
-        # Corrected line 186:
         ['report', trans('reports_dashboard', default='Reports')],
         ['financial_health', trans('financial_health_calculator', default='Financial Health')],
         ['budget', trans('budget_budget_planner', default='Budget')],
@@ -193,8 +192,8 @@ def feedback():
         ['emergency_fund', trans('emergency_fund_calculator', default='Emergency Fund')],
         ['learning', trans('learning_hub_courses', default='Learning')],
         ['quiz', trans('quiz_personality_quiz', default='Quiz')],
-        ['taxation', trans('taxation_calculator', default='Taxation')], # Added comma here
-        ['news', trans('news_updates', default='News')] # Removed extra indentation, ensure proper list formatting
+        ['taxation', trans('taxation_calculator', default='Taxation')],
+        ['news', trans('news_updates', default='News')]
     ]
     if request.method == 'POST':
         try:
@@ -211,7 +210,6 @@ def feedback():
                 flash(trans('general_invalid_input', default='Please provide a rating between 1 and 5'), 'danger')
                 return render_template('general/feedback.html', t=trans, lang=lang, tool_options=tool_options, title=trans('general_feedback', lang=lang))
             with current_app.app_context():
-                # Import get_mongo_db here to avoid circular dependencies if it's defined in models.py
                 from models import get_mongo_db
                 if current_user.is_authenticated:
                     from utils import get_user_query
