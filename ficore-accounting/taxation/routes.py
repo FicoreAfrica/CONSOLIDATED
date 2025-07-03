@@ -106,32 +106,36 @@ def tax_summary(name, gross_income, turnover):
         "sme_cit": cit
     }
 
-# Database Seeding
+    # Seed tax rates
 def seed_tax_data():
     db = get_mongo_db()
-    # Create collections if they don't exist
-    for collection in ['tax_rates', 'payment_locations', 'tax_reminders']:
+    for collection in ['tax_rates', 'vat_rules', 'payment_locations', 'tax_reminders']:
         if collection not in db.list_collection_names():
             db.create_collection(collection)
 
-    # Seed tax rates
     if db.tax_rates.count_documents({}) == 0:
         tax_rates = [
-            {'role': 'personal', 'min_income': 0.0, 'max_income': 800000.0, 'rate': 0.0, 'description': trans('tax_rate_personal_0', default='0% tax rate for personal income up to 800,000 NGN')},
-            {'role': 'personal', 'min_income': 800001.0, 'max_income': 3000000.0, 'rate': 0.15, 'description': trans('tax_rate_personal_15', default='15% tax rate for personal income from 800,001 to 3,000,000 NGN')},
-            {'role': 'personal', 'min_income': 3000001.0, 'max_income': 12000000.0, 'rate': 0.18, 'description': trans('tax_rate_personal_18', default='18% tax rate for personal income from 3,000,001 to 12,000,000 NGN')},
-            {'role': 'personal', 'min_income': 12000001.0, 'max_income': float('inf'), 'rate': 0.25, 'description': trans('tax_rate_personal_25', default='25% tax rate for personal income above 12,000,000 NGN')},
-            {'role': 'company', 'min_income': 0.0, 'max_income': 25000000.0, 'rate': 0.0, 'description': trans('tax_rate_company_small', default='0% for revenue up to ₦25M (Small Business)')},
-            {'role': 'company', 'min_income': 25000001.0, 'max_income': 100000000.0, 'rate': 0.20, 'description': trans('tax_rate_company_medium', default='20% for revenue between ₦25M and ₦100M (Medium Business)')},
-            {'role': 'company', 'min_income': 100000001.0, 'max_income': float('inf'), 'rate': 0.30, 'description': trans('tax_rate_company_large', default='30% for revenue above ₦100M (Large Business)')},
-            {'role': 'company', 'min_income': 0.0, 'max_income': 25000000.0, 'rate': 0.0, 'description': trans('tax_rate_cit_small', default='0% CIT for turnover ≤ ₦25M')},
-            {'role': 'company', 'min_income': 25000001.0, 'max_income': 100000000.0, 'rate': 0.20, 'description': trans('tax_rate_cit_medium', default='20% CIT for turnover ₦25M - ₦100M')},
-            {'role': 'company', 'min_income': 100000001.0  , 'max_income': float('inf'), 'rate': 0.30, 'description': trans('tax_rate_cit_large', default='30% CIT for turnover > ₦100M')}
+            {'role': 'personal', 'min_income': 0.0, 'max_income': 800000.0, 'rate': 0.0, 'description': trans('tax_rate_personal_0', default='0% tax rate for personal income up to ₦800,000 (with ₦200,000 rent relief if income ≤ ₦1M)')},
+            {'role': 'personal', 'min_income': 800001.0, 'max_income': 3000000.0, 'rate': 0.15, 'description': trans('tax_rate_personal_15', default='15% tax rate for personal income from ₦800,001 to ₦3,000,000')},
+            {'role': 'personal', 'min_income': 3000001.0, 'max_income': 12000000.0, 'rate': 0.18, 'description': trans('tax_rate_personal_18', default='18% tax rate for personal income from ₦3,000,001 to ₦12,000,000')},
+            {'role': 'personal', 'min_income': 12000001.0, 'max_income': 25000000.0, 'rate': 0.21, 'description': trans('tax_rate_personal_21', default='21% tax rate for personal income from ₦12,000,001 to ₦25,000,000')},
+            {'role': 'personal', 'min_income': 25000001.0, 'max_income': 50000000.0, 'rate': 0.23, 'description': trans('tax_rate_personal_23', default='23% tax rate for personal income from ₦25,000,001 to ₦50,000,000')},  # Fixed incomplete entry
+            {'role': 'personal', 'min_income': 50000001.0, 'max_income': float('inf'), 'rate': 0.25, 'description': trans('tax_rate_personal_25', default='25% tax rate for personal income above ₦50,000,000')},  # Added to complete progression
+            {'role': 'company', 'min_income': 0.0, 'max_income': 50000000.0, 'rate': 0.0, 'description': trans('tax_rate_cit_small', default='0% CIT for turnover ≤ ₦50M, simplified return, no audit')},  # Fixed incomplete trans
+            {'role': 'company', 'min_income': 50000001.0, 'max_income': float('inf'), 'rate': 0.25, 'description': trans('tax_rate_cit_large_2026', default='25% CIT for turnover > ₦50M (2026 onward)')}
         ]
         db.tax_rates.insert_many(tax_rates)
         logger.info("Seeded tax rates")
 
-    # Seed payment locations
+    if db.vat_rules.count_documents({}) == 0:
+        vat_rules = [
+            {'category': cat, 'vat_exempt': True, 'description': trans(f'tax_vat_exempt_{cat}', default=f'{cat.capitalize()} is exempt from VAT')} for cat in ['food', 'healthcare', 'education', 'rent', 'power', 'baby_products']
+        ] + [
+            {'category': 'business_credit', 'vat_exempt': False, 'description': trans('tax_vat_reclaimed', default='Input VAT reclaimed for business')}
+        ]
+        db.vat_rules.insert_many(vat_rules)
+        logger.info("Seeded VAT rules")
+
     if db.payment_locations.count_documents({}) == 0:
         locations = [
             {'name': 'Lagos NRS Office', 'address': '123 Broad Street, Lagos', 'contact': '+234-1-2345678'},
@@ -140,10 +144,9 @@ def seed_tax_data():
         db.payment_locations.insert_many(locations)
         logger.info("Seeded tax locations")
 
-    # Seed tax reminders
     if db.tax_reminders.count_documents({}) == 0:
         reminders = [
-            {'user_id': 'admin', 'message': trans('tax_reminder_quarterly', default='File quarterly tax return with NRS'), 'reminder_date': datetime.datetime(2025, 9, 30), 'created_at': datetime.datetime.utcnow()}
+            {'user_id': 'admin', 'message': trans('tax_reminder_quarterly', default='File quarterly tax return with NRS'), 'reminder_date': datetime.datetime(2026, 3, 31), 'created_at': datetime.datetime.utcnow()}
         ]
         db.tax_reminders.insert_many(reminders)
         logger.info("Seeded reminders")
