@@ -1,7 +1,12 @@
 from flask import Blueprint, render_template, redirect, url_for, flash, request, Response, jsonify, session
 from flask_login import login_required, current_user
 from translations import trans
-from utils import trans_function, requires_role, check_coin_balance, format_currency, format_date, get_mongo_db, is_admin, get_user_query, BUSINESS_TOOLS, BUSINESS_NAV, ALL_TOOLS, ADMIN_NAV
+from utils import (
+    trans_function, requires_role, check_coin_balance, format_currency, format_date,
+    get_mongo_db, is_admin, get_user_query,
+    BUSINESS_TOOLS, BUSINESS_NAV, BUSINESS_EXPLORE_FEATURES,
+    ALL_TOOLS, ADMIN_NAV, ADMIN_EXPLORE_FEATURES
+)
 from bson import ObjectId
 from datetime import datetime
 from flask_wtf import FlaskForm
@@ -36,8 +41,19 @@ def index():
         query = {'type': 'receipt'} if is_admin() else {'user_id': str(current_user.id), 'type': 'receipt'}
         receipts = list(db.cashflows.find(query).sort('created_at', -1))
         tools = BUSINESS_TOOLS if current_user.role == 'trader' else ALL_TOOLS
-        nav_items = BUSINESS_NAV if current_user.role == 'trader' else ADMIN_NAV
-        return render_template('receipts/index.html', receipts=receipts, format_currency=format_currency, format_date=format_date, t=trans, lang=session.get('lang', 'en'), tools=tools, nav_items=nav_items)
+        nav_items = BUSINESS_EXPLORE_FEATURES if current_user.role == 'trader' else ADMIN_EXPLORE_FEATURES
+        bottom_nav_items = BUSINESS_NAV if current_user.role == 'trader' else ADMIN_NAV
+        return render_template(
+            'receipts/index.html',
+            receipts=receipts,
+            format_currency=format_currency,
+            format_date=format_date,
+            tools=tools,
+            nav_items=nav_items,
+            bottom_nav_items=bottom_nav_items,
+            t=trans,
+            lang=session.get('lang', 'en')
+        )
     except Exception as e:
         logger.error(f"Error fetching receipts for user {current_user.id}: {str(e)}")
         flash(trans('receipts_fetch_error', default='An error occurred'), 'danger')
@@ -56,8 +72,6 @@ def view(id):
             return jsonify({'error': trans('receipts_record_not_found', default='Record not found')}), 404
         receipt['_id'] = str(receipt['_id'])
         receipt['created_at'] = receipt['created_at'].isoformat() if receipt.get('created_at') else None
-        tools = BUSINESS_TOOLS if current_user.role == 'trader' else ALL_TOOLS
-        nav_items = BUSINESS_NAV if current_user.role == 'trader' else ADMIN_NAV
         return jsonify(receipt)
     except Exception as e:
         logger.error(f"Error fetching receipt {id} for user {current_user.id}: {str(e)}")
@@ -114,8 +128,6 @@ def generate_pdf(id):
                 'ref': f"Receipt PDF generated for {receipt['party_name']}"
             })
         buffer.seek(0)
-        tools = BUSINESS_TOOLS if current_user.role == 'trader' else ALL_TOOLS
-        nav_items = BUSINESS_NAV if current_user.role == 'trader' else ADMIN_NAV
         return Response(
             buffer.getvalue(),
             mimetype='application/pdf',
@@ -168,8 +180,17 @@ def add():
             logger.error(f"Error adding receipt for user {current_user.id}: {str(e)}")
             flash(trans('receipts_add_error', default='An error occurred'), 'danger')
     tools = BUSINESS_TOOLS if current_user.role == 'trader' else ALL_TOOLS
-    nav_items = BUSINESS_NAV if current_user.role == 'trader' else ADMIN_NAV
-    return render_template('receipts/add.html', form=form, t=trans, lang=session.get('lang', 'en'), tools=tools, nav_items=nav_items)
+    nav_items = BUSINESS_EXPLORE_FEATURES if current_user.role == 'trader' else ADMIN_EXPLORE_FEATURES
+    bottom_nav_items = BUSINESS_NAV if current_user.role == 'trader' else ADMIN_NAV
+    return render_template(
+        'receipts/add.html',
+        form=form,
+        tools=tools,
+        nav_items=nav_items,
+        bottom_nav_items=bottom_nav_items,
+        t=trans,
+        lang=session.get('lang', 'en')
+    )
 
 @receipts_bp.route('/edit/<id>', methods=['GET', 'POST'])
 @login_required
@@ -208,8 +229,18 @@ def edit(id):
                 logger.error(f"Error updating receipt {id} for user {current_user.id}: {str(e)}")
                 flash(trans('receipts_edit_error', default='An error occurred'), 'danger')
         tools = BUSINESS_TOOLS if current_user.role == 'trader' else ALL_TOOLS
-        nav_items = BUSINESS_NAV if current_user.role == 'trader' else ADMIN_NAV
-        return render_template('receipts/edit.html', form=form, receipt=receipt, t=trans, lang=session.get('lang', 'en'), tools=tools, nav_items=nav_items)
+        nav_items = BUSINESS_EXPLORE_FEATURES if current_user.role == 'trader' else ADMIN_EXPLORE_FEATURES
+        bottom_nav_items = BUSINESS_NAV if current_user.role == 'trader' else ADMIN_NAV
+        return render_template(
+            'receipts/edit.html',
+            form=form,
+            receipt=receipt,
+            tools=tools,
+            nav_items=nav_items,
+            bottom_nav_items=bottom_nav_items,
+            t=trans,
+            lang=session.get('lang', 'en')
+        )
     except Exception as e:
         logger.error(f"Error fetching receipt {id} for user {current_user.id}: {str(e)}")
         flash(trans('receipts_record_not_found', default='Cashflow not found'), 'danger')
