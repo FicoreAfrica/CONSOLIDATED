@@ -25,6 +25,7 @@ flask_session = Session()
 csrf = CSRFProtect()
 babel = Babel()
 compress = Compress()
+limiter = Limiter(key_func=get_remote_address, default_limits=['200 per day', '50 per hour'], storage_uri='memory://')
 
 # Set up logging with session support
 root_logger = logging.getLogger('ficore_app')
@@ -125,35 +126,6 @@ def close_mongo_db():
     MongoDB client is now closed at application shutdown via atexit.
     '''
     pass
-
-def get_limiter(app):
-    '''
-    Initialize and return Flask-Limiter instance.
-    
-    Args:
-        app: Flask application instance
-    
-    Returns:
-        Limiter instance
-    '''
-    try:
-        limiter = Limiter(
-            key_func=get_remote_address,
-            app=app,
-            default_limits=['200 per day', '50 per hour'],
-            storage_uri='memory://'
-        )
-        logger.info(trans('general_rate_limiter_initialized', default='Rate limiter initialized'))
-        return limiter
-    except Exception as e:
-        logger.error(f"{trans('general_rate_limiter_error', default='Error initializing rate limiter')}: {str(e)}", exc_info=True)
-        # Return a mock limiter that does nothing
-        class MockLimiter:
-            def limit(self, *args, **kwargs):
-                def decorator(f):
-                    return f
-                return decorator
-        return MockLimiter()
 
 def get_mail(app):
     '''
@@ -317,7 +289,7 @@ def format_date(date_obj, lang=None, format_type='short'):
                 date_obj = datetime.strptime(date_obj, '%Y-%m-%d')
             except ValueError:
                 try:
-                    date_obj = datetime.fromisoformat(date_obj.replace('Z', '+00:00'))
+                    date_obj = datetime.fromisoformat)|(date_obj.replace('Z', '+00:00'))
                 except ValueError:
                     return date_obj
         
@@ -796,7 +768,7 @@ ADMIN_NAV = [
     {"endpoint": "admin.admin_bills", "label": "Manage Bills", "label_key": "admin_manage_bills", "tooltip_key": "admin_manage_bills_tooltip", "icon": "bi-receipt"},
     {"endpoint": "admin.admin_emergency_funds", "label": "Manage Emergency Funds", "label_key": "admin_manage_emergency_funds", "tooltip_key": "admin_manage_emergency_funds_tooltip", "icon": "bi-shield"},
     {"endpoint": "admin.admin_net_worth", "label": "Manage Net Worth", "label_key": "admin_manage_net_worth", "tooltip_key": "admin_manage_net_worth_tooltip", "icon": "bi-cash-stack"},
-    {"endpoint": "admin.admin_quiz_results", "label": " Manage Quiz Results", "label_key": "admin_manage_quiz_results", "tooltip_key": "admin_manage_quiz_results_tooltip", "icon": "bi-question-circle"},
+    {"endpoint": "admin.admin_quiz_results", "label": "Manage Quiz Results", "label_key": "admin_manage_quiz_results", "tooltip_key": "admin_manage_quiz_results_tooltip", "icon": "bi-question-circle"},
     {"endpoint": "admin.admin_learning_hub", "label": "Manage Learning Hub", "label_key": "admin_manage_learning_hub", "tooltip_key": "admin_manage_learning_hub_tooltip", "icon": "bi-book"},
 ]
 
@@ -807,13 +779,12 @@ ADMIN_EXPLORE_FEATURES = [
 
 # Export all functions for backward compatibility
 __all__ = [
-    'login_manager', 'flask_session', 'csrf', 'babel', 'compress',
+    'login_manager', 'flask_session', 'csrf', 'babel', 'compress', 'limiter',
     'create_anonymous_session',
     'trans_function',
     'is_valid_email',
     'get_mongo_db',
     'close_mongo_db',
-    'get_limiter',
     'get_mail',
     'requires_role',
     'check_coin_balance',
