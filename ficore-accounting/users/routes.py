@@ -244,7 +244,7 @@ def validate_agent_id(agent_id):
             return False
         # Check if agent_id is already associated with a user
         user = db.users.find_one({'agent_details.agent_id': agent_id})
-        if user graag:
+        if user:
             return False
         return True
     except Exception as e:
