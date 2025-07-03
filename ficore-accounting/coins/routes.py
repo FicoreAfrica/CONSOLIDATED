@@ -5,7 +5,13 @@ from flask_wtf.file import FileField, FileAllowed
 from gridfs import GridFS
 from wtforms import FloatField, StringField, SelectField, SubmitField, validators
 from translations import trans
-from utils import trans_function, requires_role, check_coin_balance, get_mongo_db, is_admin, get_user_query, get_limiter, PERSONAL_TOOLS, PERSONAL_NAV, BUSINESS_TOOLS, BUSINESS_NAV, AGENT_TOOLS, AGENT_NAV, ALL_TOOLS, ADMIN_NAV
+from utils import (
+    trans_function, requires_role, check_coin_balance, get_mongo_db, is_admin, get_user_query, get_limiter,
+    PERSONAL_TOOLS, PERSONAL_NAV, PERSONAL_EXPLORE_FEATURES,
+    BUSINESS_TOOLS, BUSINESS_NAV, BUSINESS_EXPLORE_FEATURES,
+    AGENT_TOOLS, AGENT_NAV, AGENT_EXPLORE_FEATURES,
+    ALL_TOOLS, ADMIN_NAV, ADMIN_EXPLORE_FEATURES
+)
 from bson import ObjectId
 from datetime import datetime
 from logging import getLogger
@@ -47,7 +53,8 @@ class PurchaseForm(FlaskForm):
     amount = SelectField(
         trans('coins_coin_amount', default='Coin Amount'),
         choices=[('10', '10 Coins'), ('50', '50 Coins'), ('100', '100 Coins')],
-        validators=[validators.DataRequired()]
+        validators=[validators.DataRequired(message=trans('coins_amount_required', default='Coin amount is required'))],
+        render_kw={'class': 'form-select'}
     )
     payment_method = SelectField(
         trans('general_payment_method', default='Payment Method'),
@@ -55,18 +62,21 @@ class PurchaseForm(FlaskForm):
             ('card', trans('general_card', default='Credit/Debit Card')),
             ('bank', trans('general_bank_transfer', default='Bank Transfer'))
         ],
-        validators=[validators.DataRequired()]
+        validators=[validators.DataRequired(message=trans('general_payment_method_required', default='Payment method is required'))],
+        render_kw={'class': 'form-select'}
     )
-    submit = SubmitField(trans('coins_purchase', default='Purchase'))
+    submit = SubmitField(trans('coins_purchase', default='Purchase'), render_kw={'class': 'btn btn-primary w-100'})
 
 class ReceiptUploadForm(FlaskForm):
     receipt = FileField(
         trans('coins_receipt', default='Receipt'),
         validators=[
-            FileAllowed(['jpg', 'png', 'pdf'], trans('coins_invalid_file_type', default='Only JPG, PNG, or PDF files are allowed'))
-        ]
+            FileAllowed(['jpg', 'png', 'pdf'], trans('coins_invalid_file_type', default='Only JPG, PNG, or PDF files are allowed')),
+            validators.DataRequired(message=trans('coins_receipt_required', default='Receipt file is required'))
+        ],
+        render_kw={'class': 'form-control'}
     )
-    submit = SubmitField(trans('coins_upload_receipt', default='Upload Receipt'))
+    submit = SubmitField(trans('coins_upload_receipt', default='Upload Receipt'), render_kw={'class': 'btn btn-primary w-100'})
 
 def credit_coins(user_id: str, amount: int, ref: str, type: str = 'purchase') -> None:
     """Credit coins to a user and log transaction using MongoDB transaction."""
@@ -125,18 +135,24 @@ def purchase():
         except ValueError as e:
             logger.error(f"User not found for coin purchase: {str(e)}")
             flash(trans('general_user_not_found', default='User not found'), 'danger')
-            return render_template('coins/purchase.html', form=form, t=trans, lang=session.get('lang', 'en'), tools=tools, nav_items=nav_items)
         except errors.PyMongoError as e:
             logger.error(f"MongoDB error purchasing coins for user {current_user.id}: {str(e)}")
             flash(trans('general_something_went_wrong', default='An error occurred'), 'danger')
-            return render_template('coins/purchase.html', form=form, t=trans, lang=session.get('lang', 'en'), tools=tools, nav_items=nav_items)
         except Exception as e:
             logger.error(f"Unexpected error purchasing coins for user {current_user.id}: {str(e)}")
             flash(trans('general_something_went_wrong', default='An error occurred'), 'danger')
-            return render_template('coins/purchase.html', form=form, t=trans, lang=session.get('lang', 'en'), tools=tools, nav_items=nav_items)
     tools = PERSONAL_TOOLS if current_user.role == 'personal' else BUSINESS_TOOLS if current_user.role == 'trader' else AGENT_TOOLS if current_user.role == 'agent' else ALL_TOOLS
-    nav_items = PERSONAL_NAV if current_user.role == 'personal' else BUSINESS_NAV if current_user.role == 'trader' else AGENT_NAV if current_user.role == 'agent' else ADMIN_NAV
-    return render_template('coins/purchase.html', form=form, t=trans, lang=session.get('lang', 'en'), tools=tools, nav_items=nav_items)
+    nav_items = PERSONAL_EXPLORE_FEATURES if current_user.role == 'personal' else BUSINESS_EXPLORE_FEATURES if current_user.role == 'trader' else AGENT_EXPLORE_FEATURES if current_user.role == 'agent' else ADMIN_EXPLORE_FEATURES
+    bottom_nav_items = PERSONAL_NAV if current_user.role == 'personal' else BUSINESS_NAV if current_user.role == 'trader' else AGENT_NAV if current_user.role == 'agent' else ADMIN_NAV
+    return render_template(
+        'coins/purchase.html',
+        form=form,
+        t=trans,
+        lang=session.get('lang', 'en'),
+        tools=tools,
+        nav_items=nav_items,
+        bottom_nav_items=bottom_nav_items
+    )
 
 @coins_bp.route('/history', methods=['GET'])
 @login_required
@@ -152,7 +168,8 @@ def history():
         for tx in transactions:
             tx['_id'] = str(tx['_id'])
         tools = PERSONAL_TOOLS if current_user.role == 'personal' else BUSINESS_TOOLS if current_user.role == 'trader' else AGENT_TOOLS if current_user.role == 'agent' else ALL_TOOLS
-        nav_items = PERSONAL_NAV if current_user.role == 'personal' else BUSINESS_NAV if current_user.role == 'trader' else AGENT_NAV if current_user.role == 'agent' else ADMIN_NAV
+        nav_items = PERSONAL_EXPLORE_FEATURES if current_user.role == 'personal' else BUSINESS_EXPLORE_FEATURES if current_user.role == 'trader' else AGENT_EXPLORE_FEATURES if current_user.role == 'agent' else ADMIN_EXPLORE_FEATURES
+        bottom_nav_items = PERSONAL_NAV if current_user.role == 'personal' else BUSINESS_NAV if current_user.role == 'trader' else AGENT_NAV if current_user.role == 'agent' else ADMIN_NAV
         return render_template(
             'coins/history.html',
             transactions=transactions,
@@ -160,12 +177,25 @@ def history():
             t=trans,
             lang=session.get('lang', 'en'),
             tools=tools,
-            nav_items=nav_items
+            nav_items=nav_items,
+            bottom_nav_items=bottom_nav_items
         )
     except Exception as e:
         logger.error(f"Error fetching coin history for user {current_user.id}: {str(e)}")
         flash(trans('general_something_went_wrong', default='An error occurred'), 'danger')
-        return render_template('coins/history.html', transactions=[], coin_balance=0, t=trans, lang=session.get('lang', 'en'), tools=tools, nav_items=nav_items)
+        tools = PERSONAL_TOOLS if current_user.role == 'personal' else BUSINESS_TOOLS if current_user.role == 'trader' else AGENT_TOOLS if current_user.role == 'agent' else ALL_TOOLS
+        nav_items = PERSONAL_EXPLORE_FEATURES if current_user.role == 'personal' else BUSINESS_EXPLORE_FEATURES if current_user.role == 'trader' else AGENT_EXPLORE_FEATURES if current_user.role == 'agent' else ADMIN_EXPLORE_FEATURES
+        bottom_nav_items = PERSONAL_NAV if current_user.role == 'personal' else BUSINESS_NAV if current_user.role == 'trader' else AGENT_NAV if current_user.role == 'agent' else ADMIN_NAV
+        return render_template(
+            'coins/history.html',
+            transactions=[],
+            coin_balance=0,
+            t=trans,
+            lang=session.get('lang', 'en'),
+            tools=tools,
+            nav_items=nav_items,
+            bottom_nav_items=bottom_nav_items
+        )
 
 @coins_bp.route('/receipt_upload', methods=['GET', 'POST'])
 @login_required
@@ -222,38 +252,94 @@ def receipt_upload():
         except ValueError as e:
             logger.error(f"User not found for receipt upload: {str(e)}")
             flash(trans('general_user_not_found', default='User not found'), 'danger')
-            return render_template('coins/receipt_upload.html', form=form, t=trans, lang=session.get('lang', 'en'), tools=tools, nav_items=nav_items)
         except errors.PyMongoError as e:
             logger.error(f"MongoDB error uploading receipt for user {current_user.id}: {str(e)}")
             flash(trans('general_something_went_wrong', default='An error occurred'), 'danger')
-            return render_template('coins/receipt_upload.html', form=form, t=trans, lang=session.get('lang', 'en'), tools=tools, nav_items=nav_items)
         except Exception as e:
             logger.error(f"Unexpected error uploading receipt for user {current_user.id}: {str(e)}")
             flash(trans('general_something_went_wrong', default='An error occurred'), 'danger')
-            return render_template('coins/receipt_upload.html', form=form, t=trans, lang=session.get('lang', 'en'), tools=tools, nav_items=nav_items)
     tools = PERSONAL_TOOLS if current_user.role == 'personal' else BUSINESS_TOOLS if current_user.role == 'trader' else AGENT_TOOLS if current_user.role == 'agent' else ALL_TOOLS
-    nav_items = PERSONAL_NAV if current_user.role == 'personal' else BUSINESS_NAV if current_user.role == 'trader' else AGENT_NAV if current_user.role == 'agent' else ADMIN_NAV
-    return render_template('coins/receipt_upload.html', form=form, t=trans, lang=session.get('lang', 'en'), tools=tools, nav_items=nav_items)
+    nav_items = PERSONAL_EXPLORE_FEATURES if current_user.role == 'personal' else BUSINESS_EXPLORE_FEATURES if current_user.role == 'trader' else AGENT_EXPLORE_FEATURES if current_user.role == 'agent' else ADMIN_EXPLORE_FEATURES
+    bottom_nav_items = PERSONAL_NAV if current_user.role == 'personal' else BUSINESS_NAV if current_user.role == 'trader' else AGENT_NAV if current_user.role == 'agent' else ADMIN_NAV
+    return render_template(
+        'coins/receipt_upload.html',
+        form=form,
+        t=trans,
+        lang=session.get('lang', 'en'),
+        tools=tools,
+        nav_items=nav_items,
+        bottom_nav_items=bottom_nav_items
+    )
 
-@coins_bp.route('/balance', methods=['GET'])
+@coins_bp.route('/receipts', methods=['GET'])
 @login_required
-@ensure_limiter().limit("100 per minute")
-def get_balance():
-    """API endpoint to fetch current coin balance."""
+@requires_role('admin')
+@ensure_limiter().limit("50 per hour")
+def view_receipts():
+    """View all uploaded receipts (admin only)."""
     try:
-        if not current_user.is_authenticated or not current_user.id:
-            logger.warning("Unauthorized access attempt to /coins/balance")
-            return jsonify({'error': trans('general_unauthorized', default='Unauthorized access')}), 401
-        user_id = str(current_user.id)
         db = get_mongo_db()
-        user_query = get_user_query(user_id)
-        user = db.users.find_one(user_query)
-        if not user:
-            logger.error(f"User not found: {user_id}")
-            return jsonify({'error': trans('general_user_not_found', default='User not found')}), 404
-        coin_balance = user.get('coin_balance', 0)
-        logger.info(f"Fetched coin balance for user {user_id}: {coin_balance}")
-        return jsonify({'coin_balance': coin_balance}), 200
+        fs = GridFS(db)
+        receipts = list(fs.find().sort('upload_date', -1).limit(50))
+        for receipt in receipts:
+            receipt['_id'] = str(receipt['_id'])
+            receipt['user_id'] = receipt.get('user_id', 'Unknown')
+        return render_template(
+            'coins/receipts.html',
+            receipts=receipts,
+            t=trans,
+            lang=session.get('lang', 'en'),
+            tools=ALL_TOOLS,
+            nav_items=ADMIN_EXPLORE_FEATURES,
+            bottom_nav_items=ADMIN_NAV
+        )
     except Exception as e:
-        logger.error(f"Error fetching coin balance for user {user_id}: {str(e)}")
-        return jsonify({'error': trans('general_something_went_wrong', default='An error occurred')}), 500
+        logger.error(f"Error fetching receipts for admin {current_user.id}: {str(e)}")
+        flash(trans('general_something_went_wrong', default='An error occurred'), 'danger')
+        return render_template(
+            'coins/receipts.html',
+            receipts=[],
+            t=trans,
+            lang=session.get('lang', 'en'),
+            tools=ALL_TOOLS,
+            nav_items=ADMIN_EXPLORE_FEATURES,
+            bottom_nav_items=ADMIN_NAV
+        )
+
+@coins_bp.route('/receipt/<file_id>', methods=['GET'])
+@login_required
+@requires_role('admin')
+@ensure_limiter().limit("10 per hour")
+def view_receipt(file_id):
+    """Serve a specific receipt file (admin only)."""
+    try:
+        db = get_mongo_db()
+        fs = GridFS(db)
+        file = fs.get(ObjectId(file_id))
+        response = current_app.response_class(
+            file.read(),
+            mimetype=file.content_type or 'application/octet-stream',
+            direct_passthrough=True
+        )
+        response.headers.set('Content-Disposition', 'inline', filename=file.filename)
+        logger.info(f"Admin {current_user.id} viewed receipt {file_id}")
+        return response
+    except Exception as e:
+        logger.error(f"Error serving receipt {file_id} for admin {current_user.id}: {str(e)}")
+        flash(trans('general_something_went_wrong', default='An error occurred'), 'danger')
+        return redirect(url_for('coins.view_receipts'))
+
+@coins_bp.route('/api/balance', methods=['GET'])
+@login_required
+@ensure_limiter().limit("100 per hour")
+def get_balance():
+    """API endpoint to get current user's coin balance."""
+    try:
+        db = get_mongo_db()
+        user_query = get_user_query(str(current_user.id))
+        user = db.users.find_one(user_query)
+        balance = user.get('coin_balance', 0) if user else 0
+        return jsonify({'balance': balance})
+    except Exception as e:
+        logger.error(f"Error fetching coin balance for user {current_user.id}: {str(e)}")
+        return jsonify({'error': 'Failed to fetch balance'}), 500
