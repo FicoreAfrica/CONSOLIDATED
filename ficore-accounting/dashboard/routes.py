@@ -1,7 +1,13 @@
 from flask import Blueprint, render_template, redirect, url_for, flash, session
 from flask_login import login_required, current_user
 from translations import trans
-from utils import trans_function, requires_role, format_currency, format_date, get_mongo_db, is_admin
+from utils import (
+    PERSONAL_TOOLS, PERSONAL_NAV, PERSONAL_EXPLORE_FEATURES,
+    BUSINESS_TOOLS, BUSINESS_NAV, BUSINESS_EXPLORE_FEATURES,
+    AGENT_TOOLS, AGENT_NAV, AGENT_EXPLORE_FEATURES,
+    ALL_TOOLS, ADMIN_NAV, ADMIN_EXPLORE_FEATURES,
+    trans_function, requires_role, format_currency, format_date, get_mongo_db, is_admin
+)
 from bson import ObjectId
 from datetime import datetime
 import logging
@@ -75,6 +81,28 @@ def index():
         for item in recent_creditors + recent_debtors + recent_payments + recent_receipts + recent_inventory:
             item['_id'] = str(item['_id'])
 
+        # Role-based navigation data
+        if current_user.role == 'personal':
+            tools_for_template = PERSONAL_TOOLS
+            explore_features_for_template = PERSONAL_EXPLORE_FEATURES
+            bottom_nav_for_template = PERSONAL_NAV
+        elif current_user.role == 'trader':
+            tools_for_template = BUSINESS_TOOLS
+            explore_features_for_template = BUSINESS_EXPLORE_FEATURES
+            bottom_nav_for_template = BUSINESS_NAV
+        elif current_user.role == 'agent':
+            tools_for_template = AGENT_TOOLS
+            explore_features_for_template = AGENT_EXPLORE_FEATURES
+            bottom_nav_for_template = AGENT_NAV
+        elif current_user.role == 'admin':
+            tools_for_template = ALL_TOOLS
+            explore_features_for_template = ADMIN_EXPLORE_FEATURES
+            bottom_nav_for_template = ADMIN_NAV
+        else:
+            tools_for_template = []
+            explore_features_for_template = []
+            bottom_nav_for_template = []
+
         return render_template(
             'dashboard/index.html',
             recent_creditors=recent_creditors,
@@ -83,6 +111,9 @@ def index():
             recent_receipts=recent_receipts,
             recent_inventory=recent_inventory,
             personal_finance_summary=personal_finance_summary,
+            tools=tools_for_template,
+            nav_items=explore_features_for_template,
+            bottom_nav_items=bottom_nav_for_template,
             format_currency=format_currency,
             format_date=format_date,
             t=trans,
