@@ -692,10 +692,7 @@ def to_dict_tax_reminder(record):
 
 # Personal role tools and navigation
 PERSONAL_TOOLS = [
-    {"endpoint": "personal.emergency_fund.main", "label": "Emergency Fund", "label_key": "emergency_fund_calculator", "tooltip_key": "emergency_fund_tooltip", "icon": "bi-shield"},
-    {"endpoint": "personal.health_score.main", "label": "Financial Health", "label_key": "financial_health_calculator", "tooltip_key": "financial_health_tooltip", "icon": "bi-heart"},
-    {"endpoint": "personal.learning_hub.main", "label": "Learning Hub", "label_key": "learning_hub_courses", "tooltip_key": "learning_tooltip", "icon": "bi-book"},
-    {"endpoint": "personal.net_worth.main", "label": "Net Worth", "label_key": "net_worth_calculator", "tooltip_key": "net_worth_tooltip", "icon": "bi-cash-stack"},
+    {"endpoint": "personal.budget.main", "label": "Budget", "label_key": "budget_budget_planner", "tooltip_key": "budget_tooltip", "icon": "bi-wallet"},
     {"endpoint": "personal.quiz.main", "label": "Quiz", "label_key": "quiz_personality_quiz", "tooltip_key": "quiz_tooltip", "icon": "bi-question-circle"},
     {"endpoint": "taxation_bp.calculate_tax", "label": "Taxation", "label_key": "taxation_calculator", "tooltip_key": "taxation_tooltip", "icon": "bi-calculator"},
     {"endpoint": "news_bp.news_list", "label": "News", "label_key": "news_list", "tooltip_key": "news_tooltip", "icon": "bi-newspaper"},
@@ -712,6 +709,9 @@ PERSONAL_NAV = [
 PERSONAL_EXPLORE_FEATURES = [
     {"endpoint": "personal.budget.main", "label": "Budget", "label_key": "budget_budget_planner", "tooltip_key": "budget_tooltip", "icon": "bi-wallet"},
     {"endpoint": "personal.emergency_fund.main", "label": "Emergency Fund", "label_key": "emergency_fund_calculator", "tooltip_key": "emergency_fund_tooltip", "icon": "bi-shield"},
+    {"endpoint": "personal.health_score.main", "label": "Financial Health", "label_key": "financial_health_calculator", "tooltip_key": "financial_health_tooltip", "icon": "bi-heart"},
+    {"endpoint": "personal.net_worth.main", "label": "Net Worth", "label_key": "net_worth_calculator", "tooltip_key": "net_worth_tooltip", "icon": "bi-cash-stack"},
+
 ]
 
 # Trader role tools and navigation
@@ -721,9 +721,7 @@ BUSINESS_TOOLS = [
     {"endpoint": "debtors.index", "label": "They Owe", "label_key": "debtors_dashboard", "tooltip_key": "debtors_tooltip", "icon": "bi-person-plus"},
     {"endpoint": "receipts.index", "label": "MoneyIn", "label_key": "receipts_dashboard", "tooltip_key": "receipts_tooltip", "icon": "bi-cash-coin"},
     {"endpoint": "payments.index", "label": "MoneyOut", "label_key": "payments_dashboard", "tooltip_key": "payments_tooltip", "icon": "bi-person-minus"},
-    {"endpoint": "reports.index", "label": "Reports", "label_key": "reports_dashboard", "tooltip_key": "reports_tooltip", "icon": "bi-bar-chart"},
-    {"endpoint": "coins.history", "label": "Coins", "label_key": "coins_dashboard", "tooltip_key": "coins_tooltip", "icon": "bi-coin"},
-    {"endpoint": "news_bp.news_list", "label": "News", "label_key": "news_list", "tooltip_key": "news_tooltip", "icon": "bi-newspaper"},
+    
 ]
 
 BUSINESS_NAV = [
@@ -731,13 +729,15 @@ BUSINESS_NAV = [
     {"endpoint": "debtors.index", "label": "They Owe", "label_key": "debtors_dashboard", "tooltip_key": "debtors_tooltip", "icon": "bi-person-plus"},
     {"endpoint": "receipts.index", "label": "MoneyIn", "label_key": "receipts_dashboard", "tooltip_key": "receipts_tooltip", "icon": "bi-cash-coin"},
     {"endpoint": "inventory.index", "label": "Inventory", "label_key": "inventory_dashboard", "tooltip_key": "inventory_tooltip", "icon": "bi-box"},
-    {"endpoint": "taxation_bp.calculate_tax", "label": "Taxation", "label_key": "taxation_calculator", "tooltip_key": "taxation_tooltip", "icon": "bi-calculator"},
     {"endpoint": "settings.profile", "label": "Profile", "label_key": "profile_settings", "tooltip_key": "profile_tooltip", "icon": "bi-person"},
 ]
 
 BUSINESS_EXPLORE_FEATURES = [
     {"endpoint": "inventory.index", "label": "Inventory", "label_key": "inventory_dashboard", "tooltip_key": "inventory_tooltip", "icon": "bi-box"},
+    {"endpoint": "taxation_bp.calculate_tax", "label": "Taxation", "label_key": "taxation_calculator", "tooltip_key": "taxation_tooltip", "icon": "bi-calculator"},
     {"endpoint": "reports.index", "label": "Reports", "label_key": "reports_dashboard", "tooltip_key": "reports_tooltip", "icon": "bi-bar-chart"},
+    {"endpoint": "coins.history", "label": "Coins", "label_key": "coins_dashboard", "tooltip_key": "coins_tooltip", "icon": "bi-coin"},
+    {"endpoint": "news_bp.news_list", "label": "News", "label_key": "news_list", "tooltip_key": "news_tooltip", "icon": "bi-newspaper"},
 ]
 
 # Agent role tools and navigation
@@ -772,6 +772,12 @@ ADMIN_NAV = [
     {"endpoint": "admin.manage_users", "label": "Manage Users", "label_key": "admin_manage_users", "tooltip_key": "admin_manage_users_tooltip", "icon": "bi-people"},
     {"endpoint": "admin.credit_coins", "label": "Credit Coins", "label_key": "admin_credit_coins", "tooltip_key": "admin_credit_coins_tooltip", "icon": "bi-coin"},
     {"endpoint": "admin.audit", "label": "View Audit Logs", "label_key": "admin_view_audit_logs", "tooltip_key": "admin_view_audit_logs_tooltip", "icon": "bi-file-earmark-text"},
+    
+]
+
+ADMIN_EXPLORE_FEATURES = [
+    {"endpoint": "admin.dashboard", "label": "Dashboard", "label_key": "admin_dashboard", "tooltip_key": "admin_dashboard_tooltip", "icon": "bi-speedometer"},
+    {"endpoint": "admin.manage_users", "label": "Manage Users", "label_key": "admin_manage_users", "tooltip_key": "admin_manage_users_tooltip", "icon": "bi-people"},
     {"endpoint": "admin.manage_agents", "label": "Manage Agents", "label_key": "admin_manage_agents", "tooltip_key": "admin_manage_agents_tooltip", "icon": "bi-person-workspace"},
     {"endpoint": "admin.admin_budgets", "label": "Manage Budgets", "label_key": "admin_manage_budgets", "tooltip_key": "admin_manage_budgets_tooltip", "icon": "bi-wallet"},
     {"endpoint": "admin.admin_bills", "label": "Manage Bills", "label_key": "admin_manage_bills", "tooltip_key": "admin_manage_bills_tooltip", "icon": "bi-receipt"},
@@ -779,11 +785,6 @@ ADMIN_NAV = [
     {"endpoint": "admin.admin_net_worth", "label": "Manage Net Worth", "label_key": "admin_manage_net_worth", "tooltip_key": "admin_manage_net_worth_tooltip", "icon": "bi-cash-stack"},
     {"endpoint": "admin.admin_quiz_results", "label": "Manage Quiz Results", "label_key": "admin_manage_quiz_results", "tooltip_key": "admin_manage_quiz_results_tooltip", "icon": "bi-question-circle"},
     {"endpoint": "admin.admin_learning_hub", "label": "Manage Learning Hub", "label_key": "admin_manage_learning_hub", "tooltip_key": "admin_manage_learning_hub_tooltip", "icon": "bi-book"},
-]
-
-ADMIN_EXPLORE_FEATURES = [
-    {"endpoint": "admin.dashboard", "label": "Dashboard", "label_key": "admin_dashboard", "tooltip_key": "admin_dashboard_tooltip", "icon": "bi-speedometer"},
-    {"endpoint": "admin.manage_users", "label": "Manage Users", "label_key": "admin_manage_users", "tooltip_key": "admin_manage_users_tooltip", "icon": "bi-people"},
 ]
 
 # Export all functions for backward compatibility
