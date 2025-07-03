@@ -53,25 +53,16 @@ def index():
         creditors = list(db.records.find(query).sort('created_at', -1))
         
         # Role-based navigation data
-        if current_user.role == 'trader':
-            tools_for_template = BUSINESS_TOOLS
-            explore_features_for_template = BUSINESS_EXPLORE_FEATURES
-            bottom_nav_for_template = BUSINESS_NAV
-        elif current_user.role == 'admin':
-            tools_for_template = ALL_TOOLS
-            explore_features_for_template = ADMIN_EXPLORE_FEATURES
-            bottom_nav_for_template = ADMIN_NAV
-        else:
-            tools_for_template = []
-            explore_features_for_template = []
-            bottom_nav_for_template = []
+        tools = BUSINESS_TOOLS if current_user.role == 'trader' else ALL_TOOLS
+        nav_items = BUSINESS_EXPLORE_FEATURES if current_user.role == 'trader' else ADMIN_EXPLORE_FEATURES
+        bottom_nav_items = BUSINESS_NAV if current_user.role == 'trader' else ADMIN_NAV
 
         return render_template(
             'creditors/index.html',
             creditors=creditors,
-            tools=tools_for_template,
-            nav_items=explore_features_for_template,
-            bottom_nav_items=bottom_nav_for_template,
+            tools=tools,
+            nav_items=nav_items,
+            bottom_nav_items=bottom_nav_items,
             format_currency=format_currency,
             format_date=format_date,
             t=trans,
@@ -121,25 +112,16 @@ def view_page(id):
             return redirect(url_for('creditors.index'))
         
         # Role-based navigation data
-        if current_user.role == 'trader':
-            tools_for_template = BUSINESS_TOOLS
-            explore_features_for_template = BUSINESS_EXPLORE_FEATURES
-            bottom_nav_for_template = BUSINESS_NAV
-        elif current_user.role == 'admin':
-            tools_for_template = ALL_TOOLS
-            explore_features_for_template = ADMIN_EXPLORE_FEATURES
-            bottom_nav_for_template = ADMIN_NAV
-        else:
-            tools_for_template = []
-            explore_features_for_template = []
-            bottom_nav_for_template = []
+        tools = BUSINESS_TOOLS if current_user.role == 'trader' else ALL_TOOLS
+        nav_items = BUSINESS_EXPLORE_FEATURES if current_user.role == 'trader' else ADMIN_EXPLORE_FEATURES
+        bottom_nav_items = BUSINESS_NAV if current_user.role == 'trader' else ADMIN_NAV
 
         return render_template(
             'creditors/view.html',
             creditor=creditor,
-            tools=tools_for_template,
-            nav_items=explore_features_for_template,
-            bottom_nav_items=bottom_nav_for_template,
+            tools=tools,
+            nav_items=nav_items,
+            bottom_nav_items=bottom_nav_items,
             format_currency=format_currency,
             format_date=format_date,
             t=trans,
@@ -386,25 +368,16 @@ def add():
             flash(trans('creditors_create_error', default='An error occurred'), 'danger')
     
     # Role-based navigation data
-    if current_user.role == 'trader':
-        tools_for_template = BUSINESS_TOOLS
-        explore_features_for_template = BUSINESS_EXPLORE_FEATURES
-        bottom_nav_for_template = BUSINESS_NAV
-    elif current_user.role == 'admin':
-        tools_for_template = ALL_TOOLS
-        explore_features_for_template = ADMIN_EXPLORE_FEATURES
-        bottom_nav_for_template = ADMIN_NAV
-    else:
-        tools_for_template = []
-        explore_features_for_template = []
-        bottom_nav_for_template = []
+    tools = BUSINESS_TOOLS if current_user.role == 'trader' else ALL_TOOLS
+    nav_items = BUSINESS_EXPLORE_FEATURES if current_user.role == 'trader' else ADMIN_EXPLORE_FEATURES
+    bottom_nav_items = BUSINESS_NAV if current_user.role == 'trader' else ADMIN_NAV
 
     return render_template(
         'creditors/add.html',
         form=form,
-        tools=tools_for_template,
-        nav_items=explore_features_for_template,
-        bottom_nav_items=bottom_nav_for_template,
+        tools=tools,
+        nav_items=nav_items,
+        bottom_nav_items=bottom_nav_items,
         t=trans,
         lang=session.get('lang', 'en')
     )
@@ -449,26 +422,17 @@ def edit(id):
                 flash(trans('creditors_edit_error', default='An error occurred'), 'danger')
         
         # Role-based navigation data
-        if current_user.role == 'trader':
-            tools_for_template = BUSINESS_TOOLS
-            explore_features_for_template = BUSINESS_EXPLORE_FEATURES
-            bottom_nav_for_template = BUSINESS_NAV
-        elif current_user.role == 'admin':
-            tools_for_template = ALL_TOOLS
-            explore_features_for_template = ADMIN_EXPLORE_FEATURES
-            bottom_nav_for_template = ADMIN_NAV
-        else:
-            tools_for_template = []
-            explore_features_for_template = []
-            bottom_nav_for_template = []
+        tools = BUSINESS_TOOLS if current_user.role == 'trader' else ALL_TOOLS
+        nav_items = BUSINESS_EXPLORE_FEATURES if current_user.role == 'trader' else ADMIN_EXPLORE_FEATURES
+        bottom_nav_items = BUSINESS_NAV if current_user.role == 'trader' else ADMIN_NAV
 
         return render_template(
             'creditors/edit.html',
             form=form,
             creditor=creditor,
-            tools=tools_for_template,
-            nav_items=explore_features_for_template,
-            bottom_nav_items=bottom_nav_for_template,
+            tools=tools,
+            nav_items=nav_items,
+            bottom_nav_items=bottom_nav_items,
             t=trans,
             lang=session.get('lang', 'en')
         )
