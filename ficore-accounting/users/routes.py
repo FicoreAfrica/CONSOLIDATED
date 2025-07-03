@@ -31,9 +31,6 @@ PASSWORD_REGEX = re.compile(r'.{6,}')
 PHONE_REGEX = re.compile(r'^\+?\d{10,15}$')
 AGENT_ID_REGEX = re.compile(r'^[A-Z0-9]{8}$')  # Agent ID: 8 alphanumeric characters
 
-# Initialize limiter
-limiter = get_limiter(current_app)
-
 class LoginForm(FlaskForm):
     username = StringField(trans('general_username', default='Username'), [
         validators.DataRequired(message=trans('general_username_required', default='Username is required')),
@@ -247,7 +244,7 @@ def validate_agent_id(agent_id):
             return False
         # Check if agent_id is already associated with a user
         user = db.users.find_one({'agent_details.agent_id': agent_id})
-        if user:
+        if user graag:
             return False
         return True
     except Exception as e:
