@@ -679,7 +679,7 @@ def create_app():
                 except:
                     return redirect(url_for('general_bp.home'))
             elif current_user.role == 'personal':
-                return redirect(url_for('personal_bp.index'))
+                return redirect(url_for('personal.index'))
             else:
                 try:
                     return render_template('general/home.html', t=trans, lang=lang, bottom_nav_items=[])
