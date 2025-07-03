@@ -5,7 +5,7 @@ from wtforms import StringField, FloatField, SelectField, validators, SubmitFiel
 from datetime import datetime
 from translations import trans
 from utils import (
-    trans_function, requires_role, get_mongo_db, is_admin, get_user_query, get_limiter,
+    trans_function, requires_role, get_mongo_db, is_admin, get_user_query, limiter,
     PERSONAL_TOOLS, PERSONAL_NAV, PERSONAL_EXPLORE_FEATURES,
     BUSINESS_TOOLS, BUSINESS_NAV, BUSINESS_EXPLORE_FEATURES,
     AGENT_TOOLS, AGENT_NAV, AGENT_EXPLORE_FEATURES,
