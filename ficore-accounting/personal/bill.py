@@ -9,7 +9,7 @@ from datetime import datetime, date, timedelta
 from translations import trans
 from pymongo.errors import DuplicateKeyError
 from bson import ObjectId
-from utils import requires_role, is_admin, get_mongo_db, PERSONAL_TOOLS, PERSONAL_NAV, PERSONAL_EXPLORE_FEATURES, ALL_TOOLS, ADMIN_NAV
+from utils import requires_role, is_admin, get_mongo_db, PERSONAL_TOOLS, PERSONAL_NAV, PERSONAL_EXPLORE_FEATURES, ALL_TOOLS, ADMIN_NAV, limiter
 from models import log_tool_usage
 
 bill_bp = Blueprint('bill', __name__, template_folder='templates/personal/BILL')
