@@ -35,7 +35,7 @@
                 <ul class="navbar-nav me-auto">
                     {% for item in nav_items %}
                     <li class="nav-item">
-                        <a class="nav-link {% if request.endpoint == item['endpoint'] %}active{% endif %}" href="{{ url_for(item['endpoint']) | e }}" data-bs-toggle="tooltip" data-bs-title="{{ t(item['tooltip_key'], default=item['label']) | e }}" aria-current="{% if request.endpoint == item['endpoint'] %}page{% endif %}">{{ t(item['label_key'], default=item['label']) | e }}</a>
+                        <a class="nav-link {% if request.endpoint == item.get('endpoint', '') %}active{% endif %}" href="{{ url_for(item.get('endpoint', '')) | e }}" data-bs-toggle="tooltip" data-bs-title="{{ t(item.get('tooltip_key', ''), default=item.get('label', '')) | e }}" aria-current="{% if request.endpoint == item.get('endpoint', '') %}page{% endif %}">{{ t(item.get('label_key', ''), default=item.get('label', '')) | e }}</a>
                     </li>
                     {% endfor %}
                 </ul>
@@ -150,6 +150,7 @@
         </div>
     </main>
 
+    {% if not current_user.is_authenticated %}
     <footer class="footer mt-5 py-4" style="background: linear-gradient(90deg, #003087, #004D40); color: white;" role="contentinfo">
         <div class="container text-center">
             <p>{{ t('general_about_ficore_africa', default='About Ficore Africa') | e }}: {{ t('general_empowering_financial_growth', default='Empowering financial growth across Africa since 2025') | e }}</p>
@@ -159,12 +160,7 @@
                 <a href="{{ url_for('privacy') | e }}" class="text-white">{{ t('general_privacy_policy', default='Privacy Policy') | e }}</a>
                 <a href="mailto:support@ficoreafrica.com" class="text-white"><i class="fas fa-envelope me-1" aria-hidden="true"></i> {{ t('general_contact_us', default='Contact Us') | e }}</a>
                 <a href="{{ url_for('feedback') | e }}" class="text-white"><i class="fas fa-comment me-1" aria-hidden="true"></i> {{ t('general_provide_feedback', default='Provide Feedback') | e }}</a>
-                {% if current_user.is_authenticated %}
-                <a href="{{ url_for('settings.profile') | e }}" class="text-white"><i class="fas fa-user me-1" aria-hidden="true"></i> {{ t('general_profile', default='Profile') | e }}</a>
-                <a href="{{ url_for('users.logout') | e }}" class="text-white"><i class="fas fa-sign-out-alt me-1" aria-hidden="true"></i> {{ t('general_logout', default='Logout') | e }}</a>
-                {% else %}
                 <a href="{{ url_for('users.login') | e }}" class="text-white"><i class="fas fa-sign-in-alt me-1" aria-hidden="true"></i> {{ t('general_login', default='Login') | e }}</a>
-                {% endif %}
             </div>
             <div class="social-icons d-flex justify-content-center gap-3 mt-3">
                 <a href="https://linkedin.com/company/ficoreafrica" target="_blank" aria-label="{{ t('general_connect_on_linkedin', default='Connect on LinkedIn') | e }}" class="d-flex align-items-center text-white">
@@ -179,6 +175,7 @@
             </div>
         </div>
     </footer>
+    {% endif %}
 
     <!-- Notification Modal -->
     <div class="modal fade" id="notificationModal" tabindex="-1" aria-labelledby="notificationModalLabel" aria-hidden="true">
