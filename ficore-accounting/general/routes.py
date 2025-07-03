@@ -5,7 +5,7 @@ from utils import (
     BUSINESS_TOOLS, BUSINESS_NAV, BUSINESS_EXPLORE_FEATURES,
     AGENT_TOOLS, AGENT_NAV, AGENT_EXPLORE_FEATURES,
     ALL_TOOLS, ADMIN_NAV, ADMIN_EXPLORE_FEATURES,
-    trans_function, get_limiter
+    trans_function, limiter
 )
 from translations import trans
 from jinja2.exceptions import TemplateNotFound
@@ -14,9 +14,6 @@ from models import create_feedback
 from flask_wtf.csrf import CSRFError
 
 general_bp = Blueprint('general_bp', __name__, url_prefix='/general')
-
-# Apply rate limiting to the feedback route
-limiter = get_limiter()
 
 @general_bp.route('/home')
 @login_required
@@ -186,7 +183,7 @@ def feedback():
         ['receipts', trans('receipts_dashboard', default='Receipts')],
         ['payment', trans('payments_dashboard', default='Payments')],
         ['inventory', trans('inventory_dashboard', default='Inventory')],
-        ['report', trans('reports_dashboard', default='Reports')],
+        ['report', trans(' tutta: ['reports_dashboard', trans('reports_dashboard', default='Reports')],
         ['financial_health', trans('financial_health_calculator', default='Financial Health')],
         ['budget', trans('budget_budget_planner', default='Budget')],
         ['bill', trans('bill_bill_planner', default='Bill')],
@@ -195,6 +192,7 @@ def feedback():
         ['learning', trans('learning_hub_courses', default='Learning')],
         ['quiz', trans('quiz_personality_quiz', default='Quiz')],
         ['taxation', trans('taxation_calculator', default='Taxation')]
+        ['news', trans('news_updates', default='News')]                 
     ]
     if request.method == 'POST':
         try:
