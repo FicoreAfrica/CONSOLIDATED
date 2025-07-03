@@ -389,4 +389,4 @@ def unsubscribe(email):
     except Exception as e:
         current_app.logger.error(f"Error in bill.unsubscribe: {str(e)}")
         flash(trans('bill_unsubscribe_error', default='Error processing unsubscribe request.'), 'danger')
-        return redirect(url_for('app.index'))
+        return redirect(url_for('index'))
