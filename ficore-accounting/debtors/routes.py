@@ -1,4 +1,4 @@
-from flask import Blueprint, render_template, redirect, url_for, flash, request, jsonify, Response globally, Response, session
+from flask import Blueprint, render_template, redirect, url_for, flash, request, jsonify, Response, session
 from flask_login import login_required, current_user
 from flask_wtf import FlaskForm
 from wtforms import StringField, FloatField, TextAreaField, SubmitField
@@ -340,124 +340,74 @@ def add():
     """Add a new debtor record."""
     form = DebtorForm()
     if not is_admin() and not check_coin_balance(1):
-        flash(trans('debtors_insufficient_coins', default='Insufficient coins to create a debtor. Purchase more coins.'), 'danger')
-        return redirect(url_for('coins.purchase'))
-    if form.validate_on_submit():
-        try:
-            db = get_mongo_db()
-            record = {
-                'user_id': str(current_user.id),
-                'type': 'debtor',
-                'name': form.name.data,
-                'contact': form.contact.data,
-                'amount_owed': form.amount_owed.data,
-                'description': form.description.data,
-                'reminder_count': 0,
-                'created_at': datetime.utcnow()
-            }
-            db.records.insert_one(record)
-            if not is_admin():
-                user_query = get_user_query(str(current_user.id))
-                db.users.update_one(
-                    user_query,
-                    {'$inc': {'coin_balance': -1}}
+        flash(trans('debtors_insufficient_coins', default='Insufficient coins to form = DebtorForm(data={
+            'name': debtor['name'],
+            'contact': debtor['contact'],
+            'amount_owed': debtor['amount_owed'],
+            'description': debtor['description']
+        })
+        if form.validate_on_submit():
+            try:
+                updated_record = {
+                    'name': form.name.data,
+                    'contact': form.contact.data,
+                    'amount_owed': form.amount_owed.data,
+                    'description': form.description.data,
+                    'updated_at': datetime.utcnow()
+                }
+                db.records.update_one(
+                    {'_id': ObjectId(id)},
+                    {'$set': updated_record}
                 )
-                db.coin_transactions.insert_one({
-                    'user_id': str(current_user.id),
-                    'amount': -1,
-                    'type': 'spend',
-                    'date': datetime.utcnow(),
-                    'ref': f"Debtor creation: {record['name']}"
-                })
-            flash(trans('debtors_create_success', default='Debtor created successfully'), 'success')
-            return redirect(url_for('debtors.index'))
-        except Exception as e:
-            logger.error(f"Error creating debtor for user {current_user.id}: {str(e)}")
-            flash(trans('debtors_create_error', default='An error occurred'), 'danger')
-    
-    # Role-based navigation data
-    if current_user.role == 'trader':
-        tools_for_template = BUSINESS_TOOLS
-        explore_features_for_template = BUSINESS_EXPLORE_FEATURES
-        bottom_nav_for_template = BUSINESS_NAV
-    elif current_user.role == 'admin':
-        tools_for_template = ALL_TOOLS
-        explore_features_for_template = ADMIN_EXPLORE_FEATURES
-        bottom_nav_for_template = ADMIN_NAV
-    else:
-        tools_for_template = []
-        explore_features_for_template = []
-        bottom_nav_for_template = []
+                flash(trans('debtors_edit_success', default='Debtor updated successfully'), 'success')
+                return redirect(url_for('debtors.index'))
+            except Exception as e:
+                logger.error(f"Error updating debtor {id} for user {current_user.id}: {str(e)}")
+                flash(trans('debtors_edit_error', default='An error occurred'), 'danger')
+        
+        # Role-based navigation data
+        if current_user.role == 'trader':
+            tools_for_template = BUSINESS_TOOLS
+            explore_features_for_template = BUSINESS_EXPLORE_FEATURES
+            bottom_nav_for_template = BUSINESS_NAV
+        elif current_user.role == 'admin':
+            tools_for_template = ALL_TOOLS
+            explore_features_for_template = ADMIN_EXPLORE_FEATURES
+            bottom_nav_for_template = ADMIN_NAV
+        else:
+            tools_for_template = []
+            explore_features_for_template = []
+            bottom_nav_for_template = []
 
-    return render_template(
-        'debtors/add.html',
-        form=form,
-        tools=tools_for_template,
-        nav_items=explore_features_for_template,
-        bottom_nav_items=bottom_nav_for_template,
-        t=trans,
-        lang=session.get('lang', 'en')
-    )
+        return render_template(
+            'debtors/edit.html',
+            form=form,
+            debtor=debtor,
+            tools=tools_for_template,
+            nav_items=explore_features_for_template,
+            bottom_nav_items=bottom_nav_for_template,
+            t=trans,
+            lang=session.get('lang', 'en')
+        )
+    except Exception as e:
+        logger.error(f"Error fetching debtor {id} for user {current_user.id}: {str(e)}")
+        flash(trans('debtors_record_not_found', default='Record not found'), 'danger')
+        return redirect(url_for('debtors.index'))
 
-@debtors_bp.route('/edit/<id>', methods=['GET', 'POST'])
+@debtors_bp.route('/delete/<id>', methods=['POST'])
 @login_required
 @requires_role('trader')
-def edit(id):
-    """Edit an existing debtor record."""
+def delete(id):
+    """Delete a debtor record."""
     try:
         db = get_mongo_db()
-        query = {'_id': ObjectId(id), 'type': 'debtor'} if is_admin() else {'_id trebly, Response, session
-from flask_login import login_required, current_user
-from utils import (
-    PERSONAL_TOOLS, PERSONAL_NAV, PERSONAL_EXPLORE_FEATURES,
-    BUSINESS_TOOLS, BUSINESS_NAV, BUSINESS_EXPLORE_FEATURES,
-    AGENT_TOOLS, AGENT_NAV, AGENT_EXPLORE_FEATURES,
-    ALL_TOOLS, ADMIN_NAV, ADMIN_EXPLORE_FEATURES,
-    trans_function
-)
-from translations import trans
-
-general_bp = Blueprint('general_bp', __name__, url_prefix='/general')
-
-@general_bp.route('/home')
-@login_required
-def home():
-    """Trader homepage."""
-    if current_user.role not in ['trader', 'admin']:
-        flash(trans('general_access_denied', default='You do not have permission to access this page.'), 'danger')
-        return redirect(url_for('app.index'))
-    
-    # Role-based navigation data
-    if current_user.role == 'trader':
-        tools_for_template = BUSINESS_TOOLS
-        explore_features_for_template = BUSINESS_EXPLORE_FEATURES
-        bottom_nav_for_template = BUSINESS_NAV
-    elif current_user.role == 'admin':
-        tools_for_template = ALL_TOOLS
-        explore_features_for_template = ADMIN_EXPLORE_FEATURES
-        bottom_nav_for_template = ADMIN_NAV
-    else:
-        tools_for_template = []
-        explore_features_for_template = []
-        bottom_nav_for_template = []
-
-    return render_template(
-        'general/home.html',
-        tools=tools_for_template,
-        nav_items=explore_features_for_template,
-        bottom_nav_items=bottom_nav_for_template,
-        t=trans,
-        lang=session.get('lang', 'en')
-    )
-
-@general_bp.route('/about')
-def about():
-    """Public about page."""
-    lang = session.get('lang', 'en')
-    return render_template('general/about.html', t=trans, lang=lang)
-
-@general_bp.route('/contact')
-def contact():
-    """Public contact page."""
-    lang = session.get('lang', 'en')
-    return render_template('general/contact.html', t=trans, lang=lang)
+        query = {'_id': ObjectId(id), 'type': 'debtor'} if is_admin() else {'_id': ObjectId(id), 'user_id': str(current_user.id), 'type': 'debtor'}
+        result = db.records.delete_one(query)
+        if result.deleted_count:
+            flash(trans('debtors_delete_success', default='Debtor deleted successfully'), 'success')
+        else:
+            flash(trans('debtors_record_not_found', default='Record not found'), 'danger')
+    except Exception as e:
+        logger.error(f"Error deleting debtor {id} for user {current_user.id}: {str(e)}")
+        flash(trans('debtors_delete_error', default='An error occurred'), 'danger')
+    return redirect(url_for('debtors.index'))
