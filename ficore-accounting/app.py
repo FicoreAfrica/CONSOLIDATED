@@ -22,7 +22,7 @@ from models import (
     to_dict_emergency_fund, to_dict_learning_progress, to_dict_quiz_result, initialize_database
 )
 from utils import (
-    trans_function, is_valid_email, get_mongo_db, close_mongo_db, get_limiter,
+    trans_function, is_valid_email, get_mongo_db, close_mongo_db, limiter,
     get_mail, requires_role, check_coin_balance, is_admin, login_manager,
     flask_session, csrf, babel, compress, PERSONAL_TOOLS, PERSONAL_NAV, PERSONAL_EXPLORE_FEATURES,
     BUSINESS_TOOLS, BUSINESS_NAV, BUSINESS_EXPLORE_FEATURES, AGENT_TOOLS, AGENT_NAV, AGENT_EXPLORE_FEATURES,
@@ -264,7 +264,7 @@ def create_app():
     compress.init_app(app)
     csrf.init_app(app)
     mail = get_mail(app)
-    limiter = get_limiter(app)
+    limiter.init_app(app)
     serializer = URLSafeTimedSerializer(app.config['SECRET_KEY'])
     babel.init_app(app)
     
@@ -388,6 +388,8 @@ def create_app():
     from personal import personal_bp
     from general.routes import general_bp
     from admin.routes import admin_bp
+    from news.routes import news_bp
+    from taxation.routes import taxation_bp
     
     app.register_blueprint(users_bp, url_prefix='/users')
     logger.info('Registered users blueprint')
