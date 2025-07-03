@@ -85,23 +85,23 @@ def index():
         if current_user.role == 'personal':
             tools_for_template = PERSONAL_TOOLS
             explore_features_for_template = PERSONAL_EXPLORE_FEATURES
-            bottom_nav_for_template = PERSONAL_NAV
+            bottom_nav_items = PERSONAL_NAV
         elif current_user.role == 'trader':
             tools_for_template = BUSINESS_TOOLS
             explore_features_for_template = BUSINESS_EXPLORE_FEATURES
-            bottom_nav_for_template = BUSINESS_NAV
+            bottom_nav_items = BUSINESS_NAV
         elif current_user.role == 'agent':
             tools_for_template = AGENT_TOOLS
             explore_features_for_template = AGENT_EXPLORE_FEATURES
-            bottom_nav_for_template = AGENT_NAV
+            bottom_nav_items = AGENT_NAV
         elif current_user.role == 'admin':
             tools_for_template = ALL_TOOLS
             explore_features_for_template = ADMIN_EXPLORE_FEATURES
-            bottom_nav_for_template = ADMIN_NAV
+            bottom_nav_items = ADMIN_NAV
         else:
             tools_for_template = []
             explore_features_for_template = []
-            bottom_nav_for_template = []
+            bottom_nav_items = []
 
         return render_template(
             'dashboard/index.html',
@@ -113,7 +113,7 @@ def index():
             personal_finance_summary=personal_finance_summary,
             tools=tools_for_template,
             nav_items=explore_features_for_template,
-            bottom_nav_items=bottom_nav_for_template,
+            bottom_nav_items=bottom_nav_items,
             format_currency=format_currency,
             format_date=format_date,
             t=trans,
