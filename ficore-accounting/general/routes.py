@@ -12,6 +12,7 @@ from jinja2.exceptions import TemplateNotFound
 from datetime import datetime
 from models import create_feedback
 from flask_wtf.csrf import CSRFError
+from flask import current_app # Added to resolve current_app not defined in error handling
 
 general_bp = Blueprint('general_bp', __name__, url_prefix='/general')
 
@@ -183,7 +184,8 @@ def feedback():
         ['receipts', trans('receipts_dashboard', default='Receipts')],
         ['payment', trans('payments_dashboard', default='Payments')],
         ['inventory', trans('inventory_dashboard', default='Inventory')],
-        ['report', trans(' tutta: ['reports_dashboard', trans('reports_dashboard', default='Reports')],
+        # Corrected line 186:
+        ['report', trans('reports_dashboard', default='Reports')],
         ['financial_health', trans('financial_health_calculator', default='Financial Health')],
         ['budget', trans('budget_budget_planner', default='Budget')],
         ['bill', trans('bill_bill_planner', default='Bill')],
@@ -191,8 +193,8 @@ def feedback():
         ['emergency_fund', trans('emergency_fund_calculator', default='Emergency Fund')],
         ['learning', trans('learning_hub_courses', default='Learning')],
         ['quiz', trans('quiz_personality_quiz', default='Quiz')],
-        ['taxation', trans('taxation_calculator', default='Taxation')]
-        ['news', trans('news_updates', default='News')]                 
+        ['taxation', trans('taxation_calculator', default='Taxation')], # Added comma here
+        ['news', trans('news_updates', default='News')] # Removed extra indentation, ensure proper list formatting
     ]
     if request.method == 'POST':
         try:
@@ -209,6 +211,8 @@ def feedback():
                 flash(trans('general_invalid_input', default='Please provide a rating between 1 and 5'), 'danger')
                 return render_template('general/feedback.html', t=trans, lang=lang, tool_options=tool_options, title=trans('general_feedback', lang=lang))
             with current_app.app_context():
+                # Import get_mongo_db here to avoid circular dependencies if it's defined in models.py
+                from models import get_mongo_db
                 if current_user.is_authenticated:
                     from utils import get_user_query
                     query = get_user_query(str(current_user.id))
@@ -238,7 +242,7 @@ def feedback():
                     'timestamp': datetime.utcnow()
                 })
             current_app.logger.info(f'Feedback submitted: tool={tool_name}, rating={rating}', 
-                                   extra={'session_id': session.get('sid', 'no-session-id'), 'ip_address': request.remote_addr})
+                                    extra={'session_id': session.get('sid', 'no-session-id'), 'ip_address': request.remote_addr})
             flash(trans('general_thank_you', default='Thank you for your feedback!'), 'success')
             return redirect(url_for('index'))
         except ValueError as e:
