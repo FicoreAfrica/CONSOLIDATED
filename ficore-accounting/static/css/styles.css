@@ -893,6 +893,10 @@ h2.card-title {
     flex-direction: column;
     justify-content: space-between;
 }
+.tool-card .card-body h3 {
+    font-size: var(--font-size-h4);
+    margin-bottom: 0.5rem;
+}
 
 .card .btn-primary {
     margin-top: auto;
