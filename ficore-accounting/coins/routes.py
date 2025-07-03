@@ -6,7 +6,7 @@ from gridfs import GridFS
 from wtforms import FloatField, StringField, SelectField, SubmitField, validators
 from translations import trans
 from utils import (
-    trans_function, requires_role, check_coin_balance, get_mongo_db, is_admin, get_user_query, get_limiter,
+    trans_function, requires_role, check_coin_balance, get_mongo_db, is_admin, get_user_query,
     PERSONAL_TOOLS, PERSONAL_NAV, PERSONAL_EXPLORE_FEATURES,
     BUSINESS_TOOLS, BUSINESS_NAV, BUSINESS_EXPLORE_FEATURES,
     AGENT_TOOLS, AGENT_NAV, AGENT_EXPLORE_FEATURES,
@@ -20,34 +20,6 @@ from pymongo import errors
 logger = getLogger(__name__)
 
 coins_bp = Blueprint('coins', __name__, template_folder='templates/coins')
-
-# Initialize limiter as None; will be set by init_coins_limiter or on-demand
-limiter = None
-
-def init_coins_limiter(app):
-    """Initialize the limiter for the coins Blueprint."""
-    global limiter
-    try:
-        limiter = get_limiter(app)
-        logger.info("Coins blueprint limiter initialized successfully")
-    except Exception as e:
-        logger.error(f"Failed to initialize coins limiter: {str(e)}")
-        limiter = None
-
-def ensure_limiter():
-    """Ensure limiter is initialized before route execution."""
-    global limiter
-    if limiter is None:
-        try:
-            limiter = get_limiter(current_app)
-            logger.info("Limiter initialized on-demand for coins blueprint")
-        except Exception as e:
-            logger.error(f"Failed to initialize limiter on-demand: {str(e)}")
-            # Fallback: Create a dummy limiter to avoid NoneType errors
-            from flask_limiter import Limiter
-            limiter = Limiter(lambda: None, default_limits=["1000 per day"])
-            logger.warning("Using dummy limiter as fallback")
-    return limiter
 
 class PurchaseForm(FlaskForm):
     amount = SelectField(
@@ -119,7 +91,7 @@ def credit_coins(user_id: str, amount: int, ref: str, type: str = 'purchase') ->
 @coins_bp.route('/purchase', methods=['GET', 'POST'])
 @login_required
 @requires_role(['trader', 'personal'])
-@ensure_limiter().limit("50 per hour")
+@limiter.limit("50 per hour")
 def purchase():
     """Handle coin purchase requests."""
     form = PurchaseForm()
@@ -156,7 +128,7 @@ def purchase():
 
 @coins_bp.route('/history', methods=['GET'])
 @login_required
-@ensure_limiter().limit("100 per hour")
+@limiter.limit("100 per hour")
 def history():
     """View coin transaction history."""
     try:
@@ -200,7 +172,7 @@ def history():
 @coins_bp.route('/receipt_upload', methods=['GET', 'POST'])
 @login_required
 @requires_role(['trader', 'personal'])
-@ensure_limiter().limit("10 per hour")
+@limiter.limit("10 per hour")
 def receipt_upload():
     """Handle payment receipt uploads with transaction for coin deduction."""
     form = ReceiptUploadForm()
@@ -274,7 +246,7 @@ def receipt_upload():
 @coins_bp.route('/receipts', methods=['GET'])
 @login_required
 @requires_role('admin')
-@ensure_limiter().limit("50 per hour")
+@limiter.limit("50 per hour")
 def view_receipts():
     """View all uploaded receipts (admin only)."""
     try:
@@ -309,7 +281,7 @@ def view_receipts():
 @coins_bp.route('/receipt/<file_id>', methods=['GET'])
 @login_required
 @requires_role('admin')
-@ensure_limiter().limit("10 per hour")
+@limiter.limit("10 per hour")
 def view_receipt(file_id):
     """Serve a specific receipt file (admin only)."""
     try:
@@ -331,7 +303,7 @@ def view_receipt(file_id):
 
 @coins_bp.route('/api/balance', methods=['GET'])
 @login_required
-@ensure_limiter().limit("100 per hour")
+@limiter.limit("100 per hour")
 def get_balance():
     """API endpoint to get current user's coin balance."""
     try:
