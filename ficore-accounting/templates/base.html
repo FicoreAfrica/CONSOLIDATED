@@ -22,10 +22,11 @@
 </head>
 <body>
     {% if current_user.is_authenticated %}
-    <nav class="navbar navbar-expand-lg navbar-dark bg-dark" role="navigation" aria-label="{{ t('general_main_navigation', default='Main navigation') | e }}">
+    {# Top Navigation Bar for Authenticated Users (visible on large screens, hidden on small for mobile nav) #}
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark d-none d-lg-flex" role="navigation" aria-label="{{ t('general_main_navigation', default='Main navigation') | e }}">
         <div class="container-fluid">
             <a class="navbar-brand" href="{{ url_for('general_bp.home') | e }}" aria-label="{{ t('general_ficore_africa', default='Ficore Africa') | e }}">
-                <img src="{{ url_for('static', filename='img/ficore_records_logo.png') | e }}" alt="{{ t('general_ficore_africa_logo', default='Ficore Africa Logo') | e }}" class="logo" style="border-radius: 50%; object-fit: contain; width: 80px; height: 80px;">
+                <img src="{{ url_for('static', filename='img/ficore_records_logo.png') | e }}" alt="{{ t('general_ficore_africa_logo', default='Ficore Africa Logo') | e }}" class="logo" style="border-radius: 50%; object-fit: contain; width: 40px; height: 40px;">
                 {{ t('general_ficore_africa', default='Ficore Africa') | e }}
             </a>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="{{ t('general_toggle_navigation', default='Toggle navigation') | e }}">
@@ -33,7 +34,10 @@
             </button>
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav me-auto">
-                    {% for item in BUSINESS_NAV %}
+                    {# Dynamic navigation based on user role - example using BUSINESS_NAV #}
+                    {# You would typically pass the correct NAV list (BUSINESS_NAV, PERSONAL_NAV, AGENT_NAV, ADMIN_NAV) from your Flask view context #}
+                    {% set top_nav_data = BUSINESS_NAV %} {# Placeholder: Replace with actual role-based nav #}
+                    {% for item in top_nav_data %}
                     <li class="nav-item">
                         <a class="nav-link {% if request.endpoint == item.endpoint %}active{% endif %}" href="{{ url_for(item.endpoint) | e }}" data-bs-toggle="tooltip" data-bs-title="{{ t(item.tooltip_key, default=item.label) | e }}" aria-current="{% if request.endpoint == item.endpoint %}page{% endif %}">
                             <i class="{{ item.icon }} me-1"></i>{{ t(item.label_key, default=item.label) | e }}
@@ -41,22 +45,17 @@
                     </li>
                     {% endfor %}
                 </ul>
-                <ul class="navbar-nav ms-auto align-items-center header-actions">
-                    <li class="nav-item">
-                        <button class="nav-link btn btn-link text-white" id="notificationBell" data-bs-toggle="modal" data-bs-target="#notificationModal" data-bs-title="{{ t('general_notifications_tooltip', default='View notifications') | e }}" aria-label="{{ t('general_notifications', default='Notifications') | e }}">
-                            <i class="bi bi-bell"></i>
-                            <span class="notification-badge d-none" id="notificationBadge"></span>
-                        </button>
-                    </li>
+                {# Header actions for desktop, typically not duplicated if on home page top-header #}
+                <ul class="navbar-nav ms-auto align-items-center">
                     <li class="nav-item">
                         <a class="nav-link" href="{{ url_for('settings.profile') | e }}" data-bs-toggle="tooltip" data-bs-title="{{ t('general_profile_tooltip', default='View profile') | e }}" aria-label="{{ t('general_profile', default='Profile') | e }}">
-                            <i class="bi bi-person-circle"></i>
+                            <i class="bi bi-person-circle"></i> {{ current_user.display_name | default(current_user.id) | e }}
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link no-js-intercept" href="{{ url_for('users.logout') | e }}" data-bs-toggle="tooltip" data-bs-title="{{ t('general_logout', default='Logout') | e }}" aria-label="{{ t('general_logout', default='Logout') | e }}" rel="external">
-                            <i class="bi bi-box-arrow-right"></i>
-                        </a>
+                        <button class="nav-link btn btn-link text-white" id="darkModeToggle" onclick="toggleDarkMode()" data-bs-toggle="tooltip" data-bs-title="{{ t('general_mode_toggle_tooltip_switch_to_dark', default='Switch to dark mode') | e }}" aria-label="{{ t('general_mode_toggle_dark', default='Toggle dark mode') | e }}">
+                            <i class="bi bi-moon-stars"></i>
+                        </button>
                     </li>
                     <li class="nav-item dropdown">
                         <a class="nav-link dropdown-toggle" href="#" id="languageDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false" data-bs-title="{{ t('general_language_tooltip', default='Change language') | e }}" aria-label="{{ t('general_language', default='Language') | e }}">
@@ -68,19 +67,20 @@
                         </ul>
                     </li>
                     <li class="nav-item">
-                        <button class="nav-link btn btn-link text-white" id="darkModeToggle" onclick="toggleDarkMode()" data-bs-toggle="tooltip" data-bs-title="{{ t('general_mode_toggle_tooltip_switch_to_dark', default='Switch to dark mode') | e }}" aria-label="{{ t('general_mode_toggle_dark', default='Toggle dark mode') | e }}">
-                            <i class="bi bi-moon-stars"></i>
-                        </button>
+                        <a class="nav-link no-js-intercept" href="{{ url_for('users.logout') | e }}" data-bs-toggle="tooltip" data-bs-title="{{ t('general_logout', default='Logout') | e }}" aria-label="{{ t('general_logout', default='Logout') | e }}" rel="external">
+                            <i class="bi bi-box-arrow-right"></i>
+                        </a>
                     </li>
                 </ul>
             </div>
         </div>
     </nav>
     {% else %}
+    {# Top Navigation Bar for Non-Authenticated Users #}
     <nav class="navbar navbar-expand-lg navbar-dark bg-dark" role="navigation" aria-label="{{ t('general_main_navigation', default='Main navigation') | e }}">
         <div class="container-fluid">
             <a class="navbar-brand" href="{{ url_for('general_bp.home') | e }}" aria-label="{{ t('general_ficore_africa', default='Ficore Africa') | e }}">
-                <img src="{{ url_for('static', filename='img/ficore_logo.png') | e }}" alt="{{ t('general_ficore_africa_logo', default='Ficore Africa Logo') | e }}" class="logo" style="border-radius: 50%; object-fit: contain; width: 80px; height: 80px;">
+                <img src="{{ url_for('static', filename='img/ficore_logo.png') | e }}" alt="{{ t('general_ficore_africa_logo', default='Ficore Africa Logo') | e }}" class="logo" style="border-radius: 50%; object-fit: contain; width: 40px; height: 40px;">
                 {{ t('general_ficore_africa', default='Ficore Africa') | e }}
             </a>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="{{ t('general_toggle_navigation', default='Toggle navigation') | e }}">
@@ -151,15 +151,18 @@
         </div>
     </main>
 
-    {# ADDED NEW BLOCK FOR AUTHENTICATED USERS' BOTTOM NAV #}
+    {# Mobile Bottom Navigation for Authenticated Users (hidden on large screens) #}
     {% if current_user.is_authenticated %}
-    <nav class="navbar navbar-expand-lg navbar-dark bg-dark fixed-bottom d-lg-none mobile-bottom-nav"> {# d-lg-none hides on large screens, mobile-bottom-nav for custom styling #}
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark fixed-bottom d-lg-none mobile-bottom-nav">
         <div class="container-fluid d-flex justify-content-around align-items-center">
-            {# Prioritize nav_items if available, otherwise fallback to BUSINESS_NAV #}
+            {# Determine which navigation list to use based on user role or specific page needs #}
+            {# For simplicity, this example uses BUSINESS_NAV. You would need logic in your Flask view
+               to pass the appropriate nav list (e.g., PERSONAL_NAV, AGENT_NAV, ADMIN_NAV) to the template. #}
             {% set bottom_nav_data = nav_items if nav_items is defined and nav_items else BUSINESS_NAV %}
+            
             {% for item in bottom_nav_data %}
-                <a class="nav-link text-center flex-fill py-2" href="{{ url_for(item.endpoint) | e }}">
-                    <i class="{{ item.icon }} d-block fs-5 mb-1"></i> {# Larger icon, block display, margin-bottom #}
+                <a class="nav-link text-center flex-fill py-2 nav-item-mobile {% if request.endpoint == item.endpoint %}active{% endif %}" href="{{ url_for(item.endpoint) | e }}">
+                    <i class="{{ item.icon }} d-block fs-5 mb-1"></i>
                     <small>{{ t(item.label_key, default=item.label) | e }}</small>
                 </a>
             {% endfor %}
@@ -297,7 +300,7 @@
             const darkModeToggle = document.getElementById('darkModeToggle');
             if (darkModeToggle) {
                 darkModeToggle.querySelector('i').className = isDark ? 'bi bi-sun' : 'bi bi-moon-stars';
-                darkModeToggle.setAttribute('data-bs-title', isDark ? '{{ t("general_mode_toggle_tooltip_switch_to_light", default="Switch to light mode") | e }}' : '{{ t("general_mode_toggle_tooltip_switch_to_dark", default="Switch to dark mode") | e }}');
+                darkModeToggle.setAttribute('data-bs-title', isDark ? '{{ t("general_mode_toggle_tooltip_switch_to_light", default="Switch to light mode") | e }}' : '{{ t("general_mode_toggle_tooltip_switch_to_dark", default="Toggle dark mode") | e }}');
                 darkModeToggle.setAttribute('aria-label', isDark ? '{{ t("general_mode_toggle_light", default="Toggle light mode") | e }}' : '{{ t("general_mode_toggle_dark", default="Toggle dark mode") | e }}');
                 const tooltip = bootstrap.Tooltip.getInstance(darkModeToggle);
                 if (tooltip) tooltip.dispose();
@@ -307,15 +310,18 @@
 
         async function loadNotificationCount() {
             try {
-                const response = await fetch('{{ url_for('personal.notification_count') | e }}');
+                // Adjust this URL if personal.notification_count is not universally accessible
+                const response = await fetch('{{ url_for('personal.notification_count') | e }}'); 
                 if (!response.ok) throw new Error('Network response was not ok');
                 const data = await response.json();
                 const badge = document.getElementById('notificationBadge');
-                if (data.count > 0) {
-                    badge.textContent = data.count;
-                    badge.classList.remove('d-none');
-                } else {
-                    badge.classList.add('d-none');
+                if (badge) { // Check if the badge element exists in the current view
+                    if (data.count > 0) {
+                        badge.textContent = data.count;
+                        badge.classList.remove('d-none');
+                    } else {
+                        badge.classList.add('d-none');
+                    }
                 }
             } catch (error) {
                 console.error('Failed to load notification count:', error);
@@ -324,7 +330,12 @@
 
         async function loadNotifications() {
             const body = document.getElementById('notificationBody');
+            if (!body) { // Ensure the notification modal body exists
+                console.warn('Notification modal body (#notificationBody) not found.');
+                return;
+            }
             try {
+                // Adjust this URL if personal.notifications is not universally accessible
                 const response = await fetch('{{ url_for('personal.notifications') | e }}');
                 if (!response.ok) throw new Error('Network response was not ok');
                 const data = await response.json();
@@ -332,11 +343,15 @@
                     body.innerHTML = `<p class="text-danger">{{ t('general_notification_load_error', default='Failed to load notifications') | e }}</p>`;
                     return;
                 }
-                body.innerHTML = data.map(notification => `
-                    <div class="notification-item ${notification.read ? 'read' : 'unread'}">
-                        <p>${notification.message} <small class="text-muted">${new Date(notification.timestamp).toLocaleString()}</small></p>
-                    </div>
-                `).join('');
+                if (data.length === 0) {
+                     body.innerHTML = `<p class="text-muted text-center">{{ t('general_no_notifications_yet', default='No new notifications.') | e }}</p>`;
+                } else {
+                    body.innerHTML = data.map(notification => `
+                        <div class="notification-item ${notification.read ? 'read' : 'unread'}">
+                            <p>${notification.message} <small class="text-muted">${new Date(notification.timestamp).toLocaleString()}</small></p>
+                        </div>
+                    `).join('');
+                }
             } catch (error) {
                 body.innerHTML = `<p class="text-danger">{{ t('general_notification_load_error', default='Failed to load notifications') | e }}</p>`;
                 console.error('Failed to load notifications:', error);
