@@ -326,7 +326,7 @@ def create_app():
                 if user is None:
                     logger.warning(f'No user found for ID: {user_id}', extra={'ip_address': request.remote_addr})
                 else:
-                    logger.info(f'User loaded: {user.username if hasattr(user, "username") else user_id}', extra={'ip_address': request.remote_addr})
+                    logger.debug(f'User loaded: {user.username if hasattr(user, "username") else user_id}', extra={'ip_address': request.remote_addr})
                 return user
         except Exception as e:
             logger.error(f'Error loading user {user_id}: {str(e)}', exc_info=True)
@@ -734,7 +734,7 @@ def create_app():
     @app.route('/health')
     @limiter.limit('10 per minute')
     def health():
-        logger.info('Health check', extra={'ip_address': request.remote_addr})
+        logger.debug('Health check', extra={'ip_address': request.remote_addr})
         status = {'status': 'healthy'}
         try:
             with app.app_context():
