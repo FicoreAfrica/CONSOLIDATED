@@ -1,45 +1,11 @@
-<script type="text/javascript">
-        var gk_isXlsx = false;
-        var gk_xlsxFileLookup = {};
-        var gk_fileData = {};
-        function filledCell(cell) {
-          return cell !== '' && cell != null;
-        }
-        function loadFileData(filename) {
-        if (gk_isXlsx && gk_xlsxFileLookup[filename]) {
-            try {
-                var workbook = XLSX.read(gk_fileData[filename], { type: 'base64' });
-                var firstSheetName = workbook.SheetNames[0];
-                var worksheet = workbook.Sheets[firstSheetName];
-
-                // Convert sheet to JSON to filter blank rows
-                var jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1, blankrows: false, defval: '' });
-                // Filter out blank rows (rows where all cells are empty, null, or undefined)
-                var filteredData = jsonData.filter(row => row.some(filledCell));
-
-                // Heuristic to find the header row by ignoring rows with fewer filled cells than the next row
-                var headerRowIndex = filteredData.findIndex((row, index) =>
-                  row.filter(filledCell).length >= filteredData[index + 1]?.filter(filledCell).length
-                );
-                // Fallback
-                if (headerRowIndex === -1 || headerRowIndex > 25) {
-                  headerRowIndex = 0;
-                }
-
-                // Convert filtered JSON back to CSV
-                var csv = XLSX.utils.aoa_to_sheet(filteredData.slice(headerRowIndex)); // Create a new sheet from filtered array of arrays
-                csv = XLSX.utils.sheet_to_csv(csv, { header: 1 });
-                return csv;
-            } catch (e) {
-                console.error(e);
-                return "";
-            }
-        }
-        return gk_fileData[filename] || "";
-        }
-        </script>{% extends "base.html" %}
+{% extends "base.html" %}
 {% block content %}
 <div class="container">
+    {% if policy_notice %}
+        <div class="alert alert-info" role="alert">
+            {{ policy_notice }}
+        </div>
+    {% endif %}
     {% with messages = get_flashed_messages(with_categories=true) %}
         {% if messages %}
             {% for category, message in messages %}
@@ -72,13 +38,21 @@
             {{ t('tax_to_calculate_tax_obligation', default='to calculate your tax obligation') }}.
         </p>
         {% if role in ['trader', 'agent'] %}
-            <p>{{ t('tax_select_business_size', default='Select your business size:') }}</p>
+            <p>{{ t('tax_select_business_size', default='Select your business size for CIT calculations:') }}</p>
         {% endif %}
         {% if tax_rates %}
             <p>{{ t('tax_available_rates', default='Available tax rates for your role:') }}</p>
             <ul>
                 {% for rate in tax_rates %}
-                    <li>{{ rate.description }} ({{ rate.min_income }} - {{ rate.max_income }}): {{ (rate.rate * 100)|round(2) }}%</li>
+                    <li>{{ rate.description }} (₦{{ rate.min_income | round(2) }} - {{ rate.max_income | round(2) if rate.max_income != float('inf') else '∞' }}): {{ (rate.rate * 100)|round(2) }}%</li>
+                {% endfor %}
+            </ul>
+        {% endif %}
+        {% if vat_rules %}
+            <p>{{ t('tax_vat_rules', default='VAT rules:') }}</p>
+            <ul>
+                {% for rule in vat_rules %}
+                    <li>{{ rule.description }}</li>
                 {% endfor %}
             </ul>
         {% endif %}
@@ -117,6 +91,28 @@
                     </div>
                 {% endif %}
             </div>
+            <div class="form-group" id="vat_category_group" style="display: none;">
+                {{ form.vat_category.label(class="form-label") }}
+                {{ form.vat_category(class="form-control", **{'data-validate': 'true'}) }}
+                {% if form.vat_category.errors %}
+                    <div class="text-danger">
+                        {% for error in form.vat_category.errors %}
+                            {{ error }}<br>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+            </div>
+            <div class="form-group" id="is_business_vat_group" style="display: none;">
+                {{ form.is_business_vat.label(class="form-check-label") }}
+                {{ form.is_business_vat(class="form-check-input") }}
+                {% if form.is_business_vat.errors %}
+                    <div class="text-danger">
+                        {% for error in form.is_business_vat.errors %}
+                            {{ error }}<br>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+            </div>
             {{ form.submit(class="btn btn-primary") }}
         </form>
         <div id="taxResult" class="mt-3"></div>
@@ -126,6 +122,10 @@
         <h1>{{ t('tax_calculation_result', default='Tax Calculation Result') }}</h1>
         <p>{{ t('tax_for_amount_of', default='For an amount of') }} ₦{{ amount | round(2) }}, {{ t('tax_your_tax_obligation_is', default='your tax obligation is') }} ₦{{ tax | round(2) }}.</p>
         <p>{{ t('tax_explanation', default='Explanation') }}: {{ explanation }}</p>
+        {% if simplified_return is defined %}
+            <p>{{ t('tax_simplified_return', default='Simplified Return') }}: {{ 'Yes' if simplified_return else 'No' }}</p>
+            <p>{{ t('tax_audit_required', default='Audit Required') }}: {{ 'No' if not audit_required else 'Yes' }}</p>
+        {% endif %}
         <a href="{{ url_for('taxation_bp.calculate_tax') }}" class="btn btn-secondary">{{ t('tax_back_to_calculator', default='Back to Calculator') }}</a>
         <a href="{{ url_for('taxation_bp.understand_taxes') }}" class="btn btn-info mt-3" style="font-size: 1.2em; padding: 10px 20px;">{{ t('tax_understand_taxes', default='Understand Your Taxes') }}</a>
 
@@ -260,10 +260,31 @@
                     {% for rate in rates %}
                         <tr>
                             <td>{{ rate.role }}</td>
-                            <td>{{ rate.min_income | round(2) }}</td>
-                            <td>{{ rate.max_income | round(2) if rate.max_income != float('inf') else '∞' }}</td>
+                            <td>₦{{ rate.min_income | round(2) }}</td>
+                            <td>₦{{ rate.max_income | round(2) if rate.max_income != float('inf') else '∞' }}</td>
                             <td>{{ (rate.rate * 100)|round(2) }}%</td>
                             <td>{{ rate.description }}</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        {% endif %}
+        {% if vat_rules %}
+            <h2>{{ t('tax_existing_vat_rules', default='Existing VAT Rules') }}</h2>
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>{{ t('tax_category', default='Category') }}</th>
+                        <th>{{ t('tax_vat_exempt', default='VAT Exempt') }}</th>
+                        <th>{{ t('tax_description', default='Description') }}</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for rule in vat_rules %}
+                        <tr>
+                            <td>{{ rule.category }}</td>
+                            <td>{{ 'Yes' if rule.vat_exempt else 'No' }}</td>
+                            <td>{{ rule.description }}</td>
                         </tr>
                     {% endfor %}
                 </tbody>
@@ -325,26 +346,26 @@
 
     {% elif section == 'understand_taxes' %}
         <h1>{{ t('tax_understand_your_taxes', default='Understand Your Taxes') }}</h1>
-        <p><strong>Updated as of July 02, 2025</strong></p>
-        <h2>{{ t('tax_key_changes', default='Key Changes for Small Businesses and Individuals') }}</h2>
+        <p><strong>{{ t('tax_updated_as_of', default='Updated as of') }} July 03, 2025</strong></p>
+        <h2>{{ t('tax_key_changes_2026', default='Key Tax Changes Effective 1 January 2026') }}</h2>
+        <p>{{ t('tax_new_laws_notice', default='New tax laws were enacted on 26 June 2025, effective from 1 January 2026, to support individuals and businesses in Nigeria.') }}</p>
         <ul>
-            <li><strong>Tax Exemption for Low Earners:</strong> If you earn less than ₦800,000 annually, you’re exempt from personal income tax.</li>
-            <li><strong>Small Business Relief:</strong> If your business earns under ₦25 million yearly, you pay 0% company income tax.</li>
-            <li><strong>VAT Updates:</strong> The VAT rate stays at 7.5%, but essentials like food, medicine, and electricity are now zero-rated, meaning no VAT on these purchases. You can recover input VAT on related business costs.</li>
-            <li><strong>E-Invoicing Mandate:</strong> All businesses must use e-invoicing systems provided by the Nigeria Revenue Service (NRS) for VAT compliance.</li>
-            <li><strong>Development Levy:</strong> A 2%-4% levy applies to fund national projects, based on your income or turnover.</li>
-            <li><strong>New Tax Ombudsman:</strong> An independent office is available to help resolve tax disputes.</li>
+            <li><strong>{{ t('tax_pit_relief', default='Personal Income Tax Relief') }}:</strong> {{ t('tax_pit_relief_details', default='Individuals earning up to ₦1,000,000 annually receive a �Geometry
+            <li><strong>{{ t('tax_vat_exemptions', default='VAT Exemptions') }}:</strong> {{ t('tax_vat_exemptions_details', default='No VAT on essential goods and services (food, healthcare, education, rent, power, baby products), reducing costs for families.') }}</li>
+            <li><strong>{{ t('tax_small_business_cit', default='Small Business CIT Exemption') }}:</strong> {{ t('tax_small_business_cit_details', default='Businesses with turnover ≤ ₦50,000,000 pay 0% corporate income tax and can file simplified returns without audits.') }}</li>
+            <li><strong>{{ t('tax_large_business_cit', default='Large Business CIT Reduction') }}:</strong> {{ t('tax_large_business_cit_details', default='Corporate tax rate for businesses with turnover > ₦50,000,000 reduced to 27.5% in 2025 and 25% from 2026 onward.') }}</li>
+            <li><strong>{{ t('tax_vat_credits', default='VAT Credits for Businesses') }}:</strong> {{ t('tax_vat_credits_details', default='Businesses can reclaim 7.5% VAT paid on expenses and assets.') }}</li>
         </ul>
         <h2>{{ t('tax_actions_to_take', default='Actions to Take') }}</h2>
         <ol>
-            <li><strong>Get Informed:</strong> Learn about these changes and how they affect you or your small business.</li>
-            <li><strong>Assess Impact:</strong> Check how your finances and operations are affected, especially with e-invoicing and VAT recovery.</li>
-            <li><strong>Update Strategy:</strong> Adjust your tax planning to benefit from exemptions and prepare for e-invoicing.</li>
-            <li><strong>Implement Changes:</strong> Update your records and software to comply with new rules by July 2025.</li>
-            <li><strong>Seek Support:</strong> Contact the Tax Ombudsman or NRS for help with compliance issues.</li>
-            <li><strong>Stay Updated:</strong> Regularly check for new guidelines from the NRS.</li>
+            <li><strong>{{ t('tax_get_informed', default='Get Informed') }}:</strong> {{ t('tax_get_informed_details', default='Understand how these changes affect your personal or business taxes.') }}</li>
+            <li><strong>{{ t('tax_assess_impact', default='Assess Impact') }}:</strong> {{ t('tax_assess_impact_details', default='Evaluate how exemptions, reliefs, and credits impact your finances.') }}</li>
+            <li><strong>{{ t('tax_update_strategy', default='Update Strategy') }}:</strong> {{ t('tax_update_strategy_details', default='Adjust tax planning to leverage exemptions and credits.') }}</li>
+            <li><strong>{{ t('tax_implement_changes', default='Implement Changes') }}:</strong> {{ t('tax_implement_changes_details', default='Update records and processes to comply with new rules by January 2026.') }}</li>
+            <li><strong>{{ t('tax_seek_support', default='Seek Support') }}:</strong> {{ t('tax_seek_support_details', default='Contact the Nigeria Revenue Service (NRS) for compliance assistance.') }}</li>
+            <li><strong>{{ t('tax_stay_updated', default='Stay Updated') }}:</strong> {{ t('tax_stay_updated_details', default='Check for updates from NRS to stay compliant.') }}</li>
         </ol>
-        <p>{{ t('tax_note', default='Note: These reforms, effective from June 26, 2025, are managed by the Nigeria Revenue Service (NRS), replacing the FIRS.') }}</p>
+        <p>{{ t('tax_note', default='Note: These reforms, effective from 1 January 2026, are managed by the Nigeria Revenue Service (NRS).') }}</p>
         <a href="{{ url_for('taxation_bp.calculate_tax') }}" class="btn btn-secondary mt-3">{{ t('tax_back_to_calculator', default='Back to Calculator') }}</a>
     {% endif %}
 </div>
@@ -358,60 +379,93 @@
             const amountInput = document.querySelector('input[name="amount"]');
             const taxpayerTypeInput = document.querySelector('select[name="taxpayer_type"]');
             const businessSizeGroup = document.getElementById('business_size_group');
+            const vatCategoryGroup = document.getElementById('vat_category_group');
+            const isBusinessVatGroup = document.getElementById('is_business_vat_group');
             const taxResult = document.getElementById('taxResult');
             const taxRates = {{ tax_rates | tojson }};
+            const vatRules = {{ vat_rules | tojson }};
 
-            // Show/hide business size field based on taxpayer type
+            // Show/hide fields based on taxpayer type
             taxpayerTypeInput.addEventListener('change', () => {
                 const taxpayerType = taxpayerTypeInput.value;
                 businessSizeGroup.style.display = (taxpayerType === 'small_business' || taxpayerType === 'cit') ? 'block' : 'none';
+                vatCategoryGroup.style.display = taxpayerType === 'vat' ? 'block' : 'none';
+                isBusinessVatGroup.style.display = taxpayerType === 'vat' ? 'block' : 'none';
             });
 
             // Real-time tax preview
             amountInput.addEventListener('input', () => {
                 const amount = parseFloat(amountInput.value);
                 const taxpayerType = taxpayerTypeInput.value;
+                const vatCategory = document.querySelector('select[name="vat_category"]').value;
+                const isBusinessVat = document.querySelector('input[name="is_business_vat"]').checked;
                 let preview = '';
                 if (!isNaN(amount) && amount >= 0) {
                     if (taxpayerType === 'paye') {
-                        let total_tax = 0.0;
                         let taxable_amount = amount;
-                        let last_limit = 0.0;
-                        const tax_brackets = [
-                            { limit: 800000.0, rate: 0.0 },
-                            { limit: 3000000.0, rate: 0.15 },
-                            { limit: 12000000.0, rate: 0.18 },
-                            { limit: Infinity, rate: 0.25 }
-                        ];
-                        for (let bracket of tax_brackets) {
-                            if (taxable_amount <= last_limit) break;
-                            let band_amount = Math.min(taxable_amount, bracket.limit) - last_limit;
-                            if (band_amount > 0) {
-                                total_tax += band_amount * bracket.rate;
-                            }
-                            if (taxable_amount <= bracket.limit) break;
-                            last_limit = bracket.limit;
+                        if (taxable_amount <= 1000000) {
+                            taxable_amount = Math.max(0, taxable_amount - 200000);
                         }
-                        const levy_rate = amount <= 5000000 ? 0.02 : 0.04;
-                        total_tax += amount * levy_rate;
-                        preview = `<div class="alert alert-info">{{ t('tax_estimated_tax', default='Estimated tax') }}: ₦${total_tax.toFixed(2)} (Progressive PAYE + ${levy_rate*100}% Development Levy)</div>`;
+                        let total_tax = 0.0;
+                        if (taxable_amount <= 800000) {
+                            total_tax = 0;
+                        } else if (taxable_amount <= 3000000) {
+                            total_tax += (taxable_amount - 800000) * 0.15;
+                        } else if (taxable_amount <= 12000000) {
+                            total_tax += 2200000 * 0.15;
+                            total_tax += (taxable_amount - 3000000) * 0.18;
+                        } else if (taxable_amount <= 25000000) {
+                            total_tax += 2200000 * 0.15;
+                            total_tax += 9000000 * 0.18;
+                            total_tax += (taxable_amount - 12000000) * 0.21;
+                        } else if (taxable_amount <= 50000000) {
+                            total_tax += 2200000 * 0.15;
+                            total_tax += 9000000 * 0.18;
+                            total_tax += 13000000 * 0.21;
+                            total_tax += (taxable_amount - 25000000) * 0.23;
+                        } else {
+                            total_tax += 2200000 * 0.15;
+                            total_tax += 9000000 * 0.18;
+                            total_tax += 13000000 * 0.21;
+                            total_tax += 25000000 * 0.23;
+                            total_tax += (taxable_amount - 50000000) * 0.25;
+                        }
+                        const explanation = taxable_amount <= 1000000 ? "{{ t('tax_paye_explanation', default='Progressive PAYE: 0% up to ₦800,000, 15% up to ₦3M, 18% up to ₦12M, 21% up to ₦25M, 23% up to ₦50M, 25% above ₦50M + ₦200,000 rent relief') }}" : "{{ t('tax_paye_explanation_no_relief', default='Progressive PAYE: 0% up to ₦800,000, 15% up to ₦3M, 18% up to ₦12M, 21% up to ₦25M, 23% up to ₦50M, 25% above ₦50M') }}";
+                        preview = `<div class="alert alert-info">{{ t('tax_estimated_tax', default='Estimated tax') }}: ₦${total_tax.toFixed(2)} (${explanation})</div>`;
                     } else if (taxpayerType === 'small_business' || taxpayerType === 'cit') {
                         let tax = 0.0;
                         let explanation = '';
-                        if (amount <= 25000000) {
+                        let simplified_return = false;
+                        let audit_required = false;
+                        const current_year = new Date().getFullYear();
+                        if (amount <= 50000000) {
                             tax = 0.0;
-                            explanation = '0% for revenue up to ₦25M';
-                        } else if (amount <= 100000000) {
-                            tax = amount * 0.20;
-                            explanation = '20% for revenue between ₦25M and ₦100M';
+                            explanation = "{{ t('tax_cit_explanation_small', default='0% CIT for turnover ≤ ₦50M, simplified return, no audit') }}";
+                            simplified_return = true;
+                            audit_required = false;
                         } else {
-                            tax = amount * 0.30;
-                            explanation = '30% for revenue above ₦100M';
+                            const rate = current_year === 2025 ? 0.275 : 0.25;
+                            tax = amount * rate;
+                            explanation = `{{ t('tax_cit_explanation_large', default='${rate*100}% CIT for turnover > ₦50M') }}`;
+                            simplified_return = false;
+                            audit_required = true;
                         }
-                        const levy_rate = amount <= 5000000 ? 0.02 : 0.04;
-                        const tertiary_edu_tax = amount * 0.03;
-                        tax += tertiary_edu_tax + (amount * levy_rate);
-                        preview = `<div class="alert alert-info">{{ t('tax_estimated_tax', default='Estimated tax') }}: ₦${tax.toFixed(2)} (${explanation} + 3% Tertiary Education Tax + ${levy_rate*100}% Development Levy)</div>`;
+                        preview = `<div class="alert alert-info">{{ t('tax_estimated_tax', default='Estimated tax') }}: ₦${tax.toFixed(2)} (${explanation}, {{ t('tax_simplified_return', default='Simplified Return') }}: ${simplified_return ? 'Yes' : 'No'}, {{ t('tax_audit_required', default='Audit Required') }}: ${audit_required ? 'Yes' : 'No'})</div>`;
+                    } else if (taxpayerType === 'vat') {
+                        let tax = 0.0;
+                        let explanation = '';
+                        const exemptCategories = ['food', 'healthcare', 'education', 'rent', 'power', 'baby_products'];
+                        if (exemptCategories.includes(vatCategory)) {
+                            tax = 0.0;
+                            explanation = `{{ t('tax_vat_exempt', default='${vatCategory} is VAT-exempt') }}`;
+                        } else if (isBusinessVat) {
+                            tax = 0.0;
+                            explanation = "{{ t('tax_vat_reclaimed', default='Input VAT reclaimed for business') }}";
+                        } else {
+                            tax = amount * 0.075;
+                            explanation = "{{ t('tax_vat_applied', default='7.5% VAT applied') }}";
+                        }
+                        preview = `<div class="alert alert-info">{{ t('tax_estimated_tax', default='Estimated tax') }}: ₦${tax.toFixed(2)} (${explanation})</div>`;
                     }
                 } else {
                     preview = `<div class="alert alert-warning">{{ t('tax_no_rate_found', default='No tax rate found for this amount') }}</div>`;
@@ -425,12 +479,18 @@
                 const amount = parseFloat(amountInput.value);
                 const taxpayerType = taxpayerTypeInput.value;
                 const businessSize = document.querySelector('select[name="business_size"]').value;
+                const vatCategory = document.querySelector('select[name="vat_category"]').value;
+                const isBusinessVat = document.querySelector('input[name="is_business_vat"]').checked;
                 if (isNaN(amount) || amount < 0) {
                     taxResult.innerHTML = '<div class="alert alert-danger">{{ t('tax_invalid_input', default='Invalid input. Amount must be a positive number.') }}</div>';
                     return;
                 }
                 if ((taxpayerType === 'small_business' || taxpayerType === 'cit') && !businessSize) {
                     taxResult.innerHTML = '<div class="alert alert-danger">{{ t('tax_invalid_business_size', default='Invalid business size selected') }}</div>';
+                    return;
+                }
+                if (taxpayerType === 'vat' && !vatCategory) {
+                    taxResult.innerHTML = '<div class="alert alert-danger">{{ t('tax_invalid_vat_category', default='VAT category required') }}</div>';
                     return;
                 }
                 try {
@@ -445,18 +505,25 @@
                             amount,
                             taxpayer_type: taxpayerType,
                             business_size: businessSize,
+                            vat_category: vatCategory,
+                            is_business_vat: isBusinessVat,
                             csrf_token: csrfToken
                         })
                     });
                     const result = await response.json();
                     if (response.ok) {
-                        taxResult.innerHTML = `
+                        let resultHtml = `
                             <div class="alert alert-success">
                                 {{ t('tax_for_amount_of', default='For an amount of') }} ₦${result.amount.toFixed(2)}, 
                                 {{ t('tax_your_tax_obligation_is', default='your tax obligation is') }} ₦${result.tax.toFixed(2)}.<br>
                                 {{ t('tax_explanation', default='Explanation') }}: ${result.explanation}
-                            </div>
                         `;
+                        if (result.simplified_return !== undefined) {
+                            resultHtml += `<br>{{ t('tax_simplified_return', default='Simplified Return') }}: ${result.simplified_return ? 'Yes' : 'No'}`;
+                            resultHtml += `<br>{{ t('tax_audit_required', default='Audit Required') }}: ${result.audit_required ? 'Yes' : 'No'}`;
+                        }
+                        resultHtml += '</div>';
+                        taxResult.innerHTML = resultHtml;
                     } else {
                         taxResult.innerHTML = `<div class="alert alert-danger">${result.error || '{{ t('tax_error', default='An error occurred.') }}'}</div>`;
                     }
