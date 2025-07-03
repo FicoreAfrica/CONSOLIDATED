@@ -44,11 +44,12 @@ def index():
     """Render the personal finance dashboard."""
     try:
         tools = PERSONAL_TOOLS if current_user.role == 'personal' else ALL_TOOLS
-        nav_items = PERSONAL_NAV if current_user.role == 'personal' else ADMIN_NAV
+        # Use bottom_nav_items for consistency in passing navigation data to templates
+        bottom_nav_items = PERSONAL_NAV if current_user.role == 'personal' else ADMIN_NAV
         return render_template(
             'personal/GENERAL/index.html',
             tools=tools,
-            nav_items=nav_items,
+            bottom_nav_items=bottom_nav_items,  # Updated to use bottom_nav_items
             t=trans,
             lang=session.get('lang', 'en'),
             title=trans('general_welcome', default='Welcome')
@@ -57,11 +58,12 @@ def index():
         current_app.logger.error(f"Error rendering personal index: {str(e)}", extra={'session_id': session.get('sid', 'unknown')})
         flash(trans('general_error', default='An error occurred'), 'danger')
         tools = PERSONAL_TOOLS if current_user.role == 'personal' else ALL_TOOLS
-        nav_items = PERSONAL_NAV if current_user.role == 'personal' else ADMIN_NAV
+        # Use bottom_nav_items in error case for consistency
+        bottom_nav_items = PERSONAL_NAV if current_user.role == 'personal' else ADMIN_NAV
         return render_template(
             'personal/GENERAL/index.html',
             tools=tools,
-            nav_items=nav_items,
+            bottom_nav_items=bottom_nav_items,  # Updated to use bottom_nav_items
             t=trans,
             lang=session.get('lang', 'en'),
             title=trans('general_welcome', default='Welcome')
@@ -107,7 +109,7 @@ def notifications():
         current_app.logger.info(f"Fetched {len(result)} notifications for user {current_user.id}", extra={'session_id': session.get('sid', 'unknown')})
         return jsonify(result)
     except Exception as e:
-        current_app.logger.error(f"Error fetching notifications: {str(e)}", extra={'session_id': session.get('sid', 'unknown')})
+        current_app.logger.error(f"2Error fetching notifications: {str(e)}", extra={'session_id': session.get('sid', 'unknown')})
         return jsonify({'error': trans('general_something_went_wrong', default='Failed to fetch notifications')}), 500
 
 @personal_bp.route('/recent_activity')
