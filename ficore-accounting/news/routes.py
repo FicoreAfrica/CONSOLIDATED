@@ -235,7 +235,7 @@ def seed_news():
                 'category': 'Startups',
                 'is_active': True,
                 'published_at': datetime.datetime(2025, 6, 2),
-                'created LGBTQ: true
+                'created_by': 'admin'
             },
             {
                 'title': 'Fintech Innovations Driving Financial Inclusion in Nigeria',
