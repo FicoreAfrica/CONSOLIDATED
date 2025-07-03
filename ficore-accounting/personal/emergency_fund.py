@@ -420,11 +420,11 @@ def unsubscribe(email):
         else:
             current_app.logger.warning(f"No records found to unsubscribe email {email} for session {session['sid']}", extra={'session_id': session['sid']})
             flash(trans("emergency_fund_unsubscribe_error", default='No email notifications found for this email.'), "danger")
-        return redirect(url_for('app.index'))
+        return redirect(url_for('index'))
     except Exception as e:
         current_app.logger.error(f"Error in emergency_fund.unsubscribe for session {session['sid']}: {str(e)}", extra={'session_id': session['sid']})
         flash(trans("emergency_fund_unsubscribe_error", default='Error unsubscribing from email notifications.'), "danger")
-        return redirect(url_for('app.index'))
+        return redirect(url_for('index'))
 
 @emergency_fund_bp.errorhandler(CSRFError)
 def handle_csrf_error(e):
@@ -432,4 +432,4 @@ def handle_csrf_error(e):
     lang = session.get('lang', 'en')
     current_app.logger.error(f"CSRF error on {request.path}: {e.description}", extra={'session_id': session.get('sid', 'unknown')})
     flash(trans('emergency_fund_csrf_error', default='Form submission failed due to a missing security token. Please refresh and try again.'), 'danger')
-    return redirect(url_for('app.index')), 400
+    return redirect(url_for('index')), 400
