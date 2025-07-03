@@ -43,7 +43,7 @@ import re
 from flask_mail import Mail
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
-flask_session = Session()
+flask_session = session()
 from flask_wtf.csrf import CSRFProtect
 from flask_babel import Babel
 from flask_compress import Compress
