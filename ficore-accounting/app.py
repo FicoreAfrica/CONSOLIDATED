@@ -24,8 +24,9 @@ from models import (
 from utils import (
     trans_function, is_valid_email, get_mongo_db, close_mongo_db, get_limiter,
     get_mail, requires_role, check_coin_balance, is_admin, login_manager,
-    flask_session, csrf, babel, compress, PERSONAL_TOOLS, PERSONAL_NAV,
-    BUSINESS_TOOLS, BUSINESS_NAV, AGENT_TOOLS, AGENT_NAV, ALL_TOOLS, ADMIN_NAV
+    flask_session, csrf, babel, compress, PERSONAL_TOOLS, PERSONAL_NAV, PERSONAL_EXPLORE_FEATURES,
+    BUSINESS_TOOLS, BUSINESS_NAV, BUSINESS_EXPLORE_FEATURES, AGENT_TOOLS, AGENT_NAV, AGENT_EXPLORE_FEATURES,
+    ALL_TOOLS, ADMIN_NAV, ADMIN_EXPLORE_FEATURES
 )
 from session_utils import create_anonymous_session
 from translations import trans, get_translations, get_all_translations, get_module_translations
@@ -36,7 +37,7 @@ import time
 from pymongo import MongoClient
 import certifi
 from common_features.taxation import seed_tax_data
-from coins.routes import coins_bp, init_coins_limiter  # Added import for init_coins_limiter
+from coins.routes import coins_bp, init_coins_limiter
 
 # Load environment variables
 load_dotenv()
@@ -142,7 +143,6 @@ def check_mongodb_connection(app):
             return True
         except Exception as e:
             logger.error(f'MongoDB connection failed: {str(e)}', exc_info=True)
-            # Alert or notify for monitoring in production
             return False
 
 def setup_session(app):
@@ -154,7 +154,6 @@ def setup_session(app):
                 app.config['SESSION_TYPE'] = 'filesystem'
                 flask_session.init_app(app)
                 logger.info('Session configured with filesystem fallback')
-                # Consider alerting for monitoring
                 return
             app.config['SESSION_TYPE'] = 'mongodb'
             app.config['SESSION_MONGODB'] = app.mongo_client
@@ -202,7 +201,7 @@ class User(UserMixin):
 
 def create_app():
     app = Flask(__name__, template_folder='templates', static_folder='static')
-    CORS(app, resources={r"/api/*": {"origins": "*"}})  # Restrict CORS for API routes
+    CORS(app, resources={r"/api/*": {"origins": "*"}})
     
     # Load configuration
     app.config['SECRET_KEY'] = os.getenv('SECRET_KEY')
@@ -226,7 +225,7 @@ def create_app():
     app.config['WHATSAPP_API_URL'] = os.getenv('WHATSAPP_API_URL')
     app.config['WHATSAPP_API_KEY'] = os.getenv('WHATSAPP_API_KEY')
     app.config['BASE_URL'] = os.getenv('BASE_URL', 'http://localhost:5000')
-    app.config['SETUP_KEY'] = os.getenv('SETUP_KEY')  # Required for setup route
+    app.config['SETUP_KEY'] = os.getenv('SETUP_KEY')
     
     # Validate critical environment variables
     for key in ['SETUP_KEY', 'GOOGLE_CLIENT_ID', 'GOOGLE_CLIENT_SECRET', 'SMTP_USERNAME', 'SMTP_PASSWORD']:
@@ -238,7 +237,7 @@ def create_app():
         client = MongoClient(
             app.config['MONGO_URI'],
             serverSelectionTimeoutMS=5000,
-            tls=True,  # Explicitly enable TLS
+            tls=True,
             tlsCAFile=certifi.where() if os.getenv('MONGO_CA_FILE') is None else os.getenv('MONGO_CA_FILE')
         )
         client.admin.command('ping')
@@ -292,9 +291,8 @@ def create_app():
     with app.app_context():
         try:
             db = get_mongo_db()
-            # Check if tax data needs updating (e.g., based on a version or timestamp)
             tax_version = db.tax_rates.find_one({'_id': 'version'})
-            current_tax_version = '2025-07-02'  # Update this when tax rules change
+            current_tax_version = '2025-07-02'
             if not tax_version or tax_version.get('version') != current_tax_version:
                 seed_tax_data()
                 db.tax_rates.update_one(
@@ -412,7 +410,7 @@ def create_app():
     from settings.routes import settings_bp
     from personal import personal_bp
     from general.routes import general_bp
-    from admin.routes import admin_bp  # Ensure admin_bp is imported
+    from admin.routes import admin_bp
     
     app.register_blueprint(users_bp, url_prefix='/users')
     logger.info('Registered users blueprint')
@@ -424,7 +422,7 @@ def create_app():
     logger.info('Registered taxation blueprint')
     try:
         app.register_blueprint(coins_bp, url_prefix='/coins')
-        init_coins_limiter(app)  # Initialize coins limiter after registration
+        init_coins_limiter(app)
         logger.info('Registered coins blueprint and initialized limiter')
     except Exception as e:
         logger.warning(f'Could not import coins blueprint: {str(e)}')
@@ -546,13 +544,13 @@ def create_app():
         if not current_user.is_authenticated:
             return {}
         if current_user.role == 'personal':
-            return dict(tools=PERSONAL_TOOLS, nav_items=PERSONAL_NAV)
+            return dict(tools=PERSONAL_TOOLS, nav_items=PERSONAL_EXPLORE_FEATURES, bottom_nav_items=PERSONAL_NAV)
         elif current_user.role == 'trader':
-            return dict(tools=BUSINESS_TOOLS, nav_items=BUSINESS_NAV)
+            return dict(tools=BUSINESS_TOOLS, nav_items=BUSINESS_EXPLORE_FEATURES, bottom_nav_items=BUSINESS_NAV)
         elif current_user.role == 'agent':
-            return dict(tools=AGENT_TOOLS, nav_items=AGENT_NAV)
+            return dict(tools=AGENT_TOOLS, nav_items=AGENT_EXPLORE_FEATURES, bottom_nav_items=AGENT_NAV)
         elif current_user.role == 'admin':
-            return dict(tools=ALL_TOOLS, nav_items=ADMIN_NAV)
+            return dict(tools=ALL_TOOLS, nav_items=ADMIN_EXPLORE_FEATURES, bottom_nav_items=ADMIN_NAV)
         return {}
     
     @app.context_processor
@@ -596,7 +594,7 @@ def create_app():
             "script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://code.jquery.com; "
             "style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://fonts.googleapis.com; "
             "img-src 'self' data:; "
-            "connect-src 'self' https://api.ficore.app; "  # Restrict to app's API
+            "connect-src 'self' https://api.ficore.app; "
             "font-src 'self' https://cdn.jsdelivr.net https://fonts.gstatic.com;"
         )
         response.headers['X-Frame-Options'] = 'DENY'
@@ -716,7 +714,11 @@ def create_app():
                 return redirect(url_for('agents_bp.agent_portal'))
             elif current_user.role == 'trader':
                 try:
-                    return render_template('general/home.html', t=trans, lang=lang, title=trans('general_business_home', lang=lang))
+                    tools = BUSINESS_TOOLS
+                    nav_items = BUSINESS_EXPLORE_FEATURES
+                    bottom_nav_items = BUSINESS_NAV
+                    return render_template('general/home.html', t=trans, lang=lang, title=trans('general_business_home', lang=lang),
+                                          tools=tools, nav_items=nav_items, bottom_nav_items=bottom_nav_items)
                 except TemplateNotFound as e:
                     logger.error(f'Template not found: {str(e)}', exc_info=True)
                     return render_template('personal/GENERAL/error.html', t=trans, lang=lang, error=str(e)), 404
@@ -1053,7 +1055,7 @@ def create_app():
             ['emergency_fund', trans('emergency_fund_calculator', default='Emergency Fund')],
             ['learning', trans('learning_hub_courses', default='Learning')],
             ['quiz', trans('quiz_personality_quiz', default='Quiz')],
-            ['taxation', trans('taxation_calculator', default='Taxation')]  # Added taxation tool
+            ['taxation', trans('taxation_calculator', default='Taxation')]
         ]
         if request.method == 'POST':
             try:
@@ -1157,7 +1159,6 @@ def create_app():
     
     @app.route('/static/<path:filename>')
     def static_files(filename):
-        # Prevent directory traversal
         if '..' in filename or filename.startswith('/'):
             logger.warning(f'Invalid static file path: {filename}', extra={'ip_address': request.remote_addr})
             abort(403)
@@ -1169,7 +1170,6 @@ def create_app():
     def static_personal(filename):
         allowed_extensions = {'.css', '.js', '.png', '.jpg', '.jpeg', '.gif', '.ico', '.svg'}
         file_ext = os.path.splitext(filename)[1].lower()
-        # Prevent directory traversal
         if '..' in filename or filename.startswith('/') or file_ext not in allowed_extensions:
             logger.warning(f'Invalid static_personal file path or extension: {filename}', extra={'ip_address': request.remote_addr})
             abort(403)
