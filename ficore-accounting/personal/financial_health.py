@@ -472,11 +472,11 @@ def unsubscribe(email):
         else:
             current_app.logger.warning(f"No records found to unsubscribe email {email} for session {session['sid']}", extra={'session_id': session['sid']})
             flash(trans("financial_health_unsubscribe_error", default='No email notifications found for this email.'), "danger")
-        return redirect(url_for('app.index'))
+        return redirect(url_for('index'))
     except Exception as e:
         current_app.logger.error(f"Error in financial_health.unsubscribe for session {session.get('sid', 'unknown')}: {str(e)}", extra={'session_id': session.get('sid', 'unknown')})
         flash(trans("financial_health_unsubscribe_error", default='Error unsubscribing from email notifications.'), "danger")
-        return redirect(url_for('app.index'))
+        return redirect(url_for('index'))
 
 @financial_health_bp.errorhandler(CSRFError)
 def handle_csrf_error(e):
