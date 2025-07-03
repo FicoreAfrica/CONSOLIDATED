@@ -43,7 +43,7 @@ import re
 from flask_mail import Mail
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
-from flask_session import Session
+flask_session = Session()
 from flask_wtf.csrf import CSRFProtect
 from flask_babel import Babel
 from flask_compress import Compress
@@ -557,7 +557,7 @@ def create_app():
     @app.context_processor
     def inject_role_nav():
         if not current_user.is_authenticated:
-            return {}
+            return {'tools': [], 'nav_items': [], 'bottom_nav_items': []}
         if current_user.role == 'personal':
             return dict(tools=PERSONAL_TOOLS, nav_items=PERSONAL_EXPLORE_FEATURES, bottom_nav_items=PERSONAL_NAV)
         elif current_user.role == 'trader':
@@ -566,7 +566,7 @@ def create_app():
             return dict(tools=AGENT_TOOLS, nav_items=AGENT_EXPLORE_FEATURES, bottom_nav_items=AGENT_NAV)
         elif current_user.role == 'admin':
             return dict(tools=ALL_TOOLS, nav_items=ADMIN_EXPLORE_FEATURES, bottom_nav_items=ADMIN_NAV)
-        return {}
+        return {'tools': [], 'nav_items': [], 'bottom_nav_items': []}
     
     @app.context_processor
     def inject_globals():
@@ -682,10 +682,10 @@ def create_app():
                 return redirect(url_for('personal_bp.index'))
             else:
                 try:
-                    return render_template('general/home.html', t=trans, lang=lang)
+                    return render_template('general/home.html', t=trans, lang=lang, bottom_nav_items=[])
                 except TemplateNotFound as e:
                     logger.error(f'Template not found: {str(e)}', exc_info=True)
-                    return render_template('personal/GENERAL/error.html', t=trans, lang=lang, error=str(e)), 404
+                    return render_template('personal/GENERAL/error.html', t=trans, lang=lang, error=str(e), bottom_nav_items=[]), 404
         try:
             courses = app.config.get('COURSES', [])
             logger.info(f'Retrieved {len(courses)} courses')
@@ -696,20 +696,21 @@ def create_app():
                 lang=lang,
                 sample_courses=courses,
                 title=trans('general_welcome', lang=lang),
-                is_anonymous=session.get('is_anonymous', False)
+                is_anonymous=session.get('is_anonymous', False),
+                bottom_nav_items=[]
             )
         except TemplateNotFound as e:
             logger.error(f'Template not found: {str(e)}', exc_info=True)
             flash(trans('general_error', default='Template not found'), 'danger')
-            return render_template('personal/GENERAL/error.html', t=trans, lang=lang, error=str(e)), 404
+            return render_template('personal/GENERAL/error.html', t=trans, lang=lang, error=str(e), bottom_nav_items=[]), 404
         except Exception as e:
             logger.error(f'Error in index route: {str(e)}', exc_info=True)
             flash(trans('general_error', default='An error occurred'), 'danger')
             try:
-                return render_template('errors/500.html', t=trans, lang=lang, error=str(e)), 500
+                return render_template('errors/500.html', t=trans, lang=lang, error=str(e), bottom_nav_items=[]), 500
             except TemplateNotFound as e:
                 logger.error(f'Template not found: {str(e)}', exc_info=True)
-                return render_template('personal/GENERAL/error.html', t=trans, lang=lang, error=str(e)), 500
+                return render_template('personal/GENERAL/error.html', t=trans, lang=lang, error=str(e), bottom_nav_items=[]), 500
     
     @app.route('/general_dashboard')
     @ensure_session_id
@@ -736,15 +737,15 @@ def create_app():
                                           tools=tools, nav_items=nav_items, bottom_nav_items=bottom_nav_items)
                 except TemplateNotFound as e:
                     logger.error(f'Template not found: {str(e)}', exc_info=True)
-                    return render_template('personal/GENERAL/error.html', t=trans, lang=lang, error=str(e)), 404
+                    return render_template('personal/GENERAL/error.html', t=trans, lang=lang, error=str(e), bottom_nav_items=BUSINESS_NAV), 404
             else:
                 flash(trans('general_no_permission', default='You do not have permission to access this page.'), 'danger')
                 return redirect(url_for('index'))
         try:
-            return render_template('general/home.html', t=trans, lang=lang, is_public=True, title=trans('general_business_home', lang=lang))
+            return render_template('general/home.html', t=trans, lang=lang, is_public=True, title=trans('general_business_home', lang=lang), bottom_nav_items=[])
         except TemplateNotFound as e:
             logger.error(f'Template not found: {str(e)}', exc_info=True)
-            return render_template('personal/GENERAL/error.html', t=trans, lang=lang, error=str(e)), 404
+            return render_template('personal/GENERAL/error.html', t=trans, lang=lang, error=str(e), bottom_nav_items=[]), 404
     
     @app.route('/health')
     @limiter.limit('10 per minute')
@@ -1024,10 +1025,10 @@ def create_app():
         if not app.config['SETUP_KEY'] or setup_key != app.config['SETUP_KEY']:
             logger.warning(f'Invalid setup key: {setup_key}', extra={'ip_address': request.remote_addr})
             try:
-                return render_template('errors/403.html', content=trans('general_access_denied', default='Access denied')), 403
+                return render_template('errors/403.html', content=trans('general_access_denied', default='Access denied'), bottom_nav_items=[]), 403
             except TemplateNotFound as e:
                 logger.error(f'Template not found: {str(e)}', exc_info=True)
-                return render_template('personal/GENERAL/error.html', content=trans('general_access_denied', default='Access denied'), error=str(e)), 403
+                return render_template('personal/GENERAL/error.html', content=trans('general_access_denied', default='Access denied'), error=str(e), bottom_nav_items=[]), 403
         try:
             with app.app_context():
                 initialize_database(app)
@@ -1038,10 +1039,10 @@ def create_app():
             flash(trans('general_error', default='An error occurred during database setup'), 'danger')
             logger.error(f'Database setup error: {str(e)}', exc_info=True, extra={'ip_address': request.remote_addr})
             try:
-                return render_template('errors/500.html', content=trans('general_error', default='Internal server error'), error=str(e)), 500
+                return render_template('errors/500.html', content=trans('general_error', default='Internal server error'), error=str(e), bottom_nav_items=[]), 500
             except TemplateNotFound as e:
                 logger.error(f'Template not found: {str(e)}', exc_info=True)
-                return render_template('personal/GENERAL/error.html', content=trans('general_error', default='Internal server error'), error=str(e)), 500
+                return render_template('personal/GENERAL/error.html', content=trans('general_error', default='Internal server error'), error=str(e), bottom_nav_items=[]), 500
     
     @app.route('/static/<path:filename>')
     def static_files(filename):
@@ -1074,7 +1075,7 @@ def create_app():
     @app.route('/favicon.ico')
     def favicon():
         try:
-            return send_from_directory(app.static_folder, 'icons/favicon.ico')
+            return send_from_directory(app.static_folder, 'img/favicon.ico')
         except FileNotFoundError:
             logger.error('Favicon not found', extra={'ip_address': request.remote_addr})
             abort(404)
@@ -1126,12 +1127,14 @@ def create_app():
             return render_template('errors/403.html', 
                                  t=trans, 
                                  error=trans('general_csrf_error', default='Invalid CSRF token'), 
-                                 lang=session.get('lang', 'en')), 403
+                                 lang=session.get('lang', 'en'), 
+                                 bottom_nav_items=[]), 403
         except TemplateNotFound:
             return render_template('personal/GENERAL/error.html', 
                                  t=trans, 
                                  error=trans('general_csrf_error', default='Invalid CSRF token'), 
-                                 lang=session.get('lang', 'en')), 403
+                                 lang=session.get('lang', 'en'),
+                                 bottom_nav_items=[]), 403
 
     @app.errorhandler(404)
     def page_not_found(e):
@@ -1140,12 +1143,14 @@ def create_app():
             return render_template('errors/404.html', 
                                  t=trans, 
                                  lang=session.get('lang', 'en'), 
-                                 error=str(e)), 404
+                                 error=str(e), 
+                                 bottom_nav_items=[]), 404
         except TemplateNotFound:
             return render_template('personal/GENERAL/error.html', 
                                  t=trans, 
                                  lang=session.get('lang', 'en'), 
-                                 error=str(e)), 404
+                                 error=str(e), 
+                                 bottom_nav_items=[]), 404
 
     @app.errorhandler(500)
     def internal_server_error(e):
@@ -1154,12 +1159,14 @@ def create_app():
             return render_template('errors/500.html', 
                                  t=trans, 
                                  lang=session.get('lang', 'en'), 
-                                 error=str(e)), 500
+                                 error=str(e), 
+                                 bottom_nav_items=[]), 500
         except TemplateNotFound:
             return render_template('personal/GENERAL/error.html', 
                                  t=trans, 
                                  lang=session.get('lang', 'en'), 
-                                 error=str(e)), 500
+                                 error=str(e), 
+                                 bottom_nav_items=[]), 500
 
     return app
 
