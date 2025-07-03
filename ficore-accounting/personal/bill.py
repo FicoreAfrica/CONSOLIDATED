@@ -9,7 +9,7 @@ from datetime import datetime, date, timedelta
 from translations import trans
 from pymongo.errors import DuplicateKeyError
 from bson import ObjectId
-from utils import requires_role, is_admin, get_mongo_db, PERSONAL_TOOLS, PERSONAL_NAV, ALL_TOOLS, ADMIN_NAV
+from utils import requires_role, is_admin, get_mongo_db, PERSONAL_TOOLS, PERSONAL_NAV, PERSONAL_EXPLORE_FEATURES, ALL_TOOLS, ADMIN_NAV
 from models import log_tool_usage
 
 bill_bp = Blueprint('bill', __name__, template_folder='templates/personal/BILL')
@@ -281,6 +281,7 @@ def main():
                 continue
         tools = PERSONAL_TOOLS if current_user.role == 'personal' else ALL_TOOLS
         nav_items = PERSONAL_NAV if current_user.role == 'personal' else ADMIN_NAV
+        explore_features = PERSONAL_EXPLORE_FEATURES if current_user.role == 'personal' else []
         return render_template(
             'personal/BILL/bill_main.html',
             form=form,
@@ -304,13 +305,15 @@ def main():
             lang=lang,
             tool_title=trans('bill_title', default='Bill Manager'),
             tools=tools,
-            nav_items=nav_items
+            nav_items=nav_items,
+            explore_features=explore_features
         )
     except Exception as e:
         current_app.logger.error(f"Error in bill.main: {str(e)}")
         flash(trans('bill_dashboard_load_error', default='Error loading bill dashboard.'), 'danger')
         tools = PERSONAL_TOOLS if current_user.role == 'personal' else ALL_TOOLS
         nav_items = PERSONAL_NAV if current_user.role == 'personal' else ADMIN_NAV
+        explore_features = PERSONAL_EXPLORE_FEATURES if current_user.role == 'personal' else []
         return render_template(
             'personal/BILL/bill_main.html',
             form=form,
@@ -334,7 +337,8 @@ def main():
             lang=lang,
             tool_title=trans('bill_title', default='Bill Manager'),
             tools=tools,
-            nav_items=nav_items
+            nav_items=nav_items,
+            explore_features=explore_features
         ), 500
 
 @bill_bp.route('/summary')
@@ -386,11 +390,3 @@ def unsubscribe(email):
         current_app.logger.error(f"Error in bill.unsubscribe: {str(e)}")
         flash(trans('bill_unsubscribe_error', default='Error processing unsubscribe request.'), 'danger')
         return redirect(url_for('app.index'))
-
-@bill_bp.errorhandler(CSRFError)
-def handle_csrf_error(e):
-    """Handle CSRF errors with user-friendly message."""
-    lang = session.get('lang', 'en')
-    current_app.logger.error(f"CSRF error on {request.path}: {e.description}")
-    flash(trans('bill_csrf_error', default='Form submission failed due to a missing security token. Please refresh and try again.'), 'danger')
-    return redirect(url_for('bill.main')), 400
