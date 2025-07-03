@@ -5,12 +5,11 @@ from wtforms.validators import DataRequired, Email, Optional
 from flask_wtf.csrf import CSRFProtect, CSRFError
 from flask_login import current_user
 from datetime import datetime
-from mailersend_email import send_email, EMAIL_CONFIG
-import uuid
-import json
+import logging
 import os
-from translations import trans
 from werkzeug.utils import secure_filename
+from mailersend_email import send_email, EMAIL_CONFIG
+from translations import trans
 from models import log_tool_usage
 from session_utils import create_anonymous_session
 from utils import requires_role, is_admin, get_mongo_db, PERSONAL_TOOLS, PERSONAL_NAV, ALL_TOOLS, ADMIN_NAV
@@ -19,8 +18,8 @@ from bson import ObjectId
 learning_hub_bp = Blueprint(
     'learning_hub',
     __name__,
-    template_folder='templates/personal/LEARNINGHUB',
-    url_prefix='/LEARNINGHUB'
+    template_folder='templates/personal/learning_hub',
+    url_prefix='/learning_hub'
 )
 
 # Initialize CSRF protection
@@ -160,7 +159,7 @@ courses_data = {
                         "title_key": "learning_hub_lesson_savings_goals_title",
                         "title_en": "Setting Savings Goals",
                         "content_type": "text",
-                        "content_en": "Discover how to set realistic and achievableSavings goals that will motivate you to save consistently.",
+                        "content_en": "Discover how to set realistic and achievable savings goals that will motivate you to save consistently.",
                         "quiz_id": "quiz-savings-1"
                     }
                 ]
@@ -299,8 +298,6 @@ def custom_login_required(f):
 def get_progress():
     """Retrieve learning progress from MongoDB with caching."""
     try:
-        # TEMPORARY: Allow admin to view all progress records during testing
-        # TODO: Restore original filter_kwargs for production
         filter_kwargs = {} if is_admin() else {'user_id': current_user.id} if current_user.is_authenticated else {'session_id': session.get('sid')}
         progress_records = get_mongo_db().learning_materials.find(filter_kwargs)
         progress = {}
@@ -332,8 +329,6 @@ def save_course_progress(course_id, course_progress):
         if not isinstance(course_id, str) or not isinstance(course_progress, dict):
             current_app.logger.error(f"Invalid course_id or course_progress: course_id={course_id}, course_progress={course_progress}", extra={'session_id': session.get('sid', 'no-session-id')})
             return
-        # TEMPORARY: Allow admin to save progress for any user during testing
-        # TODO: Restore original filter_kwargs for production
         filter_kwargs = {'course_id': course_id} if is_admin() else {'user_id': current_user.id, 'course_id': course_id} if current_user.is_authenticated else {'session_id': session['sid'], 'course_id': course_id}
         update_data = {
             '$set': {
@@ -535,7 +530,7 @@ def main():
         current_app.logger.info(f"Rendering main learning hub page", extra={'session_id': session.get('sid', 'no-session-id')})
         
         return render_template(
-            'personal/LEARNINGHUB/learning_hub_main.html',
+            'personal/learning_hub/learning_hub_main.html',
             courses=courses_data,
             progress=progress,
             progress_summary=progress_summary,
@@ -559,7 +554,7 @@ def main():
         tools = PERSONAL_TOOLS if current_user.role == 'personal' else ALL_TOOLS
         nav_items = PERSONAL_NAV if current_user.role == 'personal' else ADMIN_NAV
         return render_template(
-            'personal/LEARNINGHUB/learning_hub_main.html',
+            'personal/learning_hub/learning_hub_main.html',
             courses={},
             progress={},
             progress_summary=[],
@@ -718,7 +713,7 @@ def lesson_action():
                                 "course_title": course.get('title_en', ''),
                                 "lesson_title": lesson.get('title_en', ''),
                                 "completed_at": datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S'),
-                                "cta_url": url_for('personal/LEARNINGHUB/learning_hub.main', _external=True),
+                                "cta_url": url_for('learning_hub.main', _external=True),
                                 "unsubscribe_url": url_for('learning_hub.unsubscribe', email=profile['email'], _external=True)
                             },
                             lang=session.get('lang', 'en')
@@ -790,7 +785,7 @@ def quiz_action():
                             "score": score,
                             "total": len(quiz['questions']),
                             "completed_at": datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S'),
-                            "cta_url": url_for('personal/LEARNINGHUB/learning_hub.main', _external=True),
+                            "cta_url": url_for('learning_hub.main', _external=True),
                             "unsubscribe_url": url_for('learning_hub.unsubscribe', email=profile['email'], _external=True)
                         },
                         lang=session.get('lang', 'en')
@@ -843,7 +838,7 @@ def profile():
             
             current_app.logger.info(f"Profile saved for user {current_user.id if current_user.is_authenticated else 'anonymous'}", extra={'session_id': session.get('sid', 'no-session-id')})
             flash(trans('learning_hub_profile_saved', default='Profile saved successfully', lang=lang), 'success')
-            return redirect(url_for('personal/LEARNINGHUB/learning_hub.main'))
+            return redirect(url_for('personal.index'))
         
         elif request.method == 'POST':
             flash(trans('learning_hub_profile_failed', default='Failed to save profile', lang=lang), 'danger')
@@ -851,7 +846,7 @@ def profile():
         tools = PERSONAL_TOOLS if current_user.role == 'personal' else ALL_TOOLS
         nav_items = PERSONAL_NAV if current_user.role == 'personal' else ADMIN_NAV
         return render_template(
-            'personal/LEARNINGHUB/learning_hub_profile.html',
+            'personal/learning_hub/learning_hub_profile.html',
             profile_form=profile_form,
             t=trans,
             lang=lang,
@@ -866,7 +861,7 @@ def profile():
         tools = PERSONAL_TOOLS if current_user.role == 'personal' else ALL_TOOLS
         nav_items = PERSONAL_NAV if current_user.role == 'personal' else ADMIN_NAV
         return render_template(
-            'personal/LEARNINGHUB/learning_hub_profile.html',
+            'personal/learning_hub/learning_hub_profile.html',
             profile_form=LearningHubProfileForm(),
             t=trans,
             lang=lang,
@@ -897,8 +892,6 @@ def unsubscribe(email):
         lang = session.get('lang', 'en')
         profile = session.get('learning_hub_profile', {})
         
-        # TEMPORARY: Allow admin to unsubscribe any email during testing
-        # TODO: Restore original logic for production
         if is_admin() or (profile.get('email') == email and profile.get('send_email', False)):
             profile['send_email'] = False
             session['learning_hub_profile'] = profile
@@ -910,12 +903,12 @@ def unsubscribe(email):
             current_app.logger.warning(f"Failed to unsubscribe email {email}: No matching profile or already unsubscribed", extra={'session_id': session.get('sid', 'no-session-id')})
             flash(trans("learning_hub_unsubscribe_failed", default="Failed to unsubscribe. Email not found or already unsubscribed.", lang=lang), "danger")
         
-        return redirect(url_for('personal/LEARNINGHUB/learning_hub.main'))
+        return redirect(url_for('personal.index'))
         
     except Exception as e:
         current_app.logger.error(f"Error in unsubscribe: {str(e)}", extra={'session_id': session.get('sid', 'no-session-id')})
         flash(trans("learning_hub_unsubscribe_error", default="Error processing unsubscribe request", lang=lang), "danger")
-        return redirect(url_for('personal/LEARNINGHUB/learning_hub.main')), 500
+        return redirect(url_for('personal.index')), 500
 
 @learning_hub_bp.route('/static/uploads/<path:filename>')
 @custom_login_required
@@ -944,7 +937,7 @@ def serve_uploaded_file(filename):
     except Exception as e:
         current_app.logger.error(f"Error serving uploaded file {filename}: {str(e)}", extra={'session_id': session.get('sid', 'no-session-id')})
         flash(trans("learning_hub_file_not_found", default="File not found", lang=session.get('lang', 'en')), "danger")
-        return redirect(url_for('personal/LEARNINGHUB/learning_hub.main')), 404
+        return redirect(url_for('personal.index')), 404
 
 @learning_hub_bp.errorhandler(404)
 def handle_not_found(e):
@@ -960,7 +953,7 @@ def handle_not_found(e):
     current_app.logger.error(f"404 error on {request.path}: {str(e)}", extra={'session_id': session.get('sid', 'no-session-id')})
     flash(trans("learning_hub_not_found", default="The requested page was not found. Please check the URL or return to the main page.", lang=lang), "danger")
     return render_template(
-        'personal/LEARNINGHUB/learning_hub_main.html',
+        'personal/learning_hub/learning_hub_main.html',
         courses={},
         progress={},
         progress_summary=[],
@@ -992,7 +985,7 @@ def handle_csrf_error(e):
     current_app.logger.error(f"CSRF error on {request.path}: {e.description}", extra={'session_id': session.get('sid', 'no-session-id')})
     flash(trans("learning_hub_csrf_error", default="Form submission failed due to a missing security token. Please refresh and try again.", lang=lang), "danger")
     return render_template(
-        'personal/LEARNINGHUB/learning_hub_main.html',
+        'personal/learning_hub/learning_hub_main.html',
         courses={},
         progress={},
         progress_summary=[],
@@ -1016,25 +1009,25 @@ def handle_csrf_error(e):
 @requires_role(['personal', 'admin'])
 def courses():
     """Redirect to main page with courses tab."""
-    return redirect(url_for('personal/LEARNINGHUB/learning_hub.main') + '#courses')
+    return redirect(url_for('learning_hub.main') + '#courses')
 
 @learning_hub_bp.route('/courses/<course_id>')
 @custom_login_required
 @requires_role(['personal', 'admin'])
 def course_overview(course_id):
     """Redirect to main page and load course overview."""
-    return redirect(url_for('personal/LEARNINGHUB/learning_hub.main') + f'#course-{course_id}')
+    return redirect(url_for('learning_hub.main') + f'#course-{course_id}')
 
 @learning_hub_bp.route('/courses/<course_id>/lesson/<lesson_id>')
 @custom_login_required
 @requires_role(['personal', 'admin'])
 def lesson(course_id, lesson_id):
     """Redirect to main page and load lesson."""
-    return redirect(url_for('personal/LEARNINGHUB/learning_hub.main') + f'#lesson-{course_id}-{lesson_id}')
+    return redirect(url_for('learning_hub.main') + f'#lesson-{course_id}-{lesson_id}')
 
 @learning_hub_bp.route('/courses/<course_id>/quiz/<quiz_id>')
 @custom_login_required
 @requires_role(['personal', 'admin'])
 def quiz(course_id, quiz_id):
     """Redirect to main page and load quiz."""
-    return redirect(url_for('personal/LEARNINGHUB/learning_hub.main') + f'#quiz-{course_id}-{quiz_id}')
+    return redirect(url_for('learning_hub.main') + f'#quiz-{course_id}-{quiz_id}')
