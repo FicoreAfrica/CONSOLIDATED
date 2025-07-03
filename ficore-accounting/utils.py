@@ -289,7 +289,7 @@ def format_date(date_obj, lang=None, format_type='short'):
                 date_obj = datetime.strptime(date_obj, '%Y-%m-%d')
             except ValueError:
                 try:
-                    date_obj = datetime.fromisoformat)|(date_obj.replace('Z', '+00:00'))
+                    date_obj = datetime.fromisoformat(date_obj.replace('Z', '+00:00'))
                 except ValueError:
                     return date_obj
         
