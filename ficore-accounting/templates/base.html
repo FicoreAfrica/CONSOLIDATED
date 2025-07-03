@@ -151,6 +151,22 @@
         </div>
     </main>
 
+    {# ADDED NEW BLOCK FOR AUTHENTICATED USERS' BOTTOM NAV #}
+    {% if current_user.is_authenticated %}
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark fixed-bottom d-lg-none mobile-bottom-nav"> {# d-lg-none hides on large screens, mobile-bottom-nav for custom styling #}
+        <div class="container-fluid d-flex justify-content-around align-items-center">
+            {# Prioritize nav_items if available, otherwise fallback to BUSINESS_NAV #}
+            {% set bottom_nav_data = nav_items if nav_items is defined and nav_items else BUSINESS_NAV %}
+            {% for item in bottom_nav_data %}
+                <a class="nav-link text-center flex-fill py-2" href="{{ url_for(item.endpoint) | e }}">
+                    <i class="{{ item.icon }} d-block fs-5 mb-1"></i> {# Larger icon, block display, margin-bottom #}
+                    <small>{{ t(item.label_key, default=item.label) | e }}</small>
+                </a>
+            {% endfor %}
+        </div>
+    </nav>
+    {% endif %}
+
     {% if not current_user.is_authenticated %}
     <footer class="footer mt-5 py-4" style="background: linear-gradient(90deg, #003087, #004D40); color: white;" role="contentinfo">
         <div class="container text-center">
