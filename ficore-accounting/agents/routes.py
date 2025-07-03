@@ -102,18 +102,15 @@ def agent_portal():
             activity['_id'] = str(activity['_id'])
         
         logger.info(f"Agent {agent_id} accessed dashboard")
-        tools = AGENT_TOOLS if current_user.role == 'agent' else ALL_TOOLS
-        nav_items = AGENT_EXPLORE_FEATURES if current_user.role == 'agent' else ADMIN_EXPLORE_FEATURES
-        bottom_nav_items = AGENT_NAV if current_user.role == 'agent' else ADMIN_NAV
         return render_template(
             'agents/agent_portal.html',
             traders_registered=traders_registered,
             tokens_today=tokens_today,
             recent_activities=recent_activities,
             assisted_traders=assisted_traders,
-            tools=tools,
-            nav_items=nav_items,
-            bottom_nav_items=bottom_nav_items,
+            tools=AGENT_TOOLS,
+            nav_items=AGENT_EXPLORE_FEATURES,
+            bottom_nav_items=AGENT_NAV,
             format_currency=format_currency,
             format_date=format_date,
             t=trans,
@@ -122,7 +119,14 @@ def agent_portal():
     except Exception as e:
         logger.error(f"Error loading agent dashboard for {current_user.id}: {str(e)}")
         flash(trans('agents_dashboard_error', default='An error occurred while loading the dashboard'), 'danger')
-        return redirect(url_for('index'))
+        return render_template(
+            'agents/error.html',
+            tools=AGENT_TOOLS,
+            nav_items=AGENT_EXPLORE_FEATURES,
+            bottom_nav_items=AGENT_NAV,
+            t=trans,
+            lang=session.get('lang', 'en')
+        )
 
 @agents_bp.route('/register_trader', methods=['GET', 'POST'])
 @login_required
@@ -213,19 +217,25 @@ def register_trader():
         except Exception as e:
             logger.error(f"Error registering trader by agent {current_user.id}: {str(e)}")
             flash(trans('agents_registration_error', default='An error occurred during trader registration'), 'danger')
+            return render_template(
+                'agents/register_trader.html',
+                form=form,
+                tools=AGENT_TOOLS,
+                nav_items=AGENT_EXPLORE_FEATURES,
+                bottom_nav_items=AGENT_NAV,
+                t=trans,
+                lang=session.get('lang', 'en')
+            )
     
-        tools = AGENT_TOOLS if current_user.role == 'agent' else ALL_TOOLS
-        nav_items = AGENT_EXPLORE_FEATURES if current_user.role == 'agent' else ADMIN_EXPLORE_FEATURES
-        bottom_nav_items = AGENT_NAV if current_user.role == 'agent' else ADMIN_NAV
-        return render_template(
-            'agents/register_trader.html',
-            form=form,
-            tools=tools,
-            nav_items=nav_items,
-            bottom_nav_items=bottom_nav_items,
-            t=trans,
-            lang=session.get('lang', 'en')
-        )
+    return render_template(
+        'agents/register_trader.html',
+        form=form,
+        tools=AGENT_TOOLS,
+        nav_items=AGENT_EXPLORE_FEATURES,
+        bottom_nav_items=AGENT_NAV,
+        t=trans,
+        lang=session.get('lang', 'en')
+    )
 
 @agents_bp.route('/manage_tokens', methods=['GET', 'POST'])
 @login_required
@@ -297,19 +307,25 @@ def manage_tokens():
         except Exception as e:
             logger.error(f"Error processing tokens by agent {current_user.id}: {str(e)}")
             flash(trans('agents_token_processing_error', default='An error occurred while processing tokens'), 'danger')
+            return render_template(
+                'agents/manage_tokens.html',
+                form=form,
+                tools=AGENT_TOOLS,
+                nav_items=AGENT_EXPLORE_FEATURES,
+                bottom_nav_items=AGENT_NAV,
+                t=trans,
+                lang=session.get('lang', 'en')
+            )
     
-        tools = AGENT_TOOLS if current_user.role == 'agent' else ALL_TOOLS
-        nav_items = AGENT_EXPLORE_FEATURES if current_user.role == 'agent' else ADMIN_EXPLORE_FEATURES
-        bottom_nav_items = AGENT_NAV if current_user.role == 'agent' else ADMIN_NAV
-        return render_template(
-            'agents/manage_tokens.html',
-            form=form,
-            tools=tools,
-            nav_items=nav_items,
-            bottom_nav_items=bottom_nav_items,
-            t=trans,
-            lang=session.get('lang', 'en')
-        )
+    return render_template(
+        'agents/manage_tokens.html',
+        form=form,
+        tools=AGENT_TOOLS,
+        nav_items=AGENT_EXPLORE_FEATURES,
+        bottom_nav_items=AGENT_NAV,
+        t=trans,
+        lang=session.get('lang', 'en')
+    )
 
 @agents_bp.route('/assist_trader_records/<trader_id>')
 @login_required
@@ -351,18 +367,15 @@ def assist_trader_records(trader_id):
             record['_id'] = str(record['_id'])
         
         logger.info(f"Agent {current_user.id} accessed records for trader {trader_id}")
-        tools = AGENT_TOOLS if current_user.role == 'agent' else ALL_TOOLS
-        nav_items = AGENT_EXPLORE_FEATURES if current_user.role == 'agent' else ADMIN_EXPLORE_FEATURES
-        bottom_nav_items = AGENT_NAV if current_user.role == 'agent' else ADMIN_NAV
         return render_template(
             'agents/assist_trader_records.html',
             trader=trader,
             recent_debtors=recent_debtors,
             recent_creditors=recent_creditors,
             recent_cashflows=recent_cashflows,
-            tools=tools,
-            nav_items=nav_items,
-            bottom_nav_items=bottom_nav_items,
+            tools=AGENT_TOOLS,
+            nav_items=AGENT_EXPLORE_FEATURES,
+            bottom_nav_items=AGENT_NAV,
             format_currency=format_currency,
             format_date=format_date,
             t=trans,
@@ -372,7 +385,14 @@ def assist_trader_records(trader_id):
     except Exception as e:
         logger.error(f"Error accessing trader records for agent {current_user.id}: {str(e)}")
         flash(trans('agents_records_access_error', default='An error occurred while accessing trader records'), 'danger')
-        return redirect(url_for('agents_bp.agent_portal'))
+        return render_template(
+            'agents/error.html',
+            tools=AGENT_TOOLS,
+            nav_items=AGENT_EXPLORE_FEATURES,
+            bottom_nav_items=AGENT_NAV,
+            t=trans,
+            lang=session.get('lang', 'en')
+        )
 
 @agents_bp.route('/generate_trader_report/<trader_id>')
 @login_required
@@ -431,9 +451,6 @@ def generate_trader_report(trader_id):
         })
         
         logger.info(f"Agent {current_user.id} generated report for trader {trader_id}")
-        tools = AGENT_TOOLS if current_user.role == 'agent' else ALL_TOOLS
-        nav_items = AGENT_EXPLORE_FEATURES if current_user.role == 'agent' else ADMIN_EXPLORE_FEATURES
-        bottom_nav_items = AGENT_NAV if current_user.role == 'agent' else ADMIN_NAV
         return render_template(
             'agents/generate_trader_report.html',
             trader=trader,
@@ -443,9 +460,9 @@ def generate_trader_report(trader_id):
             total_payments=total_payments_amount,
             net_position=total_debtors_amount - total_creditors_amount,
             net_cashflow=total_receipts_amount - total_payments_amount,
-            tools=tools,
-            nav_items=nav_items,
-            bottom_nav_items=bottom_nav_items,
+            tools=AGENT_TOOLS,
+            nav_items=AGENT_EXPLORE_FEATURES,
+            bottom_nav_items=AGENT_NAV,
             format_currency=format_currency,
             t=trans,
             lang=session.get('lang', 'en')
@@ -454,7 +471,14 @@ def generate_trader_report(trader_id):
     except Exception as e:
         logger.error(f"Error generating trader report for agent {current_user.id}: {str(e)}")
         flash(trans('agents_report_generation_error', default='An error occurred while generating the report'), 'danger')
-        return redirect(url_for('agents_bp.agent_portal'))
+        return render_template(
+            'agents/error.html',
+            tools=AGENT_TOOLS,
+            nav_items=AGENT_EXPLORE_FEATURES,
+            bottom_nav_items=AGENT_NAV,
+            t=trans,
+            lang=session.get('lang', 'en')
+        )
 
 @agents_bp.route('/my_activity')
 @login_required
@@ -487,17 +511,14 @@ def my_activity():
             activity['_id'] = str(activity['_id'])
         
         logger.info(f"Agent {agent_id} accessed activity log")
-        tools = AGENT_TOOLS if current_user.role == 'agent' else ALL_TOOLS
-        nav_items = AGENT_EXPLORE_FEATURES if current_user.role == 'agent' else ADMIN_EXPLORE_FEATURES
-        bottom_nav_items = AGENT_NAV if current_user.role == 'agent' else ADMIN_NAV
         return render_template(
             'agents/my_activity.html',
             total_traders_registered=total_traders_registered,
             total_tokens_amount=total_tokens_amount,
             activities=activities,
-            tools=tools,
-            nav_items=nav_items,
-            bottom_nav_items=bottom_nav_items,
+            tools=AGENT_TOOLS,
+            nav_items=AGENT_EXPLORE_FEATURES,
+            bottom_nav_items=AGENT_NAV,
             format_currency=format_currency,
             format_date=format_date,
             t=trans,
@@ -507,7 +528,14 @@ def my_activity():
     except Exception as e:
         logger.error(f"Error loading agent activity for {current_user.id}: {str(e)}")
         flash(trans('agents_activity_load_error', default='An error occurred while loading activity log'), 'danger')
-        return redirect(url_for('agents_bp.agent_portal'))
+        return render_template(
+            'agents/error.html',
+            tools=AGENT_TOOLS,
+            nav_items=AGENT_EXPLORE_FEATURES,
+            bottom_nav_items=AGENT_NAV,
+            t=trans,
+            lang=session.get('lang', 'en')
+        )
 
 @agents_bp.route('/api/search_traders')
 @login_required
