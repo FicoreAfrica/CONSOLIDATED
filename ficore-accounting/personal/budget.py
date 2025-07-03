@@ -368,4 +368,4 @@ def handle_csrf_error(e):
     lang = session.get('lang', 'en')
     current_app.logger.error(f"CSRF error on {request.path}: {e.description}", extra={'session_id': session.get('sid', 'unknown')})
     flash(trans('budget_csrf_error', default='Form submission failed due to a missing security token. Please refresh and try again.', lang=lang), 'danger')
-    return redirect(url_for('index')), 400
+    return redirect(url_for('personal.index')), 400
