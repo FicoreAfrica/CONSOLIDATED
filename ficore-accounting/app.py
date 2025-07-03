@@ -36,7 +36,8 @@ from jinja2.exceptions import TemplateNotFound
 import time
 from pymongo import MongoClient
 import certifi
-from common.taxation import seed_tax_data
+from news.routes import seed_news
+from taxation.routes import seed_tax_data
 from coins.routes import coins_bp, init_coins_limiter
 
 # Load environment variables
@@ -287,51 +288,6 @@ def create_app():
     
     setup_session(app)
     
-    # Call seed_tax_data with version check
-    with app.app_context():
-        try:
-            db = get_mongo_db()
-            tax_version = db.tax_rates.find_one({'_id': 'version'})
-            current_tax_version = '2025-07-02'
-            if not tax_version or tax_version.get('version') != current_tax_version:
-                seed_tax_data()
-                db.tax_rates.update_one(
-                    {'_id': 'version'},
-                    {'$set': {'version': current_tax_version, 'updated_at': datetime.utcnow()}},
-                    upsert=True
-                )
-                logger.info(f'Tax data seeded or updated to version {current_tax_version}')
-            else:
-                logger.info('Tax data already up-to-date')
-        except Exception as e:
-            logger.error(f'Failed to seed tax data: {str(e)}', exc_info=True)
-    
-    # Flask-Babel locale selector
-    def get_locale():
-        supported_languages = app.config.get('SUPPORTED_LANGUAGES', ['en', 'ha'])
-        return session.get('lang', request.accept_languages.best_match(supported_languages, default='en'))
-    babel.locale_selector = get_locale
-    
-    # Configure Flask-Login
-    login_manager.init_app(app)
-    login_manager.login_view = 'users.login'
-    login_manager.login_message = trans('general_login_required', default='Please log in to access this page.')
-    login_manager.login_message_category = 'info'
-    
-    @login_manager.user_loader
-    def load_user(user_id):
-        try:
-            with app.app_context():
-                user = get_user(get_mongo_db(), user_id)
-                if user is None:
-                    logger.warning(f'No user found for ID: {user_id}', extra={'ip_address': request.remote_addr})
-                else:
-                    logger.debug(f'User loaded: {user.username if hasattr(user, "username") else user_id}', extra={'ip_address': request.remote_addr})
-                return user
-        except Exception as e:
-            logger.error(f'Error loading user {user_id}: {str(e)}', exc_info=True)
-            return None
-    
     # Initialize database and collections
     with app.app_context():
         try:
@@ -367,6 +323,29 @@ def create_app():
             except Exception as e:
                 logger.warning(f'Some indexes may already exist: {str(e)}')
             
+            # Seed tax and news data
+            try:
+                tax_version = db.tax_rates.find_one({'_id': 'version'})
+                current_tax_version = '2025-07-02'
+                if not tax_version or tax_version.get('version') != current_tax_version:
+                    seed_tax_data()
+                    db.tax_rates.update_one(
+                        {'_id': 'version'},
+                        {'$set': {'version': current_tax_version, 'updated_at': datetime.utcnow()}},
+                        upsert=True
+                    )
+                    logger.info(f'Tax data seeded or updated to version {current_tax_version}')
+                else:
+                    logger.info('Tax data already up-to-date')
+                
+                if db.news.count_documents({}) == 0:
+                    seed_news()
+                    logger.info('News data seeded')
+                else:
+                    logger.info('News data already seeded')
+            except Exception as e:
+                logger.error(f'Failed to seed tax or news data: {str(e)}', exc_info=True)
+            
             # Initialize admin user
             admin_email = os.getenv('ADMIN_EMAIL', 'ficore@gmail.com')
             admin_password = os.getenv('ADMIN_PASSWORD')
@@ -398,8 +377,6 @@ def create_app():
     # Register blueprints
     from users.routes import users_bp
     from agents.routes import agents_bp
-    from common.routes import common_bp
-    from common.taxation import taxation_bp
     from creditors.routes import creditors_bp
     from dashboard.routes import dashboard_bp
     from debtors.routes import debtors_bp
@@ -416,9 +393,9 @@ def create_app():
     logger.info('Registered users blueprint')
     app.register_blueprint(agents_bp, url_prefix='/agents')
     logger.info('Registered agents blueprint')
-    app.register_blueprint(common_bp)
-    logger.info('Registered common blueprint')
-    app.register_blueprint(taxation_bp)
+    app.register_blueprint(news_bp, url_prefix='/news')
+    logger.info('Registered news blueprint')
+    app.register_blueprint(taxation_bp, url_prefix='/taxation')
     logger.info('Registered taxation blueprint')
     try:
         app.register_blueprint(coins_bp, url_prefix='/coins')
