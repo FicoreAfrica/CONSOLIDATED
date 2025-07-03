@@ -478,7 +478,7 @@ def main():
         ]
 
         tools = PERSONAL_TOOLS if current_user.role == 'personal' else ALL_TOOLS
-        nav_items = PERSONAL_NAV if current_user.role == 'personal' else ADMIN_NAV
+        bottom_nav_items = PERSONAL_NAV if current_user.role == 'personal' else ADMIN_NAV
         current_app.logger.info(f"Rendering quiz main page with {len(records)} results for session {session['sid']}", extra={'session_id': session['sid']})
         return render_template(
             'personal/quiz/quiz_main.html',
@@ -498,14 +498,14 @@ def main():
             t=trans,
             tool_title=trans('quiz_title', default='Financial Quiz', lang=lang),
             tools=tools,
-            nav_items=nav_items
+            bottom_nav_items=bottom_nav_items
         )
 
     except Exception as e:
         current_app.logger.error(f"Error in quiz.main for session {session.get('sid', 'unknown')}: {str(e)}", extra={'session_id': session.get('sid', 'unknown')})
         flash(trans('quiz_error_results', default='An error occurred while loading quiz. Please try again.'), 'danger')
         tools = PERSONAL_TOOLS if current_user.role == 'personal' else ALL_TOOLS
-        nav_items = PERSONAL_NAV if current_user.role == 'personal' else ADMIN_NAV
+        bottom_nav_items = PERSONAL_NAV if current_user.role == 'personal' else ADMIN_NAV
         return render_template(
             'personal/quiz/quiz_main.html',
             form=form,
@@ -533,7 +533,7 @@ def main():
             t=trans,
             tool_title=trans('quiz_title', default='Financial Quiz', lang=lang),
             tools=tools,
-            nav_items=nav_items
+            bottom_nav_items=bottom_nav_items
         ), 500
 
 @quiz_bp.route('/unsubscribe/<email>')
@@ -585,7 +585,7 @@ def handle_csrf_error(e):
     """Handle CSRF errors with user-friendly message."""
     lang = session.get('lang', 'en')
     tools = PERSONAL_TOOLS if current_user.role == 'personal' else ALL_TOOLS
-    nav_items = PERSONAL_NAV if current_user.role == 'personal' else ADMIN_NAV
+    bottom_nav_items = PERSONAL_NAV if current_user.role == 'personal' else ADMIN_NAV
     current_app.logger.error(f"CSRF error on {request.path}: {e.description}", extra={'session_id': session.get('sid', 'unknown')})
     flash(trans('quiz_csrf_error', default='Form submission failed due to a missing security token. Please refresh and try again.'), 'danger')
     return render_template(
@@ -615,5 +615,5 @@ def handle_csrf_error(e):
         t=trans,
         tool_title=trans('quiz_title', default='Financial Quiz', lang=lang),
         tools=tools,
-        nav_items=nav_items
+        bottom_nav_items=bottom_nav_items
     ), 400
