@@ -10,7 +10,7 @@ from bson import ObjectId
 from translations import trans
 from models import log_tool_usage
 from session_utils import create_anonymous_session
-from utils import requires_role, is_admin, get_mongo_db, PERSONAL_TOOLS, PERSONAL_NAV, ALL_TOOLS, ADMIN_NAV, format_currency
+from utils import requires_role, is_admin, get_mongo_db, PERSONAL_TOOLS, PERSONAL_NAV, ALL_TOOLS, ADMIN_NAV, format_currency, limiter
 
 emergency_fund_bp = Blueprint(
     'emergency_fund',
