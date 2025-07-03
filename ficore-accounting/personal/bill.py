@@ -280,7 +280,7 @@ def main():
                 current_app.logger.warning(f"Invalid amount for bill {bill_id}: {bill.get('amount')}")
                 continue
         tools = PERSONAL_TOOLS if current_user.role == 'personal' else ALL_TOOLS
-        nav_items = PERSONAL_NAV if current_user.role == 'personal' else ADMIN_NAV
+        bottom_nav_items = PERSONAL_NAV if current_user.role == 'personal' else ADMIN_NAV
         explore_features = PERSONAL_EXPLORE_FEATURES if current_user.role == 'personal' else []
         return render_template(
             'personal/BILL/bill_main.html',
@@ -305,14 +305,14 @@ def main():
             lang=lang,
             tool_title=trans('bill_title', default='Bill Manager'),
             tools=tools,
-            nav_items=nav_items,
+            bottom_nav_items=bottom_nav_items,
             explore_features=explore_features
         )
     except Exception as e:
         current_app.logger.error(f"Error in bill.main: {str(e)}")
         flash(trans('bill_dashboard_load_error', default='Error loading bill dashboard.'), 'danger')
         tools = PERSONAL_TOOLS if current_user.role == 'personal' else ALL_TOOLS
-        nav_items = PERSONAL_NAV if current_user.role == 'personal' else ADMIN_NAV
+        bottom_nav_items = PERSONAL_NAV if current_user.role == 'personal' else ADMIN_NAV
         explore_features = PERSONAL_EXPLORE_FEATURES if current_user.role == 'personal' else []
         return render_template(
             'personal/BILL/bill_main.html',
@@ -337,7 +337,7 @@ def main():
             lang=lang,
             tool_title=trans('bill_title', default='Bill Manager'),
             tools=tools,
-            nav_items=nav_items,
+            bottom_nav_items=bottom_nav_items,
             explore_features=explore_features
         ), 500
 
