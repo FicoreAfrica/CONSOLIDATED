@@ -14,6 +14,7 @@ from models import log_tool_usage
 from session_utils import create_anonymous_session
 from utils import requires_role, is_admin, get_mongo_db, PERSONAL_TOOLS, PERSONAL_NAV, ALL_TOOLS, ADMIN_NAV
 from bson import ObjectId
+from werkzeug import Response
 
 learning_hub_bp = Blueprint(
     'learning_hub',
@@ -48,7 +49,7 @@ def init_app(app):
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
-# Courses data with multimedia support
+# Courses data with multimedia support and role tags
 courses_data = {
     "budgeting_101": {
         "id": "budgeting_101",
@@ -59,6 +60,7 @@ courses_data = {
         "title_key": "learning_hub_course_budgeting101_title",
         "desc_key": "learning_hub_course_budgeting101_desc",
         "is_premium": False,
+        "roles": ["civil_servant", "nysc", "agent"],
         "modules": [
             {
                 "id": "module-1",
@@ -111,6 +113,7 @@ courses_data = {
         "title_key": "learning_hub_course_financial_quiz_title",
         "desc_key": "learning_hub_course_financial_quiz_desc",
         "is_premium": False,
+        "roles": ["civil_servant", "nysc", "agent"],
         "modules": [
             {
                 "id": "module-1",
@@ -139,6 +142,7 @@ courses_data = {
         "title_key": "learning_hub_course_savings_basics_title",
         "desc_key": "learning_hub_course_savings_basics_desc",
         "is_premium": False,
+        "roles": ["civil_servant", "nysc", "agent"],
         "modules": [
             {
                 "id": "module-1",
@@ -175,6 +179,7 @@ courses_data = {
         "title_key": "learning_hub_course_tax_reforms_2025_title",
         "desc_key": "learning_hub_course_tax_reforms_2025_desc",
         "is_premium": False,
+        "roles": ["civil_servant", "agent"],
         "modules": [
             {
                 "id": "module-1",
@@ -206,6 +211,73 @@ courses_data = {
   - Can now claim VAT credits on eligible expenses.
                         """,
                         "quiz_id": "quiz-tax-reforms-2025"
+                    }
+                ]
+            }
+        ]
+    },
+    "digital_foundations": {
+        "id": "digital_foundations",
+        "title_en": "Digital Foundations",
+        "title_ha": "Tushen Dijital",
+        "description_en": "Learn the basics of computers, internet tools, and how to use AI tools like ChatGPT for everyday tasks. No prior knowledge needed!",
+        "description_ha": "Koyon asalin kwamfutoci, kayan aikin intanet, da yadda ake amfani da kayan aikin AI kamar ChatGPT don ayyukan yau da kullum. Ba a buƙatar ilimi na farko!",
+        "title_key": "learning_hub_digital_foundations_title",
+        "desc_key": "learning_hub_digital_foundations_desc",
+        "is_premium": False,
+        "roles": ["civil_servant", "nysc", "agent"],
+        "modules": [
+            {
+                "id": "module-1",
+                "title_key": "learning_hub_module_computer_basics_title",
+                "title_en": "Computer Basics",
+                "lessons": [
+                    {
+                        "id": "digital_foundations-module-1-lesson-1",
+                        "title_key": "learning_hub_lesson_computer_basics_title",
+                        "title_en": "What is a Computer?",
+                        "content_type": "text",
+                        "content_en": "Understand the basic components of a computer and how to use it for everyday tasks.",
+                        "quiz_id": None
+                    },
+                    {
+                        "id": "digital_foundations-module-1-lesson-2",
+                        "title_key": "learning_hub_lesson_files_title",
+                        "title_en": "Saving vs. Uploading Files",
+                        "content_type": "text",
+                        "content_en": "Learn the difference between saving a file locally and uploading it to the cloud or a website.",
+                        "quiz_id": None
+                    }
+                ]
+            },
+            {
+                "id": "module-2",
+                "title_key": "learning_hub_module_internet_tools_title",
+                "title_en": "Internet Tools",
+                "lessons": [
+                    {
+                        "id": "digital_foundations-module-2-lesson-1",
+                        "title_key": "learning_hub_lesson_browser_title",
+                        "title_en": "What is a Browser?",
+                        "content_type": "video",
+                        "content_path": "uploads/browser_intro.mp4",
+                        "content_en": "Explore how to use web browsers to access the internet effectively.",
+                        "quiz_id": None
+                    }
+                ]
+            },
+            {
+                "id": "module-3",
+                "title_key": "learning_hub_module_ai_basics_title",
+                "title_en": "AI for Beginners",
+                "lessons": [
+                    {
+                        "id": "digital_foundations-module-3-lesson-1",
+                        "title_key": "learning_hub_lesson_ai_budgeting_title",
+                        "title_en": "Using ChatGPT for Budgeting",
+                        "content_type": "text",
+                        "content_en": "Learn how to use AI tools like ChatGPT to assist with budgeting and financial planning.",
+                        "quiz_id": "quiz-digital-foundations-3-1"
                     }
                 ]
             }
@@ -350,6 +422,51 @@ quizzes_data = {
                 "answer_en": "Reduced CIT to 27.5%, later 25%"
             }
         ]
+    },
+    "quiz-digital-foundations-3-1": {
+        "id": "quiz-digital-foundations-3-1",
+        "questions": [
+            {
+                "question_key": "learning_hub_quiz_digital_q1",
+                "question_en": "What can AI tools like ChatGPT help you with?",
+                "options_keys": [
+                    "learning_hub_quiz_digital_opt1_a",
+                    "learning_hub_quiz_digital_opt1_b",
+                    "learning_hub_quiz_digital_opt1_c",
+                    "learning_hub_quiz_digital_opt1_d"
+                ],
+                "options_en": ["Budgeting", "Building a computer", "Driving a car", "Cooking meals"],
+                "answer_key": "learning_hub_quiz_digital_opt1_a",
+                "answer_en": "Budgeting"
+            }
+        ]
+    },
+    "reality_check_quiz": {
+        "id": "reality_check_quiz",
+        "questions": [
+            {
+                "question_key": "learning_hub_quiz_q1",
+                "question_en": "What is a web browser?",
+                "options_keys": [
+                    "learning_hub_quiz_q1_a",
+                    "learning_hub_quiz_q1_b"
+                ],
+                "options_en": ["A program to browse the internet", "A type of computer hardware"],
+                "answer_key": "learning_hub_quiz_q1_a",
+                "answer_en": "A program to browse the internet"
+            },
+            {
+                "question_key": "learning_hub_quiz_q2",
+                "question_en": "How do you save a file?",
+                "options_keys": [
+                    "learning_hub_quiz_q2_a",
+                    "learning_hub_quiz_q2_b"
+                ],
+                "options_en": ["Click File > Save in an application", "Send it to an email"],
+                "answer_key": "learning_hub_quiz_q2_a",
+                "answer_en": "Click File > Save in an application"
+            }
+        ]
     }
 }
 
@@ -374,6 +491,9 @@ class UploadForm(FlaskForm):
         ('video', 'Video'), ('text', 'Text'), ('pdf', 'PDF')
     ], validators=[DataRequired()])
     is_premium = BooleanField(trans('learning_hub_is_premium', default='Premium Content'), default=False)
+    roles = SelectField(trans('learning_hub_roles', default='Roles'), choices=[
+        ('all', 'All Roles'), ('civil_servant', 'Civil Servant'), ('nysc', 'NYSC Member'), ('agent', 'Agent')
+    ], validators=[DataRequired()])
     file = FileField(trans('learning_hub_upload_file', default='Upload File'), validators=[DataRequired()])
     submit = SubmitField(trans('learning_hub_upload', default='Upload'))
 
@@ -385,6 +505,7 @@ class UploadForm(FlaskForm):
         self.description.validators[0].message = trans('learning_hub_description_required', default='Description is required', lang=lang)
         self.content_type.validators[0].message = trans('learning_hub_content_type_required', default='Content type is required', lang=lang)
         self.file.validators[0].message = trans('learning_hub_file_required', default='File is required', lang=lang)
+        self.roles.validators[0].message = trans('learning_hub_roles_required', default='Role is required', lang=lang)
 
 def custom_login_required(f):
     """Custom login decorator that allows both authenticated users and anonymous sessions."""
@@ -413,7 +534,8 @@ def get_progress():
                     'lessons_completed': record.get('lessons_completed', []),
                     'quiz_scores': record.get('quiz_scores', {}),
                     'current_lesson': record.get('current_lesson'),
-                    'coins_earned': record.get('coins_earned', 0)
+                    'coins_earned': record.get('coins_earned', 0),
+                    'badges_earned': record.get('badges_earned', [])
                 }
             except Exception as e:
                 current_app.logger.error(f"Error parsing progress record for course {record.get('course_id', 'unknown')}: {str(e)}", extra={'session_id': session.get('sid', 'no-session-id')})
@@ -442,11 +564,12 @@ def save_course_progress(course_id, course_progress):
                 'quiz_scores': course_progress.get('quiz_scores', {}),
                 'current_lesson': course_progress.get('current_lesson'),
                 'coins_earned': course_progress.get('coins_earned', 0),
+                'badges_earned': course_progress.get('badges_earned', []),
                 'updated_at': datetime.utcnow()
             }
         }
         get_mongo_db().learning_materials.update_one(filter_kwargs, update_data, upsert=True)
-        current_app.logger.info(f"Saved progress for course {course_id}", extra={'session_id': session.get('sid')})
+        current_app.logger.info(f"Saved progress for course {course_id}", extra={'session_id': session['sid']})
     except Exception as e:
         current_app.logger.error(f"Error saving progress to MongoDB for course {course_id}: {str(e)}", extra={'session_id': session.get('sid', 'no-session-id')})
 
@@ -469,6 +592,7 @@ def init_storage(app):
                         'description_en': course['description_en'],
                         'description_ha': course['description_ha'],
                         'is_premium': course.get('is_premium', False),
+                        'roles': course.get('roles', []),
                         'modules': course.get('modules', []),
                         'created_at': datetime.utcnow()
                     } for course in courses_data.values()
@@ -482,7 +606,7 @@ def init_storage(app):
 
 def course_lookup(course_id):
     """Retrieve course by ID with validation."""
-    course = courses_data.get(course_id)
+    course = get_mongo_db().learning_materials.find_one({'type': 'course', 'id': course_id})
     if not course or not isinstance(course, dict) or 'modules' not in course or not isinstance(course['modules'], list):
         current_app.logger.error(f"Invalid course data for course_id {course_id}: {course}", extra={'session_id': session.get('sid', 'no-session-id')})
         return None
@@ -511,18 +635,19 @@ def lesson_lookup(course, lesson_id):
     return None, None
 
 def calculate_progress_summary():
-    """Calculate progress summary for dashboard."""
+    """Calculate progress summary for dashboard, including badges."""
     progress = get_progress()
     progress_summary = []
     total_completed = 0
     total_quiz_scores = 0
     total_coins_earned = 0
     certificates_earned = 0
+    badges_earned = []
     
     for course_id, course in courses_data.items():
         if not course_lookup(course_id):
             continue
-        cp = progress.get(course_id, {'lessons_completed': [], 'current_lesson': None, 'quiz_scores': {}, 'coins_earned': 0})
+        cp = progress.get(course_id, {'lessons_completed': [], 'current_lesson': None, 'quiz_scores': {}, 'coins_earned': 0, 'badges_earned': []})
         lessons_total = sum(len(m.get('lessons', [])) for m in course.get('modules', []))
         completed = len(cp.get('lessons_completed', []))
         percent = int((completed / lessons_total) * 100) if lessons_total > 0 else 0
@@ -542,10 +667,11 @@ def calculate_progress_summary():
         total_completed += completed
         total_quiz_scores += sum(cp.get('quiz_scores', {}).values())
         total_coins_earned += cp.get('coins_earned', 0)
+        badges_earned.extend(cp.get('badges_earned', []))
         if completed == lessons_total and lessons_total > 0:
             certificates_earned += 1
     
-    return progress_summary, total_completed, total_quiz_scores, certificates_earned, total_coins_earned
+    return progress_summary, total_completed, total_quiz_scores, certificates_earned, total_coins_earned, badges_earned
 
 @learning_hub_bp.route('/')
 @learning_hub_bp.route('/main', methods=['GET', 'POST'])
@@ -569,9 +695,13 @@ def main():
             mongo=get_mongo_db()
         )
         
+        # Get courses filtered by role
+        role_filter = session.get('role_filter', 'all')
+        courses = {k: v for k, v in courses_data.items() if role_filter == 'all' or role_filter in v.get('roles', [])}
+        
         # Get progress and calculate summary
         progress = get_progress()
-        progress_summary, total_completed, total_quiz_scores, certificates_earned, total_coins_earned = calculate_progress_summary()
+        progress_summary, total_completed, total_quiz_scores, certificates_earned, total_coins_earned, badges_earned = calculate_progress_summary()
         
         # Get profile data
         profile_data = session.get('learning_hub_profile', {})
@@ -592,8 +722,9 @@ def main():
                     file_path = os.path.join(current_app.config.get('UPLOAD_FOLDER', UPLOAD_FOLDER), filename)
                     upload_form.file.data.save(file_path)
                     
-                    # Update MongoDB instead of in-memory courses_data
+                    # Update MongoDB
                     course_id = upload_form.course_id.data
+                    roles = [upload_form.roles.data] if upload_form.roles.data != 'all' else ['civil_servant', 'nysc', 'agent']
                     course_data = {
                         'type': 'course',
                         'id': course_id,
@@ -604,6 +735,7 @@ def main():
                         'description_en': upload_form.description.data,
                         'description_ha': upload_form.description.data,  # Placeholder
                         'is_premium': upload_form.is_premium.data,
+                        'roles': roles,
                         'modules': [{
                             'id': f"{course_id}-module-1",
                             'title_key': f"learning_hub_module_{course_id}_title",
@@ -639,14 +771,15 @@ def main():
         
         return render_template(
             'personal/learning_hub/learning_hub_main.html',
-            courses=courses_data,
+            courses=courses,
             progress=progress,
             progress_summary=progress_summary,
             total_completed=total_completed,
-            total_courses=len(courses_data),
+            total_courses=len(courses),
             quiz_scores_count=total_quiz_scores,
             certificates_earned=certificates_earned,
             total_coins_earned=total_coins_earned,
+            badges_earned=badges_earned,
             profile_form=profile_form,
             upload_form=upload_form,
             profile_data=profile_data,
@@ -654,7 +787,8 @@ def main():
             lang=lang,
             tool_title=trans('learning_hub_title', default='Learning Hub', lang=lang),
             tools=tools,
-            nav_items=nav_items
+            nav_items=nav_items,
+            role_filter=role_filter
         )
         
     except Exception as e:
@@ -672,6 +806,7 @@ def main():
             quiz_scores_count=0,
             certificates_earned=0,
             total_coins_earned=0,
+            badges_earned=[],
             profile_form=LearningHubProfileForm(),
             upload_form=UploadForm(),
             profile_data={},
@@ -679,7 +814,8 @@ def main():
             lang=lang,
             tool_title=trans('learning_hub_title', default='Learning Hub', lang=lang),
             tools=tools,
-            nav_items=nav_items
+            nav_items=nav_items,
+            role_filter='all'
         ), 500
 
 @learning_hub_bp.route('/api/course/<course_id>')
@@ -693,7 +829,7 @@ def get_course_data(course_id):
             return jsonify({'success': False, 'message': trans('learning_hub_course_not_found', default='Course not found')}), 404
         
         progress = get_progress()
-        course_progress = progress.get(course_id, {'lessons_completed': [], 'quiz_scores': {}, 'current_lesson': None, 'coins_earned': 0})
+        course_progress = progress.get(course_id, {'lessons_completed': [], 'quiz_scores': {}, 'current_lesson': None, 'coins_earned': 0, 'badges_earned': []})
         
         return jsonify({
             'success': True,
@@ -722,7 +858,7 @@ def get_lesson_data():
             return jsonify({'success': False, 'message': trans('learning_hub_lesson_not_found', default='Lesson not found')}), 404
         
         progress = get_progress()
-        course_progress = progress.get(course_id, {'lessons_completed': [], 'quiz_scores': {}, 'current_lesson': None, 'coins_earned': 0})
+        course_progress = progress.get(course_id, {'lessons_completed': [], 'quiz_scores': {}, 'current_lesson': None, 'coins_earned': 0, 'badges_earned': []})
         
         # Find next lesson
         next_lesson_id = None
@@ -766,7 +902,7 @@ def get_quiz_data():
             return jsonify({'success': False, 'message': trans('learning_hub_quiz_not_found', default='Quiz not found')}), 404
         
         progress = get_progress()
-        course_progress = progress.get(course_id, {'lessons_completed': [], 'quiz_scores': {}, 'current_lesson': None, 'coins_earned': 0})
+        course_progress = progress.get(course_id, {'lessons_completed': [], 'quiz_scores': {}, 'current_lesson': None, 'coins_earned': 0, 'badges_earned': []})
         
         return jsonify({
             'success': True,
@@ -791,7 +927,7 @@ def lesson_action():
         if action == 'mark_complete':
             progress = get_progress()
             if course_id not in progress:
-                course_progress = {'lessons_completed': [], 'quiz_scores': {}, 'current_lesson': lesson_id, 'coins_earned': 0}
+                course_progress = {'lessons_completed': [], 'quiz_scores': {}, 'current_lesson': lesson_id, 'coins_earned': 0, 'badges_earned': []}
                 progress[course_id] = course_progress
             else:
                 course_progress = progress[course_id]
@@ -799,9 +935,17 @@ def lesson_action():
             if lesson_id not in course_progress['lessons_completed']:
                 course_progress['lessons_completed'].append(lesson_id)
                 course_progress['current_lesson'] = lesson_id
-                # Award coins for completing specific lessons
+                # Award coins and badges
+                coins_earned = 0
+                badge_earned = None
                 if course_id == 'tax_reforms_2025' and lesson_id == 'tax_reforms_2025-module-1-lesson-1':
-                    course_progress['coins_earned'] = course_progress.get('coins_earned', 0) + 3
+                    coins_earned = 3
+                elif course_id == 'digital_foundations' and lesson_id == 'digital_foundations-module-1-lesson-1':
+                    coins_earned = 3
+                    badge_earned = {'title_key': 'learning_hub_badge_digital_starter', 'title_en': 'Digital Starter'}
+                course_progress['coins_earned'] = course_progress.get('coins_earned', 0) + coins_earned
+                if badge_earned and badge_earned not in course_progress['badges_earned']:
+                    course_progress['badges_earned'].append(badge_earned)
                 save_course_progress(course_id, course_progress)
                 
                 # Send email if user has provided details and opted in
@@ -828,7 +972,8 @@ def lesson_action():
                                 "completed_at": datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S'),
                                 "cta_url": url_for('learning_hub.main', _external=True),
                                 "unsubscribe_url": url_for('learning_hub.unsubscribe', email=profile['email'], _external=True),
-                                "coins_earned": course_progress.get('coins_earned', 0)
+                                "coins_earned": coins_earned,
+                                "badge_earned": badge_earned.get('title_en') if badge_earned else None
                             },
                             lang=session.get('lang', 'en')
                         )
@@ -838,13 +983,15 @@ def lesson_action():
                 return jsonify({
                     'success': True,
                     'message': trans('learning_hub_lesson_completed', default='Lesson marked as complete'),
-                    'coins_earned': course_progress.get('coins_earned', 0)
+                    'coins_earned': coins_earned,
+                    'badge_earned': badge_earned.get('title_en') if badge_earned else None
                 })
             else:
                 return jsonify({
                     'success': True,
                     'message': trans('learning_hub_lesson_already_completed', default='Lesson already completed'),
-                    'coins_earned': course_progress.get('coins_earned', 0)
+                    'coins_earned': 0,
+                    'badge_earned': None
                 })
         
         return jsonify({'success': False, 'message': trans('learning_hub_invalid_action', default='Invalid action')}), 400
@@ -856,13 +1003,13 @@ def lesson_action():
 @custom_login_required
 @requires_role(['personal', 'admin'])
 def quiz_action():
-    """Handle quiz actions like submitting answers."""
+    """Handle quiz actions like submitting answers, including Reality Check Quiz."""
     try:
         course_id = request.form.get('course_id')
         quiz_id = request.form.get('quiz_id')
         action = request.form.get('action')
         
-        if action == 'submit_quiz':
+        if action == 'submit_quiz' or action == 'submit_reality_check':
             quiz = quizzes_data.get(quiz_id)
             if not quiz:
                 return jsonify({'success': False, 'message': trans('learning_hub_quiz_not_found', default='Quiz not found')}), 404
@@ -874,29 +1021,42 @@ def quiz_action():
                 if user_answer and user_answer == question['answer_en']:
                     score += 1
             
-            # Check if quiz score meets passmark (60% for tax_reforms_2025)
-            passmark = 0.6 * len(quiz['questions'])
+            # Check if quiz score meets passmark (60% for most quizzes)
+            passmark = 0.6 * len(quiz['questions']) if quiz_id != 'reality_check_quiz' else 0
             passed = score >= passmark
             
-            # Save score
+            # Save score and award coins/badges
             progress = get_progress()
-            if course_id not in progress:
-                course_progress = {'lessons_completed': [], 'quiz_scores': {}, 'current_lesson': None, 'coins_earned': 0}
+            if course_id not in progress and quiz_id != 'reality_check_quiz':
+                course_progress = {'lessons_completed': [], 'quiz_scores': {}, 'current_lesson': None, 'coins_earned': 0, 'badges_earned': []}
                 progress[course_id] = course_progress
             else:
-                course_progress = progress[course_id]
+                course_progress = progress.get(course_id, {'lessons_completed': [], 'quiz_scores': {}, 'current_lesson': None, 'coins_earned': 0, 'badges_earned': []})
+            
+            coins_earned = 0
+            badge_earned = None
+            if quiz_id == 'quiz-tax-reforms-2025' and passed and quiz_id not in course_progress.get('quiz_scores', {}):
+                coins_earned = 3
+            elif quiz_id == 'reality_check_quiz' and quiz_id not in course_progress.get('quiz_scores', {}):
+                coins_earned = 3
+                badge_earned = {'title_key': 'learning_hub_badge_reality_check', 'title_en': 'Reality Check'}
             
             course_progress['quiz_scores'][quiz_id] = score
-            # Award coins for passing the tax reforms quiz
-            if passed and quiz_id == 'quiz-tax-reforms-2025' and quiz_id not in course_progress.get('quiz_scores', {}):
-                course_progress['coins_earned'] = course_progress.get('coins_earned', 0) + 3
-            save_course_progress(course_id, course_progress)
+            course_progress['coins_earned'] = course_progress.get('coins_earned', 0) + coins_earned
+            if badge_earned and badge_earned not in course_progress['badges_earned']:
+                course_progress['badges_earned'].append(badge_earned)
+            if quiz_id != 'reality_check_quiz':
+                save_course_progress(course_id, course_progress)
+            else:
+                session['reality_check_score'] = score
+                session.permanent = True
+                session.modified = True
             
             # Send email notification for quiz completion
             profile = session.get('learning_hub_profile', {})
             if profile.get('send_email') and profile.get('email'):
                 try:
-                    course = course_lookup(course_id)
+                    course = course_lookup(course_id) if course_id else {'title_en': 'Reality Check Quiz'}
                     config = EMAIL_CONFIG.get("learning_hub_quiz_completed", {})
                     subject = trans(config.get("subject_key", "learning_hub_quiz_completed_subject"), default="Quiz Completed", lang=session.get('lang', 'en'))
                     template = config.get("template", "learning_hub_quiz_completed.html")
@@ -914,7 +1074,8 @@ def quiz_action():
                             "score": score,
                             "total": len(quiz['questions']),
                             "passed": passed,
-                            "coins_earned": course_progress.get('coins_earned', 0),
+                            "coins_earned": coins_earned,
+                            "badge_earned": badge_earned.get('title_en') if badge_earned else None,
                             "completed_at": datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S'),
                             "cta_url": url_for('learning_hub.main', _external=True),
                             "unsubscribe_url": url_for('learning_hub.unsubscribe', email=profile['email'], _external=True)
@@ -924,19 +1085,90 @@ def quiz_action():
                 except Exception as e:
                     current_app.logger.error(f"Failed to send email for quiz {quiz_id}: {str(e)}", extra={'session_id': session.get('sid', 'no-session-id')})
             
+            message = trans('learning_hub_quiz_submitted', default='Quiz submitted successfully')
+            if quiz_id == 'reality_check_quiz':
+                message = trans('learning_hub_quiz_submitted', default='Quiz submitted successfully') + '. '
+                message += trans('learning_hub_quiz_recommendation', default='We recommend starting with the Digital Foundations course to build your ICT skills!') if score < 2 else trans('learning_hub_quiz_perfect', default='Great job! You have strong ICT basics!')
+            
             return jsonify({
                 'success': True,
-                'message': trans('learning_hub_quiz_submitted', default='Quiz submitted successfully'),
+                'message': message,
                 'score': score,
                 'total': len(quiz['questions']),
                 'passed': passed,
-                'coins_earned': course_progress.get('coins_earned', 0)
+                'coins_earned': coins_earned,
+                'badge_earned': badge_earned.get('title_en') if badge_earned else None
             })
         
         return jsonify({'success': False, 'message': trans('learning_hub_invalid_action', default='Invalid action')}), 400
     except Exception as e:
         current_app.logger.error(f"Error in quiz action: {str(e)}", extra={'session_id': session.get('sid', 'no-session-id')})
         return jsonify({'success': False, 'message': trans('learning_hub_quiz_error', default='Error processing quiz')}), 500
+
+@learning_hub_bp.route('/api/set_role_filter', methods=['POST'])
+@custom_login_required
+@requires_role(['personal', 'admin'])
+def set_role_filter():
+    """Set role filter for course display."""
+    try:
+        role = request.form.get('role')
+        if role not in ['all', 'civil_servant', 'nysc', 'agent']:
+            return jsonify({'success': False, 'message': trans('learning_hub_invalid_role', default='Invalid role selected')}), 400
+        session['role_filter'] = role
+        session.permanent = True
+        session.modified = True
+        current_app.logger.info(f"Set role filter to {role}", extra={'session_id': session['sid']})
+        return jsonify({'success': True, 'message': trans('learning_hub_role_updated', default='Role filter updated')})
+    except Exception as e:
+        current_app.logger.error(f"Error setting role filter: {str(e)}", extra={'session_id': session.get('sid', 'no-session-id')})
+        return jsonify({'success': False, 'message': trans('learning_hub_role_error', default='Error updating role filter')}), 500
+
+@learning_hub_bp.route('/register_webinar', methods=['POST'])
+@custom_login_required
+@requires_role(['personal', 'admin'])
+def register_webinar():
+    """Handle webinar registration."""
+    try:
+        email = request.form.get('email')
+        if not email:
+            flash(trans('general_email_required', default='Email is required'), 'danger')
+            return redirect(url_for('learning_hub.main'))
+        
+        # Save webinar registration to MongoDB
+        get_mongo_db().webinar_registrations.insert_one({
+            'email': email,
+            'user_id': current_user.id if current_user.is_authenticated else None,
+            'session_id': session['sid'],
+            'registered_at': datetime.utcnow()
+        })
+        
+        # Send confirmation email
+        config = EMAIL_CONFIG.get("learning_hub_webinar_registration", {})
+        subject = trans(config.get("subject_key", "learning_hub_webinar_registration_subject"), default="Webinar Registration Confirmed", lang=session.get('lang', 'en'))
+        template = config.get("template", "learning_hub_webinar_registration.html")
+        
+        send_email(
+            app=current_app,
+            logger=current_app.logger,
+            to_email=email,
+            subject=subject,
+            template_name=template,
+            data={
+                "first_name": session.get('learning_hub_profile', {}).get('first_name', ''),
+                "webinar_date": "TBD",  # Placeholder; update with actual date
+                "cta_url": url_for('learning_hub.main', _external=True),
+                "unsubscribe_url": url_for('learning_hub.unsubscribe', email=email, _external=True)
+            },
+            lang=session.get('lang', 'en')
+        )
+        
+        flash(trans('learning_hub_webinar_registered', default='Successfully registered for the webinar!'), 'success')
+        current_app.logger.info(f"Registered email {email} for webinar", extra={'session_id': session['sid']})
+        return redirect(url_for('learning_hub.main'))
+    except Exception as e:
+        current_app.logger.error(f"Error registering for webinar: {str(e)}", extra={'session_id': session.get('sid', 'no-session-id')})
+        flash(trans('learning_hub_webinar_error', default='Error registering for webinar'), 'danger')
+        return redirect(url_for('learning_hub.main')), 500
 
 @learning_hub_bp.route('/profile', methods=['GET', 'POST'])
 @custom_login_required
@@ -1095,6 +1327,7 @@ def handle_not_found(e):
         quiz_scores_count=0,
         certificates_earned=0,
         total_coins_earned=0,
+        badges_earned=[],
         profile_form=LearningHubProfileForm(),
         upload_form=UploadForm(),
         profile_data={},
@@ -1102,7 +1335,8 @@ def handle_not_found(e):
         lang=lang,
         tool_title=trans('learning_hub_title', default='Learning Hub', lang=lang),
         tools=tools,
-        nav_items=nav_items
+        nav_items=nav_items,
+        role_filter='all'
     ), 404
 
 @learning_hub_bp.errorhandler(CSRFError)
@@ -1128,6 +1362,7 @@ def handle_csrf_error(e):
         quiz_scores_count=0,
         certificates_earned=0,
         total_coins_earned=0,
+        badges_earned=[],
         profile_form=LearningHubProfileForm(),
         upload_form=UploadForm(),
         profile_data={},
@@ -1135,7 +1370,8 @@ def handle_csrf_error(e):
         lang=lang,
         tool_title=trans('learning_hub_title', default='Learning Hub', lang=lang),
         tools=tools,
-        nav_items=nav_items
+        nav_items=nav_items,
+        role_filter='all'
     ), 400
 
 # Legacy route redirects for backward compatibility
@@ -1166,3 +1402,12 @@ def lesson(course_id, lesson_id):
 def quiz(course_id, quiz_id):
     """Redirect to main page and load quiz."""
     return redirect(url_for('learning_hub.main') + f'#quiz-{course_id}-{quiz_id}')
+
+@learning_hub_bp.route('/forum')
+@custom_login_required
+@requires_role(['personal', 'admin'])
+def forum():
+    """Placeholder for community forum."""
+    lang = session.get('lang', 'en')
+    flash(trans('learning_hub_forum_coming_soon', default='Community forum coming soon!'), 'info')
+    return redirect(url_for('learning_hub.main'))
