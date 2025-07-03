@@ -303,17 +303,17 @@ def login():
             if not USERNAME_REGEX.match(username):
                 flash(trans('general_username_format', default='Username must be alphanumeric with underscores'), 'danger')
                 logger.warning(f"Invalid username format: {username}")
-                return render_template('users/login.html', form=form, t=trans, lang=session.get('lang', 'en')), 401
+                return render_template('users/login.html', form=form, t=trans, lang=session.get('lang', 'en'), tools=None, nav_items=None, bottom_nav_items=[]), 401
             db = get_mongo_db()
             user = db.users.find_one({'_id': username})
             if not user:
                 flash(trans('general_username_not_found', default='Username does not exist. Please check your signup details.'), 'danger')
                 logger.warning(f"Login attempt for non-existent username: {username}")
-                return render_template('users/login.html', form=form, t=trans, lang=session.get('lang', 'en')), 401
+                return render_template('users/login.html', form=form, t=trans, lang=session.get('lang', 'en'), tools=None, nav_items=None, bottom_nav_items=[]), 401
             if not check_password_hash(user['password'], form.password.data):
                 logger.warning(f"Failed login attempt for username: {username} (invalid password)")
                 flash(trans('general_invalid_password', default='Incorrect password'), 'danger')
-                return render_template('users/login.html', form=form, t=trans, lang=session.get('lang', 'en')), 401
+                return render_template('users/login.html', form=form, t=trans, lang=session.get('lang', 'en'), tools=None, nav_items=None, bottom_nav_items=[]), 401
             logger.info(f"User found: {username}, proceeding with login")
             if os.environ.get('ENABLE_2FA', 'true').lower() == 'true':
                 otp = ''.join(str(random.randint(0, 9)) for _ in range(6))
@@ -357,7 +357,7 @@ def login():
         except errors.PyMongoError as e:
             logger.error(f"MongoDB error during login: {str(e)}")
             flash(trans('general_database_error', default='An error occurred while accessing the database. Please try again later.'), 'danger')
-            return render_template('users/login.html', form=form, t=trans, lang=session.get('lang', 'en')), 500
+            return render_template('users/login.html', form=form, t=trans, lang=session.get('lang', 'en'), tools=None, nav_items=None, bottom_nav_items=[]), 500
     else:
         for field, errors in form.errors.items():
             for error in errors:
@@ -369,7 +369,7 @@ def login():
         lang=session.get('lang', 'en'),
         tools=None,
         nav_items=None,
-        bottom_nav_items=None
+        bottom_nav_items=[]
     )
 
 @users_bp.route('/verify_2fa', methods=['GET', 'POST'])
@@ -413,7 +413,7 @@ def verify_2fa():
         except errors.PyMongoError as e:
             logger.error(f"MongoDB error during 2FA verification: {str(e)}")
             flash(trans('general_database_error', default='An error occurred while accessing the database. Please try again later.'), 'danger')
-            return render_template('users/verify_2fa.html', form=form, t=trans, lang=session.get('lang', 'en'), tools=None, nav_items=None, bottom_nav_items=None), 500
+            return render_template('users/verify_2fa.html', form=form, t=trans, lang=session.get('lang', 'en'), tools=None, nav_items=None, bottom_nav_items=[]), 500
     else:
         for field, errors in form.errors.items():
             for error in errors:
@@ -425,7 +425,7 @@ def verify_2fa():
         lang=session.get('lang', 'en'),
         tools=None,
         nav_items=None,
-        bottom_nav_items=None
+        bottom_nav_items=[]
     )
 
 @users_bp.route('/signup', methods=['GET', 'POST'])
@@ -450,20 +450,20 @@ def signup():
                 if not agent_id:
                     form.agent_id.errors.append(trans('agents_agent_id_required', default='Agent ID is required for Agent role'))
                     logger.warning(f"Signup failed for {username}: Agent ID is required")
-                    return render_template('users/signup.html', form=form, t=trans, lang=session.get('lang', 'en'), tools=None, nav_items=None, bottom_nav_items=None)
+                    return render_template('users/signup.html', form=form, t=trans, lang=session.get('lang', 'en'), tools=None, nav_items=None, bottom_nav_items=[])
                 if not validate_agent_id(agent_id):
                     form.agent_id.errors.append(trans('agents_agent_id_invalid', default='Invalid or already used Agent ID'))
                     logger.warning(f"Signup failed for {username}: Invalid or already used Agent ID {agent_id}")
-                    return render_template('users/signup.html', form=form, t=trans, lang=session.get('lang', 'en'), tools=None, nav_items=None, bottom_nav_items=None)
+                    return render_template('users/signup.html', form=form, t=trans, lang=session.get('lang', 'en'), tools=None, nav_items=None, bottom_nav_items=[])
 
             if db.users.find_one({'_id': username}):
                 flash(trans('general_username_exists', default='Username already exists'), 'danger')
                 logger.warning(f"Signup failed: Username {username} already exists")
-                return render_template('users/signup.html', form=form, t=trans, lang=session.get('lang', 'en'), tools=None, nav_items=None, bottom_nav_items=None)
+                return render_template('users/signup.html', form=form, t=trans, lang=session.get('lang', 'en'), tools=None, nav_items=None, bottom_nav_items=[])
             if db.users.find_one({'email': email}):
                 flash(trans('general_email_exists', default='Email already exists'), 'danger')
                 logger.warning(f"Signup failed: Email {email} already exists")
-                return render_template('users/signup.html', form=form, t=trans, lang=session.get('lang', 'en'), tools=None, nav_items=None, bottom_nav_items=None)
+                return render_template('users/signup.html', form=form, t=trans, lang=session.get('lang', 'en'), tools=None, nav_items=None, bottom_nav_items=[])
 
             user_data = {
                 '_id': username,
@@ -487,7 +487,7 @@ def signup():
             if not result.inserted_id:
                 flash(trans('general_database_error', default='An error occurred while creating your account. Please try again later.'), 'danger')
                 logger.error(f"Failed to insert user: {username}")
-                return render_template('users/signup.html', form=form, t=trans, lang=session.get('lang', 'en'), tools=None, nav_items=None, bottom_nav_items=None)
+                return render_template('users/signup.html', form=form, t=trans, lang=session.get('lang', 'en'), tools=None, nav_items=None, bottom_nav_items=[])
 
             db.coin_transactions.insert_one({
                 'user_id': username,
@@ -515,7 +515,7 @@ def signup():
         except Exception as e:
             logger.error(f"Unexpected error during signup for {username}: {str(e)}")
             flash(trans('general_database_error', default='An error occurred while accessing the database. Please try again later.'), 'danger')
-            return render_template('users/signup.html', form=form, t=trans, lang=session.get('lang', 'en'), tools=None, nav_items=None, bottom_nav_items=None), 500
+            return render_template('users/signup.html', form=form, t=trans, lang=session.get('lang', 'en'), tools=None, nav_items=None, bottom_nav_items=[]), 500
     else:
         for field, errors in form.errors.items():
             for error in errors:
@@ -527,7 +527,7 @@ def signup():
         lang=session.get('lang', 'en'),
         tools=None,
         nav_items=None,
-        bottom_nav_items=None
+        bottom_nav_items=[]
     )
 
 @users_bp.route('/forgot_password', methods=['GET', 'POST'])
@@ -545,7 +545,7 @@ def forgot_password():
             if not user:
                 flash(trans('general_email_not_found', default='No user found with this email'), 'danger')
                 logger.warning(f"No user found with email: {email}")
-                return render_template('users/forgot_password.html', form=form, t=trans, lang=session.get('lang', 'en'), tools=None, nav_items=None, bottom_nav_items=None)
+                return render_template('users/forgot_password.html', form=form, t=trans, lang=session.get('lang', 'en'), tools=None, nav_items=None, bottom_nav_items=[])
             reset_token = URLSafeTimedSerializer(current_app.config['SECRET_KEY']).dumps(email, salt='reset-salt')
             expiry = datetime.utcnow() + timedelta(minutes=15)
             db.users.update_one(
@@ -563,11 +563,11 @@ def forgot_password():
             log_audit_action('forgot_password', {'email': email})
             logger.info(f"Password reset email sent to {email}")
             flash(trans('general_reset_email_sent', default='Password reset email sent'), 'success')
-            return render_template('users/forgot_password.html', form=form, t=trans, lang=session.get('lang', 'en'), tools=None, nav_items=None, bottom_nav_items=None)
+            return render_template('users/forgot_password.html', form=form, t=trans, lang=session.get('lang', 'en'), tools=None, nav_items=None, bottom_nav_items=[])
         except Exception as e:
             logger.error(f"Error during forgot password for {email}: {str(e)}")
             flash(trans('general_email_send_error', default='An error occurred while sending the reset email'), 'danger')
-            return render_template('users/forgot_password.html', form=form, t=trans, lang=session.get('lang', 'en'), tools=None, nav_items=None, bottom_nav_items=None), 500
+            return render_template('users/forgot_password.html', form=form, t=trans, lang=session.get('lang', 'en'), tools=None, nav_items=None, bottom_nav_items=[]), 500
     else:
         for field, errors in form.errors.items():
             for error in errors:
@@ -579,7 +579,7 @@ def forgot_password():
         lang=session.get('lang', 'en'),
         tools=None,
         nav_items=None,
-        bottom_nav_items=None
+        bottom_nav_items=[]
     )
 
 @users_bp.route('/reset_password', methods=['GET', 'POST'])
@@ -603,7 +603,7 @@ def reset_password():
             if not user:
                 flash(trans('general_invalid_email', default='No user found with this email'), 'danger')
                 logger.warning(f"No user found with email: {email}")
-                return render_template('users/reset_password.html', form=form, token=token, t=trans, lang=session.get('lang', 'en'), tools=None, nav_items=None, bottom_nav_items=None)
+                return render_template('users/reset_password.html', form=form, token=token, t=trans, lang=session.get('lang', 'en'), tools=None, nav_items=None, bottom_nav_items=[])
             db.users.update_one(
                 {'_id': user['_id']},
                 {'$set': {'password': generate_password_hash(form.password.data)},
@@ -616,7 +616,7 @@ def reset_password():
         except errors.PyMongoError as e:
             logger.error(f"MongoDB error during password reset for {email}: {str(e)}")
             flash(trans('general_database_error', default='An error occurred while accessing the database. Please try again later.'), 'danger')
-            return render_template('users/reset_password.html', form=form, token=token, t=trans, lang=session.get('lang', 'en'), tools=None, nav_items=None, bottom_nav_items=None), 500
+            return render_template('users/reset_password.html', form=form, token=token, t=trans, lang=session.get('lang', 'en'), tools=None, nav_items=None, bottom_nav_items=[]), 500
     else:
         for field, errors in form.errors.items():
             for error in errors:
@@ -629,7 +629,7 @@ def reset_password():
         lang=session.get('lang', 'en'),
         tools=None,
         nav_items=None,
-        bottom_nav_items=None
+        bottom_nav_items=[]
     )
 
 @users_bp.route('/setup_wizard', methods=['GET', 'POST'])
