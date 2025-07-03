@@ -172,7 +172,6 @@
             </div>
         </div>
 
-        <!-- Bottom Navigation Bar -->
         <nav class="bottom-nav fixed-bottom bg-light border-top d-flex justify-content-around align-items-center py-2">
             {% for item in nav_items %}
             <a href="{{ item.get('url', '#') | e }}" class="nav-item text-center text-dark" data-bs-toggle="tooltip" data-bs-title="{{ t(item.get('tooltip', item.get('label', '')), default=item.get('label', '')) | e }}">
@@ -183,7 +182,6 @@
         </nav>
 
     {% else %}
-        <!-- Public View for Unauthenticated Users -->
         <div class="text-center">
             <div class="page-title">
                 <h1>{{ t('general_business_home', default='Welcome to Ficore Business & Agent Tools') | e }}</h1>
@@ -191,7 +189,6 @@
             </div>
         </div>
 
-        <!-- Business and Agent Tools Overview -->
         <section class="tools-section my-5">
             <h2 class="text-center"><i class="bi bi-tools"></i> {{ t('general_our_tools', default='Our Business & Agent Tools') | e }}</h2>
             <p class="text-center mb-4">{{ t('general_business_tools_desc', default='Discover powerful tools to manage your business or support traders as an agent.') | e }}</p>
@@ -253,7 +250,6 @@
             </div>
         </section>
 
-        <!-- CTA Section -->
         <section class="cta-section my-5 text-center">
             <h3>{{ t('general_ready_to_start', default='Ready to Take Control of Your Finances?') | e }}</h3>
             <p>{{ t('general_business_signup_prompt', default='Sign up as a business owner or agent to access powerful financial management tools.') | e }}</p>
@@ -298,7 +294,9 @@ document.addEventListener('DOMContentLoaded', function() {
         you_owe: '{{ t("general_you_owe", default="You owe") | e }}',
         balanced: '{{ t("general_balanced", default="Balanced") | e }}',
         no_recent_activity: '{{ t("general_no_recent_activity", default="No recent activity") | e }}',
-        start_by_adding_debt: '{{ t("general_start_by_adding_debt", default="Start by adding a debt or transaction") | e }}'
+        start_by_adding_debt: '{{ t("general_start_by_adding_debt", default="Start by adding a debt or transaction") | e }}',
+        no_notifications: '{{ t("general_no_notifications", default="No notifications") | e }}', // Added translation
+        check_back_later: '{{ t("general_check_back_later", default="Check back later") | e }}' // Added translation
     };
 
     // Load financial data, notifications, and recent activity
@@ -402,8 +400,8 @@ document.addEventListener('DOMContentLoaded', function() {
                                     <i class="bi bi-bell text-muted"></i>
                                 </div>
                                 <div class="notification-content">
-                                    <div class="notification-description">${translations.no_notifications || 'No notifications'}</div>
-                                    <div class="notification-time text-muted">${translations.check_back_later || 'Check back later'}</div>
+                                    <div class="notification-description">${translations.no_notifications}</div>
+                                    <div class="notification-time text-muted">${translations.check_back_later}</div>
                                 </div>
                             </div>
                         `;
