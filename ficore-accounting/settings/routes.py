@@ -101,7 +101,7 @@ def get_role_based_nav():
 def index():
     """Display settings overview."""
     try:
-        tools, explore_features, bottom_nav = get_role_based_nav()
+        tools, explore_features, bottom_nav_items = get_role_based_nav()
         return render_template(
             'settings/index.html',
             user=current_user,
@@ -109,7 +109,7 @@ def index():
             lang=session.get('lang', 'en'),
             tools=tools,
             nav_items=explore_features,
-            bottom_nav_items=bottom_nav
+            bottom_nav_items=bottom_nav_items
         )
     except Exception as e:
         logger.error(f"Error loading settings for user {current_user.id}: {str(e)}")
@@ -151,7 +151,7 @@ def profile():
             try:
                 if form.email.data != user['email'] and db.users.find_one({'email': form.email.data}):
                     flash(trans('general_email_exists', default='Email already in use'), 'danger')
-                    tools, explore_features, bottom_nav = get_role_based_nav()
+                    tools, explore_features, bottom_nav_items = get_role_based_nav()
                     return render_template(
                         'settings/profile.html',
                         form=form,
@@ -160,7 +160,7 @@ def profile():
                         lang=session.get('lang', 'en'),
                         tools=tools,
                         nav_items=explore_features,
-                        bottom_nav_items=bottom_nav
+                        bottom_nav_items=bottom_nav_items
                     )
                 update_data = {
                     'display_name': form.full_name.data,
@@ -215,7 +215,7 @@ def profile():
             'settings': user.get('settings', {}),
             'security_settings': user.get('security_settings', {})
         }
-        tools, explore_features, bottom_nav = get_role_based_nav()
+        tools, explore_features, bottom_nav_items = get_role_based_nav()
         return render_template(
             'settings/profile.html',
             form=form,
@@ -224,7 +224,7 @@ def profile():
             lang=session.get('lang', 'en'),
             tools=tools,
             nav_items=explore_features,
-            bottom_nav_items=bottom_nav
+            bottom_nav_items=bottom_nav_items
         )
     except Exception as e:
         logger.error(f"Error in profile settings for user {current_user.id}: {str(e)}")
@@ -257,7 +257,7 @@ def notifications():
             except Exception as e:
                 logger.error(f"Error updating notifications for user {current_user.id}: {str(e)}")
                 flash(trans('general_something_went_wrong', default='An error occurred'), 'danger')
-        tools, explore_features, bottom_nav = get_role_based_nav()
+        tools, explore_features, bottom_nav_items = get_role_based_nav()
         return render_template(
             'settings/notifications.html',
             form=form,
@@ -265,7 +265,7 @@ def notifications():
             lang=session.get('lang', 'en'),
             tools=tools,
             nav_items=explore_features,
-            bottom_nav_items=bottom_nav
+            bottom_nav_items=bottom_nav_items
         )
     except Exception as e:
         logger.error(f"Error in notification settings for user {current_user.id}: {str(e)}")
@@ -294,7 +294,7 @@ def language():
             except Exception as e:
                 logger.error(f"Error updating language for user {current_user.id}: {str(e)}")
                 flash(trans('general_something_went_wrong', default='An error occurred'), 'danger')
-        tools, explore_features, bottom_nav = get_role_based_nav()
+        tools, explore_features, bottom_nav_items = get_role_based_nav()
         return render_template(
             'settings/language.html',
             form=form,
@@ -302,7 +302,7 @@ def language():
             lang=session.get('lang', 'en'),
             tools=tools,
             nav_items=explore_features,
-            bottom_nav_items=bottom_nav
+            bottom_nav_items=bottom_nav_items
         )
     except Exception as e:
         logger.error(f"Error in language settings for user {current_user.id}: {str(e)}")
@@ -318,7 +318,7 @@ def update_user_setting():
         setting_name = data.get('setting')
         value = data.get('value')
         if setting_name not in ['showKoboToggle', 'incognitoModeToggle', 'appSoundsToggle', 
-                               ' FingerprintPasswordToggle', 'fingerprintPinToggle', 'hideSensitiveDataToggle']:
+                               'FingerprintPasswordToggle', 'fingerprintPinToggle', 'hideSensitiveDataToggle']:
             return jsonify({"success": False, "message": trans('general_invalid_setting', default='Invalid setting name.')}), 400
         db = get_mongo_db()
         user_query = get_user_query(str(current_user.id))
