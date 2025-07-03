@@ -30,7 +30,7 @@ from utils import (
 )
 from session_utils import create_anonymous_session
 from translations import trans, get_translations, get_all_translations, get_module_translations
-from flask_login import login_required, current_user, UserMixin
+from flask_login import LoginManager, login_required, current_user, UserMixin
 from flask_wtf.csrf import CSRFError
 from jinja2.exceptions import TemplateNotFound
 import time
@@ -39,6 +39,15 @@ import certifi
 from news.routes import seed_news
 from taxation.routes import seed_tax_data
 from coins.routes import coins_bp
+import re
+from flask_mail import Mail
+from flask_limiter import Limiter
+from flask_limiter.util import get_remote_address
+from flask_session import Session
+from flask_wtf.csrf import CSRFProtect
+from flask_babel import Babel
+from flask_compress import Compress
+import requests
 
 # Load environment variables
 load_dotenv()
@@ -76,6 +85,14 @@ class SessionAdapter(logging.LoggerAdapter):
         return msg, kwargs
 
 logger = SessionAdapter(root_logger, {})
+
+# Initialize extensions
+login_manager = LoginManager()
+flask_session = Session()
+csrf = CSRFProtect()
+babel = Babel()
+compress = Compress()
+limiter = Limiter(key_func=get_remote_address, default_limits=['200 per day', '50 per hour'], storage_uri='memory://')
 
 # Decorators
 def admin_required(f):
@@ -267,7 +284,27 @@ def create_app():
     limiter.init_app(app)
     serializer = URLSafeTimedSerializer(app.config['SECRET_KEY'])
     babel.init_app(app)
-    
+    login_manager.init_app(app)
+    login_manager.login_view = 'users.login'
+
+    # User loader callback for Flask-Login
+    @login_manager.user_loader
+    def load_user(user_id):
+        try:
+            db = get_mongo_db()
+            user = db.users.find_one({'_id': user_id})
+            if not user:
+                return None
+            return User(
+                id=user['_id'],
+                email=user['email'],
+                display_name=user.get('display_name', user['_id']),
+                role=user.get('role', 'personal')
+            )
+        except Exception as e:
+            logger.error(f"Error loading user {user_id}: {str(e)}", exc_info=True)
+            return None
+
     # Initialize MongoDB and scheduler
     with app.app_context():
         db = get_mongo_db()
