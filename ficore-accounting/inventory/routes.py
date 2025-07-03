@@ -1,7 +1,13 @@
 from flask import Blueprint, render_template, redirect, url_for, flash, request, session
 from flask_login import login_required, current_user
 from translations import trans
-from utils import trans_function, requires_role, check_coin_balance, format_currency, format_date, get_mongo_db, is_admin, get_user_query, BUSINESS_TOOLS, BUSINESS_NAV, ALL_TOOLS, ADMIN_NAV
+from utils import (
+    PERSONAL_TOOLS, PERSONAL_NAV, PERSONAL_EXPLORE_FEATURES,
+    BUSINESS_TOOLS, BUSINESS_NAV, BUSINESS_EXPLORE_FEATURES,
+    AGENT_TOOLS, AGENT_NAV, AGENT_EXPLORE_FEATURES,
+    ALL_TOOLS, ADMIN_NAV, ADMIN_EXPLORE_FEATURES,
+    trans_function, requires_role, check_coin_balance, format_currency, format_date, get_mongo_db, is_admin, get_user_query
+)
 from bson import ObjectId
 from datetime import datetime
 from flask_wtf import FlaskForm
@@ -33,9 +39,31 @@ def index():
         # TODO: Restore original user_id filter {'user_id': str(current_user.id)} for production
         query = {} if is_admin() else {'user_id': str(current_user.id)}
         items = list(db.inventory.find(query).sort('created_at', -1))
-        tools = BUSINESS_TOOLS if current_user.role == 'trader' else ALL_TOOLS
-        nav_items = BUSINESS_NAV if current_user.role == 'trader' else ADMIN_NAV
-        return render_template('inventory/index.html', items=items, format_currency=format_currency, tools=tools, nav_items=nav_items, t=trans, lang=session.get('lang', 'en'))
+        
+        # Role-based navigation data
+        if current_user.role == 'trader':
+            tools_for_template = BUSINESS_TOOLS
+            explore_features_for_template = BUSINESS_EXPLORE_FEATURES
+            bottom_nav_for_template = BUSINESS_NAV
+        elif current_user.role == 'admin':
+            tools_for_template = ALL_TOOLS
+            explore_features_for_template = ADMIN_EXPLORE_FEATURES
+            bottom_nav_for_template = ADMIN_NAV
+        else:
+            tools_for_template = []
+            explore_features_for_template = []
+            bottom_nav_for_template = []
+
+        return render_template(
+            'inventory/index.html',
+            items=items,
+            format_currency=format_currency,
+            tools=tools_for_template,
+            nav_items=explore_features_for_template,
+            bottom_nav_items=bottom_nav_for_template,
+            t=trans,
+            lang=session.get('lang', 'en')
+        )
     except Exception as e:
         logger.error(f"Error fetching inventory for user {current_user.id}: {str(e)}")
         flash(trans('inventory_fetch_error', default='An error occurred'), 'danger')
@@ -54,9 +82,31 @@ def low_stock():
         # Use $expr to compare qty with threshold field
         query = {**base_query, '$expr': {'$lte': ['$qty', '$threshold']}}
         low_stock_items = list(db.inventory.find(query).sort('qty', 1))
-        tools = BUSINESS_TOOLS if current_user.role == 'trader' else ALL_TOOLS
-        nav_items = BUSINESS_NAV if current_user.role == 'trader' else ADMIN_NAV
-        return render_template('inventory/low_stock.html', items=low_stock_items, format_currency=format_currency, tools=tools, nav_items=nav_items, t=trans, lang=session.get('lang', 'en'))
+        
+        # Role-based navigation data
+        if current_user.role == 'trader':
+            tools_for_template = BUSINESS_TOOLS
+            explore_features_for_template = BUSINESS_EXPLORE_FEATURES
+            bottom_nav_for_template = BUSINESS_NAV
+        elif current_user.role == 'admin':
+            tools_for_template = ALL_TOOLS
+            explore_features_for_template = ADMIN_EXPLORE_FEATURES
+            bottom_nav_for_template = ADMIN_NAV
+        else:
+            tools_for_template = []
+            explore_features_for_template = []
+            bottom_nav_for_template = []
+
+        return render_template(
+            'inventory/low_stock.html',
+            items=low_stock_items,
+            format_currency=format_currency,
+            tools=tools_for_template,
+            nav_items=explore_features_for_template,
+            bottom_nav_items=bottom_nav_for_template,
+            t=trans,
+            lang=session.get('lang', 'en')
+        )
     except Exception as e:
         logger.error(f"Error fetching low stock items for user {current_user.id}: {str(e)}")
         flash(trans('inventory_low_stock_error', default='An error occurred'), 'danger')
@@ -107,9 +157,30 @@ def add():
         except Exception as e:
             logger.error(f"Error adding inventory item for user {current_user.id}: {str(e)}")
             flash(trans('inventory_add_error', default='An error occurred'), 'danger')
-    tools = BUSINESS_TOOLS if current_user.role == 'trader' else ALL_TOOLS
-    nav_items = BUSINESS_NAV if current_user.role == 'trader' else ADMIN_NAV
-    return render_template('inventory/add.html', form=form, tools=tools, nav_items=nav_items, t=trans, lang=session.get('lang', 'en'))
+    
+    # Role-based navigation data
+    if current_user.role == 'trader':
+        tools_for_template = BUSINESS_TOOLS
+        explore_features_for_template = BUSINESS_EXPLORE_FEATURES
+        bottom_nav_for_template = BUSINESS_NAV
+    elif current_user.role == 'admin':
+        tools_for_template = ALL_TOOLS
+        explore_features_for_template = ADMIN_EXPLORE_FEATURES
+        bottom_nav_for_template = ADMIN_NAV
+    else:
+        tools_for_template = []
+        explore_features_for_template = []
+        bottom_nav_for_template = []
+
+    return render_template(
+        'inventory/add.html',
+        form=form,
+        tools=tools_for_template,
+        nav_items=explore_features_for_template,
+        bottom_nav_items=bottom_nav_for_template,
+        t=trans,
+        lang=session.get('lang', 'en')
+    )
 
 @inventory_bp.route('/edit/<id>', methods=['GET', 'POST'])
 @login_required
@@ -153,9 +224,31 @@ def edit(id):
             except Exception as e:
                 logger.error(f"Error updating inventory item {id} for user {current_user.id}: {str(e)}")
                 flash(trans('inventory_edit_error', default='An error occurred'), 'danger')
-        tools = BUSINESS_TOOLS if current_user.role == 'trader' else ALL_TOOLS
-        nav_items = BUSINESS_NAV if current_user.role == 'trader' else ADMIN_NAV
-        return render_template('inventory/edit.html', form=form, item=item, tools=tools, nav_items=nav_items, t=trans, lang=session.get('lang', 'en'))
+        
+        # Role-based navigation data
+        if current_user.role == 'trader':
+            tools_for_template = BUSINESS_TOOLS
+            explore_features_for_template = BUSINESS_EXPLORE_FEATURES
+            bottom_nav_for_template = BUSINESS_NAV
+        elif current_user.role == 'admin':
+            tools_for_template = ALL_TOOLS
+            explore_features_for_template = ADMIN_EXPLORE_FEATURES
+            bottom_nav_for_template = ADMIN_NAV
+        else:
+            tools_for_template = []
+            explore_features_for_template = []
+            bottom_nav_for_template = []
+
+        return render_template(
+            'inventory/edit.html',
+            form=form,
+            item=item,
+            tools=tools_for_template,
+            nav_items=explore_features_for_template,
+            bottom_nav_items=bottom_nav_for_template,
+            t=trans,
+            lang=session.get('lang', 'en')
+        )
     except Exception as e:
         logger.error(f"Error fetching inventory item {id} for user {current_user.id}: {str(e)}")
         flash(trans('inventory_item_not_found', default='Item not found'), 'danger')
