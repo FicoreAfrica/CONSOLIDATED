@@ -35,8 +35,6 @@ def index():
     """List all inventory items for the current user."""
     try:
         db = get_mongo_db()
-        # TEMPORARY: Allow admin to view all inventory items during testing
-        # TODO: Restore original user_id filter {'user_id': str(current_user.id)} for production
         query = {} if is_admin() else {'user_id': str(current_user.id)}
         items = list(db.inventory.find(query).sort('created_at', -1))
         
@@ -44,15 +42,15 @@ def index():
         if current_user.role == 'trader':
             tools_for_template = BUSINESS_TOOLS
             explore_features_for_template = BUSINESS_EXPLORE_FEATURES
-            bottom_nav_for_template = BUSINESS_NAV
+            bottom_nav_items = BUSINESS_NAV
         elif current_user.role == 'admin':
             tools_for_template = ALL_TOOLS
             explore_features_for_template = ADMIN_EXPLORE_FEATURES
-            bottom_nav_for_template = ADMIN_NAV
+            bottom_nav_items = ADMIN_NAV
         else:
             tools_for_template = []
             explore_features_for_template = []
-            bottom_nav_for_template = []
+            bottom_nav_items = []
 
         return render_template(
             'inventory/index.html',
@@ -60,7 +58,7 @@ def index():
             format_currency=format_currency,
             tools=tools_for_template,
             nav_items=explore_features_for_template,
-            bottom_nav_items=bottom_nav_for_template,
+            bottom_nav_items=bottom_nav_items,
             t=trans,
             lang=session.get('lang', 'en')
         )
@@ -76,10 +74,7 @@ def low_stock():
     """List inventory items with low stock."""
     try:
         db = get_mongo_db()
-        # TEMPORARY: Allow admin to view all low stock items during testing
-        # TODO: Restore original user_id filter for production
         base_query = {} if is_admin() else {'user_id': str(current_user.id)}
-        # Use $expr to compare qty with threshold field
         query = {**base_query, '$expr': {'$lte': ['$qty', '$threshold']}}
         low_stock_items = list(db.inventory.find(query).sort('qty', 1))
         
@@ -87,15 +82,15 @@ def low_stock():
         if current_user.role == 'trader':
             tools_for_template = BUSINESS_TOOLS
             explore_features_for_template = BUSINESS_EXPLORE_FEATURES
-            bottom_nav_for_template = BUSINESS_NAV
+            bottom_nav_items = BUSINESS_NAV
         elif current_user.role == 'admin':
             tools_for_template = ALL_TOOLS
             explore_features_for_template = ADMIN_EXPLORE_FEATURES
-            bottom_nav_for_template = ADMIN_NAV
+            bottom_nav_items = ADMIN_NAV
         else:
             tools_for_template = []
             explore_features_for_template = []
-            bottom_nav_for_template = []
+            bottom_nav_items = []
 
         return render_template(
             'inventory/low_stock.html',
@@ -103,7 +98,7 @@ def low_stock():
             format_currency=format_currency,
             tools=tools_for_template,
             nav_items=explore_features_for_template,
-            bottom_nav_items=bottom_nav_for_template,
+            bottom_nav_items=bottom_nav_items,
             t=trans,
             lang=session.get('lang', 'en')
         )
@@ -118,8 +113,6 @@ def low_stock():
 def add():
     """Add a new inventory item."""
     form = InventoryForm()
-    # TEMPORARY: Bypass coin check for admin during testing
-    # TODO: Restore original check_coin_balance(1) for production
     if not is_admin() and not check_coin_balance(1):
         flash(trans('inventory_insufficient_coins', default='Insufficient coins to add an item. Purchase more coins.'), 'danger')
         return redirect(url_for('coins.purchase'))
@@ -133,12 +126,10 @@ def add():
                 'unit': form.unit.data,
                 'buying_price': form.buying_price.data,
                 'selling_price': form.selling_price.data,
-                'threshold': form.threshold.data or 5,  # Default threshold
+                'threshold': form.threshold.data or 5,
                 'created_at': datetime.utcnow()
             }
             db.inventory.insert_one(item)
-            # TEMPORARY: Skip coin deduction for admin during testing
-            # TODO: Restore original coin deduction for production
             if not is_admin():
                 user_query = get_user_query(str(current_user.id))
                 db.users.update_one(
@@ -158,29 +149,29 @@ def add():
             logger.error(f"Error adding inventory item for user {current_user.id}: {str(e)}")
             flash(trans('inventory_add_error', default='An error occurred'), 'danger')
     
-    # Role-based navigation data
-    if current_user.role == 'trader':
-        tools_for_template = BUSINESS_TOOLS
-        explore_features_for_template = BUSINESS_EXPLORE_FEATURES
-        bottom_nav_for_template = BUSINESS_NAV
-    elif current_user.role == 'admin':
-        tools_for_template = ALL_TOOLS
-        explore_features_for_template = ADMIN_EXPLORE_FEATURES
-        bottom_nav_for_template = ADMIN_NAV
-    else:
-        tools_for_template = []
-        explore_features_for_template = []
-        bottom_nav_for_template = []
+        # Role-based navigation data
+        if current_user.role == 'trader':
+            tools_for_template = BUSINESS_TOOLS
+            explore_features_for_template = BUSINESS_EXPLORE_FEATURES
+            bottom_nav_items = BUSINESS_NAV
+        elif current_user.role == 'admin':
+            tools_for_template = ALL_TOOLS
+            explore_features_for_template = ADMIN_EXPLORE_FEATURES
+            bottom_nav_items = ADMIN_NAV
+        else:
+            tools_for_template = []
+            explore_features_for_template = []
+            bottom_nav_items = []
 
-    return render_template(
-        'inventory/add.html',
-        form=form,
-        tools=tools_for_template,
-        nav_items=explore_features_for_template,
-        bottom_nav_items=bottom_nav_for_template,
-        t=trans,
-        lang=session.get('lang', 'en')
-    )
+        return render_template(
+            'inventory/add.html',
+            form=form,
+            tools=tools_for_template,
+            nav_items=explore_features_for_template,
+            bottom_nav_items=bottom_nav_items,
+            t=trans,
+            lang=session.get('lang', 'en')
+        )
 
 @inventory_bp.route('/edit/<id>', methods=['GET', 'POST'])
 @login_required
@@ -189,8 +180,6 @@ def edit(id):
     """Edit an existing inventory item."""
     try:
         db = get_mongo_db()
-        # TEMPORARY: Allow admin to edit any inventory item during testing
-        # TODO: Restore original user_id filter {'_id': ObjectId(id), 'user_id': str(current_user.id)} for production
         query = {'_id': ObjectId(id)} if is_admin() else {'_id': ObjectId(id), 'user_id': str(current_user.id)}
         item = db.inventory.find_one(query)
         if not item:
@@ -229,15 +218,15 @@ def edit(id):
         if current_user.role == 'trader':
             tools_for_template = BUSINESS_TOOLS
             explore_features_for_template = BUSINESS_EXPLORE_FEATURES
-            bottom_nav_for_template = BUSINESS_NAV
+            bottom_nav_items = BUSINESS_NAV
         elif current_user.role == 'admin':
             tools_for_template = ALL_TOOLS
             explore_features_for_template = ADMIN_EXPLORE_FEATURES
-            bottom_nav_for_template = ADMIN_NAV
+            bottom_nav_items = ADMIN_NAV
         else:
             tools_for_template = []
             explore_features_for_template = []
-            bottom_nav_for_template = []
+            bottom_nav_items = []
 
         return render_template(
             'inventory/edit.html',
@@ -245,7 +234,7 @@ def edit(id):
             item=item,
             tools=tools_for_template,
             nav_items=explore_features_for_template,
-            bottom_nav_items=bottom_nav_for_template,
+            bottom_nav_items=bottom_nav_items,
             t=trans,
             lang=session.get('lang', 'en')
         )
@@ -261,8 +250,6 @@ def delete(id):
     """Delete an inventory item."""
     try:
         db = get_mongo_db()
-        # TEMPORARY: Allow admin to delete any inventory item during testing
-        # TODO: Restore original user_id filter {'_id': ObjectId(id), 'user_id': str(current_user.id)} for production
         query = {'_id': ObjectId(id)} if is_admin() else {'_id': ObjectId(id), 'user_id': str(current_user.id)}
         result = db.inventory.delete_one(query)
         if result.deleted_count:
