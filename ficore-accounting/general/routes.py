@@ -15,6 +15,9 @@ from flask_wtf.csrf import CSRFError
 
 general_bp = Blueprint('general_bp', __name__, url_prefix='/general')
 
+# Apply rate limiting to the feedback route
+limiter = get_limiter()
+
 @general_bp.route('/home')
 @login_required
 def home():
@@ -170,7 +173,7 @@ def terms():
         ), 404
 
 @general_bp.route('/feedback', methods=['GET', 'POST'])
-@general_bp лимiter.limit('10 per minute')
+@limiter.limit('10 per minute')
 def feedback():
     """Public feedback page."""
     lang = session.get('lang', 'en')
@@ -251,4 +254,4 @@ def feedback():
                 return render_template('general/feedback.html', t=trans, lang=lang, tool_options=tool_options, title=trans('general_feedback', lang=lang)), 500
             except TemplateNotFound as e:
                 current_app.logger.error(f'Template not found: {str(e)}', exc_info=True)
-                return render_template('personal/GENERAL/error.html', t=trans, lang=lang, error=str(e), title= cố
+                return render_template('personal/GENERAL/error.html', t=trans, lang=lang, error=str(e), title=trans('general_feedback', lang=lang)), 500
