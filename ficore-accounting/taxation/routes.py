@@ -484,7 +484,7 @@ def manage_tax_rates():
     serialized_vat_rules = [
         {
             'category': rule['category'],
-            'vat_exempt': role['vat_exempt'],
+            'vat_exempt': rule['vat_exempt'],
             'description': rule['description'],
             '_id': str(rule['_id'])
         } for rule in vat_rules
