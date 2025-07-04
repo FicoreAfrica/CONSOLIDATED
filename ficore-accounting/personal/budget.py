@@ -11,7 +11,7 @@ from translations import trans
 from bson import ObjectId
 from models import log_tool_usage
 from session_utils import create_anonymous_session
-from utils import requires_role, is_admin, get_mongo_db, PERSONAL_TOOLS, PERSONAL_NAV, PERSONAL_EXPLORE_FEATURES, ALL_TOOLS, ADMIN_NAV, limiter
+from utils import requires_role, is_admin, get_mongo_db, limiter
 
 budget_bp = Blueprint(
     'budget',
@@ -111,9 +111,9 @@ def main():
         form_data['email'] = current_user.email
         form_data['first_name'] = current_user.username
     form = BudgetForm(data=form_data)
-    tools = PERSONAL_TOOLS if current_user.role == 'personal' else ALL_TOOLS
-    bottom_nav_items = PERSONAL_NAV if current_user.role == 'personal' else ADMIN_NAV
-    explore_features = PERSONAL_EXPLORE_FEATURES if current_user.role == 'personal' else []
+    tools = utils.PERSONAL_TOOLS if current_user.role == 'personal' else utils.ALL_TOOLS
+    bottom_nav_items = utils.PERSONAL_NAV if current_user.role == 'personal' else utils.ADMIN_NAV
+    explore_features = utils.PERSONAL_EXPLORE_FEATURES if current_user.role == 'personal' else []
     log_tool_usage(
         get_mongo_db(),
         tool_name='budget',
