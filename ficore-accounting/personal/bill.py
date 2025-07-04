@@ -9,7 +9,7 @@ from datetime import datetime, date, timedelta
 from translations import trans
 from pymongo.errors import DuplicateKeyError
 from bson import ObjectId
-from utils import requires_role, is_admin, get_mongo_db, PERSONAL_TOOLS, PERSONAL_NAV, PERSONAL_EXPLORE_FEATURES, ALL_TOOLS, ADMIN_NAV, limiter
+from utils import requires_role, is_admin, get_mongo_db, limiter
 from models import log_tool_usage
 
 bill_bp = Blueprint('bill', __name__, template_folder='templates/personal/BILL')
@@ -279,9 +279,9 @@ def main():
             except (ValueError, TypeError):
                 current_app.logger.warning(f"Invalid amount for bill {bill_id}: {bill.get('amount')}")
                 continue
-        tools = PERSONAL_TOOLS if current_user.role == 'personal' else ALL_TOOLS
-        bottom_nav_items = PERSONAL_NAV if current_user.role == 'personal' else ADMIN_NAV
-        explore_features = PERSONAL_EXPLORE_FEATURES if current_user.role == 'personal' else []
+        tools = utils.PERSONAL_TOOLS if current_user.role == 'personal' else utils.ALL_TOOLS
+        bottom_nav_items = utils.PERSONAL_NAV if current_user.role == 'personal' else utils.ADMIN_NAV
+        explore_features = utils.PERSONAL_EXPLORE_FEATURES if current_user.role == 'personal' else []
         return render_template(
             'personal/BILL/bill_main.html',
             form=form,
@@ -311,9 +311,9 @@ def main():
     except Exception as e:
         current_app.logger.error(f"Error in bill.main: {str(e)}")
         flash(trans('bill_dashboard_load_error', default='Error loading bill dashboard.'), 'danger')
-        tools = PERSONAL_TOOLS if current_user.role == 'personal' else ALL_TOOLS
-        bottom_nav_items = PERSONAL_NAV if current_user.role == 'personal' else ADMIN_NAV
-        explore_features = PERSONAL_EXPLORE_FEATURES if current_user.role == 'personal' else []
+        tools = utils.PERSONAL_TOOLS if current_user.role == 'personal' else utils.ALL_TOOLS
+        bottom_nav_items = utils.PERSONAL_NAV if current_user.role == 'personal' else utils.ADMIN_NAV
+        explore_features = utils.PERSONAL_EXPLORE_FEATURES if current_user.role == 'personal' else []
         return render_template(
             'personal/BILL/bill_main.html',
             form=form,
