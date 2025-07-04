@@ -90,7 +90,6 @@ _PERSONAL_NAV = [
     {"endpoint": "personal.index", "label": "Home", "label_key": "general_home", "tooltip_key": "general_home_tooltip", "icon": "bi-house"},
     {"endpoint": "personal.budget.main", "label": "Budget", "label_key": "budget_budget_planner", "tooltip_key": "budget_tooltip", "icon": "bi-wallet"},
     {"endpoint": "personal.bill.main", "label": "Bills", "label_key": "bill_bill_planner", "tooltip_key": "bill_tooltip", "icon": "bi-receipt"},
-    {"endpoint": "personal.learning_hub.main", "label": "Learning Hub", "label_key": "learning_hub_courses", "tooltip_key": "learning_tooltip", "icon": "bi-book"},
     {"endpoint": "settings.profile", "label": "Profile", "label_key": "profile_settings", "tooltip_key": "profile_tooltip", "icon": "bi-person"},
 ]
 
@@ -116,7 +115,6 @@ _BUSINESS_NAV = [
     {"endpoint": "general_bp.home", "label": "Home", "label_key": "general_business_home", "tooltip_key": "general_business_home_tooltip", "icon": "bi-house"},
     {"endpoint": "debtors.index", "label": "They Owe", "label_key": "debtors_dashboard", "tooltip_key": "debtors_tooltip", "icon": "bi-person-plus"},
     {"endpoint": "receipts.index", "label": "MoneyIn", "label_key": "receipts_dashboard", "tooltip_key": "receipts_tooltip", "icon": "bi-cash-coin"},
-    {"endpoint": "inventory.index", "label": "Inventory", "label_key": "inventory_dashboard", "tooltip_key": "inventory_tooltip", "icon": "bi-box"},
     {"endpoint": "settings.profile", "label": "Profile", "label_key": "profile_settings", "tooltip_key": "profile_tooltip", "icon": "bi-person"},
 ]
 
