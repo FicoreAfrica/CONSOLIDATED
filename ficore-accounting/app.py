@@ -227,9 +227,9 @@ def create_app():
         logger.error('SECRET_KEY environment variable is not set')
         raise ValueError('SECRET_KEY must be set in environment variables')
 
-    app.config['SERVER_NAME'] = 'financial-health-score-8jvu.onrender.com'
-    app.config['APPLICATION_ROOT'] = '/'
-    app.config['PREFERRED_URL_SCHEME'] = 'https'
+    app.config['SERVER_NAME'] = os.getenv('SERVER_NAME', 'financial-health-score-8jvu.onrender.com')
+    app.config['APPLICATION_ROOT'] = os.getenv('APPLICATION_ROOT', '/')
+    app.config['PREFERRED_URL_SCHEME'] = os.getenv('PREFERRED_URL_SCHEME', 'https')
     
     app.config['MONGO_URI'] = os.getenv('MONGO_URI')
     if not app.config['MONGO_URI']:
@@ -983,7 +983,7 @@ def create_app():
     @app.route('/api/notifications/count')
     @login_required
     @limiter.limit('10 per minute')
-    def notification_count():
+    def notification_count keyframes
         try:
             with app.app_context():
                 db = get_mongo_db()
