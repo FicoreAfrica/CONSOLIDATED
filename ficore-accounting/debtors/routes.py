@@ -223,7 +223,7 @@ def send_reminder():
         
         if recipient:
             if send_type == 'sms':
-                success, api_response = send_sms_reminder reception, message)
+                success, api_response = send_sms_reminder (reception, message)
             elif send_type == 'whatsapp':
                 success, api_response = send_whatsapp_reminder(recipient, message)
         
