@@ -1,7 +1,7 @@
 GENERAL_TRANSLATIONS = {
     'en': {
         # Authentication & User Management
-        'general_business_home': 'Business Dashboard',
+        'general_business_home': 'Home',
         'general_hello_user': 'Hello, User',
         'general_i_owe': 'I Owe',
         'general_en': 'English',
@@ -1282,7 +1282,7 @@ GENERAL_TRANSLATIONS = {
         'general_page_not_found_message': 'Shafin da kake nema ba a samu ba',
         'general_join_waitlist': 'Shiga Jerin Jira',
         'general_book_consultancy': 'Yi Rijistar Shawara',
-        'general_business_home': 'Dashboard na Kasuwanci',
+        'general_business_home': 'Gida',
         'general_hello_user': 'Sannu, Mai Amfani',
         'general_i_owe': 'Ana Bina Bashin',
         'general_i_am_owed': 'Ina Bin Bashin',
