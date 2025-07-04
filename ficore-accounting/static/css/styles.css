@@ -1,4 +1,5 @@
-```css
+/* style.css */
+
 /* Define CSS Custom Properties for Colors */
 :root {
     --navbar-height: 60px;
@@ -178,9 +179,6 @@ h3 { font-size: 1.25rem; }
     flex: 1 0 auto;
     padding-top: var(--navbar-height);
     padding-bottom: var(--bottom-nav-height);
-    display: flex;
-    justify-content: center;
-    align-items: center;
 }
 
 @media (max-width: 991.98px) {
@@ -294,7 +292,6 @@ h3 { font-size: 1.25rem; }
     margin-right: 0.5rem;
     border-radius: 4px;
 }
-
 .navbar-toggler {
     border: none;
     padding: 0.5rem;
@@ -478,97 +475,6 @@ h3 { font-size: 1.25rem; }
     justify-content: center;
 }
 
-/* Tool-Specific Icons for Bottom Navigation and Cards */
-.debtor-icon {
-    font-size: 1.8rem;
-    color: var(--success-color);
-    background: rgba(16, 185, 129, 0.1);
-    padding: 0.5rem;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.creditor-icon {
-    font-size: 1.8rem;
-    color: var(--button-danger-bg);
-    background: rgba(239, 68, 68, 0.1);
-    padding: 0.5rem;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.money-in-icon {
-    font-size: 1.8rem;
-    color: var(--success-color);
-    background: rgba(16, 185, 129, 0.1);
-    padding: 0.5rem;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.money-out-icon {
-    font-size: 1.8rem;
-    color: var(--button-danger-bg);
-    background: rgba(239, 68, 68, 0.1);
-    padding: 0.5rem;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.inventory-icon {
-    font-size: 1.8rem;
-    color: var(--accent-blue);
-    background: rgba(58, 134, 255, 0.1);
-    padding: 0.5rem;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.dark-mode .debtor-icon,
-.dark-mode .money-in-icon {
-    background: rgba(52, 211, 153, 0.1);
-    color: var(--success-color);
-}
-
-.dark-mode .creditor-icon,
-.dark-mode .money-out-icon {
-    background: rgba(248, 113, 113, 0.1);
-    color: var(--button-danger-bg);
-}
-
-.dark-mode .inventory-icon {
-    background: rgba(147, 197, 253, 0.1);
-    color: var(--accent-blue);
-}
-
-.tool-card .debtor-icon,
-.tool-card .creditor-icon,
-.tool-card .money-in-icon,
-.tool-card .money-out-icon,
-.tool-card .inventory-icon {
-    font-size: 1.5rem;
-    margin-bottom: 0.75rem;
-}
-
-.action-card .debtor-icon,
-.action-card .creditor-icon,
-.action-card .money-in-icon,
-.action-card .money-out-icon,
-.action-card .inventory-icon {
-    font-size: 2.2rem;
-    margin-bottom: 0.5rem;
-}
-
 @media (max-width: 991.98px) {
     .navbar-expand-lg {
         display: none !important;
@@ -590,11 +496,6 @@ h3 { font-size: 1.25rem; }
 /* Top Header */
 .top-header {
     padding: 1rem 0;
-    background: var(--navbar-bg);
-    border-bottom: 1px solid var(--card-border);
-    position: sticky;
-    top: 0;
-    z-index: 1000;
 }
 
 .welcome-text {
@@ -2184,6 +2085,12 @@ h2.card-title {
         height: 2rem;
         font-size: 0.9rem;
     }
+    #modeToggle {
+        padding: 8px 16px;
+        font-size: 0.8rem;
+        margin-top: 8px;
+        margin-bottom: 12px;
+    }
     .course-grid, .dashboard-grid {
         grid-template-columns: 1fr;
         gap: 1rem;
@@ -2264,2295 +2171,307 @@ h2.card-title {
         font-size: 1rem;
     }
     .stat-card .snapshot-label, .stat-card-value {
-        font-size: 0.875rem;
+        font-size: 0.65rem;
+    }
+    .table th, .table td {
+        font-size: 0.75rem;
+        padding: 0.5rem;
+    }
+    .form-container {
+        padding: 1rem;
+    }
+    .form-control, .form-select {
+        font-size: 0.85rem;
+        padding: 0.5rem;
+    }
+    .testimonials-section .carousel-control-prev,
+    .testimonials-section .carousel-control-next {
+        height: 30px;
+        width: 30px;
+    }
+    .avatar-circle {
+        width: 50px;
+        height: 50px;
+        font-size: 1.3rem;
+    }
+    .testimonials-section .testimonial p {
+        font-size: 0.9rem;
+    }
+    .cta-section {
+        padding: 2rem 0;
+        margin: 1.5rem 0;
+    }
+    .cta-section .btn-lg {
+        padding: 0.6rem 1.5rem;
+        font-size: 1rem;
+        min-width: 150px;
+        margin: 0.25rem 0;
+    }
+    .cta-section .dropdown-menu {
+        min-width: 160px;
     }
 }
 
 @media (min-width: 768px) {
-    .stat-cards-container {
+    .navbar {
+        max-width: 100%;
+        padding: 0;
+    }
+    .navbar-container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 1rem 2rem;
         flex-direction: row;
         align-items: center;
+        justify-content: space-between;
     }
-    .stat-card {
-        min-width: 150px;
-        max-width: 200px;
-        padding: 0.75rem;
+    .footer-container {
+        max-width: 1200px;
+        padding: 1rem 2rem;
     }
-    .stat-card .snapshot-icon {
-        width: 2rem;
-        height: 2rem;
-        font-size: 1.25rem;
+    .navbar-actions {
+        width: auto;
+        margin: 0;
+        gap: 1rem;
     }
-    .stat-card .snapshot-label {
-        font-size: 0.75rem;
+    .navbar-collapse {
+        display: flex;
+        align-items: center;
+        justify-content: flex-end;
     }
-    .stat-card-value {
-        font-size: 0.875rem;
+    .navbar-nav {
+        flex-direction: row;
+        align-items: center;
+        gap: 1rem;
     }
-}
-
-@media (min-width: 992px) {
+    .nav-link {
+        padding: 0.5rem 1.5rem;
+        font-size: 1rem;
+    }
     .container {
-        max-width: 960px;
+        max-width: 1200px;
+        padding: 1rem 2rem;
+    }
+    .step-container {
+        max-width: 1200px;
+        padding: 1rem 2rem;
     }
     .hero.hero-background {
-        padding: 4rem 0;
-        min-height: 450px;
+        padding: 0 0 4rem 0;
+    }
+    .hero .container {
+        padding: 0 2rem;
     }
     .hero h1 {
         font-size: clamp(2.5rem, 5vw, 3.5rem);
     }
     .hero p.lead {
-        font-size: clamp(1.1rem, 2.5vw, 1.3rem);
+        font-size: clamp(1.1rem, 3vw, 1.3rem);
+    }
+    .hero-content {
+        max-width: 900px;
+    }
+    .actions-container, .actions-grid {
+        flex-wrap: nowrap;
+    }
+    .cta-creditor-card,
+    .cta-debtor-card {
+        flex-basis: 180px;
+        flex-grow: 1.5;
+        max-width: 250px;
+    }
+    .action-card:not(.cta-creditor-card):not(.cta-debtor-card) {
+        flex-basis: 120px;
+        flex-grow: 1;
+        max-width: 180px;
+    }
+    .course-grid, .dashboard-grid {
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 2rem;
+        max-width: 1200px;
+        margin-left: auto;
+        margin-right: auto;
+    }
+    .card {
+        padding: 1.5rem;
     }
     .card-title {
-        font-size: 1.5rem;
+        font-size: var(--font-size-h4);
     }
-    .tools-section .accordion-body {
-        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-    }
-}
-
-@media (min-width: 1200px) {
-    .container {
-        max-width: 1140px;
-    }
-    .tools-section .accordion-body {
-        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-    }
-}
-
-@media (min-width: 1400px) {
-    .container {
-        max-width: 1320px;
-    }
-}
-
-/* Animation for Loading States */
-@keyframes pulse {
-    0% { opacity: 1; }
-    50% { opacity: 0.5; }
-    100% { opacity: 1; }
-}
-
-.loading {
-    animation: pulse 1.5s infinite;
-}
-
-/* Custom Hover Effects */
-.nav-card:hover .nav-card-icon,
-.tool-card:hover .card-body i,
-.action-card:hover .action-icon {
-    transform: scale(1.1);
-}
-
-/* Ensure no overlap with fixed elements */
-@media (max-width: 991.98px) {
-    .alert-container {
-        margin-top: calc(var(--navbar-height) + 0.5rem);
-        margin-bottom: var(--bottom-nav-height);
-    }
-}
-
-/* High Contrast Mode */
-@media (prefers-contrast: high) {
-    :root {
-        --background-main: #ffffff;
-        --card-bg: #ffffff;
-        --text-color: #000000;
-        --text-secondary: #000000;
-        --text-muted: #333333;
-        --navbar-bg: #ffffff;
-        --navbar-text-color: #000000;
-        --card-border: #000000;
-        --table-border: #000000;
-        --button-primary-bg: #0000ff;
-        --button-primary-hover: #000099;
-        --accent-blue: #0000ff;
-        --success-color: #008000;
-    }
-    .dark-mode {
-        --background-main: #000000;
-        --card-bg: #000000;
-        --text-color: #ffffff;
-        --text-secondary: #ffffff;
-        --text-muted: #cccccc;
-        --navbar-bg: #000000;
-        --navbar-text-color: #ffffff;
-        --card-border: #ffffff;
-        --table-border: #ffffff;
-        --button-primary-bg: #00ccff;
-        --button-primary-hover: #0099cc;
-        --accent-blue: #00ccff;
-        --success-color: #00ff00;
-    }
-}
-
-/* Reduced Motion Preferences */
-@media (prefers-reduced-motion: reduce) {
-    .card:hover, .nav-card:hover, .tool-card:hover, .action-card:hover,
-    .why-item:hover, .role-card:hover, .btn:hover, .btn-primary:hover,
-    .btn-secondary:hover, .btn-success:hover, .btn-danger:hover, .btn-warning:hover {
-        transform: none;
-        box-shadow: none;
-    }
-    .nav-card:hover .nav-card-icon,
-    .tool-card:hover .card-body i,
-    .action-card:hover .action-icon {
-        transform: none;
-    }
-}
-
-/* Ensure tooltips are styled consistently */
-.tooltip-inner {
-    background: var(--card-bg);
-    color: var(--text-color);
-    border: 1px solid var(--card-border);
-    border-radius: 0.5rem;
-    padding: 0.5rem 0.75rem;
-    font-size: 0.875rem;
-}
-
-.tooltip.bs-tooltip-top .tooltip-arrow::before {
-    border-top-color: var(--card-border);
-}
-
-.tooltip.bs-tooltip-bottom .tooltip-arrow::before {
-    border-bottom-color: var(--card-border);
-}
-
-.tooltip.bs-tooltip-start .tooltip-arrow::before {
-    border-left-color: var(--card-border);
-}
-
-.tooltip.bs-tooltip-end .tooltip-arrow::before {
-    border-right-color: var(--card-border);
-}
-
-/* Custom styles for pagination */
-.pagination {
-    display: flex;
-    justify-content: center;
-    gap: 0.5rem;
-    margin-top: 1.5rem;
-}
-
-.page-item .page-link {
-    background: var(--card-bg);
-    color: var(--text-color);
-    border: 1px solid var(--card-border);
-    border-radius: 0.5rem;
-    padding: 0.5rem 1rem;
-    font-size: 0.875rem;
-    transition: background-color 0.3s ease, color 0.3s ease;
-}
-
-.page-item.active .page-link {
-    background: var(--accent-blue);
-    color: #ffffff;
-    border-color: var(--accent-blue);
-}
-
-.page-item .page-link:hover {
-    background: var(--button-secondary-hover);
-    color: var(--accent-blue);
-}
-
-.page-item.disabled .page-link {
-    background: var(--card-bg);
-    color: var(--text-muted);
-    border-color: var(--card-border);
-    cursor: not-allowed;
-}
-
-/* Custom styles for badges */
-.badge {
-    font-size: 0.75rem;
-    font-weight: 600;
-    padding: 0.35rem 0.75rem;
-    border-radius: 0.5rem;
-}
-
-.badge-success {
-    background: var(--alert-success-bg);
-    color: var(--alert-success-text);
-}
-
-.badge-danger {
-    background: var(--alert-danger-bg);
-    color: var(--alert-danger-text);
-}
-
-.badge-warning {
-    background: var(--alert-warning-bg);
-    color: var(--alert-warning-text);
-}
-
-.badge-info {
-    background: var(--alert-info-bg);
-    color: var(--alert-info-text);
-}
-
-/* Custom styles for progress bars */
-.progress {
-    background: var(--card-bg);
-    border: 1px solid var(--card-border);
-    border-radius: 0.5rem;
-    height: 1rem;
-}
-
-.progress-bar {
-    background: var(--accent-blue);
-    transition: width 0.3s ease;
-}
-
-/* Custom styles for lists */
-.list-group-item {
-    background: var(--card-bg);
-    border: 1px solid var(--card-border);
-    color: var(--text-color);
-    padding: 0.75rem 1rem;
-    border-radius: 0.5rem;
-    margin-bottom: 0.5rem;
-}
-
-.list-group-item:hover {
-    background: var(--button-secondary-hover);
-}
-
-/* Custom styles for images */
-.img-fluid {
-    max-width: 100%;
-    height: auto;
-    border-radius: 0.5rem;
-}
-
-/* Custom styles for modals on small screens */
-@media (max-width: 576px) {
-    .modal-dialog {
-        margin: 0.5rem;
-    }
-    .modal-content {
-        padding: 0.5rem;
-    }
-    .modal-header, .modal-footer {
-        padding: 0.75rem;
-    }
-}
-
-/* Ensure content doesn't overflow on small screens */
-@media (max-width: 576px) {
-    .table-responsive {
-        -webkit-overflow-scrolling: touch;
-    }
-    .table {
-        font-size: 0.8rem;
-    }
-    .table th, .table td {
-        padding: 0.5rem;
-    }
-    .activity-item, .notification-item {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 0.5rem;
-    }
-    .activity-icon, .notification-icon {
-        width: 2rem;
-        height: 2rem;
+    .card-text {
         font-size: 1rem;
     }
-}
-
-/* Custom styles for offcanvas */
-.offcanvas {
-    background: var(--card-bg);
-    color: var(--text-color);
-    border: 1px solid var(--card-border);
-}
-
-.offcanvas-header {
-    border-bottom: 1px solid var(--card-border);
-}
-
-.offcanvas-body {
-    padding: 1rem;
-}
-
-/* Ensure proper spacing for sticky elements */
-.sticky-top {
-    z-index: 1000;
-}
-
-/* Custom styles for dropdowns in mobile */
-@media (max-width: 576px) {
-    .dropdown-menu {
-        min-width: 100%;
-        max-width: 200px;
-        margin: 0 auto;
+    .tool-group {
+        padding: 1rem;
+        max-width: 1200px;
+        margin-left: auto;
+        margin-right: auto;
     }
-}
-
-/* Custom styles for accessibility focus */
-a:focus, button:focus, input:focus, select:focus, textarea:focus {
-    outline: 3px solid var(--accent-blue);
-    outline-offset: 2px;
-}
-
-/* Custom styles for skeleton loading */
-.skeleton {
-    background: var(--card-bg);
-    border-radius: 0.5rem;
-    position: relative;
-    overflow: hidden;
-}
-
-.skeleton::after {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: -100%;
-    width: 100%;
-    height: 100%;
-    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
-    animation: shimmer 1.5s infinite;
-}
-
-@keyframes shimmer {
-    0% { left: -100%; }
-    100% { left: 100%; }
-}
-
-/* Ensure proper rendering for RTL languages */
-html[dir="rtl"] .navbar-brand,
-html[dir="rtl"] .nav-link,
-html[dir="rtl"] .dropdown-item,
-html[dir="rtl"] .btn,
-html[dir="rtl"] .card-title,
-html[dir="rtl"] .activity-description,
-html[dir="rtl"] .notification-description {
-    text-align: right;
-}
-
-html[dir="rtl"] .navbar-nav {
-    flex-direction: row-reverse;
-}
-
-html[dir="rtl"] .dropdown-menu {
-    text-align: right;
-}
-
-html[dir="rtl"] .why-item::before {
-    left: auto;
-    right: 1rem;
-}
-
-html[dir="rtl"] .password-toggle {
-    right: auto;
-    left: 1rem;
-}
-
-html[dir="rtl"] .notification-bell,
-html[dir="rtl"] .visibility-toggle {
-    margin-left: 0.5rem;
-    margin-right: 0;
-}
-
-/* Custom styles for large screens */
-@media (min-width: 1600px) {
-    .container {
-        max-width: 1400px;
+    .group-title {
+        font-size: 1.4rem;
     }
-    .hero.hero-background {
-        min-height: 500px;
+    .group-subtext {
+        font-size: 1rem;
     }
-    .hero h1 {
-        font-size: 4rem;
+    .tools-grid {
+        gap: 2.5rem;
     }
-    .hero p.lead {
+    .accordion-button {
+        font-size: 1.6rem;
+        padding: 1.5rem 2rem;
+    }
+    .accordion-body {
+        padding: 2rem;
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 2rem;
+    }
+    .btn, .btn-primary, .btn-explore, .course-link, .tool-card button, .modal .btn {
+        padding: 14px 28px;
+        font-size: 1.1rem;
+    }
+    .btn-explore {
+        padding: 16px 32px;
+        font-size: 1.2rem;
+    }
+    .btn-secondary {
+        padding: 12px 24px;
+        font-size: 1rem;
+    }
+    .step-container .btn-nav, .quiz-container .btn-nav {
+        padding: 12px 24px;
+        font-size: 1rem;
+        min-width: 120px;
+    }
+    .video-player {
+        max-height: 600px;
+    }
+    .pdf-viewer {
+        height: 700px;
+    }
+    .section-heading,
+    .tools-section-heading {
+        font-size: 2.5rem;
+    }
+    .role-card {
+        min-height: 200px;
+        margin-bottom: 1.5rem;
+    }
+    .role-card .card-body i {
+        font-size: 2rem;
+    }
+    .role-card .card-body h3 {
+        font-size: 1.1rem;
+    }
+    .role-card .card-body p {
+        font-size: 0.9rem;
+    }
+    .tools-section .accordion-button {
+        font-size: 1.1rem;
+        padding: 0.9rem 1rem;
+    }
+    .tools-section .accordion-button i {
+        font-size: 1.3rem;
+    }
+    .tool-card {
+        min-height: 220px;
+    }
+    .tool-card .card-body i {
         font-size: 1.5rem;
     }
+    .tool-card .card-body h4 {
+        font-size: var(--font-size-h4);
+    }
     .tools-section .accordion-body {
-        grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
-    }
-}
-
-/* Ensure no unwanted overflow in cards */
-.card, .summary-card, .stat-card, .action-card, .nav-card {
-    overflow: hidden;
-}
-
-/* Custom styles for disabled buttons */
-.btn.disabled, .btn:disabled {
-    opacity: 0.6;
-    cursor: not-allowed;
-    transform: none;
-    box-shadow: none;
-}
-
-/* Custom styles for form validation */
-.form-control:valid {
-    border-color: var(--success-color);
-}
-
-.form-control:invalid {
-    border-color: var(--error-highlight);
-}
-
-/* Custom styles for accordion icons */
-.accordion-button::after {
-    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='%231e293b'%3e%3cpath fill-rule='evenodd' d='M1.646 4.646a.5.5 0 0 1 .708 0L8 10.293l5.646-5.647a.5.5 0 0 1 .708.708l-6 6a.5.5 0 0 1-.708 0l-6-6a.5.5 0 0 1 0-.708z'/%3e%3c/svg%3e");
-}
-
-.dark-mode .accordion-button::after {
-    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='%23f1f5f9'%3e%3cpath fill-rule='evenodd' d='M1.646 4.646a.5.5 0 0 1 .708 0L8 10.293l5.646-5.647a.5.5 0 0 1 .708.708l-6 6a.5.5 0 0 1-.708 0l-6-6a.5.5 0 0 1 0-.708z'/%3e%3c/svg%3e");
-}
-
-/* Custom styles for carousel indicators */
-.carousel-indicators {
-    bottom: -2.5rem;
-}
-
-.carousel-indicators [data-bs-target] {
-    background: var(--text-muted);
-    width: 10px;
-    height: 10px;
-    border-radius: 50%;
-    margin: 0 0.25rem;
-}
-
-.carousel-indicators .active {
-    background: var(--accent-blue);
-}
-
-/* Custom styles for social icons */
-.social-icons a {
-    font-size: 1.5rem;
-    color: var(--text-muted);
-    margin: 0 0.5rem;
-}
-
-.social-icons a:hover {
-    color: var(--accent-blue);
-}
-
-/* Custom styles for print-friendly tables */
-@media print {
-    .table-responsive {
-        overflow: visible;
-    }
-    .table {
-        border-collapse: collapse;
-    }
-    .table th, .table td {
-        border: 1px solid #000000;
-        padding: 0.5rem;
-    }
-}
-
-/* Ensure proper alignment for flex containers */
-.d-flex {
-    display: flex !important;
-}
-
-.align-items-center {
-    align-items: center !important;
-}
-
-.justify-content-center {
-    justify-content: center !important;
-}
-
-.justify-content-between {
-    justify-content: space-between !important;
-}
-
-/* Custom styles for breadcrumb */
-.breadcrumb {
-    background: var(--card-bg);
-    border-radius: 0.5rem;
-    padding: 0.75rem 1rem;
-    margin-bottom: 1rem;
-}
-
-.breadcrumb-item a {
-    color: var(--text-muted);
-    text-decoration: none;
-}
-
-.breadcrumb-item.active {
-    color: var(--text-color);
-}
-
-.breadcrumb-item a:hover {
-    color: var(--accent-blue);
-}
-
-/* Custom styles for alerts on small screens */
-@media (max-width: 576px) {
-    .alert {
         padding: 1rem;
+        gap: 1rem;
+    }
+    .why-section .highlight-text {
+        font-size: 1.3rem;
+    }
+    .why-item {
+        padding: 0.9rem;
+        padding-left: 2rem;
+    }
+    .why-item::before {
+        font-size: 1rem;
+        left: 0.7rem;
+    }
+    .why-item i {
+        font-size: 2rem;
+    }
+    .animated-counter {
+        font-size: 1.4rem;
+    }
+    .animated-counter + span {
+        font-size: 1rem;
+    }
+    .faq-section .accordion-button {
+        font-size: 1rem;
+        padding: 0.8rem 1rem;
+    }
+    .faq-section .accordion-button i {
+        font-size: 1.2rem;
+    }
+    .faq-section .accordion-body {
+        padding: 0.8rem 1rem;
         font-size: 0.9rem;
     }
 }
 
-/* Custom styles for tooltips on small screens */
-@media (max-width: 576px) {
-    .tooltip-inner {
-        font-size: 0.8rem;
-        padding: 0.4rem 0.6rem;
+@media (min-width: 1024px) {
+    .container {
+        max-width: 1400px;
+        padding: 1.5rem 3rem;
     }
-}
-
-/* Ensure proper spacing for sticky headers */
-.sticky-top + .container {
-    padding-top: 1rem;
-}
-
-/* Custom styles for input groups */
-.input-group-text {
-    background: var(--card-bg);
-    border: 2px solid var(--card-border);
-    color: var(--text-color);
-    border-radius: 0.5rem;
-}
-
-.input-group > .form-control {
-    border-radius: 0.5rem;
-}
-
-/* Custom styles for file inputs */
-.custom-file-label {
-    background: var(--card-bg);
-    border: 2px solid var(--card-border);
-    color: var(--text-muted);
-    border-radius: 0.5rem;
-    padding: 0.75rem;
-}
-
-.custom-file-input:focus ~ .custom-file-label {
-    border-color: var(--accent-blue);
-    box-shadow: 0 0 0 3px rgba(58, 134, 255, 0.1);
-}
-
-/* Custom styles for range inputs */
-input[type="range"] {
-    -webkit-appearance: none;
-    width: 100%;
-    height: 8px;
-    background: var(--card-bg);
-    border: 1px solid var(--card-border);
-    border-radius: 4px;
-}
-
-input[type="range"]::-webkit-slider-thumb {
-    -webkit-appearance: none;
-    width: 16px;
-    height: 16px;
-    background: var(--accent-blue);
-    border-radius: 50%;
-    cursor: pointer;
-}
-
-input[type="range"]::-moz-range-thumb {
-    width: 16px;
-    height: 16px;
-    background: var(--accent-blue);
-    border: none;
-    border-radius: 50%;
-    cursor: pointer;
-}
-
-input[type="range"]:focus {
-    outline: none;
-    box-shadow: 0 0 0 3px rgba(58, 134, 255, 0.1);
-}
-
-/* Custom styles for checkbox and radio inputs */
-input[type="checkbox"], input[type="radio"] {
-    width: 1.25rem;
-    height: 1.25rem;
-    border: 2px solid var(--card-border);
-    border-radius: 4px;
-}
-
-input[type="radio"] {
-    border-radius: 50%;
-}
-
-input[type="checkbox"]:checked, input[type="radio"]:checked {
-    background-color: var(--accent-blue);
-    border-color: var(--accent-blue);
-}
-
-/* Custom styles for select menus */
-select.form-control, select.form-select {
-    appearance: none;
-    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%231e293b' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M2 5l6 6 6-6'/%3e%3c/svg%3e");
-    background-repeat: no-repeat;
-    background-position: right 0.75rem center;
-    background-size: 16px 12px;
-}
-
-.dark-mode select.form-control, .dark-mode select.form-select {
-    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%23f1f5f9' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M2 5l6 6 6-6'/%3e%3c/svg%3e");
-}
-
-/* Custom styles for disabled form elements */
-.form-control:disabled, .form-select:disabled {
-    background: var(--table-striped-bg);
-    color: var(--text-muted);
-    cursor: not-allowed;
-}
-
-/* Custom styles for placeholder text */
-::placeholder {
-    color: var(--text-muted);
-    opacity: 0.7;
-}
-
-/* Custom styles for focus states */
-.form-control:focus, .form-select:focus, input[type="checkbox"]:focus, input[type="radio"]:focus {
-    border-color: var(--accent-blue);
-    box-shadow: 0 0 0 3px rgba(58, 134, 255, 0.1);
-}
-
-/* Custom styles for offcanvas on small screens */
-@media (max-width: 576px) {
-    .offcanvas {
-        width: 80% !important;
+    .step-container {
+        max-width: 1400px;
+        padding: 1.5rem 3rem;
     }
-}
-
-/* Custom styles for large buttons on larger screens */
-@media (min-width: 768px) {
-    .btn-lg {
-        padding: 0.75rem 1.5rem;
+    .navbar {
+        max-width: 100%;
+        padding: 0;
+    }
+    .navbar-container {
+        max-width: 1400px;
+        padding: 1.5rem 3rem;
+    }
+    .footer-container {
+        max-width: 1400px;
+        padding: 1.5rem 3rem;
+    }
+    .hero-content {
+        max-width: 1100px;
+    }
+    .course-grid, .dashboard-grid {
+        grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+        gap: 2.5rem;
+        max-width: 1400px;
+    }
+    .card {
+        padding: 2rem;
+    }
+    .card-title {
+        font-size: var(--font-size-h4);
+    }
+    .journey-strip {
+        max-width: 1400px;
+        padding: 2.5rem;
+    }
+    .journey-steps {
+        max-width: 1200px;
+        gap: 3rem;
+    }
+    .journey-step {
+        max-width: 250px;
         font-size: 1.1rem;
     }
-}
-
-/* Ensure proper alignment for nested containers */
-.container .container {
-    padding: 0;
-}
-
-/* Custom styles for aspect ratio */
-.ratio-16x9 {
-    --bs-aspect-ratio: 56.25%;
-}
-
-.ratio-4x3 {
-    --bs-aspect-ratio: 75%;
-}
-
-/* Custom styles for collapse animations */
-.collapse:not(.show) {
-    display: none;
-}
-
-.collapsing {
-    height: 0;
-    overflow: hidden;
-    transition: height 0.35s ease;
-}
-
-/* Custom styles for sticky footers */
-.footer {
-    flex-shrink: 0;
-    width: 100%;
-}
-
-/* Ensure no double borders in tables */
-.table-bordered th, .table-bordered td {
-    border: 1px solid var(--table-border);
-}
-
-/* Custom styles for alerts with icons */
-.alert i {
-    font-size: 1.25rem;
-    margin-right: 0.5rem;
-}
-
-/* Custom styles for dropdown toggle icons */
-.dropdown-toggle::after {
-    border: none;
-    content: "\f107";
-    font-family: "Font Awesome 5 Free";
-    font-weight: 900;
-    vertical-align: middle;
-    margin-left: 0.5rem;
-}
-
-/* Custom styles for cards with images */
-.card-img-top {
-    border-top-left-radius: 1rem;
-    border-top-right-radius: 1rem;
-}
-
-/* Custom styles for alerts dismissal */
-.alert-dismissible .btn-close {
-    padding: 1.25rem;
-}
-
-/* Ensure proper z-index for modals */
-.modal {
-    z-index: 1060;
-}
-
-/* Custom styles for form labels on small screens */
-@media (max-width: 576px) {
-    .form-label {
-        font-size: 0.875rem;
+    .tool-group {
+        max-width: 1400px;
+        padding: 1.5rem;
     }
-}
-
-/* Custom styles for high-resolution displays */
-@media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
-    .logo {
-        image-rendering: -webkit-optimize-contrast;
-    }
-}
-
-/* Custom styles for touch devices */
-@media (hover: none) {
-    .card:hover, .nav-card:hover, .tool-card:hover, .action-card:hover,
-    .why-item:hover, .role-card:hover {
-        transform: none;
-        box-shadow: none;
-    }
-    .nav-card:hover .nav-card-icon,
-    .tool-card:hover .card-body i,
-    .action-card:hover .action-icon {
-        transform: none;
-    }
-}
-
-/* Custom styles for print-friendly cards */
-@media print {
-    .card-img-top {
-        display: none;
-    }
-}
-
-/* Custom styles for form feedback */
-.form-text {
-    font-size: 0.8rem;
-    color: var(--text-muted);
-}
-
-/* Custom styles for nav pills */
-.nav-pills .nav-link {
-    border-radius: 0.5rem;
-    color: var(--text-color);
-}
-
-.nav-pills .nav-link.active {
-    background: var(--accent-blue);
-    color: #ffffff;
-}
-
-/* Custom styles for nav tabs */
-.nav-tabs {
-    border-bottom: 1px solid var(--card-border);
-}
-
-.nav-tabs .nav-link {
-    border: 1px solid transparent;
-    border-top-left-radius: 0.5rem;
-    border-top-right-radius: 0.5rem;
-    color: var(--text-color);
-}
-
-.nav-tabs .nav-link.active {
-    background: var(--card-bg);
-    border-color: var(--card-border);
-    border-bottom-color: var(--card-bg);
-    color: var(--accent-blue);
-}
-
-.nav-tabs .nav-link:hover {
-    border-color: var(--card-border);
-    border-bottom-color: transparent;
-}
-
-/* Custom styles for alerts in modals */
-.modal .alert {
-    margin-bottom: 0;
-}
-
-/* Custom styles for dropdowns in navbars */
-.navbar .dropdown-menu {
-    margin-top: 0.5rem;
-}
-
-/* Custom styles for sticky headers on small screens */
-@media (max-width: 576px) {
-    .sticky-top {
-        position: relative;
-    }
-}
-
-/* Custom styles for large cards */
-.card-lg {
-    padding: 2rem;
-}
-
-/* Custom styles for small cards */
-.card-sm {
-    padding: 1rem;
-}
-
-/* Custom styles for nested cards */
-.card .card {
-    box-shadow: none;
-    border: 1px solid var(--card-border);
-}
-
-/* Custom styles for alerts with no margin */
-.alert-no-margin {
-    margin: 0;
-}
-
-/* Custom styles for full-width buttons in cards */
-.card .btn-block {
-    width: 100%;
-}
-
-/* Custom styles for centered text */
-.text-center {
-    text-align: center !important;
-}
-
-/* Custom styles for justified text */
-.text-justify {
-    text-align: justify !important;
-}
-
-/* Custom styles for small text */
-.text-sm {
-    font-size: 0.875rem;
-}
-
-/* Custom styles for large text */
-.text-lg {
-    font-size: 1.25rem;
-}
-
-/* Custom styles for muted text */
-.text-muted {
-    color: var(--text-muted) !important;
-}
-
-/* Custom styles for primary text */
-.text-primary {
-    color: var(--accent-blue) !important;
-}
-
-/* Custom styles for success text */
-.text-success {
-    color: var(--success-color) !important;
-}
-
-/* Custom styles for danger text */
-.text-danger {
-    color: var(--error-highlight) !important;
-}
-
-/* Custom styles for warning text */
-.text-warning {
-    color: var(--button-warning-bg) !important;
-}
-
-/* Custom styles for info text */
-.text-info {
-    color: var(--alert-info-text) !important;
-}
-
-/* Custom styles for light text */
-.text-light {
-    color: #ffffff !important;
-}
-
-/* Custom styles for dark text */
-.text-dark {
-    color: #000000 !important;
-}
-
-/* Custom styles for font weights */
-.fw-light {
-    font-weight: 300 !important;
-}
-
-.fw-normal {
-    font-weight: 400 !important;
-}
-
-.fw-medium {
-    font-weight: 500 !important;
-}
-
-.fw-semibold {
-    font-weight: 600 !important;
-}
-
-.fw-bold {
-    font-weight: 700 !important;
-}
-
-/* Custom styles for margins */
-.mt-0 {
-    margin-top: 0 !important;
-}
-
-.mb-0 {
-    margin-bottom: 0 !important;
-}
-
-.mt-1 {
-    margin-top: 0.25rem !important;
-}
-
-.mb-1 {
-    margin-bottom: 0.25rem !important;
-}
-
-.mt-2 {
-    margin-top: 0.5rem !important;
-}
-
-.mb-2 {
-    margin-bottom: 0.5rem !important;
-}
-
-.mt-3 {
-    margin-top: 1rem !important;
-}
-
-.mb-3 {
-    margin-bottom: 1rem !important;
-}
-
-.mt-4 {
-    margin-top: 1.5rem !important;
-}
-
-.mb-4 {
-    margin-bottom: 1.5rem !important;
-}
-
-.mt-5 {
-    margin-top: 3rem !important;
-}
-
-.mb-5 {
-    margin-bottom: 3rem !important;
-}
-
-/* Custom styles for paddings */
-.p-0 {
-    padding: 0 !important;
-}
-
-.p-1 {
-    padding: 0.25rem !important;
-}
-
-.p-2 {
-    padding: 0.5rem !important;
-}
-
-.p-3 {
-    padding: 1rem !important;
-}
-
-.p-4 {
-    padding: 1.5rem !important;
-}
-
-.p-5 {
-    padding: 3rem !important;
-}
-
-/* Custom styles for rounded corners */
-.rounded-0 {
-    border-radius: 0 !important;
-}
-
-.rounded-1 {
-    border-radius: 0.25rem !important;
-}
-
-.rounded-2 {
-    border-radius: 0.5rem !important;
-}
-
-.rounded-3 {
-    border-radius: 1rem !important;
-}
-
-/* Custom styles for shadows */
-.shadow-none {
-    box-shadow: none !important;
-}
-
-.shadow-sm {
-    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05) !important;
-}
-
-.shadow {
-    box-shadow: var(--card-shadow) !important;
-}
-
-.shadow-lg {
-    box-shadow: var(--card-shadow-hover) !important;
-}
-
-/* Custom styles for flex grow */
-.flex-grow-1 {
-    flex-grow: 1 !important;
-}
-
-/* Custom styles for text alignment */
-.text-left {
-    text-align: left !important;
-}
-
-.text-right {
-    text-align: right !important;
-}
-
-/* Custom styles for display utilities */
-.d-none {
-    display: none !important;
-}
-
-.d-block {
-    display: block !important;
-}
-
-.d-inline-block {
-    display: inline-block !important;
-}
-
-/* Custom styles for visibility */
-.visible {
-    visibility: visible !important;
-}
-
-.invisible {
-    visibility: hidden !important;
-}
-
-/* Custom styles for overflow */
-.overflow-auto {
-    overflow: auto !important;
-}
-
-.overflow-hidden {
-    overflow: hidden !important;
-}
-
-/* Custom styles for position utilities */
-.position-relative {
-    position: relative !important;
-}
-
-.position-absolute {
-    position: absolute !important;
-}
-
-.position-fixed {
-    position: fixed !important;
-}
-
-/* Custom styles for z-index */
-.z-0 {
-    z-index: 0 !important;
-}
-
-.z-1 {
-    z-index: 1 !important;
-}
-
-.z-10 {
-    z-index: 10 !important;
-}
-
-.z-100 {
-    z-index: 100 !important;
-}
-
-/* Custom styles for width utilities */
-.w-25 {
-    width: 25% !important;
-}
-
-.w-50 {
-    width: 50% !important;
-}
-
-.w-75 {
-    width: 75% !important;
-}
-
-.w-100 {
-    width: 100% !important;
-}
-
-/* Custom styles for height utilities */
-.h-100 {
-    height: 100% !important;
-}
-
-/* Custom styles for gaps */
-.gap-0 {
-    gap: 0 !important;
-}
-
-.gap-1 {
-    gap: 0.25rem !important;
-}
-
-.gap-2 {
-    gap: 0.5rem !important;
-}
-
-.gap-3 {
-    gap: 1rem !important;
-}
-
-.gap-4 {
-    gap: 1.5rem !important;
-}
-
-.gap-5 {
-    gap: 3rem !important;
-}
-
-/* Custom styles for grid templates */
-.grid {
-    display: grid !important;
-}
-
-.grid-cols-1 {
-    grid-template-columns: repeat(1, minmax(0, 1fr)) !important;
-}
-
-.grid-cols-2 {
-    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
-}
-
-.grid-cols-3 {
-    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
-}
-
-.grid-cols-4 {
-    grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
-}
-
-/* Custom styles for font sizes */
-.fs-1 {
-    font-size: 2.5rem !important;
-}
-
-.fs-2 {
-    font-size: 2rem !important;
-}
-
-.fs-3 {
-    font-size: 1.75rem !important;
-}
-
-.fs-4 {
-    font-size: 1.5rem !important;
-}
-
-.fs-5 {
-    font-size: 1.25rem !important;
-}
-
-.fs-6 {
-    font-size: 1rem !important;
-}
-
-/* Custom styles for line heights */
-.lh-1 {
-    line-height: 1 !important;
-}
-
-.lh-sm {
-    line-height: 1.25 !important;
-}
-
-.lh-base {
-    line-height: 1.5 !important;
-}
-
-.lh-lg {
-    line-height: 2 !important;
-}
-
-/* Custom styles for letter spacing */
-.tracking-tight {
-    letter-spacing: -0.025em !important;
-}
-
-.tracking-normal {
-    letter-spacing: 0 !important;
-}
-
-.tracking-wide {
-    letter-spacing: 0.025em !important;
-}
-
-/* Custom styles for opacity */
-.opacity-0 {
-    opacity: 0 !important;
-}
-
-.opacity-25 {
-    opacity: 0.25 !important;
-}
-
-.opacity-50 {
-    opacity: 0.5 !important;
-}
-
-.opacity-75 {
-    opacity: 0.75 !important;
-}
-
-.opacity-100 {
-    opacity: 1 !important;
-}
-
-/* Custom styles for transitions */
-.transition-all {
-    transition: all 0.3s ease !important;
-}
-
-.transition-colors {
-    transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease !important;
-}
-
-.transition-transform {
-    transition: transform 0.3s ease !important;
-}
-
-/* Custom styles for transforms */
-.scale-90 {
-    transform: scale(0.9) !important;
-}
-
-.scale-100 {
-    transform: scale(1) !important;
-}
-
-.scale-110 {
-    transform: scale(1.1) !important;
-}
-
-.translate-y-0 {
-    transform: translateY(0) !important;
-}
-
-.translate-y-1 {
-    transform: translateY(0.25rem) !important;
-}
-
-.translate-y-2 {
-    transform: translateY(0.5rem) !important;
-}
-
-/* Custom styles for cursor */
-.cursor-pointer {
-    cursor: pointer !important;
-}
-
-.cursor-not-allowed {
-    cursor: not-allowed !important;
-}
-
-/* Custom styles for pointer events */
-.pointer-events-none {
-    pointer-events: none !important;
-}
-
-.pointer-events-auto {
-    pointer-events: auto !important;
-}
-
-/* Custom styles for text overflow */
-.text-ellipsis {
-    text-overflow: ellipsis !important;
-    overflow: hidden !important;
-    white-space: nowrap !important;
-}
-
-/* Custom styles for word break */
-.break-word {
-    word-break: break-word !important;
-}
-
-/* Custom styles for backdrop blur */
-.backdrop-blur {
-    backdrop-filter: blur(5px);
-}
-
-/* Custom styles for border widths */
-.border-0 {
-    border-width: 0 !important;
-}
-
-.border-1 {
-    border-width: 1px !important;
-}
-
-.border-2 {
-    border-width: 2px !important;
-}
-
-/* Custom styles for border styles */
-.border-solid {
-    border-style: solid !important;
-}
-
-.border-dashed {
-    border-style: dashed !important;
-}
-
-/* Custom styles for border colors */
-.border-primary {
-    border-color: var(--accent-blue) !important;
-}
-
-.border-success {
-    border-color: var(--success-color) !important;
-}
-
-.border-danger {
-    border-color: var(--error-highlight) !important;
-}
-
-/* Custom styles for background colors */
-.bg-primary {
-    background-color: var(--accent-blue) !important;
-}
-
-.bg-success {
-    background-color: var(--success-color) !important;
-}
-
-.bg-danger {
-    background-color: var(--error-highlight) !important;
-}
-
-.bg-warning {
-    background-color: var(--button-warning-bg) !important;
-}
-
-.bg-info {
-    background-color: var(--alert-info-bg) !important;
-}
-
-/* Custom styles for max-width utilities */
-.max-w-xs {
-    max-width: 20rem !important;
-}
-
-.max-w-sm {
-    max-width: 24rem !important;
-}
-
-.max-w-md {
-    max-width: 28rem !important;
-}
-
-.max-w-lg {
-    max-width: 32rem !important;
-}
-
-.max-w-xl {
-    max-width: 36rem !important;
-}
-
-/* Custom styles for min-width utilities */
-.min-w-0 {
-    min-width: 0 !important;
-}
-
-/* Custom styles for min-height utilities */
-.min-h-screen {
-    min-height: 100vh !important;
-}
-
-/* Custom styles for object fit */
-.object-cover {
-    object-fit: cover !important;
-}
-
-.object-contain {
-    object-fit: contain !important;
-}
-
-/* Custom styles for overflow wrap */
-.overflow-wrap-normal {
-    overflow-wrap: normal !important;
-}
-
-.overflow-wrap-break {
-    overflow-wrap: break-word !important;
-}
-
-/* Custom styles for text decoration */
-.text-decoration-none {
-    text-decoration: none !important;
-}
-
-.text-decoration-underline {
-    text-decoration: underline !important;
-}
-
-/* Custom styles for vertical align */
-.align-baseline {
-    vertical-align: baseline !important;
-}
-
-.align-middle {
-    vertical-align: middle !important;
-}
-
-/* Custom styles for whitespace */
-.whitespace-nowrap {
-    white-space: nowrap !important;
-}
-
-.whitespace-normal {
-    white-space: normal !important;
-}
-
-/* Custom styles for breakpoints */
-@media (max-width: 768px) {
-    .d-md-none {
-        display: none !important;
-    }
-    .d-md-block {
-        display: block !important;
-    }
-}
-
-@media (min-width: 768px) {
-    .d-md-block {
-        display: block !important;
-    }
-    .d-md-none {
-        display: none !important;
-    }
-}
-
-/* Custom styles for container breakpoints */
-@media (min-width: 576px) {
-    .container-sm {
-        max-width: 540px;
-    }
-}
-
-@media (min-width: 768px) {
-    .container-md {
-        max-width: 720px;
-    }
-}
-
-@media (min-width: 992px) {
-    .container-lg {
-        max-width: 960px;
-    }
-}
-
-@media (min-width: 1200px) {
-    .container-xl {
-        max-width: 1140px;
-    }
-}
-
-@media (min-width: 1400px) {
-    .container-xxl {
-        max-width: 1320px;
-    }
-}
-
-/* Custom styles for box shadows */
-.shadow-inner {
-    box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.05) !important;
-}
-
-/* Custom styles for text transform */
-.text-uppercase {
-    text-transform: uppercase !important;
-}
-
-.text-lowercase {
-    text-transform: lowercase !important;
-}
-
-.text-capitalize {
-    text-transform: capitalize !important;
-}
-
-/* Custom styles for font styles */
-.font-italic {
-    font-style: italic !important;
-}
-
-/* Custom styles for border radius */
-.rounded-circle {
-    border-radius: 50% !important;
-}
-
-/* Custom styles for flex direction */
-.flex-row {
-    flex-direction: row !important;
-}
-
-.flex-column {
-    flex-direction: column !important;
-}
-
-/* Custom styles for justify content */
-.justify-content-start {
-    justify-content: flex-start !important;
-}
-
-.justify-content-end {
-    justify-content: flex-end !important;
-}
-
-/* Custom styles for align items */
-.align-items-start {
-    align-items: flex-start !important;
-}
-
-.align-items-end {
-    align-items: flex-end !important;
-}
-
-/* Custom styles for flex wrap */
-.flex-wrap {
-    flex-wrap: wrap !important;
-}
-
-.flex-nowrap {
-    flex-wrap: nowrap !important;
-}
-
-/* Custom styles for order */
-.order-0 {
-    order: 0 !important;
-}
-
-.order-1 {
-    order: 1 !important;
-}
-
-/* Custom styles for pointer events */
-.pe-none {
-    pointer-events: none !important;
-}
-
-.pe-auto {
-    pointer-events: auto !important;
-}
-
-/* Custom styles for overflow */
-.overflow-x-auto {
-    overflow-x: auto !important;
-}
-
-.overflow-y-auto {
-    overflow-y: auto !important;
-}
-
-/* Custom styles for position */
-.top-0 {
-    top: 0 !important;
-}
-
-.bottom-0 {
-    bottom: 0 !important;
-}
-
-.start-0 {
-    left: 0 !important;
-}
-
-.end-0 {
-    right: 0 !important;
-}
-
-/* Custom styles for width utilities */
-.vw-100 {
-    width: 100vw !important;
-}
-
-/* Custom styles for height utilities */
-.vh-100 {
-    height: 100vh !important;
-}
-
-/* Custom styles for transitions */
-.transition-opacity {
-    transition: opacity 0.3s ease !important;
-}
-
-/* Custom styles for animations */
-@keyframes fadeIn {
-    from { opacity: 0; }
-    to { opacity: 1; }
-}
-
-.animate-fadeIn {
-    animation: fadeIn 0.5s ease-in;
-}
-
-/* Custom styles for dark mode specific elements */
-.dark-mode .text-light {
-    color: var(--text-color) !important;
-}
-
-.dark-mode .text-dark {
-    color: #ffffff !important;
-}
-
-/* Custom styles for high contrast mode specific elements */
-@media (prefers-contrast: high) {
-    .btn-primary {
-        color: #ffffff !important;
-    }
-    .btn-secondary {
-        color: #000000 !important;
-    }
-    .alert {
-        border-width: 2px !important;
-    }
-}
-
-/* Custom styles for reduced motion specific elements */
-@media (prefers-reduced-motion: reduce) {
-    .animate-fadeIn {
-        animation: none;
-    }
-}
-
-/* Custom styles for RTL specific elements */
-html[dir="rtl"] .text-left {
-    text-align: right !important;
-}
-
-html[dir="rtl"] .text-right {
-    text-align: left !important;
-}
-
-/* Custom styles for print specific elements */
-@media print {
-    .no-print {
-        display: none !important;
-    }
-    .print-only {
-        display: block !important;
-    }
-}
-
-/* Custom styles for screen reader only text */
-.sr-only-focusable:not(:focus) {
-    position: absolute;
-    width: 1px;
-    height: 1px;
-    padding: 0;
-    margin: -1px;
-    overflow: hidden;
-    clip: rect(0, 0, 0, 0);
-    border: 0;
-}
-
-/* Custom styles for touch devices */
-@media (hover: none) {
-    .tooltip-inner {
-        display: none;
-    }
-}
-
-/* Custom styles for high-resolution displays */
-@media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
-    .card, .summary-card, .stat-card, .action-card, .nav-card {
-        box-shadow: var(--card-shadow);
-    }
-}
-
-/* Custom styles for large screens */
-@media (min-width: 1800px) {
-    .container {
-        max-width: 1600px;
-    }
-    .hero h1 {
-        font-size: 4.5rem;
-    }
-    .hero p.lead {
-        font-size: 1.75rem;
-    }
-}
-
-/* Custom styles for extra small screens */
-@media (max-width: 320px) {
-    .navbar-brand {
-        font-size: 0.75rem;
-    }
-    .logo {
-        height: 30px;
-    }
-    .mobile-bottom-nav .nav-item i {
-        font-size: 1.5rem;
-    }
-    .mobile-bottom-nav .nav-label {
-        font-size: 0.65rem;
-    }
-}
-
-/* Custom styles for specific icon sizes in cards */
-.card .bi {
-    font-size: 1.5rem;
-}
-
-.card-lg .bi {
-    font-size: 2rem;
-}
-
-.card-sm .bi {
-    font-size: 1.25rem;
-}
-
-/* Custom styles for specific icon colors */
-.bi-check-circle {
-    color: var(--success-color);
-}
-
-.bi-exclamation-circle {
-    color: var(--error-highlight);
-}
-
-.bi-info-circle {
-    color: var(--alert-info-text);
-}
-
-.bi-warning {
-    color: var(--button-warning-bg);
-}
-
-/* Custom styles for specific button sizes */
-.btn-xs {
-    padding: 0.25rem 0.5rem;
-    font-size: 0.75rem;
-}
-
-/* Custom styles for specific card layouts */
-.card-horizontal {
-    display: flex;
-    flex-direction: row;
-    align-items: center;
-}
-
-.card-horizontal .card-img-top {
-    width: 40%;
-    border-top-right-radius: 0;
-    border-bottom-left-radius: 1rem;
-}
-
-.card-horizontal .card-body {
-    width: 60%;
-}
-
-/* Custom styles for specific modal sizes */
-.modal-sm {
-    max-width: 300px;
-}
-
-.modal-lg {
-    max-width: 800px;
-}
-
-.modal-xl {
-    max-width: 1140px;
-}
-
-/* Custom styles for specific alert sizes */
-.alert-sm {
-    padding: 0.5rem 0.75rem;
-    font-size: 0.875rem;
-}
-
-/* Custom styles for specific badge sizes */
-.badge-sm {
-    font-size: 0.65rem;
-    padding: 0.25rem 0.5rem;
-}
-
-/* Custom styles for specific progress bar heights */
-.progress-sm {
-    height: 0.5rem;
-}
-
-.progress-lg {
-    height: 1.5rem;
-}
-
-/* Custom styles for specific list group item sizes */
-.list-group-item-sm {
-    padding: 0.5rem 0.75rem;
-    font-size: 0.8rem;
-}
-
-/* Custom styles for specific breadcrumb item sizes */
-.breadcrumb-item {
-    font-size: 0.875rem;
-}
-
-/* Custom styles for specific dropdown item sizes */
-.dropdown-item-sm {
-    font-size: 0.8rem;
-    padding: 0.4rem 0.75rem;
-}
-
-/* Custom styles for specific tooltip sizes */
-.tooltip-sm .tooltip-inner {
-    font-size: 0.75rem;
-    padding: 0.3rem 0.5rem;
-}
-
-/* Custom styles for specific pagination sizes */
-.pagination-sm .page-link {
-    padding: 0.3rem 0.75rem;
-    font-size: 0.8rem;
-}
-
-.pagination-lg .page-link {
-    padding: 0.75rem 1.5rem;
-    font-size: 1rem;
-}
-
-/* Custom styles for specific carousel control sizes */
-.carousel-control-prev-icon,
-.carousel-control-next-icon {
-    width: 2rem;
-    height: 2rem;
-}
-
-/* Custom styles for specific social icon sizes */
-.social-icons a.sm {
-    font-size: 1.2rem;
-}
-
-/* Custom styles for specific navbar heights */
-.navbar-sm {
-    height: 50px;
-}
-
-.navbar-lg {
-    height: 80px;
-}
-
-/* Custom styles for specific footer heights */
-.footer-sm {
-    padding: 1rem 0;
-}
-
-.footer-lg {
-    padding: 2rem 0;
-}
-
-/* Custom styles for specific container paddings */
-.container-padded {
-    padding: 2rem;
-}
-
-@media (max-width: 576px) {
-    .container-padded {
-        padding: 1rem;
-    }
-}
-
-/* Custom styles for specific hero backgrounds */
-.hero-bg-light {
-    background: linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.5)), var(--card-bg);
-}
-
-.hero-bg-dark {
-    background: linear-gradient(rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.7)), var(--footer-bg);
-}
-
-/* Custom styles for specific card borders */
-.card-border-primary {
-    border: 2px solid var(--accent-blue) !important;
-}
-
-.card-border-success {
-    border: 2px solid var(--success-color) !important;
-}
-
-.card-border-danger {
-    border: 2px solid var(--error-highlight) !important;
-}
-
-/* Custom styles for specific button borders */
-.btn-border-primary {
-    border: 2px solid var(--accent-blue) !important;
-}
-
-.btn-border-success {
-    border: 2px solid var(--success-color) !important;
-}
-
-.btn-border-danger {
-    border: 2px solid var(--error-highlight) !important;
-}
-
-/* Custom styles for specific text shadows */
-.text-shadow {
-    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.2);
-}
-
-.text-shadow-sm {
-    text-shadow: 1px 1px 1px rgba(0, 0, 0, 0.1);
-}
-
-/* Custom styles for specific box shadows */
-.box-shadow-sm {
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05) !important;
-}
-
-.box-shadow-lg {
-    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1) !important;
-}
-
-/* Custom styles for specific z-index layers */
-.z-1000 {
-    z-index: 1000 !important;
-}
-
-.z-2000 {
-    z-index: 2000 !important;
-}
-
-/* Custom styles for specific animations */
-@keyframes slideIn {
-    from { transform: translateY(20px); opacity: 0; }
-    to { transform: translateY(0); opacity: 1; }
-}
-
-.animate-slideIn {
-    animation: slideIn 0.5s ease-in;
-}
-
-/* Custom styles for specific breakpoints */
-@media (max-width: 992px) {
-    .navbar-nav {
-        flex-direction: column;
-        align-items: flex-start;
-    }
-    .navbar-actions {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 0.25rem;
-    }
-}
-
-/* Custom styles for specific icon alignments */
-.icon-left {
-    margin-right: 0.5rem;
-}
-
-.icon-right {
-    margin-left: 0.5rem;
-}
-
-/* Custom styles for specific card layouts */
-.card-stacked {
-    position: relative;
-    z-index: 1;
-}
-
-.card-stacked + .card-stacked {
-    margin-top: -1rem;
-    z-index: 0;
-}
-
-/* Custom styles for specific button groups */
-.btn-group-vertical .btn {
-    border-radius: 0;
-}
-
-.btn-group-vertical .btn:first-child {
-    border-top-left-radius: 0.5rem;
-    border-top-right-radius: 0.5rem;
-}
-
-.btn-group-vertical .btn:last-child {
-    border-bottom-left-radius: 0.5rem;
-    border-bottom-right-radius: 0.5rem;
-}
-
-/* Custom styles for specific form layouts */
-.form-inline {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.5rem;
-}
-
-.form-inline .form-group {
-    flex: 1;
-    min-width: 200px;
-}
-
-/* Custom styles for specific modal animations */
-.modal.fade .modal-dialog {
-    transition: transform 0.3s ease-out;
-    transform: translateY(-50px);
-}
-
-.modal.show .modal-dialog {
-    transform: translateY(0);
-}
-
-/* Custom styles for specific offcanvas animations */
-.offcanvas.show {
-    transition: transform 0.3s ease-in-out;
-}
-
-/* Custom styles for specific carousel animations */
-.carousel-item {
-    transition: transform 0.6s ease-in-out;
-}
-
-.carousel-item-next.carousel-item-start,
-.carousel-item-prev.carousel-item-end {
-    transform: translateX(0);
-}
-
-.carousel-item-next,
-.carousel-item-prev.active {
-    transform: translateX(0);
-}
-
-/* Custom styles for specific placeholder animations */
-.placeholder-glow .placeholder {
-    animation: pulse 1.5s infinite;
-}
-
-/* Custom styles for specific accordion animations */
-.accordion-item {
-    overflow: hidden;
-}
-
-.accordion-button.collapsed::after {
-    transform: rotate(-180deg);
-}
-
-.accordion-button::after {
-    transition: transform 0.3s ease;
-}
-
-/* Custom styles for specific tooltip animations */
-.tooltip.show {
-    opacity: 1;
-}
-
-/* Custom styles for specific dropdown animations */
-.dropdown-menu.show {
-    opacity: 1;
-    visibility: visible;
-    transform: translateY(0);
-}
-
-/* Custom styles for specific badge animations */
-.badge.animate-pulse {
-    animation: pulse 1.5s infinite;
-}
-
-/* Custom styles for specific progress bar animations */
-.progress-bar-animated {
-    animation: progress-bar-stripes 1s linear infinite;
-}
-
-@keyframes progress-bar-stripes {
-    from { background-position: 1rem 0; }
-    to { background-position: 0 0; }
-}
-
-/* Custom styles for specific list group animations */
-.list-group-item-action {
-    transition: background-color 0.3s ease, color 0.3s ease;
-}
-
-.list-group-item-action:hover {
-    background: var(--button-secondary-hover);
-}
-
-/* Custom styles for specific alert animations */
-.alert.fade {
-    transition: opacity 0.3s ease;
-}
-
-.alert.fade:not(.show) {
-    opacity: 0;
-}
-
-/* Custom styles for specific button animations */
-.btn.animate-click {
-    transition: transform 0.1s ease;
-}
-
-.btn.animate-click:active {
-    transform: scale(0.95);
-}
-
-/* Custom styles for specific card animations */
-.card.animate-hover {
-    transition: transform 0.3s ease, box-shadow 0.3s ease;
-}
-
-.card.animate-hover:hover {
-    transform: translateY(-4px);
-    box-shadow: var(--card-shadow-hover);
-}
-
-/* Custom styles for specific navbar animations */
-.navbar-nav .nav-link {
-    transition: background-color 0.3s ease, color 0.3s ease;
-}
-
-/* Custom styles for specific footer animations */
-.footer a {
-    transition: color 0.3s ease;
-}
-
-/* Custom styles for specific icon animations */
-.bi.animate-spin {
-    animation: spin 1s linear infinite;
-}
-
-@keyframes spin {
-    from { transform: rotate(0deg); }
-    to { transform: rotate(360deg); }
-}
-
-/* Custom styles for specific text animations */
-.text-animate-pulse {
-    animation: pulse 1.5s infinite;
-}
-
-/* Custom styles for specific image animations */
-.img-animate-zoom {
-    transition: transform 0.3s ease;
-}
-
-.img-animate-zoom:hover {
-    transform: scale(1.05);
-}
-
-/* Custom styles for specific container animations */
-.container-animate-slide {
-    animation: slideIn 0.5s ease-in;
-}
-
-/* Custom styles for specific breakpoint-specific animations */
-@media (min-width: 768px) {
-    .card.animate-hover:hover {
-        transform: translateY(-6px);
-    }
-}
-
-/* Custom styles for specific high-contrast animations */
-@media (prefers-contrast: high) {
-    .card.animate-hover:hover {
-        box-shadow: 0 0 0 3px var(--accent-blue);
-    }
-}
-
-/* Custom styles for specific reduced-motion animations */
-@media (prefers-reduced-motion: reduce) {
-    .card.animate-hover:hover {
-        transform: none;
-        box-shadow: none;
-    }
-    .img-animate-zoom:hover {
-        transform: none;
-    }
-    .container-animate-slide {
-        animation: none;
-    }
-}
-
-/* Custom styles for specific RTL animations */
-html[dir="rtl"] .carousel-item-next,
-html[dir="rtl"] .carousel-item-prev.active {
-    transform: translateX(0);
-}
-
-html[dir="rtl"] .carousel-item-next.carousel-item-start,
-html[dir="rtl"] .carousel-item-prev.carousel-item-end {
-    transform: translateX(0);
-}
-
-/* Custom styles for specific print animations */
-@media print {
-    .animate-fadeIn, .animate-slideIn, .card.animate-hover, .img-animate-zoom {
-        animation: none;
-        transform: none;
-    }
-}
-
-/* Custom styles for specific touch device animations */
-@media (hover: none) {
-    .card.animate-hover:hover {
-        transform: none;
-        box-shadow: none;
-    }
-    .img-animate-zoom:hover {
-        transform: none;
-    }
-}
-
-/* Custom styles for specific high-resolution animations */
-@media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
-    .card.animate-hover:hover {
-        box-shadow: 0 10px 20px rgba(0, 0, 0, 0.15);
-    }
-}
-
-/* Custom styles for specific large screen animations */
-@media (min-width: 1800px) {
-    .card.animate-hover:hover {
-        transform: translateY(-8px);
-    }
-}
-
-/* Custom styles for specific extra small screen animations */
-@media (max-width: 320px) {
-    .card.animate-hover:hover {
-        transform: none;
-    }
-}
-
-/* Ensure all elements have a consistent transition */
-*,
-*::before,
-*::after {
-    transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease, transform 0.3s ease, opacity 0.3s ease;
-}
-
-/* Final override for reduced motion */
-@media (prefers-reduced-motion: reduce) {
-    *,
-    *::before,
-    *::after {
-        transition: none !important;
+    .section-heading,
+    .tools-section-heading {
+        font-size: 3rem;
     }
 }
