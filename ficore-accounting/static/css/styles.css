@@ -215,6 +215,21 @@ h3 { font-size: clamp(1.1rem, 2.5vw, 1.3rem); }
         padding-left: 0.25rem;
         padding-right: 0.25rem;
     }
+    .quick-actions .row, .tools-section .row {
+        overflow-x: auto;
+        flex-wrap: nowrap;
+    }
+    .quick-actions .col-4, .tools-section .col-6 {
+        flex: 0 0 50%;
+        max-width: 50%;
+    }
+}
+
+@media (max-width: 360px) {
+    .quick-actions .col-4, .tools-section .col-6 {
+        flex: 0 0 50%;
+        max-width: 50%;
+    }
 }
 
 .step-container {
@@ -897,17 +912,32 @@ h2.card-title {
     background: linear-gradient(135deg, #1e293b, #2a3447);
 }
 
-.summary-card {
-    background: var(--card-bg);
-    border-radius: 0.5rem;
-    padding: 0.75rem;
-    border: 1px solid var(--card-border);
-    transition: transform 0.3s ease, box-shadow 0.3s ease;
+.summary-card.debt-card {
+    background: linear-gradient(135deg, #fff0f6 60%, #ffadd2 100%);
+    border: none;
+    box-shadow: var(--shadow-sm);
 }
 
-.summary-card:hover {
-    transform: translateY(-2px);
-    box-shadow: var(--card-shadow-hover);
+.summary-card.credit-card {
+    background: linear-gradient(135deg, #d1fae5 60%, #a7f3d0 100%);
+    border: none;
+    box-shadow: var(--shadow-sm);
+}
+.dark-mode .summary-card.debt-card {
+    background: linear-gradient(135deg, #3c0c16 60%, #ef5350 100%);
+}
+
+.dark-mode .summary-card.credit-card {
+    background: linear-gradient(135deg, #0a2d1f 60%, #34d399 100%);
+}
+
+.net-label {
+    font-weight: 500;
+    color: var(--text-secondary);
+}
+
+.dark-mode .net-label {
+    color: var(--text-color);
 }
 
 .card-header {
@@ -1066,6 +1096,19 @@ h2.card-title {
 }
 
 .dark-mode .quick-actions, .dark-mode .tools-section {
+    background: linear-gradient(135deg, #1e293b, #2a3447);
+}
+
+/* Recent Activity */
+.recent-activity {
+    margin-bottom: 0.75rem;
+    background: linear-gradient(135deg, var(--card-bg), rgba(255, 255, 255, 0.9));
+    border-radius: 0.75rem;
+    padding: 0.75rem;
+    box-shadow: var(--shadow-sm);
+}
+
+.dark-mode .recent-activity {
     background: linear-gradient(135deg, #1e293b, #2a3447);
 }
 
@@ -2373,3 +2416,59 @@ h2.card-title {
     .tool-card .card-body h4 {
         font-size: var(--font-size-h4);
     }
+/* Bottom Navigation */
+.bottom-nav .nav-item .nav-label {
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: var(--text-secondary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 90px;
+}
+
+/* Tooltips */
+.tooltip-inner {
+    background: var(--card-bg);
+    color: var(--text-color);
+    border-radius: 0.5rem;
+    padding: 0.5rem;
+    box-shadow: var(--shadow-sm);
+}
+
+.tooltip.bs-tooltip-top .tooltip-arrow::before {
+    border-top-color: var(--card-bg);
+}
+
+.tooltip.bs-tooltip-bottom .tooltip-arrow::before {
+    border-bottom-color: var(--card-bg);
+}
+
+.tooltip.bs-tooltip-start .tooltip-arrow::before {
+    border-left-color: var(--card-bg);
+}
+
+.tooltip.bs-tooltip-end .tooltip-arrow::before {
+    border-right-color: var(--card-bg);
+}
+
+.dark-mode .tooltip-inner {
+    background: var(--navbar-bg);
+    color: var(--text-color);
+}
+
+.dark-mode .tooltip.bs-tooltip-top .tooltip-arrow::before {
+    border-top-color: var(--navbar-bg);
+}
+
+.dark-mode .tooltip.bs-tooltip-bottom .tooltip-arrow::before {
+    border-bottom-color: var(--navbar-bg);
+}
+
+.dark-mode .tooltip.bs-tooltip-start .tooltip-arrow::before {
+    border-left-color: var(--navbar-bg);
+}
+
+.dark-mode .tooltip.bs-tooltip-end .tooltip-arrow::before {
+    border-right-color: var(--navbar-bg);
+}
