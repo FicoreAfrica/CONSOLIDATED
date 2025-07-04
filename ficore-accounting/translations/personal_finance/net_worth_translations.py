@@ -4,8 +4,8 @@ Net worth tracking translations for personal finance tools
 
 NET_WORTH_TRANSLATIONS = {
     'en': {
-        'net_worth_calculator': 'Net Worth Tracker',
-        'net_worth_net_worth_calculator': 'Net Worth Tracker',
+        'net_worth_calculator': 'Net Worth',
+        'net_worth_net_worth_calculator': 'Net Worth',
         'net_worth_net_worth': 'Your Net Worth is',
         'net_worth_dashboard': 'Net Worth Dashboard',
         'net_worth_dashboard_load_error': 'Unable to load net worth dashboard. Please try again.',
@@ -146,8 +146,6 @@ NET_WORTH_TRANSLATIONS = {
         'net_worth_loans_description': 'Any money you borrowed from banks, apps, friends, or cooperative societies',
         'net_worth_outstanding_bills_description': 'Outstanding school fees, rent advance, or unpaid bills',
         'net_worth_email_results_description': 'Get your full net worth result sent to your inbox (optional)',
-        'net_worth_calculator_alt': 'Net Worth Calculator',
-        'net_worth_dashboard_alt': 'Net Worth Dashboard',
         'net_worth_personalized_summary': 'Your personalized net worth summary',
         'net_worth_enter_personal_information': 'Enter your personal information',
         'net_worth_insights': 'Insights',
@@ -166,8 +164,8 @@ NET_WORTH_TRANSLATIONS = {
         'Your personalized net worth summary': 'Your personalized net worth summary',
     },
     'ha': {
-        'net_worth_calculator': 'Ƙididdigar Dukiyar Kuɗi',
-        'net_worth_net_worth_calculator': 'Duba Kadarori',
+        'net_worth_calculator': 'Dukiya',
+        'net_worth_net_worth_calculator': 'Dukiya',
         'net_worth_net_worth': 'Darajar Arzikinka a halin Yanzu Shine',
         'net_worth_dashboard': 'Allon Dukiyar Kuɗi',
         'net_worth_dashboard_load_error': 'Ba a iya ɗora allon dukiyar kuɗi ba. Da fatan za a sake gwadawa.',
@@ -300,7 +298,7 @@ NET_WORTH_TRANSLATIONS = {
         'net_worth_loans_description': 'Duk kuɗin da ka aro daga bankuna, manhajojin, abokai, ko ƙungiyoyin haɗin gwiwa',
         'net_worth_outstanding_bills_description': 'Kuɗin makaranta da ba a biya ba, ci gaban haya, ko lissafin da ba a biya ba',
         'net_worth_email_results_description': 'Samu cikakken sakamakon dukiyar kuɗin ka da aka aika zuwa akwatin saƙon ka (na zaɓi)',
-        'net_worth_calculator_alt': 'Ƙididdigar Dukiyar Kuɗi',
+        'net_worth_calculator_alt': 'Dukiya',
         'net_worth_dashboard_alt': 'Allon Dukiyar Kuɗi',
         'net_worth_personalized_summary': 'Taƙaitaccen dukiyar kuɗin ka na keɓaɓɓu',
         'admin_manage_net_worth': 'Sarrafa Darajar Kuɗi',
