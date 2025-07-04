@@ -10,7 +10,7 @@ from pymongo import MongoClient
 from pymongo.errors import ConnectionFailure
 from translations import trans
 import requests
-from werkzeug.exceptions import BuildError
+from werkzeug.routing import BuildError  # Corrected import
 
 # Flask extensions - defined here to avoid having too many files
 from flask_login import LoginManager
