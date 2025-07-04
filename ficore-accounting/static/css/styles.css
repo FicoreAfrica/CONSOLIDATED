@@ -33,13 +33,13 @@
     --text-color: #1e293b;
     --text-muted: #6b7280;
     --text-secondary: #4a5568;
-    --navbar-bg: rgba(255, 255, 255, 0.85);
+    --navbar-bg: rgba(255, 255, 255, 0.95);
     --navbar-text-color: #1F1F1F;
-    --navbar-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    --navbar-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
     --footer-bg: #0F3D57;
     --card-border: #e2e8f0;
-    --card-shadow: 0 4px 15px rgba(0, 0, 0, 0.06);
-    --card-shadow-hover: 0 8px 24px rgba(0, 15, 40, 0.15);
+    --card-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    --card-shadow-hover: 0 8px 20px rgba(0, 15, 40, 0.15);
     --table-border: #e2e8f0;
     --table-header-bg: #0F3D57;
     --table-header-text: #ffffff;
@@ -93,13 +93,13 @@
     --text-color: #f1f5f9;
     --text-muted: #9ca3af;
     --text-secondary: #94a3b8;
-    --navbar-bg: rgba(255, 255, 255, 0.85);
-    --navbar-text-color: #1F1F1F;
-    --navbar-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    --navbar-bg: rgba(31, 31, 31, 0.95);
+    --navbar-text-color: #f1f5f9;
+    --navbar-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
     --footer-bg: #1e293b;
     --card-border: #4b5563;
-    --card-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
-    --card-shadow-hover: 0 12px 32px rgba(0, 0, 0, 0.4);
+    --card-shadow: 0 6px 16px rgba(0, 0, 0, 0.3);
+    --card-shadow-hover: 0 10px 24px rgba(0, 0, 0, 0.4);
     --table-border: #475569;
     --table-header-bg: #1e3a8a;
     --table-header-text: #f1f5f9;
@@ -118,8 +118,7 @@
 }
 
 .dark-mode .navbar-dark {
-    background: var(--footer-bg) !important;
-    --navbar-text-color: #f1f5f9;
+    background: var(--navbar-bg) !important;
 }
 
 /* General Transitions and Scroll Behavior */
@@ -127,7 +126,8 @@ body, .navbar, .header-message, .consent-banner, .btn, .hero, .card, .journey-st
 .tool-group, .accordion-button, .accordion-item, .tool-header-container, .progress, .badge,
 .testimonials-section, .recommended-learning, .faq-section, .why-section, .footer-disclaimer,
 .social-icons a, .insights-box, .course-link, .list-group-item, .alert-success, .alert-danger,
-.form-control, .form-check-input {
+.form-control, .form-check-input, .top-header, .notification-bell, .action-card, .nav-card,
+.notification-item, .activity-item {
     transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease, transform 0.3s ease;
 }
 
@@ -171,20 +171,20 @@ h1, h2, h3 {
     color: var(--text-color);
 }
 
-h1 { font-size: 2rem; }
-h2 { font-size: 1.75rem; }
-h3 { font-size: 1.25rem; }
+h1 { font-size: clamp(1.8rem, 4vw, 2.2rem); }
+h2 { font-size: clamp(1.5rem, 3.5vw, 1.8rem); }
+h3 { font-size: clamp(1.1rem, 2.5vw, 1.3rem); }
 
 .main-content {
     flex: 1 0 auto;
-    padding-top: var(--navbar-height);
+    padding-top: calc(var(--navbar-height) + 0.5rem);
     padding-bottom: var(--bottom-nav-height);
 }
 
 @media (max-width: 991.98px) {
     .main-content {
-        padding-top: 10px;
-        padding-bottom: var(--bottom-nav-height);
+        padding-top: 0.5rem;
+        padding-bottom: calc(var(--bottom-nav-height) + 0.5rem);
     }
     body {
         padding-top: 0;
@@ -199,10 +199,16 @@ h3 { font-size: 1.25rem; }
 }
 
 /* Containers */
-.container {
+.container, .container-fluid {
     max-width: 1200px;
     margin: 0 auto;
-    padding: 1rem;
+    padding: var(--padding-sm);
+}
+
+@media (max-width: 576px) {
+    .container, .container-fluid {
+        padding: 0.5rem;
+    }
 }
 
 .step-container {
@@ -253,7 +259,7 @@ h3 { font-size: 1.25rem; }
 .navbar {
     background: var(--navbar-bg) !important;
     border-bottom: 1px solid var(--card-border);
-    position: relative;
+    position: fixed;
     top: 0;
     width: 100%;
     height: var(--navbar-height);
@@ -262,6 +268,7 @@ h3 { font-size: 1.25rem; }
     align-items: center;
     justify-content: space-between;
     padding: 0.5rem 1rem;
+    box-shadow: var(--navbar-shadow);
 }
 
 .navbar::after {
@@ -270,7 +277,7 @@ h3 { font-size: 1.25rem; }
     bottom: 0;
     left: 0;
     right: 0;
-    height: 10px;
+    height: 8px;
     background: linear-gradient(to bottom, rgba(255, 255, 255, 0.1), transparent);
     pointer-events: none;
 }
@@ -280,25 +287,26 @@ h3 { font-size: 1.25rem; }
     align-items: center;
     color: var(--navbar-text-color);
     font-weight: 600;
-    font-size: 1rem;
+    font-size: clamp(0.9rem, 2vw, 1rem);
     text-align: center;
     margin: 0;
-    margin-right: 1.5rem;
+    margin-right: 1rem;
 }
 
 .logo {
-    height: 40px;
+    height: 36px;
     width: auto;
     margin-right: 0.5rem;
     border-radius: 4px;
 }
+
 .navbar-toggler {
     border: none;
     padding: 0.5rem;
 }
 
 .navbar-toggler-icon {
-    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 30 30'%3e%3cpath stroke='%23ffffff' stroke-linecap='round' stroke-miterlimit='10' stroke-width='2' d='M4 7h22M4 15h22M4 23h22'/%3e%3c/svg%3e");
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 30 30'%3e%3cpath stroke='%231F1F1F' stroke-linecap='round' stroke-miterlimit='10' stroke-width='2' d='M4 7h22M4 15h22M4 23h22'/%3e%3c/svg%3e");
 }
 
 .dark-mode .navbar-toggler-icon {
@@ -314,7 +322,7 @@ h3 { font-size: 1.25rem; }
 .nav-link {
     color: var(--navbar-text-color);
     font-weight: 500;
-    padding: 0.75rem 1rem;
+    padding: 0.5rem 1rem;
     font-size: 0.9rem;
 }
 
@@ -324,13 +332,13 @@ h3 { font-size: 1.25rem; }
 }
 
 .dark-mode .nav-link:hover, .dark-mode .nav-link:focus {
-    background: rgba(0, 0, 0, 0.2);
+    background: rgba(0, 0, 0, 0.3);
 }
 
 .nav-item.dropdown .nav-link {
     font-size: 0.85rem;
     color: var(--navbar-text-color) !important;
-    padding: 0.5rem 1rem;
+    padding: 0.5rem 0.75rem;
 }
 
 .navbar-collapse {
@@ -355,11 +363,13 @@ h3 { font-size: 1.25rem; }
     border: 1px solid var(--card-border);
     border-radius: 0.5rem;
     box-shadow: var(--card-shadow);
+    min-width: 120px;
 }
 
 .dropdown-item {
     color: var(--text-color);
     padding: 0.5rem 1rem;
+    font-size: 0.85rem;
 }
 
 .dropdown-item:hover, .dropdown-item:focus {
@@ -379,7 +389,7 @@ h3 { font-size: 1.25rem; }
 }
 
 .dark-mode .btn-link:hover, .dark-mode .btn-link:focus {
-    background: rgba(0, 0, 0, 0.2);
+    background: rgba(0, 0, 0, 0.3);
 }
 
 .bi-sun, .bi-moon-stars {
@@ -393,9 +403,9 @@ h3 { font-size: 1.25rem; }
 }
 
 /* Mobile Bottom Navigation */
-.mobile-bottom-nav {
+.bottom-nav {
     background: var(--card-bg);
-    box-shadow: 0 -4px 15px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.1);
     padding: 0;
     height: var(--bottom-nav-height);
     display: flex;
@@ -410,13 +420,13 @@ h3 { font-size: 1.25rem; }
     right: 0;
 }
 
-.dark-mode .mobile-bottom-nav {
+.dark-mode .bottom-nav {
     background: #2c2c2c;
-    box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.3);
+    box-shadow: 0 -2px 12px rgba(0, 0, 0, 0.3);
     border-top: 1px solid #444;
 }
 
-.mobile-bottom-nav .nav-item {
+.bottom-nav .nav-item {
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -424,62 +434,56 @@ h3 { font-size: 1.25rem; }
     color: var(--text-secondary);
     text-decoration: none;
     flex: 1;
-    padding: 8px 0;
-    transition: color 0.2s ease-in-out;
+    padding: 0.5rem;
+    transition: color 0.2s ease-in-out, background-color 0.2s ease-in-out;
     font-weight: 500;
 }
 
-.dark-mode .mobile-bottom-nav .nav-item {
+.dark-mode .bottom-nav .nav-item {
     color: #b0b0b0;
 }
 
-.mobile-bottom-nav .nav-item i {
-    font-size: 1.8rem;
-    margin-bottom: 4px;
-    color: var(--accent-blue);
+.bottom-nav .nav-item i {
+    font-size: 1.5rem;
+    margin-bottom: 0.25rem;
+    color: var(--text-secondary);
     transition: color 0.2s ease-in-out;
 }
 
-.mobile-bottom-nav .nav-item .nav-label {
+.bottom-nav .nav-item .nav-label {
     font-size: 0.75rem;
     font-weight: 500;
     color: var(--text-secondary);
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
-    max-width: 100%;
+    max-width: 80px;
 }
 
-.mobile-bottom-nav .nav-item.active {
+.bottom-nav .nav-item.active {
     color: var(--active-nav-color) !important;
+    background: rgba(255, 152, 0, 0.1);
     font-weight: 600;
 }
 
-.dark-mode .mobile-bottom-nav .nav-item.active {
+.dark-mode .bottom-nav .nav-item.active {
     color: var(--active-nav-color) !important;
+    background: rgba(255, 152, 0, 0.2);
 }
 
-.mobile-bottom-nav .nav-item.active i {
+.bottom-nav .nav-item.active i {
     color: var(--active-nav-color);
 }
 
-.dark-mode .mobile-bottom-nav .nav-item.active i {
+.dark-mode .bottom-nav .nav-item.active i {
     color: var(--active-nav-color);
-}
-
-.mobile-bottom-nav .nav-link {
-    min-height: 56px;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
 }
 
 @media (max-width: 991.98px) {
     .navbar-expand-lg {
         display: none !important;
     }
-    .mobile-bottom-nav {
+    .bottom-nav {
         display: flex !important;
     }
 }
@@ -488,20 +492,28 @@ h3 { font-size: 1.25rem; }
     .navbar-expand-lg {
         display: flex !important;
     }
-    .mobile-bottom-nav {
+    .bottom-nav {
         display: none !important;
     }
 }
 
 /* Top Header */
 .top-header {
-    padding: 1rem 0;
+    padding: 0.75rem 0;
+    background: var(--card-bg);
+    border-radius: 0.5rem;
+    box-shadow: var(--card-shadow);
+    border: 1px solid var(--card-border);
 }
 
 .welcome-text {
-    font-size: 1.5rem;
+    font-size: clamp(1.2rem, 3vw, 1.4rem);
     font-weight: 600;
     color: var(--text-color);
+    max-width: 150px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
 .header-actions {
@@ -509,27 +521,16 @@ h3 { font-size: 1.25rem; }
     align-items: center;
     gap: 0.5rem;
     justify-content: flex-end;
+    min-width: 0;
 }
 
 @media (max-width: 360px) {
     .header-actions {
-        flex-wrap: wrap;
-        justify-content: flex-end;
         gap: 0.3rem;
-        max-width: 100%;
     }
-    .language-btn,
-    .theme-toggle,
-    .profile-icon {
-        flex: 1 1 auto;
-        min-width: 40px;
-        font-size: 0.75rem;
-        margin: 0;
-        padding: 0.25rem;
-    }
-    .header {
-        flex-direction: column;
-        align-items: flex-start;
+    .welcome-text {
+        font-size: 1.1rem;
+        max-width: 100px;
     }
 }
 
@@ -551,8 +552,8 @@ h3 { font-size: 1.25rem; }
 
 .notification-badge {
     position: absolute;
-    top: 0.25rem;
-    right: 0.25rem;
+    top: -0.25rem;
+    right: -0.25rem;
     background: var(--button-danger-bg);
     color: white;
     border-radius: 50%;
@@ -563,7 +564,7 @@ h3 { font-size: 1.25rem; }
     justify-content: center;
     font-size: 0.75rem;
     font-weight: 600;
-    border: 1px solid white;
+    border: 1px solid var(--card-bg);
 }
 
 .dark-mode .notification-badge {
@@ -576,7 +577,7 @@ h3 { font-size: 1.25rem; }
 }
 
 .profile-icon, .logout-icon {
-    font-size: 1.75rem;
+    font-size: 1.5rem;
     color: var(--text-color);
     text-decoration: none;
     transition: color 0.3s ease;
@@ -586,30 +587,21 @@ h3 { font-size: 1.25rem; }
     color: var(--accent-blue);
 }
 
-.header-toggles .btn, .header-toggles .dropdown-toggle {
-    min-width: 42px;
-    font-size: 1rem;
+.header-toggles {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
 }
 
-.header-toggles {
-    gap: 0.5rem;
+.header-toggles .btn, .header-toggles .dropdown-toggle {
+    min-width: 40px;
+    font-size: 1rem;
 }
 
 .header-toggles .dropdown-menu {
     min-width: 120px;
     border-radius: 0.5rem;
     box-shadow: var(--card-shadow);
-    transform: translateY(0.5rem);
-    opacity: 0;
-    visibility: hidden;
-    transition: opacity 0.2s ease, transform 0.2s ease;
-}
-
-.header-toggles .dropdown:hover .dropdown-menu,
-.header-toggles .dropdown:focus-within .dropdown-menu {
-    opacity: 1;
-    visibility: visible;
-    transform: translateY(0);
 }
 
 /* Consent Banner */
@@ -617,7 +609,7 @@ h3 { font-size: 1.25rem; }
     background: var(--alert-info-bg);
     color: var(--alert-info-text);
     text-align: center;
-    padding: 0.5rem;
+    padding: 0.75rem;
     position: fixed;
     bottom: var(--bottom-nav-height);
     width: 100%;
@@ -627,7 +619,7 @@ h3 { font-size: 1.25rem; }
     align-items: center;
     justify-content: center;
     gap: 0.5rem;
-    word-break: break-word;
+    font-size: 0.9rem;
 }
 
 @media (min-width: 992px) {
@@ -638,26 +630,19 @@ h3 { font-size: 1.25rem; }
 
 .consent-banner i {
     color: var(--accent-blue);
-    font-size: 0.9rem;
+    font-size: 1rem;
 }
 
 .consent-banner .close-btn {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    padding: 10px 20px;
+    padding: 0.5rem 1rem;
     background: var(--button-primary-bg);
     color: white;
     border: none;
-    border-radius: 8px;
+    border-radius: 0.5rem;
     font-size: 0.9rem;
     font-weight: 600;
     cursor: pointer;
     transition: background 0.3s ease, transform 0.2s ease;
-    width: auto;
-    margin-top: 10px;
-    margin-bottom: 15px;
-    text-align: center;
 }
 
 .consent-banner .close-btn:hover {
@@ -670,10 +655,10 @@ h3 { font-size: 1.25rem; }
     background: linear-gradient(rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.6)), 
                 url('/static/images/hero-financial-africa.jpg') center/cover no-repeat,
                 linear-gradient(135deg, var(--button-primary-bg), var(--button-success-bg));
-    padding: 3rem 0 4rem;
+    padding: 2.5rem 0;
     position: relative;
     overflow: hidden;
-    min-height: 400px;
+    min-height: 350px;
     display: flex;
     flex-direction: column;
     justify-content: center;
@@ -681,20 +666,20 @@ h3 { font-size: 1.25rem; }
 }
 
 .hero .container {
-    padding: 0 1.5rem;
+    padding: 0 1rem;
     z-index: 1;
 }
 
 .hero h1 {
-    font-size: clamp(2rem, 5vw, 3.5rem);
-    margin-bottom: 1.5rem;
+    font-size: clamp(1.8rem, 4.5vw, 2.5rem);
+    margin-bottom: 1rem;
     line-height: 1.2;
 }
 
 .hero p.lead {
-    font-size: clamp(1rem, 2.5vw, 1.3rem);
-    max-width: 850px;
-    margin: 0 auto 2rem;
+    font-size: clamp(0.9rem, 2vw, 1.1rem);
+    max-width: 700px;
+    margin: 0 auto 1.5rem;
     line-height: 1.5;
 }
 
@@ -703,51 +688,40 @@ h3 { font-size: 1.25rem; }
 }
 
 .hero .dropdown-menu {
-    min-width: 220px;
+    min-width: 180px;
     border-radius: 0.5rem;
     box-shadow: var(--card-shadow);
-    transform: translateY(0.5rem);
-    opacity: 0;
-    visibility: hidden;
-    transition: opacity 0.2s ease, transform 0.2s ease;
-}
-
-.hero .dropdown:hover .dropdown-menu,
-.hero .dropdown:focus-within .dropdown-menu {
-    opacity: 1;
-    visibility: visible;
-    transform: translateY(0);
 }
 
 .hero .btn-lg {
-    padding: 0.85rem 2.5rem;
-    font-size: 1.1rem;
+    padding: 0.75rem 2rem;
+    font-size: clamp(0.9rem, 2vw, 1rem);
     font-weight: 600;
-    min-width: 180px;
+    min-width: 160px;
 }
 
 @media (max-width: 576px) {
     .hero.hero-background {
-        padding: 2rem 0;
-        min-height: 300px;
+        padding: 1.5rem 0;
+        min-height: 280px;
     }
     .hero .container {
-        padding: 0 1rem;
+        padding: 0 0.75rem;
     }
     .hero h1 {
-        font-size: clamp(1.5rem, 4vw, 2rem);
+        font-size: clamp(1.4rem, 3.5vw, 1.8rem);
     }
     .hero p.lead {
-        font-size: clamp(0.9rem, 2vw, 1rem);
-        margin-bottom: 1.5rem;
+        font-size: clamp(0.8rem, 1.8vw, 0.9rem);
+        margin-bottom: 1rem;
     }
     .hero .btn-lg {
-        padding: 0.6rem 1.5rem;
-        font-size: 1rem;
-        min-width: 150px;
+        padding: 0.5rem 1.5rem;
+        font-size: 0.9rem;
+        min-width: 140px;
     }
     .hero .dropdown-menu {
-        min-width: 160px;
+        min-width: 150px;
     }
 }
 
@@ -759,14 +733,15 @@ h3 { font-size: 1.25rem; }
     font-size: var(--font-size-sm);
     text-decoration: none;
     transition: background 0.3s ease, transform 0.3s ease, box-shadow 0.3s ease;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
 }
 
 .btn-primary {
     background: var(--button-primary-bg);
     color: #ffffff;
     border: none;
-    display: inline-block;
-    text-align: center;
 }
 
 .btn-primary:hover, .btn-primary:focus {
@@ -838,7 +813,7 @@ h3 { font-size: 1.25rem; }
 
 .btn-lg {
     font-size: 1rem;
-    padding: 0.5rem 1rem;
+    padding: 0.75rem 1.5rem;
 }
 
 /* Cards */
@@ -847,8 +822,8 @@ h3 { font-size: 1.25rem; }
     border: 1px solid var(--card-border);
     border-radius: 1rem;
     box-shadow: var(--card-shadow);
-    padding: 1.5rem;
-    margin-bottom: 1.5rem;
+    padding: 1rem;
+    margin-bottom: 1rem;
     transition: transform 0.3s ease, box-shadow 0.3s ease;
 }
 
@@ -863,7 +838,7 @@ h3 { font-size: 1.25rem; }
 
 .card-title {
     font-size: var(--font-size-h4);
-    font-weight: 700;
+    font-weight: 600;
     color: var(--text-color);
     margin-bottom: 0.5rem;
     display: flex;
@@ -876,9 +851,9 @@ h2.card-title {
 }
 
 .card-text {
-    font-size: 0.85rem;
+    font-size: 0.9rem;
     color: var(--text-secondary);
-    margin-bottom: 1rem;
+    margin-bottom: 0.75rem;
 }
 
 .card-icon {
@@ -886,13 +861,15 @@ h2.card-title {
     color: var(--text-color);
 }
 
-.toolcard {
+.tool-card {
     width: 100%;
-    min-height: 220px;
+    min-height: 200px;
     display: flex;
     flex-direction: column;
     justify-content: space-between;
+    position: relative;
 }
+
 .tool-card .card-body h3 {
     font-size: var(--font-size-h4);
     margin-bottom: 0.5rem;
@@ -919,16 +896,17 @@ h2.card-title {
 /* Financial Summary */
 .financial-summary {
     background: var(--card-bg);
-    border-radius: 1rem;
-    padding: 1.5rem;
+    border-radius: 0.75rem;
+    padding: 1rem;
     box-shadow: var(--card-shadow);
     border: 1px solid var(--card-border);
+    margin-bottom: 1rem;
 }
 
 .summary-card {
     background: var(--card-bg);
-    border-radius: 0.75rem;
-    padding: 1rem;
+    border-radius: 0.5rem;
+    padding: 0.75rem;
     border: 1px solid var(--card-border);
     transition: transform 0.3s ease, box-shadow 0.3s ease;
 }
@@ -942,8 +920,8 @@ h2.card-title {
     display: flex;
     align-items: center;
     gap: 0.5rem;
-    margin-bottom: 0.75rem;
-    font-size: 0.875rem;
+    margin-bottom: 0.5rem;
+    font-size: 0.85rem;
     font-weight: 500;
     color: var(--text-secondary);
 }
@@ -953,7 +931,7 @@ h2.card-title {
 }
 
 .card-amount {
-    font-size: 1.5rem;
+    font-size: 1.25rem;
     font-weight: 700;
     display: flex;
     align-items: baseline;
@@ -961,14 +939,14 @@ h2.card-title {
 }
 
 .currency-symbol {
-    font-size: 1rem;
+    font-size: 0.9rem;
     opacity: 0.8;
 }
 
 .net-position-card {
     background: var(--card-bg);
-    border-radius: 0.75rem;
-    padding: 1rem;
+    border-radius: 0.5rem;
+    padding: 0.75rem;
     border: 1px solid var(--card-border);
 }
 
@@ -985,12 +963,12 @@ h2.card-title {
 }
 
 .net-amount {
-    font-size: 1.25rem;
-    font-weight: 700;
+    font-size: 1.1rem;
+    font-weight: 600;
 }
 
 .net-status {
-    font-size: 0.875rem;
+    font-size: 0.85rem;
     font-weight: 500;
 }
 
@@ -1012,13 +990,13 @@ h2.card-title {
 
 /* Financial Snapshots */
 .financial-snapshots {
-    margin-bottom: 1.5rem;
+    margin-bottom: 1rem;
 }
 
 .stat-cards-container {
     display: flex;
     flex-wrap: wrap;
-    gap: 0.75rem;
+    gap: 0.5rem;
     justify-content: space-between;
 }
 
@@ -1032,8 +1010,8 @@ h2.card-title {
     gap: 0.5rem;
     transition: transform 0.3s ease, box-shadow 0.3s ease;
     flex: 1;
-    min-width: 150px;
-    max-width: 200px;
+    min-width: 140px;
+    max-width: 180px;
 }
 
 .stat-card:hover {
@@ -1070,26 +1048,25 @@ h2.card-title {
     font-weight: 600;
     color: var(--text-color);
     overflow-wrap: break-word;
-    word-break: break-all;
 }
 
 /* Section Titles */
 .section-title {
-    font-size: 1.125rem;
+    font-size: clamp(1rem, 2.5vw, 1.125rem);
     font-weight: 600;
     color: var(--text-color);
-    margin-bottom: 1rem;
+    margin-bottom: 0.75rem;
 }
 
 /* Quick Actions */
 .quick-actions {
-    margin-bottom: 1.5rem;
+    margin-bottom: 1rem;
 }
 
 .actions-container, .actions-grid {
     display: flex;
     flex-wrap: wrap;
-    gap: 1rem;
+    gap: 0.75rem;
 }
 
 .action-card {
@@ -1098,14 +1075,15 @@ h2.card-title {
     align-items: center;
     justify-content: center;
     text-decoration: none;
-    border-radius: 0.75rem;
-    transition: transform 0.15s, box-shadow 0.2s, filter 0.2s;
+    border-radius: 0.5rem;
+    transition: transform 0.15s ease, box-shadow 0.2s ease, filter 0.2s ease;
     font-weight: 500;
     padding: 0.75rem;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
     flex-grow: 1;
-    flex-basis: auto;
-    min-width: 0;
+    flex-basis: 0;
+    min-width: 100px;
+    position: relative;
 }
 
 .action-card:hover {
@@ -1117,29 +1095,29 @@ h2.card-title {
     background: linear-gradient(135deg, #f5dabc 60%, #e0bc8c 100%);
     color: #fff;
     border: none;
-    box-shadow: 0 6px 32px rgba(245, 218, 188, 0.15);
+    box-shadow: 0 6px 16px rgba(245, 218, 188, 0.15);
     filter: brightness(1);
-    padding: 1rem;
+    padding: 0.75rem;
 }
 
 .cta-debtor-card {
     background: linear-gradient(135deg, #8cdeda 60%, #4fb7b2 100%);
     color: #fff;
     border: none;
-    box-shadow: 0 6px 32px rgba(140, 222, 218, 0.15);
+    box-shadow: 0 6px 16px rgba(140, 222, 218, 0.15);
     filter: brightness(1);
-    padding: 1rem;
+    padding: 0.75rem;
 }
 
 .cta-creditor-card:hover {
     transform: translateY(-2px) scale(1.02);
-    box-shadow: 0 12px 36px rgba(184, 138, 68, 0.25);
+    box-shadow: 0 8px 20px rgba(184, 138, 68, 0.2);
     filter: brightness(1.08);
 }
 
 .cta-debtor-card:hover {
     transform: translateY(-2px) scale(1.02);
-    box-shadow: 0 12px 36px rgba(107, 114, 128, 0.25);
+    box-shadow: 0 8px 20px rgba(107, 114, 128, 0.2);
     filter: brightness(1.08);
 }
 
@@ -1147,11 +1125,10 @@ h2.card-title {
     background: var(--card-bg);
     color: var(--text-color);
     border: 1px solid var(--card-border);
-    font-weight: 500;
 }
 
 .action-icon {
-    font-size: 2.2rem;
+    font-size: 1.8rem;
     margin-bottom: 0.5rem;
     background: rgba(0, 0, 0, 0.05);
     color: var(--text-color);
@@ -1167,7 +1144,7 @@ h2.card-title {
 }
 
 .action-label {
-    font-size: 0.875rem;
+    font-size: 0.85rem;
     font-weight: 600;
     color: var(--text-secondary);
     text-align: center;
@@ -1175,12 +1152,12 @@ h2.card-title {
 
 /* Recent Activity */
 .recent-activity {
-    margin-bottom: 1.5rem;
+    margin-bottom: 1rem;
 }
 
 .activity-list {
     background: var(--card-bg);
-    border-radius: 0.75rem;
+    border-radius: 0.5rem;
     border: 1px solid var(--card-border);
     overflow: hidden;
 }
@@ -1188,8 +1165,8 @@ h2.card-title {
 .activity-item {
     display: flex;
     align-items: center;
-    gap: 1rem;
-    padding: 1rem;
+    gap: 0.75rem;
+    padding: 0.75rem;
     border-bottom: 1px solid var(--card-border);
     transition: background-color 0.3s ease;
 }
@@ -1204,8 +1181,8 @@ h2.card-title {
 
 .activity-icon {
     font-size: 1.25rem;
-    width: 2.5rem;
-    height: 2.5rem;
+    width: 2rem;
+    height: 2rem;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -1223,7 +1200,7 @@ h2.card-title {
 }
 
 .activity-description {
-    font-size: 0.875rem;
+    font-size: 0.85rem;
     font-weight: 500;
     color: var(--text-color);
     margin-bottom: 0.25rem;
@@ -1236,7 +1213,7 @@ h2.card-title {
 }
 
 .activity-amount {
-    font-size: 0.875rem;
+    font-size: 0.85rem;
     font-weight: 600;
     color: var(--text-color);
 }
@@ -1244,7 +1221,7 @@ h2.card-title {
 /* Notification List */
 .notification-list {
     background: var(--card-bg);
-    border-radius: 0.75rem;
+    border-radius: 0.5rem;
     border: 1px solid var(--card-border);
     overflow: hidden;
 }
@@ -1252,8 +1229,8 @@ h2.card-title {
 .notification-item {
     display: flex;
     align-items: center;
-    gap: 1rem;
-    padding: 1rem;
+    gap: 0.75rem;
+    padding: 0.75rem;
     border-bottom: 1px solid var(--card-border);
     transition: background-color 0.3s ease;
 }
@@ -1268,8 +1245,8 @@ h2.card-title {
 
 .notification-icon {
     font-size: 1.25rem;
-    width: 2.5rem;
-    height: 2.5rem;
+    width: 2rem;
+    height: 2rem;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -1287,7 +1264,7 @@ h2.card-title {
 }
 
 .notification-description {
-    font-size: 0.875rem;
+    font-size: 0.85rem;
     font-weight: 500;
     color: var(--text-color);
     margin-bottom: 0.25rem;
@@ -1310,13 +1287,13 @@ h2.card-title {
 
 /* Navigation Cards */
 .navigation-cards {
-    margin-bottom: 2rem;
+    margin-bottom: 1.5rem;
 }
 
 .nav-card {
     background: var(--card-bg);
-    border-radius: 0.75rem;
-    padding: 1.25rem;
+    border-radius: 0.5rem;
+    padding: 1rem;
     border: 1px solid var(--card-border);
     position: relative;
     transition: transform 0.3s ease, box-shadow 0.3s ease;
@@ -1331,9 +1308,9 @@ h2.card-title {
 }
 
 .nav-card-icon {
-    font-size: 2rem;
+    font-size: 1.8rem;
     color: var(--accent-blue);
-    margin-bottom: 1rem;
+    margin-bottom: 0.75rem;
 }
 
 .nav-card-content h4 {
@@ -1344,7 +1321,7 @@ h2.card-title {
 }
 
 .nav-card-content p {
-    font-size: 0.875rem;
+    font-size: 0.85rem;
     color: var(--text-muted);
     margin: 0;
     line-height: 1.4;
@@ -1361,17 +1338,17 @@ h2.card-title {
 
 /* Alerts */
 .alert-container {
-    margin-top: calc(var(--navbar-height) + 1rem);
-    padding-left: 15px;
-    padding-right: 15px;
+    margin-top: calc(var(--navbar-height) + 0.5rem);
+    padding-left: 0.75rem;
+    padding-right: 0.75rem;
 }
 
 .alert {
-    padding: 1.25rem 1.5rem;
-    font-size: 1rem;
+    padding: 1rem;
+    font-size: 0.9rem;
     border-radius: 0.5rem;
     border: 1px solid;
-    margin-bottom: 1rem;
+    margin-bottom: 0.75rem;
     display: flex;
     align-items: center;
     gap: 0.5rem;
@@ -1410,7 +1387,7 @@ h2.card-title {
     background-image: var(--bs-btn-close-bg);
     background-repeat: no-repeat;
     background-position: center;
-    background-size: 1em 1em;
+    background-size: 1em;
     width: 1.5em;
     height: 1.5em;
     cursor: pointer;
@@ -1429,14 +1406,14 @@ h2.card-title {
 .form-container {
     max-width: 400px;
     margin: 1rem auto;
-    padding: 1.5rem;
+    padding: 1rem;
     background: var(--card-bg);
-    border-radius: 1rem;
+    border-radius: 0.75rem;
     box-shadow: var(--card-shadow);
 }
 
 .form-group {
-    margin-bottom: 1rem;
+    margin-bottom: 0.75rem;
 }
 
 .form-label {
@@ -1447,7 +1424,7 @@ h2.card-title {
 }
 
 .form-control, .form-select {
-    padding: 0.75rem;
+    padding: 0.5rem;
     border: 2px solid var(--card-border);
     border-radius: 0.5rem;
     background: var(--card-bg);
@@ -1504,7 +1481,7 @@ h2.card-title {
 
 .password-toggle {
     position: absolute;
-    right: 1rem;
+    right: 0.75rem;
     top: 50%;
     transform: translateY(-50%);
     cursor: pointer;
@@ -1530,15 +1507,15 @@ h2.card-title {
     border-spacing: 0;
     background: var(--table-light-bg);
     border: 1px solid var(--table-border);
-    border-radius: 0.75rem;
+    border-radius: 0.5rem;
     overflow: hidden;
 }
 
 .table th, .table td {
-    padding: 0.75rem 1rem;
+    padding: 0.5rem 0.75rem;
     border-bottom: 1px solid var(--table-border);
     text-align: left;
-    font-size: 0.875rem;
+    font-size: 0.85rem;
     vertical-align: middle;
     color: var(--table-text);
 }
@@ -1581,7 +1558,7 @@ h2.card-title {
 .footer {
     background: var(--footer-bg) !important;
     color: var(--navbar-text-color);
-    padding: 1.5rem 0;
+    padding: 1rem 0;
     text-align: center;
     flex-shrink: 0;
 }
@@ -1590,6 +1567,7 @@ h2.card-title {
     color: var(--footer-link-color);
     text-decoration: none;
     margin: 0 0.5rem;
+    font-size: 0.9rem;
 }
 
 .footer a:hover {
@@ -1599,11 +1577,11 @@ h2.card-title {
 
 /* Role-Based Value Proposition */
 .role-card {
-    min-height: 250px;
+    min-height: 200px;
     display: flex;
     flex-direction: column;
     justify-content: space-between;
-    transition: transform 0.3s;
+    transition: transform 0.3s ease;
 }
 
 .role-card:hover {
@@ -1626,8 +1604,8 @@ h2.card-title {
 }
 
 .role-card .card-body i {
-    font-size: 2.5rem;
-    margin-bottom: 1rem;
+    font-size: 2rem;
+    margin-bottom: 0.75rem;
     transition: transform 0.3s ease;
 }
 
@@ -1636,43 +1614,29 @@ h2.card-title {
 }
 
 .role-card .card-body h3 {
-    font-size: 1.3rem;
-    margin-bottom: 0.75rem;
+    font-size: 1.2rem;
+    margin-bottom: 0.5rem;
 }
 
 .role-card .card-body p {
-    font-size: 0.95rem;
+    font-size: 0.9rem;
     color: var(--text-secondary);
 }
 
 /* Tools Section */
-.tools-section .accordion-button {
-    font-size: 1.3rem;
-    font-weight: 600;
-    color: var(--text-color);
-    background: var(--card-bg);
-    border-radius: 0.5rem;
-    padding: 1.2rem 1.5rem;
+.tools-section .row {
     display: flex;
-    align-items: center;
-}
-
-.tools-section .accordion-button:not(.collapsed) {
-    background: var(--button-secondary-hover);
-    color: var(--accent-blue);
-}
-
-.tools-section .accordion-button i {
-    margin-right: 0.75rem;
-    font-size: 1.5rem;
+    flex-wrap: wrap;
+    gap: 0.75rem;
 }
 
 .tool-card {
-    min-height: 250px;
+    min-height: 180px;
     display: flex;
     flex-direction: column;
     justify-content: space-between;
-    transition: transform 0.3s;
+    transition: transform 0.3s ease;
+    position: relative;
 }
 
 .tool-card:hover {
@@ -1700,8 +1664,8 @@ h2.card-title {
 }
 
 .tool-card .card-body i {
-    font-size: 1.8rem;
-    margin-bottom: 0.75rem;
+    font-size: 1.5rem;
+    margin-bottom: 0.5rem;
     transition: transform 0.3s ease;
 }
 
@@ -1715,31 +1679,35 @@ h2.card-title {
 }
 
 .tool-card .card-body p {
-    font-size: 0.9rem;
+    font-size: 0.85rem;
     color: var(--text-secondary);
 }
 
-.tools-section .accordion-body {
-    padding: 1.5rem;
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-    gap: 1.5rem;
+.tool-card .badge {
+    position: absolute;
+    top: 0.5rem;
+    right: 0.5rem;
+    font-size: 0.7rem;
+    padding: 0.25rem 0.5rem;
+    background: var(--accent-blue);
+    color: #fff;
+    border-radius: 0.25rem;
 }
 
 /* Why Choose FiCore Section */
 .why-section .highlight-text {
-    font-size: 1.6rem;
+    font-size: 1.4rem;
     font-weight: 700;
     color: var(--accent-blue);
-    margin-bottom: 1.5rem;
+    margin-bottom: 1rem;
 }
 
 .why-item {
-    padding: 1.2rem;
-    border-radius: 0.6rem;
+    padding: 1rem;
+    border-radius: 0.5rem;
     background: var(--card-bg);
     border: 1px solid var(--card-border);
-    transition: transform 0.3s ease, box-shadow 0.3s ease, background-color 0.3s ease;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
     position: relative;
     padding-left: 2.5rem;
 }
@@ -1757,14 +1725,12 @@ h2.card-title {
 .why-item:hover {
     transform: translateY(-5px);
     box-shadow: var(--card-shadow-hover);
-    background: var(--button-secondary-hover);
 }
 
 .why-item i {
     color: var(--success-color);
-    font-size: 2.5rem;
-    margin-bottom: 1rem;
-    transition: color 0.3s ease;
+    font-size: 2rem;
+    margin-bottom: 0.75rem;
 }
 
 .why-item:hover i {
@@ -1772,15 +1738,15 @@ h2.card-title {
 }
 
 .animated-counter {
-    font-size: 1.8rem;
+    font-size: 1.5rem;
     font-weight: 700;
     color: var(--accent-blue);
     display: block;
-    margin-top: 1.5rem;
+    margin-top: 1rem;
 }
 
 .animated-counter + span {
-    font-size: 1.2rem;
+    font-size: 1rem;
     font-weight: 500;
     color: var(--text-secondary);
     margin-left: 0.5rem;
@@ -1796,16 +1762,16 @@ h2.card-title {
 }
 
 .avatar-circle {
-    width: 70px;
-    height: 70px;
+    width: 60px;
+    height: 60px;
     border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 1.8rem;
+    font-size: 1.5rem;
     font-weight: 700;
     color: #fff;
-    margin: 0 auto 1.2rem;
+    margin: 0 auto 1rem;
     box-shadow: var(--card-shadow);
 }
 
@@ -1822,39 +1788,39 @@ h2.card-title {
 }
 
 .testimonials-section .testimonial p {
-    font-size: 1rem;
+    font-size: 0.9rem;
     color: var(--text-secondary);
     margin-bottom: 0.5rem;
-    max-width: 600px;
+    max-width: 500px;
     margin-left: auto;
     margin-right: auto;
 }
 
 .testimonials-section .testimonial .name {
-    font-size: 0.9rem;
+    font-size: 0.85rem;
     color: var(--text-muted);
     font-style: italic;
 }
 
 .testimonials-section .carousel-control-prev,
 .testimonials-section .carousel-control-next {
-    width: 10%;
+    width: 8%;
     background: rgba(0, 0, 0, 0.3);
     border-radius: 50%;
-    height: 40px;
-    width: 40px;
+    height: 36px;
+    width: 36px;
     top: 50%;
     transform: translateY(-50%);
 }
 
 /* FAQ Section */
 .faq-section .accordion-button {
-    font-size: 1.2rem;
+    font-size: 1.1rem;
     font-weight: 500;
     color: var(--text-color);
     background: var(--card-bg);
     border-radius: 0.5rem;
-    padding: 1.1rem 1.5rem;
+    padding: 1rem;
     display: flex;
     align-items: center;
 }
@@ -1865,50 +1831,39 @@ h2.card-title {
 }
 
 .faq-section .accordion-button i {
-    margin-right: 0.75rem;
-    font-size: 1.4rem;
+    margin-right: 0.5rem;
+    font-size: 1.2rem;
 }
 
 .faq-section .accordion-body {
-    font-size: 0.95rem;
+    font-size: 0.9rem;
     color: var(--text-secondary);
-    padding: 1.2rem 1.5rem;
+    padding: 1rem;
     line-height: 1.6;
 }
 
 /* CTA Section */
 .cta-section {
-    padding: 3rem 0;
+    padding: 2rem 0;
     background: var(--card-bg);
-    border-radius: 1rem;
-    margin: 2rem 0;
+    border-radius: 0.75rem;
+    margin: 1.5rem 0;
     box-shadow: var(--card-shadow);
     text-align: center;
 }
 
 .cta-section .btn-lg {
-    padding: 0.85rem 2.5rem;
-    font-size: 1.1rem;
+    padding: 0.75rem 2rem;
+    font-size: 1rem;
     font-weight: 600;
-    min-width: 180px;
+    min-width: 160px;
     margin: 0 0.5rem;
 }
 
 .cta-section .dropdown-menu {
-    min-width: 220px;
+    min-width: 180px;
     border-radius: 0.5rem;
     box-shadow: var(--card-shadow);
-    transform: translateY(0.5rem);
-    opacity: 0;
-    visibility: hidden;
-    transition: opacity 0.2s ease, transform 0.2s ease;
-}
-
-.cta-section .dropdown:hover .dropdown-menu,
-.cta-section .dropdown:focus-within .dropdown-menu {
-    opacity: 1;
-    visibility: visible;
-    transform: translateY(0);
 }
 
 /* Modal Styles */
@@ -1921,19 +1876,21 @@ h2.card-title {
 
 .modal-header {
     border-bottom: 1px solid var(--card-border);
+    padding: 1rem;
 }
 
 .modal-footer {
     border-top: 1px solid var(--card-border);
+    padding: 1rem;
 }
 
 /* Localization Subtext */
 .subtext {
-    font-size: 0.9em;
-    color: #666;
+    font-size: 0.85rem;
+    color: var(--text-muted);
     font-style: italic;
     display: block;
-    margin-top: 0.2em;
+    margin-top: 0.2rem;
     font-weight: 400;
 }
 
@@ -1979,7 +1936,7 @@ h2.card-title {
 
 /* Print Styles */
 @media print {
-    .navbar, .mobile-bottom-nav, .footer, .alert-container, .visibility-toggle, .header-actions {
+    .navbar, .bottom-nav, .footer, .alert-container, .visibility-toggle, .header-actions {
         display: none;
     }
     .header-actions .no-js-intercept {
@@ -2034,120 +1991,106 @@ h2.card-title {
         min-width: 60px;
     }
     .navbar-toggler {
-        padding: 0.3rem 6px;
+        padding: 0.3rem 0.5rem;
         font-size: 0.85rem;
     }
-    .container {
-        max-width: 100%;
-        margin: 0;
+    .container, .container-fluid {
         padding: 0.3rem 0.5rem;
     }
     .navbar-container, .footer-container {
         padding: 0.3rem 0.5rem;
     }
     .btn, .btn-primary, .btn-explore, .course-link, .tool-card button, .modal .btn, .btn-secondary {
-        padding: 10px 20px;
-        font-size: 0.9rem;
-        margin-top: 8px;
-        margin-bottom: 12px;
+        padding: 0.5rem 1rem;
+        font-size: 0.85rem;
+        margin-top: 0.5rem;
+        margin-bottom: 0.75rem;
     }
     .step-container .btn-nav, .quiz-container .btn-nav {
-        padding: 10px 20px;
-        font-size: 0.9rem;
-        margin: 8px 0.3rem 12px 0;
+        padding: 0.5rem 1rem;
+        font-size: 0.85rem;
+        margin: 0.5rem 0.2rem 0.75rem 0;
         min-width: 80px;
     }
     .hero.hero-background {
-        padding: 0 0 1.5rem 0;
+        padding: 1rem 0;
     }
     .hero .container {
         padding: 0 0.5rem;
     }
     .hero h1 {
-        font-size: clamp(1.2rem, 3.5vw, 1.8rem);
+        font-size: clamp(1.2rem, 3.5vw, 1.5rem);
     }
     .hero p.lead {
-        font-size: clamp(0.8rem, 2vw, 0.9rem);
+        font-size: clamp(0.75rem, 1.8vw, 0.85rem);
     }
     .card-title {
-        font-size: var(--font-size-h4);
+        font-size: clamp(1rem, 2vw, 1.1rem);
     }
     .journey-steps {
-        max-width: 100%;
-        gap: 1rem;
+        gap: 0.75rem;
     }
     .journey-step {
         flex: 1 1 40%;
-        max-width: 120px;
+        max-width: 100px;
     }
     .step-badge {
-        width: 2rem;
-        height: 2rem;
-        font-size: 0.9rem;
+        width: 1.8rem;
+        height: 1.8rem;
+        font-size: 0.8rem;
     }
     #modeToggle {
-        padding: 8px 16px;
+        padding: 0.5rem 1rem;
         font-size: 0.8rem;
-        margin-top: 8px;
-        margin-bottom: 12px;
+        margin-top: 0.5rem;
+        margin-bottom: 0.75rem;
     }
     .course-grid, .dashboard-grid {
         grid-template-columns: 1fr;
-        gap: 1rem;
+        gap: 0.75rem;
     }
     .form-control {
-        font-size: 0.875rem;
+        font-size: 0.85rem;
         padding: 0.4rem;
     }
     .video-player {
-        max-height: 300px;
+        max-height: 250px;
     }
     .pdf-viewer {
-        height: 400px;
-    }
-    .accordion-body {
-        padding: 0.5rem;
-        gap: 0.5rem;
+        height: 350px;
     }
     .card {
         padding: 0.5rem;
         margin: 0 0 0.5rem;
     }
     .role-card, .tool-card {
-        margin-bottom: 1rem;
-    }
-    .hero h1 {
-        font-size: 1.5rem;
+        margin-bottom: 0.75rem;
     }
     .btn-lg {
-        font-size: 1rem;
+        font-size: 0.9rem;
         padding: 0.5rem 1rem;
     }
 }
 
 @media (max-width: 480px) {
     .btn, .btn-primary, .course-link, .modal .btn, .btn-secondary {
-        padding: 10px 20px;
-        font-size: 0.9rem;
-        margin-top: 8px;
-        margin-bottom: 12px;
+        padding: 0.5rem 1rem;
+        font-size: 0.85rem;
+        margin-top: 0.5rem;
+        margin-bottom: 0.75rem;
     }
     .btn-explore, .tool-card button {
-        padding: 12px 24px;
-        font-size: 1rem;
+        padding: 0.6rem 1.2rem;
+        font-size: 0.9rem;
     }
     .step-container .btn-nav, .quiz-container .btn-nav {
-        padding: 10px 20px;
-        font-size: 0.9rem;
-        margin: 8px 0.3rem 12px 0;
-        min-width: 100px;
+        padding: 0.5rem 1rem;
+        font-size: 0.85rem;
+        margin: 0.5rem 0.2rem 0.75rem 0;
+        min-width: 90px;
     }
     .button-container {
-        gap: 0.5rem;
-    }
-    .accordion-body {
-        padding: 0.75rem;
-        gap: 0.75rem;
+        gap: 0.4rem;
     }
     .card {
         padding: 0.75rem;
@@ -2157,12 +2100,12 @@ h2.card-title {
 
 @media (min-width: 576px) {
     .stat-cards-container {
-        flex-direction: column;
+        flex-direction: row;
         align-items: stretch;
     }
     .stat-card {
-        max-width: 100%;
-        min-width: 0;
+        max-width: 200px;
+        min-width: 120px;
         padding: 0.5rem;
     }
     .stat-card .snapshot-icon {
@@ -2171,14 +2114,14 @@ h2.card-title {
         font-size: 1rem;
     }
     .stat-card .snapshot-label, .stat-card-value {
-        font-size: 0.65rem;
+        font-size: 0.75rem;
     }
     .table th, .table td {
-        font-size: 0.75rem;
+        font-size: 0.8rem;
         padding: 0.5rem;
     }
     .form-container {
-        padding: 1rem;
+        padding: 0.75rem;
     }
     .form-control, .form-select {
         font-size: 0.85rem;
@@ -2186,26 +2129,26 @@ h2.card-title {
     }
     .testimonials-section .carousel-control-prev,
     .testimonials-section .carousel-control-next {
-        height: 30px;
-        width: 30px;
+        height: 32px;
+        width: 32px;
     }
     .avatar-circle {
         width: 50px;
         height: 50px;
-        font-size: 1.3rem;
+        font-size: 1.2rem;
     }
     .testimonials-section .testimonial p {
-        font-size: 0.9rem;
+        font-size: 0.85rem;
     }
     .cta-section {
-        padding: 2rem 0;
-        margin: 1.5rem 0;
+        padding: 1.5rem 0;
+        margin: 1rem 0;
     }
     .cta-section .btn-lg {
         padding: 0.6rem 1.5rem;
-        font-size: 1rem;
-        min-width: 150px;
-        margin: 0.25rem 0;
+        font-size: 0.9rem;
+        min-width: 140px;
+        margin: 0.25rem;
     }
     .cta-section .dropdown-menu {
         min-width: 160px;
@@ -2220,86 +2163,77 @@ h2.card-title {
     .navbar-container {
         max-width: 1200px;
         margin: 0 auto;
-        padding: 1rem 2rem;
+        padding: 1rem 1.5rem;
         flex-direction: row;
         align-items: center;
         justify-content: space-between;
     }
     .footer-container {
         max-width: 1200px;
-        padding: 1rem 2rem;
+        padding: 1rem 1.5rem;
     }
     .navbar-actions {
-        width: auto;
-        margin: 0;
-        gap: 1rem;
-    }
-    .navbar-collapse {
-        display: flex;
-        align-items: center;
-        justify-content: flex-end;
+        gap: 0.75rem;
     }
     .navbar-nav {
         flex-direction: row;
         align-items: center;
-        gap: 1rem;
+        gap: 0.75rem;
     }
     .nav-link {
-        padding: 0.5rem 1.5rem;
-        font-size: 1rem;
+        padding: 0.5rem 1rem;
+        font-size: 0.9rem;
     }
-    .container {
+    .container, .container-fluid {
         max-width: 1200px;
-        padding: 1rem 2rem;
+        padding: 1rem 1.5rem;
     }
     .step-container {
         max-width: 1200px;
-        padding: 1rem 2rem;
+        padding: 1rem 1.5rem;
     }
     .hero.hero-background {
-        padding: 0 0 4rem 0;
+        padding: 3rem 0;
     }
     .hero .container {
-        padding: 0 2rem;
+        padding: 0 1.5rem;
     }
     .hero h1 {
-        font-size: clamp(2.5rem, 5vw, 3.5rem);
+        font-size: clamp(2rem, 4.5vw, 2.8rem);
     }
     .hero p.lead {
-        font-size: clamp(1.1rem, 3vw, 1.3rem);
+        font-size: clamp(1rem, 2vw, 1.2rem);
     }
     .hero-content {
-        max-width: 900px;
+        max-width: 800px;
     }
     .actions-container, .actions-grid {
-        flex-wrap: nowrap;
+        gap: 1rem;
     }
     .cta-creditor-card,
     .cta-debtor-card {
-        flex-basis: 180px;
-        flex-grow: 1.5;
-        max-width: 250px;
+        flex-basis: 160px;
+        max-width: 200px;
     }
     .action-card:not(.cta-creditor-card):not(.cta-debtor-card) {
-        flex-basis: 120px;
-        flex-grow: 1;
-        max-width: 180px;
+        flex-basis: 100px;
+        max-width: 140px;
     }
     .course-grid, .dashboard-grid {
-        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-        gap: 2rem;
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        gap: 1.5rem;
         max-width: 1200px;
         margin-left: auto;
         margin-right: auto;
     }
     .card {
-        padding: 1.5rem;
+        padding: 1rem;
     }
     .card-title {
         font-size: var(--font-size-h4);
     }
     .card-text {
-        font-size: 1rem;
+        font-size: 0.9rem;
     }
     .tool-group {
         padding: 1rem;
@@ -2308,73 +2242,59 @@ h2.card-title {
         margin-right: auto;
     }
     .group-title {
-        font-size: 1.4rem;
+        font-size: 1.3rem;
     }
     .group-subtext {
-        font-size: 1rem;
+        font-size: 0.9rem;
     }
     .tools-grid {
-        gap: 2.5rem;
-    }
-    .accordion-button {
-        font-size: 1.6rem;
-        padding: 1.5rem 2rem;
-    }
-    .accordion-body {
-        padding: 2rem;
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-        gap: 2rem;
+        gap: 1.5rem;
     }
     .btn, .btn-primary, .btn-explore, .course-link, .tool-card button, .modal .btn {
-        padding: 14px 28px;
-        font-size: 1.1rem;
+        padding: 0.75rem 1.5rem;
+        font-size: 1rem;
     }
     .btn-explore {
-        padding: 16px 32px;
-        font-size: 1.2rem;
+        padding: 0.9rem 1.8rem;
+        font-size: 1.1rem;
     }
     .btn-secondary {
-        padding: 12px 24px;
-        font-size: 1rem;
+        padding: 0.75rem 1.5rem;
+        font-size: 0.9rem;
     }
     .step-container .btn-nav, .quiz-container .btn-nav {
-        padding: 12px 24px;
-        font-size: 1rem;
-        min-width: 120px;
+        padding: 0.75rem 1.5rem;
+        font-size: 0.9rem;
+        min-width: 100px;
     }
     .video-player {
-        max-height: 600px;
+        max-height: 500px;
     }
     .pdf-viewer {
-        height: 700px;
+        height: 600px;
     }
     .section-heading,
     .tools-section-heading {
-        font-size: 2.5rem;
+        font-size: 2rem;
     }
     .role-card {
-        min-height: 200px;
-        margin-bottom: 1.5rem;
+        min-height: 180px;
+        margin-bottom: 1rem;
     }
     .role-card .card-body i {
-        font-size: 2rem;
+        font-size: 1.8rem;
     }
     .role-card .card-body h3 {
         font-size: 1.1rem;
     }
     .role-card .card-body p {
-        font-size: 0.9rem;
+        font-size: 0.85rem;
     }
-    .tools-section .accordion-button {
-        font-size: 1.1rem;
-        padding: 0.9rem 1rem;
-    }
-    .tools-section .accordion-button i {
-        font-size: 1.3rem;
+    .tools-section .row {
+        gap: 1rem;
     }
     .tool-card {
-        min-height: 220px;
+        min-height: 200px;
     }
     .tool-card .card-body i {
         font-size: 1.5rem;
@@ -2382,51 +2302,47 @@ h2.card-title {
     .tool-card .card-body h4 {
         font-size: var(--font-size-h4);
     }
-    .tools-section .accordion-body {
-        padding: 1rem;
-        gap: 1rem;
-    }
     .why-section .highlight-text {
-        font-size: 1.3rem;
+        font-size: 1.2rem;
     }
     .why-item {
-        padding: 0.9rem;
+        padding: 0.75rem;
         padding-left: 2rem;
     }
     .why-item::before {
         font-size: 1rem;
-        left: 0.7rem;
+        left: 0.75rem;
     }
     .why-item i {
-        font-size: 2rem;
+        font-size: 1.8rem;
     }
     .animated-counter {
-        font-size: 1.4rem;
+        font-size: 1.3rem;
     }
     .animated-counter + span {
-        font-size: 1rem;
+        font-size: 0.9rem;
     }
     .faq-section .accordion-button {
         font-size: 1rem;
-        padding: 0.8rem 1rem;
+        padding: 0.75rem 1rem;
     }
     .faq-section .accordion-button i {
-        font-size: 1.2rem;
+        font-size: 1.1rem;
     }
     .faq-section .accordion-body {
-        padding: 0.8rem 1rem;
-        font-size: 0.9rem;
+        padding: 0.75rem 1rem;
+        font-size: 0.85rem;
     }
 }
 
 @media (min-width: 1024px) {
-    .container {
+    .container, .container-fluid {
         max-width: 1400px;
-        padding: 1.5rem 3rem;
+        padding: 1.5rem 2rem;
     }
     .step-container {
         max-width: 1400px;
-        padding: 1.5rem 3rem;
+        padding: 1.5rem 2rem;
     }
     .navbar {
         max-width: 100%;
@@ -2434,44 +2350,33 @@ h2.card-title {
     }
     .navbar-container {
         max-width: 1400px;
-        padding: 1.5rem 3rem;
+        padding: 1rem 2rem;
     }
     .footer-container {
         max-width: 1400px;
-        padding: 1.5rem 3rem;
+        padding: 1rem 2rem;
     }
     .hero-content {
-        max-width: 1100px;
+        max-width: 1000px;
     }
     .course-grid, .dashboard-grid {
-        grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
-        gap: 2.5rem;
+        grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+        gap: 2rem;
         max-width: 1400px;
     }
     .card {
-        padding: 2rem;
+        padding: 1.5rem;
     }
     .card-title {
         font-size: var(--font-size-h4);
     }
-    .journey-strip {
-        max-width: 1400px;
-        padding: 2.5rem;
-    }
-    .journey-steps {
-        max-width: 1200px;
-        gap: 3rem;
-    }
-    .journey-step {
-        max-width: 250px;
-        font-size: 1.1rem;
-    }
+        
     .tool-group {
         max-width: 1400px;
         padding: 1.5rem;
     }
     .section-heading,
     .tools-section-heading {
-        font-size: 3rem;
+        font-size: 2.5rem;
     }
 }
