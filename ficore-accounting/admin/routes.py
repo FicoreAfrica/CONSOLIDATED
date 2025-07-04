@@ -4,13 +4,7 @@ from flask_wtf import FlaskForm
 from wtforms import StringField, FloatField, SelectField, validators, SubmitField
 from datetime import datetime
 from translations import trans
-from utils import (
-    trans_function, requires_role, get_mongo_db, is_admin, get_user_query, limiter,
-    PERSONAL_TOOLS, PERSONAL_NAV, PERSONAL_EXPLORE_FEATURES,
-    BUSINESS_TOOLS, BUSINESS_NAV, BUSINESS_EXPLORE_FEATURES,
-    AGENT_TOOLS, AGENT_NAV, AGENT_EXPLORE_FEATURES,
-    ALL_TOOLS, ADMIN_NAV, ADMIN_EXPLORE_FEATURES
-)
+import utils
 from models import get_budgets, get_bills, get_emergency_funds, get_net_worth, get_quiz_results, get_learning_progress
 from bson import ObjectId
 import logging
@@ -48,7 +42,7 @@ class AgentManagementForm(FlaskForm):
 def log_audit_action(action, details=None):
     """Log an admin action to audit_logs collection."""
     try:
-        db = get_mongo_db()
+        db = utils.get_mongo_db()
         db.audit_logs.insert_one({
             'admin_id': str(current_user.id),
             'action': action,
@@ -60,13 +54,13 @@ def log_audit_action(action, details=None):
 
 @admin_bp.route('/dashboard', methods=['GET'])
 @login_required
-@requires_role('admin')
-@limiter.limit("100 per hour")
+@utils.requires_role('admin')
+@utils.limiter.limit("100 per hour")
 def dashboard():
     """Admin dashboard with system stats."""
     try:
-        db = get_mongo_db()
-        user_count = db.users.count_documents({'role': {'$ne': 'admin'}} if not is_admin() else {})
+        db = utils.get_mongo_db()
+        user_count = db.users.count_documents({'role': {'$ne': 'admin'}} if not utils.is_admin() else {})
         records_count = db.records.count_documents({})
         cashflows_count = db.cashflows.count_documents({})
         inventory_count = db.inventory.count_documents({})
@@ -78,7 +72,7 @@ def dashboard():
         net_worth_count = db.net_worth_data.count_documents({})
         quiz_results_count = db.quiz_responses.count_documents({})
         learning_progress_count = db.learning_materials.count_documents({})
-        recent_users = list(db.users.find({} if is_admin() else {'role': {'$ne': 'admin'}}).sort('created_at', -1).limit(10))
+        recent_users = list(db.users.find({} if utils.is_admin() else {'role': {'$ne': 'admin'}}).sort('created_at', -1).limit(10))
         for user in recent_users:
             user['_id'] = str(user['_id'])
         return render_template(
@@ -98,9 +92,9 @@ def dashboard():
                 'learning_progress': learning_progress_count
             },
             recent_users=recent_users,
-            tools=ALL_TOOLS,
-            nav_items=ADMIN_EXPLORE_FEATURES,
-            bottom_nav_items=ADMIN_NAV,
+            tools=utils.ALL_TOOLS,
+            nav_items=utils.ADMIN_EXPLORE_FEATURES,
+            bottom_nav_items=utils.ADMIN_NAV,
             t=trans,
             lang=session.get('lang', 'en')
         )
@@ -110,30 +104,30 @@ def dashboard():
         return render_template(
             '500.html',
             error=str(e),
-            tools=ALL_TOOLS,
-            nav_items=ADMIN_EXPLORE_FEATURES,
-            bottom_nav_items=ADMIN_NAV,
+            tools=utils.ALL_TOOLS,
+            nav_items=utils.ADMIN_EXPLORE_FEATURES,
+            bottom_nav_items=utils.ADMIN_NAV,
             t=trans,
             lang=session.get('lang', 'en')
         ), 500
 
 @admin_bp.route('/users', methods=['GET'])
 @login_required
-@requires_role('admin')
-@limiter.limit("50 per hour")
+@utils.requires_role('admin')
+@utils.limiter.limit("50 per hour")
 def manage_users():
     """View and manage users."""
     try:
-        db = get_mongo_db()
-        users = list(db.users.find({} if is_admin() else {'role': {'$ne': 'admin'}}).sort('created_at', -1))
+        db = utils.get_mongo_db()
+        users = list(db.users.find({} if utils.is_admin() else {'role': {'$ne': 'admin'}}).sort('created_at', -1))
         for user in users:
             user['_id'] = str(user['_id'])
         return render_template(
             'admin/users.html',
             users=users,
-            tools=ALL_TOOLS,
-            nav_items=ADMIN_EXPLORE_FEATURES,
-            bottom_nav_items=ADMIN_NAV,
+            tools=utils.ALL_TOOLS,
+            nav_items=utils.ADMIN_EXPLORE_FEATURES,
+            bottom_nav_items=utils.ADMIN_NAV,
             t=trans,
             lang=session.get('lang', 'en')
         )
@@ -143,22 +137,22 @@ def manage_users():
         return render_template(
             'admin/users.html',
             users=[],
-            tools=ALL_TOOLS,
-            nav_items=ADMIN_EXPLORE_FEATURES,
-            bottom_nav_items=ADMIN_NAV,
+            tools=utils.ALL_TOOLS,
+            nav_items=utils.ADMIN_EXPLORE_FEATURES,
+            bottom_nav_items=utils.ADMIN_NAV,
             t=trans,
             lang=session.get('lang', 'en')
         ), 500
 
 @admin_bp.route('/users/suspend/<user_id>', methods=['POST'])
 @login_required
-@requires_role('admin')
-@limiter.limit("10 per hour")
+@utils.requires_role('admin')
+@utils.limiter.limit("10 per hour")
 def suspend_user(user_id):
     """Suspend a user account."""
     try:
-        db = get_mongo_db()
-        user_query = get_user_query(user_id)
+        db = utils.get_mongo_db()
+        user_query = utils.get_user_query(user_id)
         user = db.users.find_one(user_query)
         if not user:
             flash(trans('admin_user_not_found', default='User not found'), 'danger')
@@ -181,13 +175,13 @@ def suspend_user(user_id):
 
 @admin_bp.route('/users/delete/<user_id>', methods=['POST'])
 @login_required
-@requires_role('admin')
-@limiter.limit("5 per hour")
+@utils.requires_role('admin')
+@utils.limiter.limit("5 per hour")
 def delete_user(user_id):
     """Delete a user and their data."""
     try:
-        db = get_mongo_db()
-        user_query = get_user_query(user_id)
+        db = utils.get_mongo_db()
+        user_query = utils.get_user_query(user_id)
         user = db.users.find_one(user_query)
         if not user:
             flash(trans('admin_user_not_found', default='User not found'), 'danger')
@@ -218,8 +212,8 @@ def delete_user(user_id):
 
 @admin_bp.route('/data/delete/<collection>/<item_id>', methods=['POST'])
 @login_required
-@requires_role('admin')
-@limiter.limit("10 per hour")
+@utils.requires_role('admin')
+@utils.limiter.limit("10 per hour")
 def delete_item(collection, item_id):
     """Delete an item from a collection."""
     valid_collections = ['records', 'cashflows', 'inventory', 'budgets', 'bills', 'emergency_funds', 'net_worth_data', 'quiz_responses', 'learning_materials']
@@ -227,7 +221,7 @@ def delete_item(collection, item_id):
         flash(trans('admin_invalid_collection', default='Invalid collection selected'), 'danger')
         return redirect(url_for('admin.dashboard'))
     try:
-        db = get_mongo_db()
+        db = utils.get_mongo_db()
         result = db[collection].delete_one({'_id': ObjectId(item_id)})
         if result.deleted_count == 0:
             flash(trans('admin_item_not_found', default='Item not found'), 'danger')
@@ -243,25 +237,25 @@ def delete_item(collection, item_id):
 
 @admin_bp.route('/coins/credit', methods=['GET', 'POST'])
 @login_required
-@requires_role('admin')
-@limiter.limit("10 per hour")
+@utils.requires_role('admin')
+@utils.limiter.limit("10 per hour")
 def credit_coins():
     """Manually credit coins to a user."""
     form = CreditForm()
     if form.validate_on_submit():
         try:
-            db = get_mongo_db()
+            db = utils.get_mongo_db()
             user_id = form.user_id.data.strip().lower()
-            user_query = get_user_query(user_id)
+            user_query = utils.get_user_query(user_id)
             user = db.users.find_one(user_query)
             if not user:
                 flash(trans('admin_user_not_found', default='User not found'), 'danger')
                 return render_template(
                     'admin/reset.html',
                     form=form,
-                    tools=ALL_TOOLS,
-                    nav_items=ADMIN_EXPLORE_FEATURES,
-                    bottom_nav_items=ADMIN_NAV,
+                    tools=utils.ALL_TOOLS,
+                    nav_items=utils.ADMIN_EXPLORE_FEATURES,
+                    bottom_nav_items=utils.ADMIN_NAV,
                     t=trans,
                     lang=session.get('lang', 'en')
                 )
@@ -288,39 +282,39 @@ def credit_coins():
             return render_template(
                 'admin/reset.html',
                 form=form,
-                tools=ALL_TOOLS,
-                nav_items=ADMIN_EXPLORE_FEATURES,
-                bottom_nav_items=ADMIN_NAV,
+                tools=utils.ALL_TOOLS,
+                nav_items=utils.ADMIN_EXPLORE_FEATURES,
+                bottom_nav_items=utils.ADMIN_NAV,
                 t=trans,
                 lang=session.get('lang', 'en')
             )
     return render_template(
         'admin/reset.html',
         form=form,
-        tools=ALL_TOOLS,
-        nav_items=ADMIN_EXPLORE_FEATURES,
-        bottom_nav_items=ADMIN_NAV,
+        tools=utils.ALL_TOOLS,
+        nav_items=utils.ADMIN_EXPLORE_FEATURES,
+        bottom_nav_items=utils.ADMIN_NAV,
         t=trans,
         lang=session.get('lang', 'en')
     )
 
 @admin_bp.route('/audit', methods=['GET'])
 @login_required
-@requires_role('admin')
-@limiter.limit("50 per hour")
+@utils.requires_role('admin')
+@utils.limiter.limit("50 per hour")
 def audit():
     """View audit logs of admin actions."""
     try:
-        db = get_mongo_db()
+        db = utils.get_mongo_db()
         logs = list(db.audit_logs.find().sort('timestamp', -1).limit(100))
         for log in logs:
             log['_id'] = str(log['_id'])
         return render_template(
             'admin/audit.html',
             logs=logs,
-            tools=ALL_TOOLS,
-            nav_items=ADMIN_EXPLORE_FEATURES,
-            bottom_nav_items=ADMIN_NAV,
+            tools=utils.ALL_TOOLS,
+            nav_items=utils.ADMIN_EXPLORE_FEATURES,
+            bottom_nav_items=utils.ADMIN_NAV,
             t=trans,
             lang=session.get('lang', 'en')
         )
@@ -330,22 +324,22 @@ def audit():
         return render_template(
             'admin/audit.html',
             logs=[],
-            tools=ALL_TOOLS,
-            nav_items=ADMIN_EXPLORE_FEATURES,
-            bottom_nav_items=ADMIN_NAV,
+            tools=utils.ALL_TOOLS,
+            nav_items=utils.ADMIN_EXPLORE_FEATURES,
+            bottom_nav_items=utils.ADMIN_NAV,
             t=trans,
             lang=session.get('lang', 'en')
         )
 
 @admin_bp.route('/manage_agents', methods=['GET', 'POST'])
 @login_required
-@requires_role('admin')
-@limiter.limit("50 per hour")
+@utils.requires_role('admin')
+@utils.limiter.limit("50 per hour")
 def manage_agents():
     """Manage agent IDs (add or update status)."""
     form = AgentManagementForm()
     try:
-        db = get_mongo_db()
+        db = utils.get_mongo_db()
         agents = list(db.agents.find().sort('created_at', -1))
         for agent in agents:
             agent['_id'] = str(agent['_id'])
@@ -383,9 +377,9 @@ def manage_agents():
             'admin/manage_agents.html',
             form=form,
             agents=agents,
-            tools=ALL_TOOLS,
-            nav_items=ADMIN_EXPLORE_FEATURES,
-            bottom_nav_items=ADMIN_NAV,
+            tools=utils.ALL_TOOLS,
+            nav_items=utils.ADMIN_EXPLORE_FEATURES,
+            bottom_nav_items=utils.ADMIN_NAV,
             t=trans,
             lang=session.get('lang', 'en')
         )
@@ -397,30 +391,30 @@ def manage_agents():
             'admin/manage_agents.html',
             form=form,
             agents=[],
-            tools=ALL_TOOLS,
-            nav_items=ADMIN_EXPLORE_FEATURES,
-            bottom_nav_items=ADMIN_NAV,
+            tools=utils.ALL_TOOLS,
+            nav_items=utils.ADMIN_EXPLORE_FEATURES,
+            bottom_nav_items=utils.ADMIN_NAV,
             t=trans,
             lang=session.get('lang', 'en')
         )
 
 @admin_bp.route('/budgets', methods=['GET'])
 @login_required
-@requires_role('admin')
-@limiter.limit("50 per hour")
+@utils.requires_role('admin')
+@utils.limiter.limit("50 per hour")
 def admin_budgets():
     """View all user budgets."""
     try:
-        db = get_mongo_db()
+        db = utils.get_mongo_db()
         budgets = list(get_budgets(db, {}))
         for budget in budgets:
             budget['_id'] = str(budget['_id'])
         return render_template(
             'admin/budgets.html',
             budgets=budgets,
-            tools=ALL_TOOLS,
-            nav_items=ADMIN_EXPLORE_FEATURES,
-            bottom_nav_items=ADMIN_NAV,
+            tools=utils.ALL_TOOLS,
+            nav_items=utils.ADMIN_EXPLORE_FEATURES,
+            bottom_nav_items=utils.ADMIN_NAV,
             t=trans,
             lang=session.get('lang', 'en')
         )
@@ -430,21 +424,21 @@ def admin_budgets():
         return render_template(
             'admin/budgets.html',
             budgets=[],
-            tools=ALL_TOOLS,
-            nav_items=ADMIN_EXPLORE_FEATURES,
-            bottom_nav_items=ADMIN_NAV,
+            tools=utils.ALL_TOOLS,
+            nav_items=utils.ADMIN_EXPLORE_FEATURES,
+            bottom_nav_items=utils.ADMIN_NAV,
             t=trans,
             lang=session.get('lang', 'en')
         ), 500
 
 @admin_bp.route('/budgets/delete/<budget_id>', methods=['POST'])
 @login_required
-@requires_role('admin')
-@limiter.limit("10 per hour")
+@utils.requires_role('admin')
+@utils.limiter.limit("10 per hour")
 def admin_delete_budget(budget_id):
     """Delete a budget."""
     try:
-        db = get_mongo_db()
+        db = utils.get_mongo_db()
         result = db.budgets.delete_one({'_id': ObjectId(budget_id)})
         if result.deleted_count == 0:
             flash(trans('admin_item_not_found', default='Budget not found'), 'danger')
@@ -460,21 +454,21 @@ def admin_delete_budget(budget_id):
 
 @admin_bp.route('/bills', methods=['GET'])
 @login_required
-@requires_role('admin')
-@limiter.limit("50 per hour")
+@utils.requires_role('admin')
+@utils.limiter.limit("50 per hour")
 def admin_bills():
     """View all user bills."""
     try:
-        db = get_mongo_db()
+        db = utils.get_mongo_db()
         bills = list(get_bills(db, {}))
         for bill in bills:
             bill['_id'] = str(bill['_id'])
         return render_template(
             'admin/bills.html',
             bills=bills,
-            tools=ALL_TOOLS,
-            nav_items=ADMIN_EXPLORE_FEATURES,
-            bottom_nav_items=ADMIN_NAV,
+            tools=utils.ALL_TOOLS,
+            nav_items=utils.ADMIN_EXPLORE_FEATURES,
+            bottom_nav_items=utils.ADMIN_NAV,
             t=trans,
             lang=session.get('lang', 'en')
         )
@@ -484,21 +478,21 @@ def admin_bills():
         return render_template(
             'admin/bills.html',
             bills=[],
-            tools=ALL_TOOLS,
-            nav_items=ADMIN_EXPLORE_FEATURES,
-            bottom_nav_items=ADMIN_NAV,
+            tools=utils.ALL_TOOLS,
+            nav_items=utils.ADMIN_EXPLORE_FEATURES,
+            bottom_nav_items=utils.ADMIN_NAV,
             t=trans,
             lang=session.get('lang', 'en')
         ), 500
 
 @admin_bp.route('/bills/delete/<bill_id>', methods=['POST'])
 @login_required
-@requires_role('admin')
-@limiter.limit("10 per hour")
+@utils.requires_role('admin')
+@utils.limiter.limit("10 per hour")
 def admin_delete_bill(bill_id):
     """Delete a bill."""
     try:
-        db = get_mongo_db()
+        db = utils.get_mongo_db()
         result = db.bills.delete_one({'_id': ObjectId(bill_id)})
         if result.deleted_count == 0:
             flash(trans('admin_item_not_found', default='Bill not found'), 'danger')
@@ -514,12 +508,12 @@ def admin_delete_bill(bill_id):
 
 @admin_bp.route('/bills/mark_paid/<bill_id>', methods=['POST'])
 @login_required
-@requires_role('admin')
-@limiter.limit("10 per hour")
+@utils.requires_role('admin')
+@utils.limiter.limit("10 per hour")
 def admin_mark_bill_paid(bill_id):
     """Mark a bill as paid."""
     try:
-        db = get_mongo_db()
+        db = utils.get_mongo_db()
         result = db.bills.update_one(
             {'_id': ObjectId(bill_id)},
             {'$set': {'status': 'paid', 'updated_at': datetime.utcnow()}}
@@ -538,21 +532,21 @@ def admin_mark_bill_paid(bill_id):
 
 @admin_bp.route('/emergency_funds', methods=['GET'])
 @login_required
-@requires_role('admin')
-@limiter.limit("50 per hour")
+@utils.requires_role('admin')
+@utils.limiter.limit("50 per hour")
 def admin_emergency_funds():
     """View all user emergency funds."""
     try:
-        db = get_mongo_db()
+        db = utils.get_mongo_db()
         funds = list(get_emergency_funds(db, {}))
         for fund in funds:
             fund['_id'] = str(fund['_id'])
         return render_template(
             'admin/emergency_funds.html',
             funds=funds,
-            tools=ALL_TOOLS,
-            nav_items=ADMIN_EXPLORE_FEATURES,
-            bottom_nav_items=ADMIN_NAV,
+            tools=utils.ALL_TOOLS,
+            nav_items=utils.ADMIN_EXPLORE_FEATURES,
+            bottom_nav_items=utils.ADMIN_NAV,
             t=trans,
             lang=session.get('lang', 'en')
         )
@@ -562,21 +556,21 @@ def admin_emergency_funds():
         return render_template(
             'admin/emergency_funds.html',
             funds=[],
-            tools=ALL_TOOLS,
-            nav_items=ADMIN_EXPLORE_FEATURES,
-            bottom_nav_items=ADMIN_NAV,
+            tools=utils.ALL_TOOLS,
+            nav_items=utils.ADMIN_EXPLORE_FEATURES,
+            bottom_nav_items=utils.ADMIN_NAV,
             t=trans,
             lang=session.get('lang', 'en')
         ), 500
 
 @admin_bp.route('/emergency_funds/delete/<fund_id>', methods=['POST'])
 @login_required
-@requires_role('admin')
-@limiter.limit("10 per hour")
+@utils.requires_role('admin')
+@utils.limiter.limit("10 per hour")
 def admin_delete_emergency_fund(fund_id):
     """Delete an emergency fund."""
     try:
-        db = get_mongo_db()
+        db = utils.get_mongo_db()
         result = db.emergency_funds.delete_one({'_id': ObjectId(fund_id)})
         if result.deleted_count == 0:
             flash(trans('admin_item_not_found', default='Emergency fund not found'), 'danger')
@@ -592,21 +586,21 @@ def admin_delete_emergency_fund(fund_id):
 
 @admin_bp.route('/net_worth', methods=['GET'])
 @login_required
-@requires_role('admin')
-@limiter.limit("50 per hour")
+@utils.requires_role('admin')
+@utils.limiter.limit("50 per hour")
 def admin_net_worth():
     """View all user net worth records."""
     try:
-        db = get_mongo_db()
+        db = utils.get_mongo_db()
         net_worths = list(get_net_worth(db, {}))
         for nw in net_worths:
             nw['_id'] = str(nw['_id'])
         return render_template(
             'admin/net_worth.html',
             net_worths=net_worths,
-            tools=ALL_TOOLS,
-            nav_items=ADMIN_EXPLORE_FEATURES,
-            bottom_nav_items=ADMIN_NAV,
+            tools=utils.ALL_TOOLS,
+            nav_items=utils.ADMIN_EXPLORE_FEATURES,
+            bottom_nav_items=utils.ADMIN_NAV,
             t=trans,
             lang=session.get('lang', 'en')
         )
@@ -616,21 +610,21 @@ def admin_net_worth():
         return render_template(
             'admin/net_worth.html',
             net_worths=[],
-            tools=ALL_TOOLS,
-            nav_items=ADMIN_EXPLORE_FEATURES,
-            bottom_nav_items=ADMIN_NAV,
+            tools=utils.ALL_TOOLS,
+            nav_items=utils.ADMIN_EXPLORE_FEATURES,
+            bottom_nav_items=utils.ADMIN_NAV,
             t=trans,
             lang=session.get('lang', 'en')
         ), 500
 
 @admin_bp.route('/net_worth/delete/<nw_id>', methods=['POST'])
 @login_required
-@requires_role('admin')
-@limiter.limit("10 per hour")
+@utils.requires_role('admin')
+@utils.limiter.limit("10 per hour")
 def admin_delete_net_worth(nw_id):
     """Delete a net worth record."""
     try:
-        db = get_mongo_db()
+        db = utils.get_mongo_db()
         result = db.net_worth_data.delete_one({'_id': ObjectId(nw_id)})
         if result.deleted_count == 0:
             flash(trans('admin_item_not_found', default='Net worth record not found'), 'danger')
@@ -646,21 +640,21 @@ def admin_delete_net_worth(nw_id):
 
 @admin_bp.route('/quiz_results', methods=['GET'])
 @login_required
-@requires_role('admin')
-@limiter.limit("50 per hour")
+@utils.requires_role('admin')
+@utils.limiter.limit("50 per hour")
 def admin_quiz_results():
     """View all user quiz results."""
     try:
-        db = get_mongo_db()
+        db = utils.get_mongo_db()
         quiz_results = list(get_quiz_results(db, {}))
         for result in quiz_results:
             result['_id'] = str(result['_id'])
         return render_template(
             'admin/quiz_results.html',
             quiz_results=quiz_results,
-            tools=ALL_TOOLS,
-            nav_items=ADMIN_EXPLORE_FEATURES,
-            bottom_nav_items=ADMIN_NAV,
+            tools=utils.ALL_TOOLS,
+            nav_items=utils.ADMIN_EXPLORE_FEATURES,
+            bottom_nav_items=utils.ADMIN_NAV,
             t=trans,
             lang=session.get('lang', 'en')
         )
@@ -670,21 +664,21 @@ def admin_quiz_results():
         return render_template(
             'admin/quiz_results.html',
             quiz_results=[],
-            tools=ALL_TOOLS,
-            nav_items=ADMIN_EXPLORE_FEATURES,
-            bottom_nav_items=ADMIN_NAV,
+            tools=utils.ALL_TOOLS,
+            nav_items=utils.ADMIN_EXPLORE_FEATURES,
+            bottom_nav_items=utils.ADMIN_NAV,
             t=trans,
             lang=session.get('lang', 'en')
         ), 500
 
 @admin_bp.route('/quiz_results/delete/<result_id>', methods=['POST'])
 @login_required
-@requires_role('admin')
-@limiter.limit("10 per hour")
+@utils.requires_role('admin')
+@utils.limiter.limit("10 per hour")
 def admin_delete_quiz_result(result_id):
     """Delete a quiz result."""
     try:
-        db = get_mongo_db()
+        db = utils.get_mongo_db()
         result = db.quiz_responses.delete_one({'_id': ObjectId(result_id)})
         if result.deleted_count == 0:
             flash(trans('admin_item_not_found', default='Quiz result not found'), 'danger')
@@ -700,21 +694,21 @@ def admin_delete_quiz_result(result_id):
 
 @admin_bp.route('/learning_hub', methods=['GET'])
 @login_required
-@requires_role('admin')
-@limiter.limit("50 per hour")
+@utils.requires_role('admin')
+@utils.limiter.limit("50 per hour")
 def admin_learning_hub():
     """View all user learning hub progress."""
     try:
-        db = get_mongo_db()
+        db = utils.get_mongo_db()
         progress = list(get_learning_progress(db, {}))
         for p in progress:
             p['_id'] = str(p['_id'])
         return render_template(
             'admin/learning_hub.html',
             progress=progress,
-            tools=ALL_TOOLS,
-            nav_items=ADMIN_EXPLORE_FEATURES,
-            bottom_nav_items=ADMIN_NAV,
+            tools=utils.ALL_TOOLS,
+            nav_items=utils.ADMIN_EXPLORE_FEATURES,
+            bottom_nav_items=utils.ADMIN_NAV,
             t=trans,
             lang=session.get('lang', 'en')
         )
@@ -724,21 +718,21 @@ def admin_learning_hub():
         return render_template(
             'admin/learning_hub.html',
             progress=[],
-            tools=ALL_TOOLS,
-            nav_items=ADMIN_EXPLORE_FEATURES,
-            bottom_nav_items=ADMIN_NAV,
+            tools=utils.ALL_TOOLS,
+            nav_items=utils.ADMIN_EXPLORE_FEATURES,
+            bottom_nav_items=utils.ADMIN_NAV,
             t=trans,
             lang=session.get('lang', 'en')
         ), 500
 
 @admin_bp.route('/learning_hub/delete/<progress_id>', methods=['POST'])
 @login_required
-@requires_role('admin')
-@limiter.limit("10 per hour")
+@utils.requires_role('admin')
+@utils.limiter.limit("10 per hour")
 def admin_delete_learning_progress(progress_id):
     """Delete a learning progress record."""
     try:
-        db = get_mongo_db()
+        db = utils.get_mongo_db()
         result = db.learning_materials.delete_one({'_id': ObjectId(progress_id)})
         if result.deleted_count == 0:
             flash(trans('admin_item_not_found', default='Learning progress not found'), 'danger')
