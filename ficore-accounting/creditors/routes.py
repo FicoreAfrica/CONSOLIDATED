@@ -9,13 +9,7 @@ import logging
 import io
 import re
 import urllib.parse
-from utils import (
-    PERSONAL_TOOLS, PERSONAL_NAV, PERSONAL_EXPLORE_FEATURES,
-    BUSINESS_TOOLS, BUSINESS_NAV, BUSINESS_EXPLORE_FEATURES,
-    AGENT_TOOLS, AGENT_NAV, AGENT_EXPLORE_FEATURES,
-    ALL_TOOLS, ADMIN_NAV, ADMIN_EXPLORE_FEATURES,
-    trans_function, requires_role, check_coin_balance, format_currency, format_date, get_mongo_db, is_admin, get_user_query, limiter
-)
+import utils
 from translations import trans
 
 logger = logging.getLogger(__name__)
@@ -42,20 +36,20 @@ creditors_bp = Blueprint('creditors', __name__, url_prefix='/creditors')
 
 @creditors_bp.route('/')
 @login_required
-@requires_role('trader')
+@utils.requires_role('trader')
 def index():
     """List all creditor records for the current user."""
     try:
-        db = get_mongo_db()
+        db = utils.get_mongo_db()
         # TEMPORARY: Allow admin to view all creditors during testing
         # TODO: Restore original user_id filter {'user_id': str(current_user.id), 'type': 'creditor'} for production
-        query = {'type': 'creditor'} if is_admin() else {'user_id': str(current_user.id), 'type': 'creditor'}
+        query = {'type': 'creditor'} if utils.is_admin() else {'user_id': str(current_user.id), 'type': 'creditor'}
         creditors = list(db.records.find(query).sort('created_at', -1))
         
         # Role-based navigation data
-        tools = BUSINESS_TOOLS if current_user.role == 'trader' else ALL_TOOLS
-        nav_items = BUSINESS_EXPLORE_FEATURES if current_user.role == 'trader' else ADMIN_EXPLORE_FEATURES
-        bottom_nav_items = BUSINESS_NAV if current_user.role == 'trader' else ADMIN_NAV
+        tools = utils.BUSINESS_TOOLS if current_user.role == 'trader' else utils.ALL_TOOLS
+        nav_items = utils.BUSINESS_EXPLORE_FEATURES if current_user.role == 'trader' else utils.ADMIN_EXPLORE_FEATURES
+        bottom_nav_items = utils.BUSINESS_NAV if current_user.role == 'trader' else utils.ADMIN_NAV
 
         return render_template(
             'creditors/index.html',
@@ -63,8 +57,8 @@ def index():
             tools=tools,
             nav_items=nav_items,
             bottom_nav_items=bottom_nav_items,
-            format_currency=format_currency,
-            format_date=format_date,
+            format_currency=utils.format_currency,
+            format_date=utils.format_date,
             t=trans,
             lang=session.get('lang', 'en')
         )
@@ -75,14 +69,14 @@ def index():
 
 @creditors_bp.route('/view/<id>')
 @login_required
-@requires_role('trader')
+@utils.requires_role('trader')
 def view(id):
     """View detailed information about a specific creditor (JSON API)."""
     try:
-        db = get_mongo_db()
+        db = utils.get_mongo_db()
         # TEMPORARY: Allow admin to view any creditor during testing
         # TODO: Restore original user_id filter for production
-        query = {'_id': ObjectId(id), 'type': 'creditor'} if is_admin() else {'_id': ObjectId(id), 'user_id': str(current_user.id), 'type': 'creditor'}
+        query = {'_id': ObjectId(id), 'type': 'creditor'} if utils.is_admin() else {'_id': ObjectId(id), 'user_id': str(current_user.id), 'type': 'creditor'}
         creditor = db.records.find_one(query)
         if not creditor:
             return jsonify({'error': trans('creditors_record_not_found', default='Record not found')}), 404
@@ -98,23 +92,23 @@ def view(id):
 
 @creditors_bp.route('/view_page/<id>')
 @login_required
-@requires_role('trader')
+@utils.requires_role('trader')
 def view_page(id):
     """Render a detailed view page for a specific creditor."""
     try:
-        db = get_mongo_db()
+        db = utils.get_mongo_db()
         # TEMPORARY: Allow admin to view any creditor during testing
         # TODO: Restore original user_id filter for production
-        query = {'_id': ObjectId(id), 'type': 'creditor'} if is_admin() else {'_id': ObjectId(id), 'user_id': str(current_user.id), 'type': 'creditor'}
+        query = {'_id': ObjectId(id), 'type': 'creditor'} if utils.is_admin() else {'_id': ObjectId(id), 'user_id': str(current_user.id), 'type': 'creditor'}
         creditor = db.records.find_one(query)
         if not creditor:
             flash(trans('creditors_record_not_found', default='Record not found'), 'danger')
             return redirect(url_for('creditors.index'))
         
         # Role-based navigation data
-        tools = BUSINESS_TOOLS if current_user.role == 'trader' else ALL_TOOLS
-        nav_items = BUSINESS_EXPLORE_FEATURES if current_user.role == 'trader' else ADMIN_EXPLORE_FEATURES
-        bottom_nav_items = BUSINESS_NAV if current_user.role == 'trader' else ADMIN_NAV
+        tools = utils.BUSINESS_TOOLS if current_user.role == 'trader' else utils.ALL_TOOLS
+        nav_items = utils.BUSINESS_EXPLORE_FEATURES if current_user.role == 'trader' else utils.ADMIN_EXPLORE_FEATURES
+        bottom_nav_items = utils.BUSINESS_NAV if current_user.role == 'trader' else utils.ADMIN_NAV
 
         return render_template(
             'creditors/view.html',
@@ -122,8 +116,8 @@ def view_page(id):
             tools=tools,
             nav_items=nav_items,
             bottom_nav_items=bottom_nav_items,
-            format_currency=format_currency,
-            format_date=format_date,
+            format_currency=utils.format_currency,
+            format_date=utils.format_date,
             t=trans,
             lang=session.get('lang', 'en')
         )
@@ -134,20 +128,20 @@ def view_page(id):
 
 @creditors_bp.route('/share/<id>')
 @login_required
-@requires_role('trader')
+@utils.requires_role('trader')
 def share(id):
     """Generate a WhatsApp link to share IOU details."""
     try:
-        db = get_mongo_db()
+        db = utils.get_mongo_db()
         # TEMPORARY: Allow admin to share any creditor during testing
         # TODO: Restore original user_id filter for production
-        query = {'_id': ObjectId(id), 'type': 'creditor'} if is_admin() else {'_id': ObjectId(id), 'user_id': str(current_user.id), 'type': 'creditor'}
+        query = {'_id': ObjectId(id), 'type': 'creditor'} if utils.is_admin() else {'_id': ObjectId(id), 'user_id': str(current_user.id), 'type': 'creditor'}
         creditor = db.records.find_one(query)
         if not creditor:
             return jsonify({'success': False, 'message': trans('creditors_record_not_found', default='Record not found')}), 404
         if not creditor.get('contact'):
             return jsonify({'success': False, 'message': trans('creditors_no_contact', default='No contact provided for sharing')}), 400
-        if not is_admin() and not check_coin_balance(1):
+        if not utils.is_admin() and not utils.check_coin_balance(1):
             return jsonify({'success': False, 'message': trans('creditors_insufficient_coins', default='Insufficient coins to share IOU')}), 400
         
         contact = re.sub(r'\D', '', creditor['contact'])
@@ -156,11 +150,11 @@ def share(id):
         elif not contact.startswith('+'):
             contact = '234' + contact
         
-        message = f"Hi {creditor['name']}, this is an IOU for {format_currency(creditor['amount_owed'])} recorded on FiCore Records on {format_date(creditor['created_at'])}. Details: {creditor.get('description', 'No description provided')}."
+        message = f"Hi {creditor['name']}, this is an IOU for {utils.format_currency(creditor['amount_owed'])} recorded on FiCore Records on {utils.format_date(creditor['created_at'])}. Details: {creditor.get('description', 'No description provided')}."
         whatsapp_link = f"https://wa.me/{contact}?text={urllib.parse.quote(message)}"
         
-        if not is_admin():
-            user_query = get_user_query(str(current_user.id))
+        if not utils.is_admin():
+            user_query = utils.get_user_query(str(current_user.id))
             db.users.update_one(user_query, {'$inc': {'coin_balance': -1}})
             db.coin_transactions.insert_one({
                 'user_id': str(current_user.id),
@@ -177,7 +171,7 @@ def share(id):
 
 @creditors_bp.route('/send_reminder', methods=['POST'])
 @login_required
-@requires_role('trader')
+@utils.requires_role('trader')
 def send_reminder():
     """Send delivery reminder to creditor via SMS/WhatsApp or set snooze."""
     try:
@@ -191,17 +185,17 @@ def send_reminder():
         if not debt_id or (not recipient and not snooze_days):
             return jsonify({'success': False, 'message': trans('creditors_missing_fields', default='Missing required fields')}), 400
         
-        db = get_mongo_db()
+        db = utils.get_mongo_db()
         # TEMPORARY: Allow admin to send reminders for any creditor during testing
         # TODO: Restore original user_id filter for production
-        query = {'_id': ObjectId(debt_id), 'type': 'creditor'} if is_admin() else {'_id': ObjectId(debt_id), 'user_id': str(current_user.id), 'type': 'creditor'}
+        query = {'_id': ObjectId(debt_id), 'type': 'creditor'} if utils.is_admin() else {'_id': ObjectId(debt_id), 'user_id': str(current_user.id), 'type': 'creditor'}
         creditor = db.records.find_one(query)
         
         if not creditor:
             return jsonify({'success': False, 'message': trans('creditors_record_not_found', default='Record not found')}), 404
         
         coin_cost = 2 if recipient else 1
-        if not is_admin() and not check_coin_balance(coin_cost):
+        if not utils.is_admin() and not utils.check_coin_balance(coin_cost):
             return jsonify({'success': False, 'message': trans('creditors_insufficient_coins', default='Insufficient coins to send reminder')}), 400
         
         update_data = {'$inc': {'reminder_count': 1}}
@@ -220,8 +214,8 @@ def send_reminder():
         if success:
             db.records.update_one({'_id': ObjectId(debt_id)}, update_data)
             
-            if not is_admin():
-                user_query = get_user_query(str(current_user.id))
+            if not utils.is_admin():
+                user_query = utils.get_user_query(str(current_user.id))
                 db.users.update_one(user_query, {'$inc': {'coin_balance': -coin_cost}})
                 db.coin_transactions.insert_one({
                     'user_id': str(current_user.id),
@@ -251,7 +245,7 @@ def send_reminder():
 
 @creditors_bp.route('/generate_iou/<id>')
 @login_required
-@requires_role('trader')
+@utils.requires_role('trader')
 def generate_iou(id):
     """Generate PDF IOU for a creditor."""
     try:
@@ -259,17 +253,17 @@ def generate_iou(id):
         from reportlab.pdfgen import canvas
         from reportlab.lib.units import inch
         
-        db = get_mongo_db()
+        db = utils.get_mongo_db()
         # TEMPORARY: Allow admin to generate IOU for any creditor during testing
         # TODO: Restore original user_id filter for production
-        query = {'_id': ObjectId(id), 'type': 'creditor'} if is_admin() else {'_id': ObjectId(id), 'user_id': str(current_user.id), 'type': 'creditor'}
+        query = {'_id': ObjectId(id), 'type': 'creditor'} if utils.is_admin() else {'_id': ObjectId(id), 'user_id': str(current_user.id), 'type': 'creditor'}
         creditor = db.records.find_one(query)
         
         if not creditor:
             flash(trans('creditors_record_not_found', default='Record not found'), 'danger')
             return redirect(url_for('creditors.index'))
         
-        if not is_admin() and not check_coin_balance(1):
+        if not utils.is_admin() and not utils.check_coin_balance(1):
             flash(trans('creditors_insufficient_coins', default='Insufficient coins to generate IOU'), 'danger')
             return redirect(url_for('coins.purchase'))
         
@@ -284,13 +278,13 @@ def generate_iou(id):
         y_position = height - inch - 0.5 * inch
         p.drawString(inch, y_position, f"Creditor: {creditor['name']}")
         y_position -= 0.3 * inch
-        p.drawString(inch, y_position, f"Amount Owed: {format_currency(creditor['amount_owed'])}")
+        p.drawString(inch, y_position, f"Amount Owed: {utils.format_currency(creditor['amount_owed'])}")
         y_position -= 0.3 * inch
         p.drawString(inch, y_position, f"Contact: {creditor.get('contact', 'N/A')}")
         y_position -= 0.3 * inch
         p.drawString(inch, y_position, f"Description: {creditor.get('description', 'No description provided')}")
         y_position -= 0.3 * inch
-        p.drawString(inch, y_position, f"Date Recorded: {format_date(creditor['created_at'])}")
+        p.drawString(inch, y_position, f"Date Recorded: {utils.format_date(creditor['created_at'])}")
         y_position -= 0.3 * inch
         p.drawString(inch, y_position, f"Reminders Sent: {creditor.get('reminder_count', 0)}")
         
@@ -300,8 +294,8 @@ def generate_iou(id):
         p.showPage()
         p.save()
         
-        if not is_admin():
-            user_query = get_user_query(str(current_user.id))
+        if not utils.is_admin():
+            user_query = utils.get_user_query(str(current_user.id))
             db.users.update_one(user_query, {'$inc': {'coin_balance': -1}})
             db.coin_transactions.insert_one({
                 'user_id': str(current_user.id),
@@ -327,16 +321,16 @@ def generate_iou(id):
 
 @creditors_bp.route('/add', methods=['GET', 'POST'])
 @login_required
-@requires_role('trader')
+@utils.requires_role('trader')
 def add():
     """Add a new creditor record."""
     form = CreditorForm()
-    if not is_admin() and not check_coin_balance(1):
+    if not utils.is_admin() and not utils.check_coin_balance(1):
         flash(trans('creditors_insufficient_coins', default='Insufficient coins to create a creditor. Purchase more coins.'), 'danger')
         return redirect(url_for('coins.purchase'))
     if form.validate_on_submit():
         try:
-            db = get_mongo_db()
+            db = utils.get_mongo_db()
             record = {
                 'user_id': str(current_user.id),
                 'type': 'creditor',
@@ -348,8 +342,8 @@ def add():
                 'created_at': datetime.utcnow()
             }
             db.records.insert_one(record)
-            if not is_admin():
-                user_query = get_user_query(str(current_user.id))
+            if not utils.is_admin():
+                user_query = utils.get_user_query(str(current_user.id))
                 db.users.update_one(
                     user_query,
                     {'$inc': {'coin_balance': -1}}
@@ -368,9 +362,9 @@ def add():
             flash(trans('creditors_create_error', default='An error occurred'), 'danger')
     
     # Role-based navigation data
-    tools = BUSINESS_TOOLS if current_user.role == 'trader' else ALL_TOOLS
-    nav_items = BUSINESS_EXPLORE_FEATURES if current_user.role == 'trader' else ADMIN_EXPLORE_FEATURES
-    bottom_nav_items = BUSINESS_NAV if current_user.role == 'trader' else ADMIN_NAV
+    tools = utils.BUSINESS_TOOLS if current_user.role == 'trader' else utils.ALL_TOOLS
+    nav_items = utils.BUSINESS_EXPLORE_FEATURES if current_user.role == 'trader' else utils.ADMIN_EXPLORE_FEATURES
+    bottom_nav_items = utils.BUSINESS_NAV if current_user.role == 'trader' else utils.ADMIN_NAV
 
     return render_template(
         'creditors/add.html',
@@ -384,14 +378,14 @@ def add():
 
 @creditors_bp.route('/edit/<id>', methods=['GET', 'POST'])
 @login_required
-@requires_role('trader')
+@utils.requires_role('trader')
 def edit(id):
     """Edit an existing creditor record."""
     try:
-        db = get_mongo_db()
+        db = utils.get_mongo_db()
         # TEMPORARY: Allow admin to edit any creditor during testing
         # TODO: Restore original user_id filter for production
-        query = {'_id': ObjectId(id), 'type': 'creditor'} if is_admin() else {'_id': ObjectId(id), 'user_id': str(current_user.id), 'type': 'creditor'}
+        query = {'_id': ObjectId(id), 'type': 'creditor'} if utils.is_admin() else {'_id': ObjectId(id), 'user_id': str(current_user.id), 'type': 'creditor'}
         creditor = db.records.find_one(query)
         if not creditor:
             flash(trans('creditors_record_not_found', default='Record not found'), 'danger')
@@ -422,9 +416,9 @@ def edit(id):
                 flash(trans('creditors_edit_error', default='An error occurred'), 'danger')
         
         # Role-based navigation data
-        tools = BUSINESS_TOOLS if current_user.role == 'trader' else ALL_TOOLS
-        nav_items = BUSINESS_EXPLORE_FEATURES if current_user.role == 'trader' else ADMIN_EXPLORE_FEATURES
-        bottom_nav_items = BUSINESS_NAV if current_user.role == 'trader' else ADMIN_NAV
+        tools = utils.BUSINESS_TOOLS if current_user.role == 'trader' else utils.ALL_TOOLS
+        nav_items = utils.BUSINESS_EXPLORE_FEATURES if current_user.role == 'trader' else utils.ADMIN_EXPLORE_FEATURES
+        bottom_nav_items = utils.BUSINESS_NAV if current_user.role == 'trader' else utils.ADMIN_NAV
 
         return render_template(
             'creditors/edit.html',
@@ -443,14 +437,14 @@ def edit(id):
 
 @creditors_bp.route('/delete/<id>', methods=['POST'])
 @login_required
-@requires_role('trader')
+@utils.requires_role('trader')
 def delete(id):
     """Delete a creditor record."""
     try:
-        db = get_mongo_db()
+        db = utils.get_mongo_db()
         # TEMPORARY: Allow admin to delete any creditor during testing
         # TODO: Restore original user_id filter for production
-        query = {'_id': ObjectId(id), 'type': 'creditor'} if is_admin() else {'_id': ObjectId(id), 'user_id': str(current_user.id), 'type': 'creditor'}
+        query = {'_id': ObjectId(id), 'type': 'creditor'} if utils.is_admin() else {'_id': ObjectId(id), 'user_id': str(current_user.id), 'type': 'creditor'}
         result = db.records.delete_one(query)
         if result.deleted_count:
             flash(trans('creditors_delete_success', default='Creditor deleted successfully'), 'success')
