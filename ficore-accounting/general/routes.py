@@ -1,12 +1,6 @@
 from flask import Blueprint, render_template, redirect, url_for, flash, session, request, jsonify, make_response
 from flask_login import login_required, current_user
-from utils import (
-    PERSONAL_TOOLS, PERSONAL_NAV, PERSONAL_EXPLORE_FEATURES,
-    BUSINESS_TOOLS, BUSINESS_NAV, BUSINESS_EXPLORE_FEATURES,
-    AGENT_TOOLS, AGENT_NAV, AGENT_EXPLORE_FEATURES,
-    ALL_TOOLS, ADMIN_NAV, ADMIN_EXPLORE_FEATURES,
-    trans_function, limiter
-)
+import utils  # Changed to import the module instead of individual variables
 from translations import trans
 from jinja2.exceptions import TemplateNotFound
 from datetime import datetime
@@ -26,13 +20,13 @@ def home():
     
     # Role-based navigation data
     if current_user.role == 'trader':
-        tools_for_template = BUSINESS_TOOLS
-        explore_features_for_template = BUSINESS_EXPLORE_FEATURES
-        bottom_nav_items = BUSINESS_NAV
+        tools_for_template = utils.BUSINESS_TOOLS  # Updated to use utils. prefix
+        explore_features_for_template = utils.BUSINESS_EXPLORE_FEATURES  # Updated to use utils. prefix
+        bottom_nav_items = utils.BUSINESS_NAV  # Updated to use utils. prefix
     elif current_user.role == 'admin':
-        tools_for_template = ALL_TOOLS
-        explore_features_for_template = ADMIN_EXPLORE_FEATURES
-        bottom_nav_items = ADMIN_NAV
+        tools_for_template = utils.ALL_TOOLS  # Updated to use utils. prefix
+        explore_features_for_template = utils.ADMIN_EXPLORE_FEATURES  # Updated to use utils. prefix
+        bottom_nav_items = utils.ADMIN_NAV  # Updated to use utils. prefix
     else:
         tools_for_template = []
         explore_features_for_template = []
@@ -54,21 +48,21 @@ def about():
     # Role-based navigation data (optional, for consistency if navigation is displayed)
     if current_user.is_authenticated:
         if current_user.role == 'personal':
-            tools_for_template = PERSONAL_TOOLS
-            explore_features_for_template = PERSONAL_EXPLORE_FEATURES
-            bottom_nav_items = PERSONAL_NAV
+            tools_for_template = utils.PERSONAL_TOOLS  # Updated to use utils. prefix
+            explore_features_for_template = utils.PERSONAL_EXPLORE_FEATURES  # Updated to use utils. prefix
+            bottom_nav_items = utils.PERSONAL_NAV  # Updated to use utils. prefix
         elif current_user.role == 'trader':
-            tools_for_template = BUSINESS_TOOLS
-            explore_features_for_template = BUSINESS_EXPLORE_FEATURES
-            bottom_nav_items = BUSINESS_NAV
+            tools_for_template = utils.BUSINESS_TOOLS  # Updated to use utils. prefix
+            explore_features_for_template = utils.BUSINESS_EXPLORE_FEATURES  # Updated to use utils. prefix
+            bottom_nav_items = utils.BUSINESS_NAV  # Updated to use utils. prefix
         elif current_user.role == 'agent':
-            tools_for_template = AGENT_TOOLS
-            explore_features_for_template = AGENT_EXPLORE_FEATURES
-            bottom_nav_items = AGENT_NAV
+            tools_for_template = utils.AGENT_TOOLS  # Updated to use utils. prefix
+            explore_features_for_template = utils.AGENT_EXPLORE_FEATURES  # Updated to use utils. prefix
+            bottom_nav_items = utils.AGENT_NAV  # Updated to use utils. prefix
         elif current_user.role == 'admin':
-            tools_for_template = ALL_TOOLS
-            explore_features_for_template = ADMIN_EXPLORE_FEATURES
-            bottom_nav_items = ADMIN_NAV
+            tools_for_template = utils.ALL_TOOLS  # Updated to use utils. prefix
+            explore_features_for_template = utils.ADMIN_EXPLORE_FEATURES  # Updated to use utils. prefix
+            bottom_nav_items = utils.ADMIN_NAV  # Updated to use utils. prefix
         else:
             tools_for_template = []
             explore_features_for_template = []
@@ -94,21 +88,21 @@ def contact():
     # Role-based navigation data (optional, for consistency if navigation is displayed)
     if current_user.is_authenticated:
         if current_user.role == 'personal':
-            tools_for_template = PERSONAL_TOOLS
-            explore_features_for_template = PERSONAL_EXPLORE_FEATURES
-            bottom_nav_items = PERSONAL_NAV
+            tools_for_template = utils.PERSONAL_TOOLS  # Updated to use utils. prefix
+            explore_features_for_template = utils.PERSONAL_EXPLORE_FEATURES  # Updated to use utils. prefix
+            bottom_nav_items = utils.PERSONAL_NAV  # Updated to use utils. prefix
         elif current_user.role == 'trader':
-            tools_for_template = BUSINESS_TOOLS
-            explore_features_for_template = BUSINESS_EXPLORE_FEATURES
-            bottom_nav_items = BUSINESS_NAV
+            tools_for_template = utils.BUSINESS_TOOLS  # Updated to use utils. prefix
+            explore_features_for_template = utils.BUSINESS_EXPLORE_FEATURES  # Updated to use utils. prefix
+            bottom_nav_items = utils.BUSINESS_NAV  # Updated to use utils. prefix
         elif current_user.role == 'agent':
-            tools_for_template = AGENT_TOOLS
-            explore_features_for_template = AGENT_EXPLORE_FEATURES
-            bottom_nav_items = AGENT_NAV
+            tools_for_template = utils.AGENT_TOOLS  # Updated to use utils. prefix
+            explore_features_for_template = utils.AGENT_EXPLORE_FEATURES  # Updated to use utils. prefix
+            bottom_nav_items = utils.AGENT_NAV  # Updated to use utils. prefix
         elif current_user.role == 'admin':
-            tools_for_template = ALL_TOOLS
-            explore_features_for_template = ADMIN_EXPLORE_FEATURES
-            bottom_nav_items = ADMIN_NAV
+            tools_for_template = utils.ALL_TOOLS  # Updated to use utils. prefix
+            explore_features_for_template = utils.ADMIN_EXPLORE_FEATURES  # Updated to use utils. prefix
+            bottom_nav_items = utils.ADMIN_NAV  # Updated to use utils. prefix
         else:
             tools_for_template = []
             explore_features_for_template = []
