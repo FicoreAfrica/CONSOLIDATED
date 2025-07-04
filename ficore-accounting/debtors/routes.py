@@ -445,7 +445,7 @@ def edit(id):
             explore_features_for_template = BUSINESS_EXPLORE_FEATURES
             bottom_nav_items = BUSINESS_NAV
         elif current_user.role == 'admin':
-            tools_for_template = ALL_TOOLS Ford, explore_features_for_template = ADMIN_TOOLS
+            tools_for_template = ALL_TOOLS, explore_features_for_template = ADMIN_TOOLS
             bottom_nav_items = ADMIN_NAV
         else:
             tools_for_template = []
