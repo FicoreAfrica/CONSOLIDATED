@@ -196,8 +196,8 @@ h3 { font-size: clamp(1.1rem, 2.5vw, 1.3rem); }
 
 @media (max-width: 576px) {
     .container-fluid { padding: 0 0.25rem; }
-    .row { padding: 0 0.25rem; overflow-x: auto; flex-wrap: nowrap; }
-    .quick-actions .row, .tools-section .row { overflow-x: auto; flex-wrap: nowrap; }
+    .row { padding: 0 0.25rem;   }
+    .quick-actions .row, .tools-section .row {   }
     .quick-actions .col-4, .tools-section .col-6 { flex: 0 0 50%; max-width: 50%; }
 }
 
@@ -852,10 +852,8 @@ h3 { font-size: clamp(1.1rem, 2.5vw, 1.3rem); }
 
 .stat-cards-container {
     display: flex;
-    flex-wrap: nowrap;
     gap: 0.5rem;
     justify-content: flex-start;
-    overflow-x: auto;
     padding-bottom: 0.5rem;
 }
 
@@ -1215,7 +1213,7 @@ h3 { font-size: clamp(1.1rem, 2.5vw, 1.3rem); }
 .bi-eye { font-size: 1.2rem; }
 
 /* Tables */
-.table-responsive { overflow-x: auto; }
+.table-responsive {  }
 
 .table {
     width: 100%;
