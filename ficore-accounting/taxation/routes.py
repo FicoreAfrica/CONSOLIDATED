@@ -1,19 +1,14 @@
+import logging
+import datetime
+from bson import ObjectId
 from flask import Blueprint, render_template, request, flash, redirect, url_for, session, jsonify
 from flask_login import login_required, current_user
 from flask_wtf import FlaskForm
 from wtforms import FloatField, StringField, DateField, SelectField, SubmitField, BooleanField
 from wtforms.validators import DataRequired, NumberRange
 from translations import trans
-from utils import (
-    requires_role, get_mongo_db,
-    PERSONAL_TOOLS, PERSONAL_NAV, PERSONAL_EXPLORE_FEATURES,
-    BUSINESS_TOOLS, BUSINESS_NAV, BUSINESS_EXPLORE_FEATURES,
-    AGENT_TOOLS, AGENT_NAV, AGENT_EXPLORE_FEATURES,
-    ALL_TOOLS, ADMIN_NAV, ADMIN_EXPLORE_FEATURES
-)
-import logging
-import datetime
-from bson import ObjectId
+from utils import requires_role, get_mongo_db, initialize_tools_with_urls
+import utils
 
 logger = logging.getLogger(__name__)
 
@@ -268,9 +263,9 @@ def calculate_tax():
     ]
 
     # Define navigation based on user role
-    tools = PERSONAL_TOOLS if current_user.role == 'personal' else BUSINESS_TOOLS if current_user.role == 'trader' else AGENT_TOOLS if current_user.role == 'agent' else ALL_TOOLS
-    nav_items = PERSONAL_EXPLORE_FEATURES if current_user.role == 'personal' else BUSINESS_EXPLORE_FEATURES if current_user.role == 'trader' else AGENT_EXPLORE_FEATURES if current_user.role == 'agent' else ADMIN_EXPLORE_FEATURES
-    bottom_nav_items = PERSONAL_NAV if current_user.role == 'personal' else BUSINESS_NAV if current_user.role == 'trader' else AGENT_NAV if current_user.role == 'agent' else ADMIN_NAV
+    tools = utils.PERSONAL_TOOLS if current_user.role == 'personal' else utils.BUSINESS_TOOLS if current_user.role == 'trader' else utils.AGENT_TOOLS if current_user.role == 'agent' else utils.ALL_TOOLS
+    nav_items = utils.PERSONAL_EXPLORE_FEATURES if current_user.role == 'personal' else utils.BUSINESS_EXPLORE_FEATURES if current_user.role == 'trader' else utils.AGENT_EXPLORE_FEATURES if current_user.role == 'agent' else utils.ADMIN_EXPLORE_FEATURES
+    bottom_nav_items = utils.PERSONAL_NAV if current_user.role == 'personal' else utils.BUSINESS_NAV if current_user.role == 'trader' else utils.AGENT_NAV if current_user.role == 'agent' else utils.ADMIN_NAV
 
     if request.method == 'POST':
         if form.validate_on_submit():
@@ -392,9 +387,9 @@ def payment_info():
             '_id': str(loc['_id'])
         } for loc in locations
     ]
-    tools = PERSONAL_TOOLS if current_user.role == 'personal' else BUSINESS_TOOLS if current_user.role == 'trader' else AGENT_TOOLS if current_user.role == 'agent' else ALL_TOOLS
-    nav_items = PERSONAL_EXPLORE_FEATURES if current_user.role == 'personal' else BUSINESS_EXPLORE_FEATURES if current_user.role == 'trader' else AGENT_EXPLORE_FEATURES if current_user.role == 'agent' else ADMIN_EXPLORE_FEATURES
-    bottom_nav_items = PERSONAL_NAV if current_user.role == 'personal' else BUSINESS_NAV if current_user.role == 'trader' else AGENT_NAV if current_user.role == 'agent' else ADMIN_NAV
+    tools = utils.PERSONAL_TOOLS if current_user.role == 'personal' else utils.BUSINESS_TOOLS if current_user.role == 'trader' else utils.AGENT_TOOLS if current_user.role == 'agent' else utils.ALL_TOOLS
+    nav_items = utils.PERSONAL_EXPLORE_FEATURES if current_user.role == 'personal' else utils.BUSINESS_EXPLORE_FEATURES if current_user.role == 'trader' else utils.AGENT_EXPLORE_FEATURES if current_user.role == 'agent' else utils.ADMIN_EXPLORE_FEATURES
+    bottom_nav_items = utils.PERSONAL_NAV if current_user.role == 'personal' else utils.BUSINESS_NAV if current_user.role == 'trader' else utils.AGENT_NAV if current_user.role == 'agent' else utils.ADMIN_NAV
     return render_template(
         'taxation/taxation.html',
         section='payment_info',
@@ -434,9 +429,9 @@ def reminders():
             'user_id': str(rem['user_id'])
         } for rem in reminders
     ]
-    tools = PERSONAL_TOOLS if current_user.role == 'personal' else BUSINESS_TOOLS if current_user.role == 'trader' else AGENT_TOOLS if current_user.role == 'agent' else ALL_TOOLS
-    nav_items = PERSONAL_EXPLORE_FEATURES if current_user.role == 'personal' else BUSINESS_EXPLORE_FEATURES if current_user.role == 'trader' else AGENT_EXPLORE_FEATURES if current_user.role == 'agent' else ADMIN_EXPLORE_FEATURES
-    bottom_nav_items = PERSONAL_NAV if current_user.role == 'personal' else BUSINESS_NAV if current_user.role == 'trader' else AGENT_NAV if current_user.role == 'agent' else ADMIN_NAV
+    tools = utils.PERSONAL_TOOLS if current_user.role == 'personal' else utils.BUSINESS_TOOLS if current_user.role == 'trader' else utils.AGENT_TOOLS if current_user.role == 'agent' else utils.ALL_TOOLS
+    nav_items = utils.PERSONAL_EXPLORE_FEATURES if current_user.role == 'personal' else utils.BUSINESS_EXPLORE_FEATURES if current_user.role == 'trader' else utils.AGENT_EXPLORE_FEATURES if current_user.role == 'agent' else utils.ADMIN_EXPLORE_FEATURES
+    bottom_nav_items = utils.PERSONAL_NAV if current_user.role == 'personal' else utils.BUSINESS_NAV if current_user.role == 'trader' else utils.AGENT_NAV if current_user.role == 'agent' else utils.ADMIN_NAV
     return render_template(
         'taxation/taxation.html',
         section='reminders',
@@ -497,9 +492,9 @@ def manage_tax_rates():
         vat_rules=serialized_vat_rules,
         t=trans,
         lang=session.get('lang', 'en'),
-        tools=ALL_TOOLS,
-        nav_items=ADMIN_EXPLORE_FEATURES,
-        bottom_nav_items=ADMIN_NAV,
+        tools=utils.ALL_TOOLS,
+        nav_items=utils.ADMIN_EXPLORE_FEATURES,
+        bottom_nav_items=utils.ADMIN_NAV,
         policy_notice=trans('tax_policy_notice', default='New tax laws effective 1 January 2026: Rent relief of ₦200,000 for income ≤ ₦1M, VAT exemptions for essentials, 0% CIT for small businesses ≤ ₦50M with simplified returns, 30% CIT for large businesses, VAT credits for businesses.')
     )
 
@@ -539,9 +534,9 @@ def manage_payment_locations():
         locations=serialized_locations,
         t=trans,
         lang=session.get('lang', 'en'),
-        tools=ALL_TOOLS,
-        nav_items=ADMIN_EXPLORE_FEATURES,
-        bottom_nav_items=ADMIN_NAV,
+        tools=utils.ALL_TOOLS,
+        nav_items=utils.ADMIN_EXPLORE_FEATURES,
+        bottom_nav_items=utils.ADMIN_NAV,
         policy_notice=trans('tax_policy_notice', default='New tax laws effective 1 January 2026: Rent relief of ₦200,000 for income ≤ ₦1M, VAT exemptions for essentials, 0% CIT for small businesses ≤ ₦50M with simplified returns, 30% CIT for large businesses, VAT credits for businesses.')
     )
 
@@ -583,8 +578,8 @@ def manage_tax_deadlines():
         deadlines=serialized_deadlines,
         t=trans,
         lang=session.get('lang', 'en'),
-        tools=ALL_TOOLS,
-        nav_items=ADMIN_EXPLORE_FEATURES,
-        bottom_nav_items=ADMIN_NAV,
+        tools=utils.ALL_TOOLS,
+        nav_items=utils.ADMIN_EXPLORE_FEATURES,
+        bottom_nav_items=utils.ADMIN_NAV,
         policy_notice=trans('tax_policy_notice', default='New tax laws effective 1 January 2026: Rent relief of ₦200,000 for income ≤ ₦1M, VAT exemptions for essentials, 0% CIT for small businesses ≤ ₦50M with simplified returns, 30% CIT for large businesses, VAT credits for businesses.')
     )
