@@ -22,13 +22,7 @@ from models import (
     to_dict_financial_health, to_dict_budget, to_dict_bill, to_dict_net_worth,
     to_dict_emergency_fund, to_dict_learning_progress, to_dict_quiz_result, initialize_database
 )
-from utils import (
-    trans_function, is_valid_email, get_mongo_db, close_mongo_db, limiter,
-    get_mail, requires_role, check_coin_balance, is_admin, login_manager,
-    flask_session, csrf, babel, compress, PERSONAL_TOOLS, PERSONAL_NAV, PERSONAL_EXPLORE_FEATURES,
-    BUSINESS_TOOLS, BUSINESS_NAV, BUSINESS_EXPLORE_FEATURES, AGENT_TOOLS, AGENT_NAV, AGENT_EXPLORE_FEATURES,
-    ALL_TOOLS, ADMIN_NAV, ADMIN_EXPLORE_FEATURES, initialize_tools_with_urls
-)
+import utils  # Changed to import the module instead of individual variables
 from session_utils import create_anonymous_session
 from translations import trans, get_translations, get_all_translations, get_module_translations
 from flask_login import LoginManager, login_required, current_user, UserMixin
@@ -472,7 +466,7 @@ def create_app():
     logger.info('Registered general blueprint')
     
     # Initialize tools with URLs
-    initialize_tools_with_urls(app)
+    utils.initialize_tools_with_urls(app)  # Updated to use utils. prefix
     logger.info('Initialized tools and navigation with resolved URLs')
     
     # Jinja2 globals and filters
@@ -567,13 +561,13 @@ def create_app():
         if not current_user.is_authenticated:
             return {'tools': [], 'nav_items': [], 'bottom_nav_items': []}
         if current_user.role == 'personal':
-            return dict(tools=PERSONAL_TOOLS, nav_items=PERSONAL_EXPLORE_FEATURES, bottom_nav_items=PERSONAL_NAV)
+            return dict(tools=utils.PERSONAL_TOOLS, nav_items=utils.PERSONAL_EXPLORE_FEATURES, bottom_nav_items=utils.PERSONAL_NAV)
         elif current_user.role == 'trader':
-            return dict(tools=BUSINESS_TOOLS, nav_items=BUSINESS_EXPLORE_FEATURES, bottom_nav_items=BUSINESS_NAV)
+            return dict(tools=utils.BUSINESS_TOOLS, nav_items=utils.BUSINESS_EXPLORE_FEATURES, bottom_nav_items=utils.BUSINESS_NAV)
         elif current_user.role == 'agent':
-            return dict(tools=AGENT_TOOLS, nav_items=AGENT_EXPLORE_FEATURES, bottom_nav_items=AGENT_NAV)
+            return dict(tools=utils.AGENT_TOOLS, nav_items=utils.AGENT_EXPLORE_FEATURES, bottom_nav_items=utils.AGENT_NAV)
         elif current_user.role == 'admin':
-            return dict(tools=ALL_TOOLS, nav_items=ADMIN_EXPLORE_FEATURES, bottom_nav_items=ADMIN_NAV)
+            return dict(tools=utils.ALL_TOOLS, nav_items=utils.ADMIN_EXPLORE_FEATURES, bottom_nav_items=utils.ADMIN_NAV)
         return {'tools': [], 'nav_items': [], 'bottom_nav_items': []}
     
     @app.context_processor
@@ -738,14 +732,14 @@ def create_app():
                 return redirect(url_for('agents_bp.agent_portal'))
             elif current_user.role == 'trader':
                 try:
-                    tools = BUSINESS_TOOLS
-                    nav_items = BUSINESS_EXPLORE_FEATURES
-                    bottom_nav_items = BUSINESS_NAV
+                    tools = utils.BUSINESS_TOOLS  # Updated to use utils. prefix
+                    nav_items = utils.BUSINESS_EXPLORE_FEATURES  # Updated to use utils. prefix
+                    bottom_nav_items = utils.BUSINESS_NAV  # Updated to use utils. prefix
                     return render_template('general/home.html', t=trans, lang=lang, title=trans('general_business_home', lang=lang),
                                           tools=tools, nav_items=nav_items, bottom_nav_items=bottom_nav_items)
                 except TemplateNotFound as e:
                     logger.error(f'Template not found: {str(e)}', exc_info=True)
-                    return render_template('personal/GENERAL/error.html', t=trans, lang=lang, error=str(e), bottom_nav_items=BUSINESS_NAV), 404
+                    return render_template('personal/GENERAL/error.html', t=trans, lang=lang, error=str(e), bottom_nav_items=utils.BUSINESS_NAV), 404  # Updated to use utils. prefix
             else:
                 flash(trans('general_no_permission', default='You do not have permission to access this page.'), 'danger')
                 return redirect(url_for('index'))
