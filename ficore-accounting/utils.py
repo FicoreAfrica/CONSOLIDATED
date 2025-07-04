@@ -68,11 +68,14 @@ def generate_tools_with_urls(tools):
     for tool in tools:
         try:
             with current_app.app_context():
-                url = url_for(tool['endpoint'])
+                url = url_for(tool['endpoint'], _external=True)  # Use _external=True for absolute URLs
                 result.append({**tool, 'url': url})
-        except (BuildError, RuntimeError) as e:
-            logger.warning(f"Failed to generate URL for endpoint {tool.get('endpoint', 'unknown')}: {str(e)}")
-            result.append({**tool, 'url': '#'})  # Fallback URL
+        except BuildError as e:
+            logger.error(f"Failed to generate URL for endpoint {tool.get('endpoint', 'unknown')}: {str(e)}. Ensure endpoint is defined in blueprint.")
+            result.append({**tool, 'url': '#'})
+        except RuntimeError as e:
+            logger.warning(f"Runtime error generating URL for endpoint {tool.get('endpoint', 'unknown')}: {str(e)}")
+            result.append({**tool, 'url': '#'})
     return result
 
 # Original tool/navigation lists with endpoints
@@ -138,7 +141,7 @@ _AGENT_TOOLS = [
 _AGENT_NAV = [
     {"endpoint": "agents_bp.agent_portal", "label": "Agent Portal", "label_key": "agents_dashboard", "tooltip_key": "agents_tooltip", "icon": "bi-person-workspace"},
     {"endpoint": "agents_bp.my_activity", "label": "My Activity", "label_key": "agents_my_activity", "tooltip_key": "agents_my_activity_tooltip", "icon": "bi-person-workspace"},
-    {"endpoint": "settings.profile", "label": "Profile", "label_key": "profile_settings", "tooltip_key": "profile_tooltip", "icon": "bi-person"},
+    {"endpoint": "settings.profile", "label": "Profile", "label_key": "profile表的_settings", "tooltip_key": "profile_tooltip", "icon": "bi-person"},
 ]
 
 _AGENT_EXPLORE_FEATURES = [
@@ -165,6 +168,7 @@ _ADMIN_EXPLORE_FEATURES = [
     {"endpoint": "admin.admin_quiz_results", "label": "Manage Quiz Results", "label_key": "admin_manage_quiz_results", "tooltip_key": "admin_manage_quiz_results_tooltip", "icon": "bi-question-circle"},
     {"endpoint": "admin.admin_learning_hub", "label": "Manage Learning Hub", "label_key": "admin_manage_learning_hub", "tooltip_key": "admin_manage_learning_hub_tooltip", "icon": "bi-book"},
 ]
+
 # Initialize module-level variables (will be populated with URLs later)
 PERSONAL_TOOLS = []
 PERSONAL_NAV = []
