@@ -11,13 +11,7 @@ import os
 import requests
 import re
 import urllib.parse
-from utils import (
-    PERSONAL_TOOLS, PERSONAL_NAV, PERSONAL_EXPLORE_FEATURES,
-    BUSINESS_TOOLS, BUSINESS_NAV, BUSINESS_EXPLORE_FEATURES,
-    AGENT_TOOLS, AGENT_NAV, AGENT_EXPLORE_FEATURES,
-    ALL_TOOLS, ADMIN_NAV, ADMIN_EXPLORE_FEATURES,
-    trans_function, requires_role, check_coin_balance, format_currency, format_date, get_mongo_db, is_admin, get_user_query, limiter
-)
+import utils
 from translations import trans
 
 logger = logging.getLogger(__name__)
@@ -44,23 +38,23 @@ debtors_bp = Blueprint('debtors', __name__, url_prefix='/debtors')
 
 @debtors_bp.route('/')
 @login_required
-@requires_role('trader')
+@utils.requires_role('trader')
 def index():
     """List all debtor records for the current user."""
     try:
-        db = get_mongo_db()
-        query = {'type': 'debtor'} if is_admin() else {'user_id': str(current_user.id), 'type': 'debtor'}
+        db = utils.get_mongo_db()
+        query = {'type': 'debtor'} if utils.is_admin() else {'user_id': str(current_user.id), 'type': 'debtor'}
         debtors = list(db.records.find(query).sort('created_at', -1))
         
         # Role-based navigation data
         if current_user.role == 'trader':
-            tools_for_template = BUSINESS_TOOLS
-            explore_features_for_template = BUSINESS_EXPLORE_FEATURES
-            bottom_nav_items = BUSINESS_NAV
+            tools_for_template = utils.BUSINESS_TOOLS
+            explore_features_for_template = utils.BUSINESS_EXPLORE_FEATURES
+            bottom_nav_items = utils.BUSINESS_NAV
         elif current_user.role == 'admin':
-            tools_for_template = ALL_TOOLS
-            explore_features_for_template = ADMIN_EXPLORE_FEATURES
-            bottom_nav_items = ADMIN_NAV
+            tools_for_template = utils.ALL_TOOLS
+            explore_features_for_template = utils.ADMIN_EXPLORE_FEATURES
+            bottom_nav_items = utils.ADMIN_NAV
         else:
             tools_for_template = []
             explore_features_for_template = []
@@ -72,8 +66,8 @@ def index():
             tools=tools_for_template,
             nav_items=explore_features_for_template,
             bottom_nav_items=bottom_nav_items,
-            format_currency=format_currency,
-            format_date=format_date,
+            format_currency=utils.format_currency,
+            format_date=utils.format_date,
             t=trans,
             lang=session.get('lang', 'en')
         )
@@ -84,12 +78,12 @@ def index():
 
 @debtors_bp.route('/view/<id>')
 @login_required
-@requires_role('trader')
+@utils.requires_role('trader')
 def view(id):
     """View detailed information about a specific debtor (JSON API)."""
     try:
-        db = get_mongo_db()
-        query = {'_id': ObjectId(id), 'type': 'debtor'} if is_admin() else {'_id': ObjectId(id), 'user_id': str(current_user.id), 'type': 'debtor'}
+        db = utils.get_mongo_db()
+        query = {'_id': ObjectId(id), 'type': 'debtor'} if utils.is_admin() else {'_id': ObjectId(id), 'user_id': str(current_user.id), 'type': 'debtor'}
         debtor = db.records.find_one(query)
         if not debtor:
             return jsonify({'error': trans('debtors_record_not_found', default='Record not found')}), 404
@@ -105,12 +99,12 @@ def view(id):
 
 @debtors_bp.route('/view_page/<id>')
 @login_required
-@requires_role('trader')
+@utils.requires_role('trader')
 def view_page(id):
     """Render a detailed view page for a specific debtor."""
     try:
-        db = get_mongo_db()
-        query = {'_id': ObjectId(id), 'type': 'debtor'} if is_admin() else {'_id': ObjectId(id), 'user_id': str(current_user.id), 'type': 'debtor'}
+        db = utils.get_mongo_db()
+        query = {'_id': ObjectId(id), 'type': 'debtor'} if utils.is_admin() else {'_id': ObjectId(id), 'user_id': str(current_user.id), 'type': 'debtor'}
         debtor = db.records.find_one(query)
         if not debtor:
             flash(trans('debtors_record_not_found', default='Record not found'), 'danger')
@@ -118,13 +112,13 @@ def view_page(id):
         
         # Role-based navigation data
         if current_user.role == 'trader':
-            tools_for_template = BUSINESS_TOOLS
-            explore_features_for_template = BUSINESS_EXPLORE_FEATURES
-            bottom_nav_items = BUSINESS_NAV
+            tools_for_template = utils.BUSINESS_TOOLS
+            explore_features_for_template = utils.BUSINESS_EXPLORE_FEATURES
+            bottom_nav_items = utils.BUSINESS_NAV
         elif current_user.role == 'admin':
-            tools_for_template = ALL_TOOLS
-            explore_features_for_template = ADMIN_EXPLORE_FEATURES
-            bottom_nav_items = ADMIN_NAV
+            tools_for_template = utils.ALL_TOOLS
+            explore_features_for_template = utils.ADMIN_EXPLORE_FEATURES
+            bottom_nav_items = utils.ADMIN_NAV
         else:
             tools_for_template = []
             explore_features_for_template = []
@@ -136,8 +130,8 @@ def view_page(id):
             tools=tools_for_template,
             nav_items=explore_features_for_template,
             bottom_nav_items=bottom_nav_items,
-            format_currency=format_currency,
-            format_date=format_date,
+            format_currency=utils.format_currency,
+            format_date=utils.format_date,
             t=trans,
             lang=session.get('lang', 'en')
         )
@@ -148,18 +142,18 @@ def view_page(id):
 
 @debtors_bp.route('/share/<id>')
 @login_required
-@requires_role('trader')
+@utils.requires_role('trader')
 def share(id):
     """Generate a WhatsApp link to share IOU details."""
     try:
-        db = get_mongo_db()
-        query = {'_id': ObjectId(id), 'type': 'debtor'} if is_admin() else {'_id': ObjectId(id), 'user_id': str(current_user.id), 'type': 'debtor'}
+        db = utils.get_mongo_db()
+        query = {'_id': ObjectId(id), 'type': 'debtor'} if utils.is_admin() else {'_id': ObjectId(id), 'user_id': str(current_user.id), 'type': 'debtor'}
         debtor = db.records.find_one(query)
         if not debtor:
             return jsonify({'success': False, 'message': trans('debtors_record_not_found', default='Record not found')}), 404
         if not debtor.get('contact'):
             return jsonify({'success': False, 'message': trans('debtors_no_contact', default='No contact provided for sharing')}), 400
-        if not is_admin() and not check_coin_balance(1):
+        if not utils.is_admin() and not utils.check_coin_balance(1):
             return jsonify({'success': False, 'message': trans('debtors_insufficient_coins', default='Insufficient coins to share IOU')}), 400
         
         contact = re.sub(r'\D', '', debtor['contact'])
@@ -168,11 +162,11 @@ def share(id):
         elif not contact.startswith('+'):
             contact = '234' + contact
         
-        message = f"Hi {debtor['name']}, this is an IOU for {format_currency(debtor['amount_owed'])} recorded on FiCore Records on {format_date(debtor['created_at'])}. Details: {debtor.get('description', 'No description provided')}."
+        message = f"Hi {debtor['name']}, this is an IOU for {utils.format_currency(debtor['amount_owed'])} recorded on FiCore Records on {utils.format_date(debtor['created_at'])}. Details: {debtor.get('description', 'No description provided')}."
         whatsapp_link = f"https://wa.me/{contact}?text={urllib.parse.quote(message)}"
         
-        if not is_admin():
-            user_query = get_user_query(str(current_user.id))
+        if not utils.is_admin():
+            user_query = utils.get_user_query(str(current_user.id))
             db.users.update_one(user_query, {'$inc': {'coin_balance': -1}})
             db.coin_transactions.insert_one({
                 'user_id': str(current_user.id),
@@ -189,7 +183,7 @@ def share(id):
 
 @debtors_bp.route('/send_reminder', methods=['POST'])
 @login_required
-@requires_role('trader')
+@utils.requires_role('trader')
 def send_reminder():
     """Send reminder to debtor via SMS/WhatsApp or set snooze."""
     try:
@@ -203,15 +197,15 @@ def send_reminder():
         if not debt_id or (not recipient and not snooze_days):
             return jsonify({'success': False, 'message': trans('debtors_missing_fields', default='Missing required fields')}), 400
         
-        db = get_mongo_db()
-        query = {'_id': ObjectId(debt_id), 'type': 'debtor'} if is_admin() else {'_id': ObjectId(debt_id), 'user_id': str(current_user.id), 'type': 'debtor'}
+        db = utils.get_mongo_db()
+        query = {'_id': ObjectId(debt_id), 'type': 'debtor'} if utils.is_admin() else {'_id': ObjectId(debt_id), 'user_id': str(current_user.id), 'type': 'debtor'}
         debtor = db.records.find_one(query)
         
         if not debtor:
             return jsonify({'success': False, 'message': trans('debtors_record_not_found', default='Record not found')}), 404
         
         coin_cost = 2 if recipient else 1
-        if not is_admin() and not check_coin_balance(coin_cost):
+        if not utils.is_admin() and not utils.check_coin_balance(coin_cost):
             return jsonify({'success': False, 'message': trans('debtors_insufficient_coins', default='Insufficient coins to send reminder')}), 400
         
         update_data = {'$inc': {'reminder_count': 1}}
@@ -223,15 +217,15 @@ def send_reminder():
         
         if recipient:
             if send_type == 'sms':
-                success, api_response = send_sms_reminder (reception, message)
+                success, api_response = send_sms_reminder(recipient, message)
             elif send_type == 'whatsapp':
                 success, api_response = send_whatsapp_reminder(recipient, message)
         
         if success:
             db.records.update_one({'_id': ObjectId(debt_id)}, update_data)
             
-            if not is_admin():
-                user_query = get_user_query(str(current_user.id))
+            if not utils.is_admin():
+                user_query = utils.get_user_query(str(current_user.id))
                 db.users.update_one(user_query, {'$inc': {'coin_balance': -coin_cost}})
                 db.coin_transactions.insert_one({
                     'user_id': str(current_user.id),
@@ -261,7 +255,7 @@ def send_reminder():
 
 @debtors_bp.route('/generate_iou/<id>')
 @login_required
-@requires_role('trader')
+@utils.requires_role('trader')
 def generate_iou(id):
     """Generate PDF IOU for a debtor."""
     try:
@@ -269,15 +263,15 @@ def generate_iou(id):
         from reportlab.pdfgen import canvas
         from reportlab.lib.units import inch
         
-        db = get_mongo_db()
-        query = {'_id': ObjectId(id), 'type': 'debtor'} if is_admin() else {'_id': ObjectId(id), 'user_id': str(current_user.id), 'type': 'debtor'}
+        db = utils.get_mongo_db()
+        query = {'_id': ObjectId(id), 'type': 'debtor'} if utils.is_admin() else {'_id': ObjectId(id), 'user_id': str(current_user.id), 'type': 'debtor'}
         debtor = db.records.find_one(query)
         
         if not debtor:
             flash(trans('debtors_record_not_found', default='Record not found'), 'danger')
             return redirect(url_for('debtors.index'))
         
-        if not is_admin() and not check_coin_balance(1):
+        if not utils.is_admin() and not utils.check_coin_balance(1):
             flash(trans('debtors_insufficient_coins', default='Insufficient coins to generate IOU'), 'danger')
             return redirect(url_for('coins.purchase'))
         
@@ -292,13 +286,13 @@ def generate_iou(id):
         y_position = height - inch - 0.5 * inch
         p.drawString(inch, y_position, f"Debtor: {debtor['name']}")
         y_position -= 0.3 * inch
-        p.drawString(inch, y_position, f"Amount Owed: {format_currency(debtor['amount_owed'])}")
+        p.drawString(inch, y_position, f"Amount Owed: {utils.format_currency(debtor['amount_owed'])}")
         y_position -= 0.3 * inch
         p.drawString(inch, y_position, f"Contact: {debtor.get('contact', 'N/A')}")
         y_position -= 0.3 * inch
         p.drawString(inch, y_position, f"Description: {debtor.get('description', 'No description provided')}")
         y_position -= 0.3 * inch
-        p.drawString(inch, y_position, f"Date Recorded: {format_date(debtor['created_at'])}")
+        p.drawString(inch, y_position, f"Date Recorded: {utils.format_date(debtor['created_at'])}")
         y_position -= 0.3 * inch
         p.drawString(inch, y_position, f"Reminders Sent: {debtor.get('reminder_count', 0)}")
         
@@ -308,8 +302,8 @@ def generate_iou(id):
         p.showPage()
         p.save()
         
-        if not is_admin():
-            user_query = get_user_query(str(current_user.id))
+        if not utils.is_admin():
+            user_query = utils.get_user_query(str(current_user.id))
             db.users.update_one(user_query, {'$inc': {'coin_balance': -1}})
             db.coin_transactions.insert_one({
                 'user_id': str(current_user.id),
@@ -335,17 +329,17 @@ def generate_iou(id):
 
 @debtors_bp.route('/add', methods=['GET', 'POST'])
 @login_required
-@requires_role('trader')
+@utils.requires_role('trader')
 def add():
     """Add a new debtor record."""
     form = DebtorForm()
-    if not is_admin() and not check_coin_balance(1):
+    if not utils.is_admin() and not utils.check_coin_balance(1):
         flash(trans('debtors_insufficient_coins', default='Insufficient coins to add debtor'), 'danger')
         return redirect(url_for('coins.purchase'))
 
     if form.validate_on_submit():
         try:
-            db = get_mongo_db()
+            db = utils.get_mongo_db()
             debtor_data = {
                 'user_id': str(current_user.id),
                 'type': 'debtor',
@@ -358,8 +352,8 @@ def add():
             }
             db.records.insert_one(debtor_data)
             
-            if not is_admin():
-                user_query = get_user_query(str(current_user.id))
+            if not utils.is_admin():
+                user_query = utils.get_user_query(str(current_user.id))
                 db.users.update_one(user_query, {'$inc': {'coin_balance': -1}})
                 db.coin_transactions.insert_one({
                     'user_id': str(current_user.id),
@@ -377,13 +371,13 @@ def add():
 
     # Role-based navigation data
     if current_user.role == 'trader':
-        tools_for_template = BUSINESS_TOOLS
-        explore_features_for_template = BUSINESS_EXPLORE_FEATURES
-        bottom_nav_items = BUSINESS_NAV
+        tools_for_template = utils.BUSINESS_TOOLS
+        explore_features_for_template = utils.BUSINESS_EXPLORE_FEATURES
+        bottom_nav_items = utils.BUSINESS_NAV
     elif current_user.role == 'admin':
-        tools_for_template = ALL_TOOLS
-        explore_features_for_template = ADMIN_EXPLORE_FEATURES
-        bottom_nav_items = ADMIN_NAV
+        tools_for_template = utils.ALL_TOOLS
+        explore_features_for_template = utils.ADMIN_EXPLORE_FEATURES
+        bottom_nav_items = utils.ADMIN_NAV
     else:
         tools_for_template = []
         explore_features_for_template = []
@@ -401,12 +395,12 @@ def add():
 
 @debtors_bp.route('/edit/<id>', methods=['GET', 'POST'])
 @login_required
-@requires_role('trader')
+@utils.requires_role('trader')
 def edit(id):
     """Edit an existing debtor record."""
     try:
-        db = get_mongo_db()
-        query = {'_id': ObjectId(id), 'type': 'debtor'} if is_admin() else {'_id': ObjectId(id), 'user_id': str(current_user.id), 'type': 'debtor'}
+        db = utils.get_mongo_db()
+        query = {'_id': ObjectId(id), 'type': 'debtor'} if utils.is_admin() else {'_id': ObjectId(id), 'user_id': str(current_user.id), 'type': 'debtor'}
         debtor = db.records.find_one(query)
         
         if not debtor:
@@ -441,12 +435,13 @@ def edit(id):
 
         # Role-based navigation data
         if current_user.role == 'trader':
-            tools_for_template = BUSINESS_TOOLS
-            explore_features_for_template = BUSINESS_EXPLORE_FEATURES
-            bottom_nav_items = BUSINESS_NAV
+            tools_for_template = utils.BUSINESS_TOOLS
+            explore_features_for_template = utils.BUSINESS_EXPLORE_FEATURES
+            bottom_nav_items = utils.BUSINESS_NAV
         elif current_user.role == 'admin':
-            tools_for_template = ALL_TOOLS, explore_features_for_template = ADMIN_TOOLS
-            bottom_nav_items = ADMIN_NAV
+            tools_for_template = utils.ALL_TOOLS
+            explore_features_for_template = utils.ADMIN_EXPLORE_FEATURES
+            bottom_nav_items = utils.ADMIN_NAV
         else:
             tools_for_template = []
             explore_features_for_template = []
@@ -469,12 +464,12 @@ def edit(id):
 
 @debtors_bp.route('/delete/<id>', methods=['POST'])
 @login_required
-@requires_role('trader')
+@utils.requires_role('trader')
 def delete(id):
     """Delete a debtor record."""
     try:
-        db = get_mongo_db()
-        query = {'_id': ObjectId(id), 'type': 'debtor'} if is_admin() else {'_id': ObjectId(id), 'user_id': str(current_user.id), 'type': 'debtor'}
+        db = utils.get_mongo_db()
+        query = {'_id': ObjectId(id), 'type': 'debtor'} if utils.is_admin() else {'_id': ObjectId(id), 'user_id': str(current_user.id), 'type': 'debtor'}
         result = db.records.delete_one(query)
         if result.deleted_count:
             flash(trans('debtors_delete_success', default='Debtor deleted successfully'), 'success')
