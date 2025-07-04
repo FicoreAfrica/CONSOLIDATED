@@ -4,7 +4,7 @@ Receipt management translations for accounting tools
 
 RECEIPTS_TRANSLATIONS = {
     'en': {
-        'receipts_dashboard': 'Receipts Dashboard',
+        'receipts_dashboard': 'Receipts',
         'receipts_list': 'Receipts List',
         # Receipts
         'receipts_payer_name': 'Payer Name',
@@ -56,7 +56,7 @@ RECEIPTS_TRANSLATIONS = {
         'receipts_monthly_receipts': 'Monthly Receipts',
     },
     'ha': {
-        'receipts_dashboard': 'Allon Rasit',
+        'receipts_dashboard': 'Shigar Kudi',
         'receipts_list': 'Jerin Rasit',
         'receipts_add_receipt': 'Ƙara Rasit',
         'receipts_edit_receipt': 'Gyara Rasit',
