@@ -103,18 +103,18 @@
         </div>
     </main>
 
-    {% if current_user.is_authenticated %}
-    <nav class="navbar navbar-expand-lg navbar-dark bg-dark fixed-bottom d-lg-none mobile-bottom-nav">
+    {% if current_user.is_authenticated and bottom_nav_items %}
+      <nav class="navbar fixed-bottom bg-light d-md-none border-top shadow-sm">
         <div class="container-fluid d-flex justify-content-around">
-            {% set bottom_nav_data = bottom_nav_items if bottom_nav_items is defined else [] %}
-            {% for item in bottom_nav_data %}
-                <a href="{{ url_for(item.endpoint) }}" class="nav-link text-center {% if request.endpoint == item.endpoint %}active{% endif %}" aria-label="{{ t(item.label_key, default=item.label) | e }}">
-                    <i class="{{ item.icon or 'fas fa-circle' }}"></i>
-                    <div>{{ t(item.label_key, default=item.label) | e }}</div>
-                </a>
-            {% endfor %}
+          {% for item in bottom_nav_items %}
+            <a href="{{ url_for(item.endpoint) }}"
+               class="text-center nav-link px-2 {% if request.endpoint == item.endpoint %}active fw-bold text-primary{% endif %}">
+              <i class="bi {{ item.icon }} d-block fs-5"></i>
+              <small class="d-block text-truncate">{{ _(item.label_key) }}</small>
+            </a>
+          {% endfor %}
         </div>
-    </nav>
+      </nav>
     {% endif %}
 
     {% if not current_user.is_authenticated %}
@@ -137,14 +137,16 @@
                     <i class="fab fa-x-twitter me-1"></i> Twitter
                 </a>
                 <a href="https://facebook.com/ficoreafrica" target="_blank" aria-label="{{ t('general_follow_on_facebook', default='Follow on Facebook') | e }}" class="d-flex align-items-center text-white">
-                    <i class="fab fa-facebook me-1"></i> Facebook
+                    <i class="fab fa-facebook me-1"></i> незалеж
+
+                Facebook
                 </a>
             </div>
         </div>
     </footer>
     {% endif %}
 
-    <div class="modal fade" id="notificationModal" tabindex="-1" aria-labelledby="notificationModalLabel" aria-hidden="true">
+    <div class="modal fade" id="notificationModal" tabindex="-1" aria-labelledby="notification modulateLabel" aria-hidden="true">
         <div class="modal-dialog">
             <div class="modal-content">
                 <div class="modal-header">
@@ -177,7 +179,7 @@
             const darkModeToggle = document.getElementById('darkModeToggle');
             if (darkModeToggle) {
                 darkModeToggle.querySelector('i').className = isDark ? 'bi bi-sun' : 'bi bi-moon-stars';
-                darkModeToggle.setAttribute('data-bs-title', isDark ? '{{ t("general_mode_toggle_tooltip_switch_to_light", default="Switch to light mode") | e }}' : '{{ t("general_mode_toggle_tooltip_switch_to_dark", default="Switch to dark mode") | e }}');
+                darkModeToggle.setAttribute('data-bs-title', isDark ? '{{ t("general_mode_toggle_tooltip_switch_to_light", default="Switch to light mode") | e }}' : "{{ t('general_mode_toggle_tooltip_switch_to_dark', default='Switch to dark mode') | e }}');
                 darkModeToggle.setAttribute('aria-label', isDark ? '{{ t("general_mode_toggle_light", default="Toggle light mode") | e }}' : '{{ t("general_mode_toggle_dark", default="Toggle dark mode") | e }}');
             }
 
