@@ -8,7 +8,7 @@
         <div class="top-header d-flex justify-content-between align-items-center mb-3 py-2 bg-white shadow-sm rounded">
             <div class="d-flex align-items-center gap-2" style="min-width:0;">
                 <img src="{{ current_user.avatar_url or url_for('static', filename='img/default-profile.png') }}" class="rounded-circle" width="40" height="40" alt="Profile">
-                <span class="welcome-text text-truncate fw-bold" style="max-width:120px;">{{ t('general_hello_user', default='Hello') | e }}, {{ current_user.display_name | default(current_user.id) | e }}</span>
+                <span class="welcome-text text-truncate fw-bold">{{ t('general_hello_user', default='Hello') | e }}, {{ current_user.display_name | default(current_user.id) | e }}</span>
             </div>
             <div class="header-actions d-flex align-items-center gap-2">
                 <button class="notification-bell btn btn-link p-0 position-relative" id="notificationBell" data-bs-toggle="modal" data-bs-target="#notificationModal" data-bs-toggle="tooltip" data-bs-title="{{ t('general_notifications_tooltip', default='View notifications') | e }}" aria-label="{{ t('general_notifications', default='Notifications') | e }}">
@@ -34,7 +34,7 @@
         </div>
 
         <!-- Financial Summary -->
-        <div class="financial-summary mb-4">
+        <div class="financial-summary mb-3">
             <div class="row g-2 mb-3">
                 <div class="col-6">
                     <div class="summary-card debt-card p-3 rounded shadow-sm">
@@ -84,7 +84,7 @@
         </div>
 
         <!-- Financial Snapshots -->
-        <div class="financial-snapshots mb-4">
+        <div class="financial-snapshots mb-3">
             <div class="row g-2">
                 <div class="col-4">
                     <div class="stat-card p-2 rounded shadow-sm text-center">
@@ -123,7 +123,7 @@
         </div>
 
         <!-- Quick Actions -->
-        <div class="quick-actions mb-4">
+        <div class="quick-actions mb-3">
             <h3 class="section-title mb-3">{{ t('general_quick_actions', default='Quick Actions') | e }}</h3>
             <div class="row g-2">
                 {% for tool in tools %}
@@ -132,8 +132,8 @@
                         {% if tool.badge %}
                         <span class="badge bg-danger position-absolute top-0 end-0 translate-middle rounded-pill">{{ tool.badge }}</span>
                         {% endif %}
-                        <i class="{{ tool.icon | e }} fs-3 mb-2" style="color: var(--accent-blue);"></i>
-                        <div class="action-label text-center text-truncate fw-bold" style="font-size:0.9rem;">{{ t(tool.label, default=tool.label) | e }}</div>
+                        <i class="{{ tool.icon | e }} fs-3 mb-2"></i>
+                        <div class="action-label text-center text-truncate fw-bold">{{ t(tool.label, default=tool.label) | e }}</div>
                     </a>
                 </div>
                 {% endfor %}
@@ -141,7 +141,7 @@
         </div>
 
         <!-- Recent Activity -->
-        <div class="recent-activity mb-4">
+        <div class="recent-activity mb-3">
             <div class="d-flex justify-content-between align-items-center mb-3">
                 <h3 class="section-title mb-0">{{ t('general_recent_activity', default='Recent Activity') | e }}</h3>
                 <a href="{{ url_for('dashboard.index') | e }}" class="btn btn-link btn-sm p-0">
@@ -162,7 +162,7 @@
         </div>
 
         <!-- Navigation Cards -->
-        <div class="navigation-cards">
+        <div class="navigation-cards mb-3">
             <h3 class="section-title mb-3">{{ t('general_explore_features', default='Explore Features') | e }}</h3>
             <div class="row g-2">
                 {% for item in nav_items %}
@@ -183,11 +183,11 @@
         </div>
 
         <!-- Bottom Navigation -->
-        <nav class="bottom-nav fixed-bottom bg-white border-top d-flex justify-content-around align-items-center py-2 d-lg-none">
+        <nav class="bottom-nav fixed-bottom bg-white border-top d-flex justify-content-around align-items-center py-2 d-lg-none" role="navigation">
             {% for item in bottom_nav_items %}
             <a href="{{ url_for(item.endpoint) if item.endpoint else item.get('url', '#') | e }}" aria-label="{{ t(item.label_key, default=item.label) | e }}" class="nav-item text-center text-dark text-decoration-none" data-bs-toggle="tooltip" data-bs-title="{{ t(item.tooltip_key, default=item.label) | e }}">
                 <i class="{{ item.icon | e }} fs-4"></i>
-                <div class="nav-label text-truncate" style="font-size:0.85rem;">{{ t(item.label_key, default=item.label) | e }}</div>
+                <div class="nav-label text-truncate">{{ t(item.label_key, default=item.label) | e }}</div>
             </a>
             {% endfor %}
         </nav>
@@ -199,9 +199,9 @@
             </div>
         </div>
 
-        <section class="tools-section my-5">
+        <section class="tools-section mb-3">
             <h2 class="text-center"><i class="bi bi-tools"></i> {{ t('general_our_tools', default='Our Business & Agent Tools') | e }}</h2>
-            <p class="text-center mb-4">{{ t('general_business_tools_desc', default='Discover powerful tools to manage your business or support traders as an agent.') | e }}</p>
+            <p class="text-center mb-3">{{ t('general_business_tools_desc', default='Discover powerful tools to manage your business or support traders as an agent.') | e }}</p>
             <div class="row g-2">
                 <div class="col-6">
                     <div class="card tool-card p-3 rounded shadow-sm">
@@ -234,9 +234,7 @@
                     <div class="card tool-card p-3 rounded shadow-sm">
                         <div class="card-body p-0">
                             <h3 class="fs-5"><i class="bi bi-person-plus me-2"></i>{{ t('agents_register_trader', default='Register Traders') | e }}</h3>
-                            <p class="text-muted text-truncate">{{ t('agents_register_trader_desc', default='Onboard new traders and manage their accounts as an agent
-
-.') | e }}</p>
+                            <p class="text-muted text-truncate">{{ t('agents_register_trader_desc', default='Onboard new traders and manage their accounts as an agent.') | e }}</p>
                             <a href="{{ url_for('users.signup', role='agent') | e }}" class="btn btn-primary btn-sm">{{ t('general_get_started', default='Get Started') | e }}</a>
                         </div>
                     </div>
@@ -262,7 +260,7 @@
             </div>
         </section>
 
-        <section class="cta-section my-5 text-center">
+        <section class="cta-section mb-3 text-center">
             <h3>{{ t('general_ready_to_start', default='Ready to Take Control of Your Finances?') | e }}</h3>
             <p>{{ t('general_business_signup_prompt', default='Sign up as a business owner or agent to access powerful financial management tools.') | e }}</p>
             <div class="d-flex justify-content-center gap-3">
