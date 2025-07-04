@@ -27,7 +27,7 @@ from utils import (
     get_mail, requires_role, check_coin_balance, is_admin, login_manager,
     flask_session, csrf, babel, compress, PERSONAL_TOOLS, PERSONAL_NAV, PERSONAL_EXPLORE_FEATURES,
     BUSINESS_TOOLS, BUSINESS_NAV, BUSINESS_EXPLORE_FEATURES, AGENT_TOOLS, AGENT_NAV, AGENT_EXPLORE_FEATURES,
-    ALL_TOOLS, ADMIN_NAV, ADMIN_EXPLORE_FEATURES
+    ALL_TOOLS, ADMIN_NAV, ADMIN_EXPLORE_FEATURES, initialize_tools_with_urls
 )
 from session_utils import create_anonymous_session
 from translations import trans, get_translations, get_all_translations, get_module_translations
@@ -466,6 +466,10 @@ def create_app():
     logger.info('Registered personal blueprint with url_prefix="/personal"')
     app.register_blueprint(general_bp, url_prefix='/general')
     logger.info('Registered general blueprint')
+    
+    # Initialize tools with URLs
+    initialize_tools_with_urls(app)
+    logger.info('Initialized tools and navigation with resolved URLs')
     
     # Jinja2 globals and filters
     app.jinja_env.globals.update(
