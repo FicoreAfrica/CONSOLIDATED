@@ -97,7 +97,7 @@ _PERSONAL_NAV = [
 _PERSONAL_EXPLORE_FEATURES = [
     {"endpoint": "personal.budget.main", "label": "Budget", "label_key": "budget_budget_planner", "tooltip_key": "budget_tooltip", "icon": "bi-wallet"},
     {"endpoint": "personal.emergency_fund.main", "label": "Emergency Fund", "label_key": "emergency_fund_calculator", "tooltip_key": "emergency_fund_tooltip", "icon": "bi-shield"},
-    {"endpoint": "financial_health.main", "label": "Financial Health", "label_key": "financial_health_calculator", "tooltip_key": "financial_health_tooltip", "icon": "bi-heart"},
+    {"endpoint": "personal.financial_health.main", "label": "Financial Health", "label_key": "financial_health_calculator", "tooltip_key": "financial_health_tooltip", "icon": "bi-heart"},
     {"endpoint": "personal.net_worth.main", "label": "Net Worth", "label_key": "net_worth_calculator", "tooltip_key": "net_worth_tooltip", "icon": "bi-cash-stack"},
     {"endpoint": "personal.quiz.main", "label": "Quiz", "label_key": "quiz_personality_quiz", "tooltip_key": "quiz_tooltip", "icon": "bi-question-circle"},
     {"endpoint": "taxation_bp.calculate_tax", "label": "Taxation", "label_key": "taxation_calculator", "tooltip_key": "taxation_tooltip", "icon": "bi-calculator"},
