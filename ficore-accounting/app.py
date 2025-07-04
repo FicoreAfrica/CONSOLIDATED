@@ -22,7 +22,7 @@ from models import (
     to_dict_financial_health, to_dict_budget, to_dict_bill, to_dict_net_worth,
     to_dict_emergency_fund, to_dict_learning_progress, to_dict_quiz_result, initialize_database
 )
-import utils  # Changed to import the module instead of individual variables
+import utils
 from session_utils import create_anonymous_session
 from translations import trans, get_translations, get_all_translations, get_module_translations
 from flask_login import LoginManager, login_required, current_user, UserMixin
@@ -81,12 +81,12 @@ class SessionAdapter(logging.LoggerAdapter):
 logger = SessionAdapter(root_logger, {})
 
 # Initialize extensions
-login_manager = LoginManager()
-flask_session = Session()
-csrf = CSRFProtect()
-babel = Babel()
-compress = Compress()
-limiter = Limiter(key_func=get_remote_address, default_limits=['200 per day', '50 per hour'], storage_uri='memory://')
+login_manager = utils.LoginManager()
+flask_session = utils.Session()
+csrf = utils.CSRFProtect()
+babel = utils.Babel()
+compress = utils.Compress()
+limiter = utils.Limiter(key_func=get_remote_address, default_limits=['200 per day', '50 per hour'], storage_uri='memory://')
 
 # Decorators
 def admin_required(f):
@@ -95,8 +95,8 @@ def admin_required(f):
         if not current_user.is_authenticated:
             logger.warning("Unauthorized access attempt to admin route", extra={'ip_address': request.remote_addr})
             return redirect(url_for('users.login'))
-        if not is_admin():
-            flash(trans('general_no_permission', default='You do not have permission to access this page.'), 'danger')
+        if not utils.is_admin():
+            flash(utils.trans('general_no_permission', default='You do not have permission to access this page.'), 'danger')
             logger.warning(f"Non-admin user {current_user.id} attempted access", extra={'ip_address': request.remote_addr})
             return redirect(url_for('index'))
         return f(*args, **kwargs)
@@ -117,7 +117,7 @@ def ensure_session_id(f):
         try:
             if 'sid' not in session:
                 if not current_user.is_authenticated:
-                    create_anonymous_session()
+                    utils.create_anonymous_session()
                     logger.info(f'New anonymous session created: {session["sid"]}', extra={'ip_address': request.remote_addr})
                 else:
                     session['sid'] = str(uuid.uuid4())
@@ -149,7 +149,7 @@ def setup_logging(app):
 def check_mongodb_connection(app):
     with app.app_context():
         try:
-            db = get_mongo_db()
+            db = utils.get_mongo_db()
             db.command('ping')
             logger.info('MongoDB connection verified with ping')
             return True
@@ -160,11 +160,11 @@ def check_mongodb_connection(app):
 def setup_session(app):
     with app.app_context():
         try:
-            db = get_mongo_db()
+            db = utils.get_mongo_db()
             if not check_mongodb_connection(app):
                 logger.error('MongoDB client is not available, falling back to filesystem session')
                 app.config['SESSION_TYPE'] = 'filesystem'
-                flask_session.init_app(app)
+                utils.flask_session.init_app(app)
                 logger.info('Session configured with filesystem fallback')
                 return
             app.config['SESSION_TYPE'] = 'mongodb'
@@ -178,12 +178,12 @@ def setup_session(app):
             app.config['SESSION_COOKIE_SECURE'] = os.getenv('FLASK_ENV', 'development') == 'production'
             app.config['SESSION_COOKIE_HTTPONLY'] = True
             app.config['SESSION_COOKIE_NAME'] = 'ficore_session'
-            flask_session.init_app(app)
+            utils.flask_session.init_app(app)
             logger.info(f'Session configured: type={app.config["SESSION_TYPE"]}, db={app.config["SESSION_MONGODB_DB"]}, collection={app.config["SESSION_MONGODB_COLLECT"]}')
         except Exception as e:
             logger.error(f'Failed to configure session with MongoDB: {str(e)}', exc_info=True)
             app.config['SESSION_TYPE'] = 'filesystem'
-            flask_session.init_app(app)
+            utils.flask_session.init_app(app)
             logger.info('Session configured with filesystem fallback due to MongoDB error')
 
 class User(UserMixin):
@@ -195,14 +195,14 @@ class User(UserMixin):
 
     def get(self, key, default=None):
         with current_app.app_context():
-            user = get_mongo_db().users.find_one({'_id': self.id})
+            user = utils.get_mongo_db().users.find_one({'_id': self.id})
             return user.get(key, default) if user else default
 
     @property
     def is_active(self):
         with current_app.app_context():
             try:
-                user = get_mongo_db().users.find_one({'_id': self.id})
+                user = utils.get_mongo_db().users.find_one({'_id': self.id})
                 return user.get('is_active', True) if user else False
             except Exception as e:
                 logger.error(f'Error checking active status for user {self.id}: {str(e)}', exc_info=True)
@@ -239,7 +239,7 @@ def create_app():
     app.config['SMS_API_URL'] = os.getenv('SMS_API_URL')
     app.config['SMS_API_KEY'] = os.getenv('SMS_API_KEY')
     app.config['WHATSAPP_API_URL'] = os.getenv('WHATSAPP_API_URL')
-    app.config['WHATSAPP_API_KEY'] = os.getenv('WHATSAPP_API_KEY')
+    app.config['WHATSAPP_API_KEY'] = os.getenv('WHATSAPP_API_API_KEY')
     app.config['BASE_URL'] = os.getenv('BASE_URL', 'http://localhost:5000')
     app.config['SETUP_KEY'] = os.getenv('SETUP_KEY')
     
@@ -261,7 +261,7 @@ def create_app():
         logger.info('MongoDB client initialized successfully')
         
         def shutdown_mongo_client():
-            with app.app_context():
+            with personally app.app_context():
                 try:
                     if hasattr(app, 'mongo_client') and app.mongo_client:
                         app.mongo_client.close()
@@ -276,20 +276,20 @@ def create_app():
     
     # Initialize extensions
     setup_logging(app)
-    compress.init_app(app)
-    csrf.init_app(app)
+    utils.compress.init_app(app)
+    utils.csrf.init_app(app)
     mail = utils.get_mail(app)
-    limiter.init_app(app)
+    utils.limiter.init_app(app)
     serializer = URLSafeTimedSerializer(app.config['SECRET_KEY'])
-    babel.init_app(app)
-    login_manager.init_app(app)
-    login_manager.login_view = 'users.login'
+    utils.babel.init_app(app)
+    utils.login_manager.init_app(app)
+    utils.login_manager.login_view = 'users.login'
 
     # User loader callback for Flask-Login
-    @login_manager.user_loader
+    @utils.login_manager.user_loader
     def load_user(user_id):
         try:
-            db = get_mongo_db()
+            db = utils.get_mongo_db()
             user = db.users.find_one({'_id': user_id})
             if not user:
                 return None
@@ -305,7 +305,7 @@ def create_app():
 
     # Initialize MongoDB and scheduler
     with app.app_context():
-        db = get_mongo_db()
+        db = utils.get_mongo_db()
         try:
             scheduler = init_scheduler(app, db)
             app.config['SCHEDULER'] = scheduler
@@ -316,7 +316,7 @@ def create_app():
                         scheduler.shutdown(wait=True)
                         logger.info('Scheduler shutdown successfully')
                 except Exception as e:
-                    logger.error(f'Error shutting down scheduler: {str(e)}', exc_info=True)
+協会                    logger.error(f'Error shutting down scheduler: {str(e)}', exc_info=True)
             atexit.register(shutdown_scheduler)
         except Exception as e:
             logger.error(f'Failed to initialize scheduler: {str(e)}', exc_info=True)
@@ -326,7 +326,7 @@ def create_app():
     # Initialize database and collections
     with app.app_context():
         try:
-            db = get_mongo_db()
+            db = utils.get_mongo_db()
             initialize_database(app)
             personal_finance_collections = [
                 'budgets', 'bills', 'emergency_funds', 'financial_health_scores', 
@@ -466,7 +466,7 @@ def create_app():
     logger.info('Registered general blueprint')
     
     # Initialize tools with URLs
-    utils.initialize_tools_with_urls(app)  # Updated to use utils. prefix
+    utils.initialize_tools_with_urls(app)
     logger.info('Initialized tools and navigation with resolved URLs')
     
     # Jinja2 globals and filters
@@ -478,7 +478,7 @@ def create_app():
         WAITLIST_FORM_URL=app.config.get('WAITLIST_FORM_URL', '#'),
         CONSULTANCY_FORM_URL=app.config.get('CONSULTANCY_FORM_URL', '#'),
         trans=trans,
-        trans_function=trans_function,
+        trans_function=utils.trans_function,
         get_translations=get_translations
     )
     
@@ -550,7 +550,7 @@ def create_app():
     @app.template_filter('trans')
     def trans_filter(key, **kwargs):
         lang = session.get('lang', 'en')
-        translation = trans(key, lang=lang, **kwargs)
+        translation = utils.trans(key, lang=lang, **kwargs)
         if translation == key:
             logger.warning(f'Missing translation for key="{key}" in lang="{lang}"')
             return key
@@ -575,7 +575,7 @@ def create_app():
         lang = session.get('lang', 'en')
         def context_trans(key, **kwargs):
             used_lang = kwargs.pop('lang', lang)
-            return trans(
+            return utils.trans(
                 key,
                 lang=used_lang,
                 logger=g.get('logger', logger) if has_request_context() else logger,
@@ -596,7 +596,7 @@ def create_app():
             'current_lang': lang,
             'current_user': current_user if has_request_context() else None,
             'available_languages': [
-                {'code': code, 'name': trans(f'general_{code}', lang=lang, default=code.capitalize())}
+                {'code': code, 'name': utils.trans(f'general_{code}', lang=lang, default=code.capitalize())}
                 for code in supported_languages
             ]
         }
@@ -622,7 +622,7 @@ def create_app():
     
     # Language switching route
     @app.route('/change-language', methods=['POST'])
-    @limiter.limit('10 per minute')
+    @utils.limiter.limit('10 per minute')
     def change_language():
         try:
             data = request.get_json()
@@ -633,7 +633,7 @@ def create_app():
                 with app.app_context():
                     if current_user.is_authenticated:
                         try:
-                            get_mongo_db().users.update_one(
+                            utils.get_mongo_db().users.update_one(
                                 {'_id': current_user.id}, 
                                 {'$set': {'language': new_lang}}
                             )
@@ -645,20 +645,20 @@ def create_app():
                 
                 return jsonify({
                     'success': True, 
-                    'message': trans('general_language_changed', lang=new_lang)
+                    'message': utils.trans('general_language_changed', lang=new_lang)
                 })
             else:
                 logger.warning(f'Invalid language requested: {new_lang}')
                 return jsonify({
                     'success': False, 
-                    'message': trans('general_invalid_language')
+                    'message': utils.trans('general_invalid_language')
                 }), 400
         except Exception as e:
             logger.error(f'Error changing language: {str(e)}', 
                         extra={'session_id': session.get('sid', 'no-session-id'), 'ip_address': request.remote_addr})
             return jsonify({
                 'success': False, 
-                'message': trans('general_error')
+                'message': utils.trans('general_error')
             }), 500
     
     # Routes
@@ -697,17 +697,17 @@ def create_app():
                 courses=courses,
                 lang=lang,
                 sample_courses=courses,
-                title=trans('general_welcome', lang=lang),
+                title=utils.trans('general_welcome', lang=lang),
                 is_anonymous=session.get('is_anonymous', False),
                 bottom_nav_items=[]
             )
         except TemplateNotFound as e:
             logger.error(f'Template not found: {str(e)}', exc_info=True)
-            flash(trans('general_error', default='Template not found'), 'danger')
+            flash(utils.trans('general_error', default='Template not found'), 'danger')
             return render_template('personal/GENERAL/error.html', t=trans, lang=lang, error=str(e), bottom_nav_items=[]), 404
         except Exception as e:
             logger.error(f'Error in index route: {str(e)}', exc_info=True)
-            flash(trans('general_error', default='An error occurred'), 'danger')
+            flash(utils.trans('general_error', default='An error occurred'), 'danger')
             try:
                 return render_template('errors/500.html', t=trans, lang=lang, error=str(e), bottom_nav_items=[]), 500
             except TemplateNotFound as e:
@@ -732,31 +732,31 @@ def create_app():
                 return redirect(url_for('agents_bp.agent_portal'))
             elif current_user.role == 'trader':
                 try:
-                    tools = utils.BUSINESS_TOOLS  # Updated to use utils. prefix
-                    nav_items = utils.BUSINESS_EXPLORE_FEATURES  # Updated to use utils. prefix
-                    bottom_nav_items = utils.BUSINESS_NAV  # Updated to use utils. prefix
-                    return render_template('general/home.html', t=trans, lang=lang, title=trans('general_business_home', lang=lang),
+                    tools = utils.BUSINESS_TOOLS
+                    nav_items = utils.BUSINESS_EXPLORE_FEATURES
+                    bottom_nav_items = utils.BUSINESS_NAV
+                    return render_template('general/home.html', t=trans, lang=lang, title=utils.trans('general_business_home', lang=lang),
                                           tools=tools, nav_items=nav_items, bottom_nav_items=bottom_nav_items)
                 except TemplateNotFound as e:
                     logger.error(f'Template not found: {str(e)}', exc_info=True)
-                    return render_template('personal/GENERAL/error.html', t=trans, lang=lang, error=str(e), bottom_nav_items=utils.BUSINESS_NAV), 404  # Updated to use utils. prefix
+                    return render_template('personal/GENERAL/error.html', t=trans, lang=lang, error=str(e), bottom_nav_items=utils.BUSINESS_NAV), 404
             else:
-                flash(trans('general_no_permission', default='You do not have permission to access this page.'), 'danger')
+                flash(utils.trans('general_no_permission', default='You do not have permission to access this page.'), 'danger')
                 return redirect(url_for('index'))
         try:
-            return render_template('general/home.html', t=trans, lang=lang, is_public=True, title=trans('general_business_home', lang=lang), bottom_nav_items=[])
+            return render_template('general/home.html', t=trans, lang=lang, is_public=True, title=utils.trans('general_business_home', lang=lang), bottom_nav_items=[])
         except TemplateNotFound as e:
             logger.error(f'Template not found: {str(e)}', exc_info=True)
             return render_template('personal/GENERAL/error.html', t=trans, lang=lang, error=str(e), bottom_nav_items=[]), 404
     
     @app.route('/health')
-    @limiter.limit('10 per minute')
+    @utils.limiter.limit('10 per minute')
     def health():
         logger.debug('Health check', extra={'ip_address': request.remote_addr})
         status = {'status': 'healthy'}
         try:
             with app.app_context():
-                get_mongo_db().command('ping')
+                utils.get_mongo_db().command('ping')
             return jsonify(status), 200
         except Exception as e:
             logger.error(f'Health check failed: {str(e)}', exc_info=True)
@@ -765,12 +765,12 @@ def create_app():
             return jsonify(status), 500
     
     @app.route('/api/translations/<lang>')
-    @limiter.limit('10 per minute')
+    @utils.limiter.limit('10 per minute')
     def get_translations_api(lang):
         try:
             supported_languages = app.config.get('SUPPORTED_LANGUAGES', ['en', 'ha'])
             if lang not in supported_languages:
-                return jsonify({'error': trans('general_invalid_language')}), 400
+                return jsonify({'error': utils.trans('general_invalid_language')}), 400
             
             all_translations = get_all_translations()
             result = {}
@@ -782,29 +782,29 @@ def create_app():
         except Exception as e:
             logger.error(f'API translations error: {str(e)}', 
                         extra={'session_id': session.get('sid', 'no-session-id'), 'ip_address': request.remote_addr})
-            return jsonify({'error': trans('general_error')}), 500
+            return jsonify({'error': utils.trans('general_error')}), 500
     
     @app.route('/api/translate')
-    @limiter.limit('10 per minute')
+    @utils.limiter.limit('10 per minute')
     def api_translate():
         try:
             key = request.args.get('key')
             lang = request.args.get('lang', session.get('lang', 'en'))
             supported_languages = app.config.get('SUPPORTED_LANGUAGES', ['en', 'ha'])
             if not key:
-                return jsonify({'error': trans('general_missing_key')}), 400
+                return jsonify({'error': utils.trans('general_missing_key')}), 400
             if lang not in supported_languages:
-                return jsonify({'error': trans('general_invalid_language')}), 400
+                return jsonify({'error': utils.trans('general_invalid_language')}), 400
             
-            translation = trans(key, lang=lang)
+            translation = utils.trans(key, lang=lang)
             return jsonify({'key': key, 'translation': translation, 'lang': lang})
         except Exception as e:
             logger.error(f'API translate error: {str(e)}', 
                         extra={'session_id': session.get('sid', 'no-session-id'), 'ip_address': request.remote_addr})
-            return jsonify({'error': trans('general_error')}), 500
+            return jsonify({'error': utils.trans('general_error')}), 500
     
     @app.route('/set_language/<lang>')
-    @limiter.limit('10 per minute')
+    @utils.limiter.limit('10 per minute')
     def set_language(lang):
         supported_languages = app.config.get('SUPPORTED_LANGUAGES', ['en', 'ha'])
         new_lang = lang if lang in supported_languages else 'en'
@@ -812,16 +812,16 @@ def create_app():
             session['lang'] = new_lang
             with app.app_context():
                 if current_user.is_authenticated:
-                    get_mongo_db().users.update_one({'_id': current_user.id}, {'$set': {'language': new_lang}})
+                    utils.get_mongo_db().users.update_one({'_id': current_user.id}, {'$set': {'language': new_lang}})
             logger.info(f'Language set to {new_lang}', extra={'ip_address': request.remote_addr})
-            flash(trans('general_language_changed', default='Language updated successfully'), 'success')
+            flash(utils.trans('general_language_changed', default='Language updated successfully'), 'success')
         except Exception as e:
             logger.error(f'Session operation failed: {str(e)}', extra={'ip_address': request.remote_addr})
-            flash(trans('general_invalid_language', default='Invalid language'), 'danger')
+            flash(utils.trans('general_invalid_language', default='Invalid language'), 'danger')
         return redirect(request.referrer or url_for('index'))
     
     @app.route('/acknowledge_consent', methods=['POST'])
-    @limiter.limit('10 per minute')
+    @utils.limiter.limit('10 per minute')
     def acknowledge_consent():
         if request.method != 'POST':
             logger.warning(f'Invalid method {request.method} for consent acknowledgement', extra={'ip_address': request.remote_addr})
@@ -844,11 +844,11 @@ def create_app():
     # Accounting API routes (for non-personal users)
     @app.route('/api/debt-summary')
     @login_required
-    @limiter.limit('10 per minute')
+    @utils.limiter.limit('10 per minute')
     def debt_summary():
         try:
             with app.app_context():
-                db = get_mongo_db()
+                db = utils.get_mongo_db()
                 user_id = current_user.id
                 creditors_pipeline = [
                     {'$match': {'user_id': user_id, 'type': 'creditor'}},
@@ -868,15 +868,15 @@ def create_app():
                 })
         except Exception as e:
             logger.error(f'Error fetching debt summary: {str(e)}', exc_info=True, extra={'ip_address': request.remote_addr})
-            return jsonify({'error': trans('general_error', default='Failed to fetch debt summary')}), 500
+            return jsonify({'error': utils.trans('general_error', default='Failed to fetch debt summary')}), 500
     
     @app.route('/api/cashflow-summary')
     @login_required
-    @limiter.limit('10 per minute')
+    @utils.limiter.limit('10 per minute')
     def cashflow_summary():
         try:
             with app.app_context():
-                db = get_mongo_db()
+                db = utils.get_mongo_db()
                 user_id = current_user.id
                 now = datetime.utcnow()
                 month_start = datetime(now.year, now.month, 1)
@@ -901,15 +901,15 @@ def create_app():
                 })
         except Exception as e:
             logger.error(f'Error fetching cashflow summary: {str(e)}', exc_info=True, extra={'ip_address': request.remote_addr})
-            return jsonify({'error': trans('general_error', default='Failed to fetch cashflow summary')}), 500
+            return jsonify({'error': utils.trans('general_error', default='Failed to fetch cashflow summary')}), 500
     
     @app.route('/api/inventory-summary')
     @login_required
-    @limiter.limit('10 per minute')
+    @utils.limiter.limit('10 per minute')
     def inventory_summary():
         try:
             with app.app_context():
-                db = get_mongo_db()
+                db = utils.get_mongo_db()
                 user_id = current_user.id
                 pipeline = [
                     {'$match': {'user_id': user_id}},
@@ -930,15 +930,15 @@ def create_app():
                 })
         except Exception as e:
             logger.error(f'Error fetching inventory summary: {str(e)}', exc_info=True, extra={'ip_address': request.remote_addr})
-            return jsonify({'error': trans('general_error', default='Failed to fetch inventory summary')}), 500
+            return jsonify({'error': utils.trans('general_error', default='Failed to fetch inventory summary')}), 500
     
     @app.route('/api/recent-activity')
     @login_required
-    @limiter.limit('10 per minute')
+    @utils.limiter.limit('10 per minute')
     def recent_activity():
         try:
             with app.app_context():
-                db = get_mongo_db()
+                db = utils.get_mongo_db()
                 user_id = current_user.id
                 activities = []
                 recent_records = list(db.records.find(
@@ -972,15 +972,15 @@ def create_app():
                 return jsonify(activities)
         except Exception as e:
             logger.error(f'Error fetching recent activity: {str(e)}', exc_info=True, extra={'ip_address': request.remote_addr})
-            return jsonify({'error': trans('general_error', default='Failed to fetch recent activity')}), 500
+            return jsonify({'error': utils.trans('general_error', default='Failed to fetch recent activity')}), 500
     
     @app.route('/api/notifications/count')
     @login_required
-    @limiter.limit('10 per minute')
+    @utils.limiter.limit('10 per minute')
     def notification_count():
         try:
             with app.app_context():
-                db = get_mongo_db()
+                db = utils.get_mongo_db()
                 user_id = current_user.id
                 count = db.reminder_logs.count_documents({
                     'user_id': user_id,
@@ -989,15 +989,15 @@ def create_app():
                 return jsonify({'count': count})
         except Exception as e:
             logger.error(f'Error fetching notification count: {str(e)}', exc_info=True, extra={'ip_address': request.remote_addr})
-            return jsonify({'error': trans('general_error', default='Failed to fetch notification count')}), 500
+            return jsonify({'error': utils.trans('general_error', default='Failed to fetch notification count')}), 500
     
     @app.route('/api/notifications')
     @login_required
-    @limiter.limit('10 per minute')
+    @utils.limiter.limit('10 per minute')
     def notifications():
         try:
             with app.app_context():
-                db = get_mongo_db()
+                db = utils.get_mongo_db()
                 user_id = current_user.id
                 notifications = list(db.reminder_logs.find({
                     'user_id': user_id
@@ -1018,33 +1018,33 @@ def create_app():
                 return jsonify(result)
         except Exception as e:
             logger.error(f'Error fetching notifications: {str(e)}', exc_info=True, extra={'ip_address': request.remote_addr})
-            return jsonify({'error': trans('general_error', default='Failed to fetch notifications')}), 500
+            return jsonify({'error': utils.trans('general_error', default='Failed to fetch notifications')}), 500
     
     @app.route('/setup', methods=['GET'])
-    @limiter.limit('10 per minute')
+    @utils.limiter.limit('10 per minute')
     def setup_database_route():
         setup_key = request.args.get('key')
         if not app.config['SETUP_KEY'] or setup_key != app.config['SETUP_KEY']:
             logger.warning(f'Invalid setup key: {setup_key}', extra={'ip_address': request.remote_addr})
             try:
-                return render_template('errors/403.html', content=trans('general_access_denied', default='Access denied'), bottom_nav_items=[]), 403
+                return render_template('errors/403.html', content=utils.trans('general_access_denied', default='Access denied'), bottom_nav_items=[]), 403
             except TemplateNotFound as e:
                 logger.error(f'Template not found: {str(e)}', exc_info=True)
-                return render_template('personal/GENERAL/error.html', content=trans('general_access_denied', default='Access denied'), error=str(e), bottom_nav_items=[]), 403
+                return render_template('personal/GENERAL/error.html', content=utils.trans('general_access_denied', default='Access denied'), error=str(e), bottom_nav_items=[]), 403
         try:
             with app.app_context():
                 initialize_database(app)
-            flash(trans('general_success', default='Database setup successful'), 'success')
+            flash(utils.trans('general_success', default='Database setup successful'), 'success')
             logger.info('Database setup completed', extra={'ip_address': request.remote_addr})
             return redirect(url_for('index'))
         except Exception as e:
-            flash(trans('general_error', default='An error occurred during database setup'), 'danger')
+            flash(utils.trans('general_error', default='An error occurred during database setup'), 'danger')
             logger.error(f'Database setup error: {str(e)}', exc_info=True, extra={'ip_address': request.remote_addr})
             try:
-                return render_template('errors/500.html', content=trans('general_error', default='Internal server error'), error=str(e), bottom_nav_items=[]), 500
+                return render_template('errors/500.html', content=utils.trans('general_error', default='Internal server error'), error=str(e), bottom_nav_items=[]), 500
             except TemplateNotFound as e:
                 logger.error(f'Template not found: {str(e)}', exc_info=True)
-                return render_template('personal/GENERAL/error.html', content=trans('general_error', default='Internal server error'), error=str(e), bottom_nav_items=[]), 500
+                return render_template('personal/GENERAL/error.html', content=utils.trans('general_error', default='Internal server error'), error=str(e), bottom_nav_items=[]), 500
     
     @app.route('/static/<path:filename>')
     def static_files(filename):
@@ -1128,13 +1128,13 @@ def create_app():
         try:
             return render_template('errors/403.html', 
                                  t=trans, 
-                                 error=trans('general_csrf_error', default='Invalid CSRF token'), 
+                                 error=utils.trans('general_csrf_error', default='Invalid CSRF token'), 
                                  lang=session.get('lang', 'en'), 
                                  bottom_nav_items=[]), 403
         except TemplateNotFound:
             return render_template('personal/GENERAL/error.html', 
                                  t=trans, 
-                                 error=trans('general_csrf_error', default='Invalid CSRF token'), 
+                                 error=utils.trans('general_csrf_error', default='Invalid CSRF token'), 
                                  lang=session.get('lang', 'en'),
                                  bottom_nav_items=[]), 403
 
