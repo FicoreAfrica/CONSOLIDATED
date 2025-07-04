@@ -278,7 +278,7 @@ def create_app():
     setup_logging(app)
     compress.init_app(app)
     csrf.init_app(app)
-    mail = get_mail(app)
+    mail = utils.get_mail(app)
     limiter.init_app(app)
     serializer = URLSafeTimedSerializer(app.config['SECRET_KEY'])
     babel.init_app(app)
