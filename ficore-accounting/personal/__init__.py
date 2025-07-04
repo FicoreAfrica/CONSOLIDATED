@@ -1,6 +1,7 @@
 from flask import Blueprint, jsonify, current_app, redirect, url_for, flash, render_template, request, session
 from flask_login import current_user, login_required
-from utils import requires_role, is_admin, get_mongo_db, PERSONAL_TOOLS, PERSONAL_NAV, ALL_TOOLS, ADMIN_NAV, limiter
+from utils import requires_role, is_admin, get_mongo_db, limiter
+import utils  # Changed to import the module instead of individual variables
 from translations import trans
 from datetime import datetime
 from bson import ObjectId
@@ -43,13 +44,13 @@ def init_app(app):
 def index():
     """Render the personal finance dashboard."""
     try:
-        tools = PERSONAL_TOOLS if current_user.role == 'personal' else ALL_TOOLS
+        tools = utils.PERSONAL_TOOLS if current_user.role == 'personal' else utils.ALL_TOOLS  # Updated to use utils. prefix
         # Use bottom_nav_items for consistency in passing navigation data to templates
-        bottom_nav_items = PERSONAL_NAV if current_user.role == 'personal' else ADMIN_NAV
+        bottom_nav_items = utils.PERSONAL_NAV if current_user.role == 'personal' else utils.ADMIN_NAV  # Updated to use utils. prefix
         return render_template(
             'personal/GENERAL/index.html',
             tools=tools,
-            bottom_nav_items=bottom_nav_items,  # Updated to use bottom_nav_items
+            bottom_nav_items=bottom_nav_items,
             t=trans,
             lang=session.get('lang', 'en'),
             title=trans('general_welcome', default='Welcome')
@@ -57,13 +58,13 @@ def index():
     except Exception as e:
         current_app.logger.error(f"Error rendering personal index: {str(e)}", extra={'session_id': session.get('sid', 'unknown')})
         flash(trans('general_error', default='An error occurred'), 'danger')
-        tools = PERSONAL_TOOLS if current_user.role == 'personal' else ALL_TOOLS
+        tools = utils.PERSONAL_TOOLS if current_user.role == 'personal' else utils.ALL_TOOLS  # Updated to use utils. prefix
         # Use bottom_nav_items in error case for consistency
-        bottom_nav_items = PERSONAL_NAV if current_user.role == 'personal' else ADMIN_NAV
+        bottom_nav_items = utils.PERSONAL_NAV if current_user.role == 'personal' else utils.ADMIN_NAV  # Updated to use utils. prefix
         return render_template(
             'personal/GENERAL/index.html',
             tools=tools,
-            bottom_nav_items=bottom_nav_items,  # Updated to use bottom_nav_items
+            bottom_nav_items=bottom_nav_items,
             t=trans,
             lang=session.get('lang', 'en'),
             title=trans('general_welcome', default='Welcome')
@@ -109,7 +110,7 @@ def notifications():
         current_app.logger.info(f"Fetched {len(result)} notifications for user {current_user.id}", extra={'session_id': session.get('sid', 'unknown')})
         return jsonify(result)
     except Exception as e:
-        current_app.logger.error(f"2Error fetching notifications: {str(e)}", extra={'session_id': session.get('sid', 'unknown')})
+        current_app.logger.error(f"Error fetching notifications: {str(e)}", extra={'session_id': session.get('sid', 'unknown')})
         return jsonify({'error': trans('general_something_went_wrong', default='Failed to fetch notifications')}), 500
 
 @personal_bp.route('/recent_activity')
