@@ -165,6 +165,19 @@ _ADMIN_EXPLORE_FEATURES = [
     {"endpoint": "admin.admin_quiz_results", "label": "Manage Quiz Results", "label_key": "admin_manage_quiz_results", "tooltip_key": "admin_manage_quiz_results_tooltip", "icon": "bi-question-circle"},
     {"endpoint": "admin.admin_learning_hub", "label": "Manage Learning Hub", "label_key": "admin_manage_learning_hub", "tooltip_key": "admin_manage_learning_hub_tooltip", "icon": "bi-book"},
 ]
+# Initialize module-level variables (will be populated with URLs later)
+PERSONAL_TOOLS = []
+PERSONAL_NAV = []
+PERSONAL_EXPLORE_FEATURES = []
+BUSINESS_TOOLS = []
+BUSINESS_NAV = []
+BUSINESS_EXPLORE_FEATURES = []
+AGENT_TOOLS = []
+AGENT_NAV = []
+AGENT_EXPLORE_FEATURES = []
+ALL_TOOLS = []
+ADMIN_NAV = []
+ADMIN_EXPLORE_FEATURES = []
 
 # Pre-generate tools/navigation with URLs at startup
 def initialize_tools_with_urls(app):
