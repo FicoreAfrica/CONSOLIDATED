@@ -1,3 +1,4 @@
+```jinja
 {% extends 'base.html' %}
 {% block title %}{{ t('general_business_home', default='Business & Agent Home') | e }}{% endblock %}
 
@@ -10,14 +11,14 @@
                 <img src="{{ current_user.avatar_url or url_for('static', filename='img/default-profile.png') }}" class="rounded-circle" width="40" height="40" alt="{{ t('general_profile_alt', default='User profile picture') | e }}">
                 <span class="welcome-text text-truncate fw-bold">{{ t('general_hello_user', default='Hello') | e }}, {{ current_user.display_name | default(current_user.id) | e }}</span>
             </div>
-            <div class="header-actions d-flex align-items-center gap-2">
+            <div class="header-actions d-flex justify-content-end align-items-center gap-2">
                 <button class="notification-bell btn btn-link p-2 position-relative" id="notificationBell" data-bs-toggle="modal" data-bs-target="#notificationModal" data-bs-toggle="tooltip" data-bs-title="{{ t('general_notifications_tooltip', default='View notifications') | e }}" aria-label="{{ t('general_notifications', default='Notifications') | e }}">
                     <i class="bi bi-bell fs-4"></i>
                     <span class="notification-badge position-absolute top-0 end-0 translate-middle badge rounded-pill bg-danger d-none" id="notificationBadge"></span>
                 </button>
                 <div class="dropdown">
                     <button class="btn btn-link p-2" type="button" id="languageDropdown" data-bs-toggle="dropdown" aria-expanded="false" data-bs-toggle="tooltip" data-bs-title="{{ t('general_language', default='Language') | e }}">
-                        <i class="bi bi-globe fs-4"></i>
+                        <i class="bi bi-translate fs-4"></i>
                     </button>
                     <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="languageDropdown">
                         <li><a class="dropdown-item" href="{{ url_for('set_language', lang='en') | e }}">{{ t('general_english', default='English') | e }}</a></li>
@@ -25,7 +26,7 @@
                     </ul>
                 </div>
                 <button class="btn btn-link p-2" id="darkModeToggle" onclick="toggleDarkMode()" aria-label="{{ t('general_mode_toggle_dark', default='Toggle dark mode') | e }}" data-bs-toggle="tooltip" data-bs-title="{{ t('general_mode_toggle_dark', default='Toggle dark mode') | e }}">
-                    <i class="bi bi-moon-stars fs-4"></i>
+                    <i class="bi bi-moon fs-4"></i>
                 </button>
                 <a href="{{ url_for('users.logout') | e }}" class="logout-icon btn btn-link p-2 no-js-intercept" data-bs-toggle="tooltip" data-bs-title="{{ t('general_logout', default='Logout') | e }}" aria-label="{{ t('general_logout', default='Logout') | e }}" rel="external">
                     <i class="bi bi-box-arrow-right fs-4"></i>
@@ -263,7 +264,6 @@
         </div>
     </div>
 </div>
-{% endblock %}
 
 {% block extra_scripts %}
 <script>
@@ -521,6 +521,14 @@ document.addEventListener('DOMContentLoaded', function() {
 
         icon.className = amountsVisible ? 'bi bi-eye' : 'bi bi-eye-slash';
     };
+
+    window.toggleDarkMode = function() {
+        document.body.classList.toggle('dark-mode');
+        const icon = document.getElementById('darkModeToggle').querySelector('i');
+        icon.className = document.body.classList.contains('dark-mode') ? 'bi bi-sun fs-4' : 'bi bi-moon fs-4';
+    };
 });
 </script>
+{% endblock extra_scripts %}
 {% endblock %}
+```
