@@ -165,7 +165,7 @@ def terms():
         ), 404
 
 @general_bp.route('/feedback', methods=['GET', 'POST'])
-@limiter.limit('10 per minute')
+@utils.limiter.limit('10 per minute')
 def feedback():
     """Public feedback page."""
     lang = session.get('lang', 'en')
