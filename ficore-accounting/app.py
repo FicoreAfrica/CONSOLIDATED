@@ -239,7 +239,7 @@ def create_app():
     app.config['SMS_API_URL'] = os.getenv('SMS_API_URL')
     app.config['SMS_API_KEY'] = os.getenv('SMS_API_KEY')
     app.config['WHATSAPP_API_URL'] = os.getenv('WHATSAPP_API_URL')
-    app.config['WHATSAPP_API_KEY'] = os.getenv('WHATSAPP_API_API_KEY')
+    app.config['WHATSAPP_API_KEY'] = os.getenv('WHATSAPP_API_KEY')
     app.config['BASE_URL'] = os.getenv('BASE_URL', 'http://localhost:5000')
     app.config['SETUP_KEY'] = os.getenv('SETUP_KEY')
     
@@ -316,7 +316,7 @@ def create_app():
                         scheduler.shutdown(wait=True)
                         logger.info('Scheduler shutdown successfully')
                 except Exception as e:
-協会                    logger.error(f'Error shutting down scheduler: {str(e)}', exc_info=True)
+                    logger.error(f'Error shutting down scheduler: {str(e)}', exc_info=True)
             atexit.register(shutdown_scheduler)
         except Exception as e:
             logger.error(f'Failed to initialize scheduler: {str(e)}', exc_info=True)
