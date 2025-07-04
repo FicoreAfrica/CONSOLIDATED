@@ -4,7 +4,7 @@ Emergency fund planning translations for personal finance tools
 
 EMERGENCY_FUND_TRANSLATIONS = {
     'en': {
-        'emergency_fund_calculator': 'Emergency Fund Planner',
+        'emergency_fund_calculator': 'Emergency Fund',
         'emergency_fund_plan_emergency_fund': 'Plan your emergency fund with Ficore Africa',
         'emergency_fund_dashboard': 'Emergency Fund Dashboard',
         'emergency_fund_summary': 'Your emergency fund summary',
@@ -109,7 +109,7 @@ EMERGENCY_FUND_TRANSLATIONS = {
         'emergency_fund_no_badges_earned': 'No badges earned yet',
         'emergency_fund_send_email': 'Send me helpful tips and reminders about my emergency fund',
         'emergency_fund_send_email_tooltip': 'Opt-in to receive guidance and updates on building your emergency fund.',
-        'emergency_fund_emergency_fund_calculator': 'Emergency Fund Calculator',
+        'emergency_fund_emergency_fund_calculator': 'Emergency Fund ',
         'emergency_fund_go_emergency_fund': 'Go to Emergency Fund',
         'emergency_fund_goal': 'Set your emergency money goals',
         'emergency_fund_start_emergency_fund': 'Start building your emergency fund',
@@ -255,7 +255,7 @@ EMERGENCY_FUND_TRANSLATIONS = {
         'emergency_fund_step4_subtitle': 'Ƙayyade burin ajiyar ku da ranar kammalawa da kuke tsammani.',
         'emergency_fund_savings_max': 'Matsakaicin adadin ajiyar kuɗi ba zai iya wuce burin ku na asusun gaggawa ba.',
         'required_risk_tolerance': 'Matsayin Juriya na Haɗari da ake Buƙata',
-        'emergency_fund_emergency_fund_calculator': 'Kalkaleta na Asusun Gaggawa',
+        'emergency_fund_emergency_fund_calculator': 'Asusun Gaggawa',
         'emergency_fund_go_emergency_fund': 'Je zuwa Asusun Gaggawa',
         'required_monthly_expenses': 'Ainihin Kuɗin da Ake Kashewa Duk Wata',
         'emergency_fund_step3_subtitle': 'Faɗa mana adadin kuɗin da kuka riga kuka tara.',
