@@ -153,7 +153,7 @@
         </div>
 
         <div class="navigation-cards">
-            <h3 class="section-title mb-3">{{ t('general_explore_features', default='Explore Features') | e }}</h3>
+            <h3 class="section developmental-title mb-3">{{ t('general_explore_features', default='Explore Features') | e }}</h3>
             <div class="row g-3">
                 {% for item in nav_items %}
                 <div class="col-6 col-md-4">
@@ -173,10 +173,10 @@
         </div>
 
         <nav class="bottom-nav fixed-bottom bg-light border-top d-flex justify-content-around align-items-center py-2">
-            {% for item in nav_items %}
-            <a href="{{ item.get('url', '#') | e }}" class="nav-item text-center text-dark" data-bs-toggle="tooltip" data-bs-title="{{ t(item.get('tooltip', item.get('label', '')), default=item.get('label', '')) | e }}">
-                <i class="{{ item.get('icon', '') | e }}"></i>
-                <div class="nav-label">{{ t(item.get('label', ''), default=item.get('label', '')) | e }}</div>
+            {% for item in bottom_nav_items %}
+            <a href="{{ url_for(item.endpoint) if item.endpoint else item.get('url', '#') | e }}" aria-label="{{ t(item.label_key, default=item.label) | e }}" class="nav-item text-center text-dark" data-bs-toggle="tooltip" data-bs-title="{{ t(item.tooltip_key, default=item.label) | e }}">
+                <i class="{{ item.icon | e }}"></i>
+                <div class="nav-link">{{ t(item.label_key, default=item.label) | e }}</div>
             </a>
             {% endfor %}
         </nav>
@@ -295,8 +295,8 @@ document.addEventListener('DOMContentLoaded', function() {
         balanced: '{{ t("general_balanced", default="Balanced") | e }}',
         no_recent_activity: '{{ t("general_no_recent_activity", default="No recent activity") | e }}',
         start_by_adding_debt: '{{ t("general_start_by_adding_debt", default="Start by adding a debt or transaction") | e }}',
-        no_notifications: '{{ t("general_no_notifications", default="No notifications") | e }}', // Added translation
-        check_back_later: '{{ t("general_check_back_later", default="Check back later") | e }}' // Added translation
+        no_notifications: '{{ t("general_no_notifications", default="No notifications") | e }}',
+        check_back_later: '{{ t("general_check_back_later", default="Check back later") | e }}'
     };
 
     // Load financial data, notifications, and recent activity
