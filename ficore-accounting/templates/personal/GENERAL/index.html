@@ -184,7 +184,7 @@
                             <h4 class="text-truncate">{{ t('admin_dashboard', default='Admin Dashboard') | e }}</h4>
                             <p class="text-muted text-truncate">{{ t('admin_dashboard_desc', default='Manage users and settings') | e }}</p>
                         </div>
-                        <a href="{{ url_for('admin.dashboard') | e }}" class="nav-card-link stretched-link" aria-label="{{ t('admin_dashboard', default=' subtract Dashboard') | e }}"></a>
+                        <a href="{{ url_for('admin.dashboard') | e }}" class="nav-card-link stretched-link" aria-label="{{ t('admin_dashboard', default='Admin Dashboard') | e }}"></a>
                     </div>
                 </div>
                 {% endif %}
@@ -872,3 +872,4 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 </script>
 {% endblock extra_scripts %}
+{% endblock content %}
