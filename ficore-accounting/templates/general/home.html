@@ -2,39 +2,39 @@
 {% block title %}{{ t('general_business_home', default='Business & Agent Home') | e }}{% endblock %}
 
 {% block content %}
-<div class="container-fluid px-2">
+<div class="container-fluid px-0">
     {% if current_user.is_authenticated %}
         <!-- Top Header -->
-        <div class="top-header d-flex justify-content-between align-items-center mb-3 py-2 bg-white shadow-sm rounded">
+        <div class="top-header d-flex justify-content-between align-items-center mb-3 py-2 px-3 bg-white shadow-sm rounded mx-2">
             <div class="d-flex align-items-center gap-2" style="min-width:0;">
-                <img src="{{ current_user.avatar_url or url_for('static', filename='img/default-profile.png') }}" class="rounded-circle" width="40" height="40" alt="Profile">
+                <img src="{{ current_user.avatar_url or url_for('static', filename='img/default-profile.png') }}" class="rounded-circle" width="40" height="40" alt="{{ t('general_profile_alt', default='User profile picture') | e }}">
                 <span class="welcome-text text-truncate fw-bold">{{ t('general_hello_user', default='Hello') | e }}, {{ current_user.display_name | default(current_user.id) | e }}</span>
             </div>
             <div class="header-actions d-flex align-items-center gap-2">
-                <button class="notification-bell btn btn-link p-0 position-relative" id="notificationBell" data-bs-toggle="modal" data-bs-target="#notificationModal" data-bs-toggle="tooltip" data-bs-title="{{ t('general_notifications_tooltip', default='View notifications') | e }}" aria-label="{{ t('general_notifications', default='Notifications') | e }}">
-                    <i class="bi bi-bell fs-4 text-dark"></i>
+                <button class="notification-bell btn btn-link p-2 position-relative" id="notificationBell" data-bs-toggle="modal" data-bs-target="#notificationModal" data-bs-toggle="tooltip" data-bs-title="{{ t('general_notifications_tooltip', default='View notifications') | e }}" aria-label="{{ t('general_notifications', default='Notifications') | e }}">
+                    <i class="bi bi-bell fs-4"></i>
                     <span class="notification-badge position-absolute top-0 end-0 translate-middle badge rounded-pill bg-danger d-none" id="notificationBadge"></span>
                 </button>
                 <div class="dropdown">
-                    <button class="btn btn-link p-0" type="button" id="languageDropdown" data-bs-toggle="dropdown" aria-expanded="false" data-bs-toggle="tooltip" data-bs-title="{{ t('general_language', default='Language') | e }}">
-                        <i class="bi bi-globe fs-4 text-dark"></i>
+                    <button class="btn btn-link p-2" type="button" id="languageDropdown" data-bs-toggle="dropdown" aria-expanded="false" data-bs-toggle="tooltip" data-bs-title="{{ t('general_language', default='Language') | e }}">
+                        <i class="bi bi-globe fs-4"></i>
                     </button>
                     <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="languageDropdown">
                         <li><a class="dropdown-item" href="{{ url_for('set_language', lang='en') | e }}">{{ t('general_english', default='English') | e }}</a></li>
                         <li><a class="dropdown-item" href="{{ url_for('set_language', lang='ha') | e }}">{{ t('general_hausa', default='Hausa') | e }}</a></li>
                     </ul>
                 </div>
-                <button class="btn btn-link p-0" id="darkModeToggle" onclick="toggleDarkMode()" aria-label="{{ t('general_mode_toggle_dark', default='Toggle dark mode') | e }}" data-bs-toggle="tooltip" data-bs-title="{{ t('general_mode_toggle_dark', default='Toggle dark mode') | e }}">
-                    <i class="bi bi-moon-stars fs-4 text-dark"></i>
+                <button class="btn btn-link p-2" id="darkModeToggle" onclick="toggleDarkMode()" aria-label="{{ t('general_mode_toggle_dark', default='Toggle dark mode') | e }}" data-bs-toggle="tooltip" data-bs-title="{{ t('general_mode_toggle_dark', default='Toggle dark mode') | e }}">
+                    <i class="bi bi-moon-stars fs-4"></i>
                 </button>
-                <a href="{{ url_for('users.logout') | e }}" class="logout-icon btn btn-link p-0 no-js-intercept" data-bs-toggle="tooltip" data-bs-title="{{ t('general_logout', default='Logout') | e }}" aria-label="{{ t('general_logout', default='Logout') | e }}" rel="external">
-                    <i class="bi bi-box-arrow-right fs-4 text-dark"></i>
+                <a href="{{ url_for('users.logout') | e }}" class="logout-icon btn btn-link p-2 no-js-intercept" data-bs-toggle="tooltip" data-bs-title="{{ t('general_logout', default='Logout') | e }}" aria-label="{{ t('general_logout', default='Logout') | e }}" rel="external">
+                    <i class="bi bi-box-arrow-right fs-4"></i>
                 </a>
             </div>
         </div>
 
         <!-- Financial Summary -->
-        <div class="financial-summary mb-3">
+        <div class="financial-summary mb-3 mx-2 rounded shadow-sm">
             <div class="row g-2 mb-3">
                 <div class="col-6">
                     <div class="summary-card debt-card p-3 rounded shadow-sm">
@@ -61,22 +61,20 @@
                     </div>
                 </div>
             </div>
-            
-            <div class="net-position-card mb-3 p-3 rounded shadow-sm">
+            <div class="net-position-card p-3 rounded shadow-sm">
                 <div class="d-flex justify-content-between align-items-center">
                     <div class="net-position-info">
                         <span class="net-label fw-bold">{{ t('general_net_position', default='Net Position') | e }}:</span>
                         <span class="net-amount" id="netPosition">₦0</span>
                         <span class="net-status" id="netStatus"></span>
                     </div>
-                    <button class="visibility-toggle btn btn-link p-0" onclick="toggleAmountVisibility()" aria-label="{{ t('general_toggle_visibility', default='Toggle amount visibility') | e }}">
+                    <button class="visibility-toggle btn btn-link p-2" onclick="toggleAmountVisibility()" aria-label="{{ t('general_toggle_visibility', default='Toggle amount visibility') | e }}">
                         <i class="bi bi-eye fs-4" id="visibilityIcon"></i>
                     </button>
                 </div>
             </div>
-
-            <div class="text-center">
-                <a href="{{ url_for('dashboard.index') | e }}" class="btn btn-outline-primary btn-sm">
+            <div class="text-center mt-3">
+                <a href="{{ url_for('dashboard.index') | e }}" class="btn btn-primary btn-sm">
                     {{ t('general_view_detailed_summary', default='View Detailed Summary') | e }}
                     <i class="bi bi-arrow-right ms-1"></i>
                 </a>
@@ -84,10 +82,11 @@
         </div>
 
         <!-- Financial Snapshots -->
-        <div class="financial-snapshots mb-3">
+        <div class="financial-snapshots mb-3 mx-2">
+            <h3 class="section-title mb-3 mx-3">{{ t('general_snapshots', default='Financial Snapshots') | e }}</h3>
             <div class="row g-2">
                 <div class="col-4">
-                    <div class="stat-card p-2 rounded shadow-sm text-center">
+                    <div class="stat-card p-3 rounded shadow-sm text-center">
                         <div class="snapshot-icon mb-2">
                             <i class="bi bi-wallet2 fs-3"></i>
                         </div>
@@ -98,7 +97,7 @@
                     </div>
                 </div>
                 <div class="col-4">
-                    <div class="stat-card p-2 rounded shadow-sm text-center">
+                    <div class="stat-card p-3 rounded shadow-sm text-center">
                         <div class="snapshot-icon mb-2">
                             <i class="bi bi-graph-up fs-3"></i>
                         </div>
@@ -109,7 +108,7 @@
                     </div>
                 </div>
                 <div class="col-4">
-                    <div class="stat-card p-2 rounded shadow-sm text-center">
+                    <div class="stat-card p-3 rounded shadow-sm text-center">
                         <div class="snapshot-icon mb-2">
                             <i class="bi bi-box-seam fs-3"></i>
                         </div>
@@ -123,17 +122,18 @@
         </div>
 
         <!-- Quick Actions -->
-        <div class="quick-actions mb-3">
-            <h3 class="section-title mb-3">{{ t('general_quick_actions', default='Quick Actions') | e }}</h3>
+        <div class="quick-actions mb-3 mx-2 rounded shadow-sm">
+            <h3 class="section-title mb-3 mx-3">{{ t('general_quick_actions', default='Quick Actions') | e }}</h3>
             <div class="row g-2">
                 {% for tool in tools %}
-                <div class="col-4">
+                <div class="col-4 col-sm-4 col-md-3">
                     <a href="{{ tool.url | e }}" class="card action-card text-center shadow-sm py-3 h-100" aria-label="{{ t(tool.label, default=tool.label) | e }}">
                         {% if tool.badge %}
                         <span class="badge bg-danger position-absolute top-0 end-0 translate-middle rounded-pill">{{ tool.badge }}</span>
                         {% endif %}
                         <i class="bi {{ tool.icon | e }} fs-3 mb-2"></i>
                         <small class="action-label text-center text-truncate fw-bold">{{ t(tool.label, default=tool.label) | e }}</small>
+                        <p class="text-muted text-truncate mt-1">{{ t(tool.label + '_desc', default=tool.label + ' description') | e }}</p>
                     </a>
                 </div>
                 {% endfor %}
@@ -141,14 +141,14 @@
         </div>
 
         <!-- Recent Activity -->
-        <div class="recent-activity mb-3">
-            <div class="d-flex justify-content-between align-items-center mb-3">
+        <div class="recent-activity mb-3 mx-2 rounded shadow-sm">
+            <div class="d-flex justify-content-between align-items-center mb-3 mx-3">
                 <h3 class="section-title mb-0">{{ t('general_recent_activity', default='Recent Activity') | e }}</h3>
                 <a href="{{ url_for('dashboard.index') | e }}" class="btn btn-link btn-sm p-0">
                     {{ t('general_view_all', default='View All') | e }}
                 </a>
             </div>
-            <div class="activity-list" id="recentActivityList">
+            <div class="activity-list rounded shadow-sm" id="recentActivityList">
                 <div class="activity-item d-flex align-items-center gap-2 p-2">
                     <div class="activity-icon">
                         <i class="bi bi-plus-circle text-success"></i>
@@ -162,12 +162,12 @@
         </div>
 
         <!-- Navigation Cards -->
-        <div class="navigation-cards mb-3">
-            <h3 class="section-title mb-3">{{ t('general_explore_features', default='Explore Features') | e }}</h3>
+        <div class="navigation-cards mb-3 mx-2 rounded shadow-sm">
+            <h3 class="section-title mb-3 mx-3">{{ t('general_explore_features', default='Explore Features') | e }}</h3>
             <div class="row g-2">
                 {% for item in nav_items %}
-                <div class="col-6">
-                    <div class="card nav-card p-3 rounded shadow-sm position-relative">
+                <div class="col-6 col-md-4">
+                    <div class="card nav-card p-3 rounded shadow-sm position-relative h-100">
                         <div class="nav-card-icon mb-2">
                             <i class="bi {{ item.get('icon', '') | e }} fs-3"></i>
                         </div>
@@ -183,24 +183,27 @@
         </div>
 
         <!-- Bottom Navigation -->
-        <nav class="bottom-nav fixed-bottom bg-white border-top d-flex justify-content-around align-items-center py-2 d-lg-none" role="navigation">
-            {% for item in bottom_nav_items %}
-            <a href="{{ url_for(item.endpoint) if item.endpoint else item.get('url', '#') | e }}" aria-label="{{ t(item.label_key, default=item.label) | e }}" class="nav-item text-center text-dark text-decoration-none" data-bs-toggle="tooltip" data-bs-title="{{ t(item.tooltip_key, default=item.label) | e }}">
-                <i class="bi {{ item.icon | e }} fs-4"></i>
-                <div class="nav-label text-truncate">{{ t(item.label_key, default=item.label) | e }}</div>
+        <nav class="bottom-nav fixed-bottom bg-white border-top d-flex justify-content-around align-items-center py-2 d-lg-none shadow-sm" role="navigation" style="z-index: 1050;">
+            {% set max_items = 4 %}
+            {% for item in bottom_nav_items[:max_items] %}
+            <a href="{{ url_for(item.endpoint) if item.endpoint else item.get('url', '#') | e }}" aria-label="{{ t(item.label_key, default=item.label) | e }}" class="nav-item text-center text-dark text-decoration-none {{ 'active' if request.endpoint == item.endpoint }} d-flex flex-column align-items-center" data-bs-toggle="tooltip" data-bs-title="{{ t(item.tooltip_key, default=item.label) | e }}">
+                <i class="bi {{ item.icon | e }} fs-3 mb-1"></i>
+                <div class="nav-label text-truncate fw-bold" style="font-size: 0.75rem; max-width: 80px;">{{ t(item.label_key, default=item.label) | e }}</div>
             </a>
             {% endfor %}
         </nav>
     {% else %}
-        <div class="text-center">
-            <div class="page-title">
-                <h1>{{ t('general_business_home', default='Welcome to Ficore Business & Agent Tools') | e }}</h1>
+        <!-- Unauthenticated User Section -->
+        <div class="text-center px-2">
+            <div class="page-title mb-3">
+                <h1 class="fw-bold">{{ t('general_business_home', default='Welcome to Ficore Business & Agent Tools') | e }}</h1>
                 <small class="subtext text-muted">{{ t('general_business_welcome_desc', default='Explore tools designed for business owners and agents to streamline financial management, track debtors, manage inventory, and more.') | e }}</small>
             </div>
         </div>
 
-        <section class="tools-section mb-3">
-            <h2 class="text-center"><i class="bi bi-tools"></i> {{ t('general_our_tools', default='Our Business & Agent Tools') | e }}</h2>
+        <!-- Tools Section -->
+        <section class="tools-section mb-3 mx-2 rounded shadow-sm">
+            <h2 class="text-center mb-3"><i class="bi bi-tools fs-3 me-2"></i>{{ t('general_our_tools', default='Our Business & Agent Tools') | e }}</h2>
             <p class="text-center mb-3">{{ t('general_business_tools_desc', default='Discover powerful tools to manage your business or support traders as an agent.') | e }}</p>
             <div class="row g-2">
                 {% set explore_tools = [
@@ -212,39 +215,65 @@
                     {'endpoint': 'users.signup', 'role': 'trader', 'icon': 'bi-calculator', 'label': t('general_taxation', default='Taxation'), 'desc': t('general_taxation_desc', default='Calculate and manage taxes for your business.')}
                 ] %}
                 {% for tool in explore_tools %}
-                <div class="col-6">
+                <div class="col-6 col-md-4">
                     <a href="{{ url_for(tool.endpoint, role=tool.role) | e }}" class="card tool-card text-center shadow-sm py-3 h-100" aria-label="{{ tool.label | e }}">
-                        <i class="bi {{ tool.icon }} fs-4 d-block mb-1"></i>
-                        <small class="text-truncate">{{ tool.label | e }}</small>
+                        <i class="bi {{ tool.icon }} fs-3 mb-2"></i>
+                        <small class="tool-label text-truncate fw-bold">{{ tool.label | e }}</small>
                         <p class="text-muted text-truncate mt-1">{{ tool.desc | e }}</p>
-                        <a href="{{ url_for(tool.endpoint, role=tool.role) | e }}" class="btn btn-primary btn-sm mt-2">{{ t('general_get_started', default='Get Started') | e }}</a>
+                        <button class="btn btn-primary btn-sm mt-2">{{ t('general_get_started', default='Get Started') | e }}</button>
                     </a>
                 </div>
                 {% endfor %}
             </div>
         </section>
 
-        <section class="cta-section mb-3 text-center">
-            <h3>{{ t('general_ready_to_start', default='Ready to Take Control of Your Finances?') | e }}</h3>
-            <p>{{ t('general_business_signup_prompt', default='Sign up as a business owner or agent to access powerful financial management tools.') | e }}</p>
-            <div class="d-flex justify-content-center gap-3">
+        <!-- CTA Section -->
+        <section class="cta-section mb-3 mx-2 rounded shadow-sm text-center">
+            <h3 class="fw-bold">{{ t('general_ready_to_start', default='Ready to Take Control of Your Finances?') | e }}</h3>
+            <p class="text-muted">{{ t('general_business_signup_prompt', default='Sign up as a business owner or agent to access powerful financial management tools.') | e }}</p>
+            <div class="d-flex justify-content-center gap-2 flex-wrap">
                 <a href="{{ url_for('users.signup', role='trader') | e }}" class="btn btn-primary btn-sm">{{ t('general_signup_business', default='Business Sign Up') | e }}</a>
                 <a href="{{ url_for('users.signup', role='agent') | e }}" class="btn btn-primary btn-sm">{{ t('general_signup_agent', default='Agent Sign Up') | e }}</a>
             </div>
         </section>
     {% endif %}
 </div>
+
+<!-- Notification Modal -->
+<div class="modal fade" id="notificationModal" tabindex="-1" aria-labelledby="notificationModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="notificationModalLabel">{{ t('general_notifications', default='Notifications') | e }}</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="{{ t('general_close', default='Close') | e }}"></button>
+            </div>
+            <div class="modal-body p-0">
+                <div class="notification-list" id="notificationList">
+                    <div class="notification-item d-flex align-items-center gap-2 p-2">
+                        <div class="notification-icon">
+                            <i class="bi bi-bell text-muted"></i>
+                        </div>
+                        <div class="notification-content flex-grow-1">
+                            <div class="notification-description text-truncate">{{ t('general_loading_notifications', default='Loading notifications...') | e }}</div>
+                            <div class="notification-time text-muted">{{ t('general_just_now', default='Just now') | e }}</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
 {% endblock %}
 
 {% block extra_scripts %}
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    // Initialize tooltips for bottom navigation and header actions
+    // Initialize tooltips
     document.querySelectorAll('[data-bs-toggle="tooltip"]').forEach(tooltipTriggerEl => {
         new bootstrap.Tooltip(tooltipTriggerEl);
     });
 
-    // Navigation highlighting with startsWith
+    // Navigation highlighting
     const currentPath = window.location.pathname;
     const navItems = document.querySelectorAll('.bottom-nav .nav-item');
     navItems.forEach(item => {
@@ -258,7 +287,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     let amountsVisible = true;
 
-    // Define translation strings with fallback
+    // Translation strings
     const translations = {
         just_now: '{{ t("general_just_now", default="Just now") | e }}',
         minutes_ago: '{{ t("general_minutes_ago", default="m ago") | e }}',
@@ -468,7 +497,6 @@ document.addEventListener('DOMContentLoaded', function() {
         return Math.floor(diffInSeconds / 86400) + ' ' + translations.days_ago;
     }
 
-    // Global toggleAmountVisibility function
     window.toggleAmountVisibility = function() {
         amountsVisible = !amountsVisible;
         const icon = document.getElementById('visibilityIcon');
