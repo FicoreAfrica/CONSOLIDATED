@@ -10,7 +10,7 @@ from bson import ObjectId
 from translations import trans
 from models import log_tool_usage
 from session_utils import create_anonymous_session
-from utils import requires_role, is_admin, get_mongo_db, PERSONAL_TOOLS, PERSONAL_NAV, ALL_TOOLS, ADMIN_NAV, format_currency, limiter
+from utils import requires_role, is_admin, get_mongo_db, format_currency, limiter
 
 emergency_fund_bp = Blueprint(
     'emergency_fund',
@@ -131,8 +131,8 @@ def main():
         form_data['email'] = current_user.email
         form_data['first_name'] = current_user.username
     form = EmergencyFundForm(data=form_data)
-    tools = PERSONAL_TOOLS if current_user.role == 'personal' else ALL_TOOLS
-    bottom_nav_items = PERSONAL_NAV if current_user.role == 'personal' else ADMIN_NAV
+    tools = utils.PERSONAL_TOOLS if current_user.role == 'personal' else utils.ALL_TOOLS
+    bottom_nav_items = utils.PERSONAL_NAV if current_user.role == 'personal' else utils.ADMIN_NAV
     log_tool_usage(
         tool_name='emergency_fund',
         user_id=current_user.id if current_user.is_authenticated else None,
@@ -410,8 +410,8 @@ def unsubscribe(email):
     session.permanent = True
     session.modified = True
     lang = session.get('lang', 'en')
-    tools = PERSONAL_TOOLS if current_user.role == 'personal' else ALL_TOOLS
-    bottom_nav_items = PERSONAL_NAV if current_user.role == 'personal' else ADMIN_NAV
+    tools = utils.PERSONAL_TOOLS if current_user.role == 'personal' else utils.ALL_TOOLS
+    bottom_nav_items = utils.PERSONAL_NAV if current_user.role == 'personal' else utils.ADMIN_NAV
     try:
         log_tool_usage(
             tool_name='emergency_fund',
@@ -443,8 +443,8 @@ def unsubscribe(email):
 def handle_csrf_error(e):
     """Handle CSRF errors with user-friendly message."""
     lang = session.get('lang', 'en')
-    tools = PERSONAL_TOOLS if current_user.role == 'personal' else ALL_TOOLS
-    bottom_nav_items = PERSONAL_NAV if current_user.role == 'personal' else ADMIN_NAV
+    tools = utils.PERSONAL_TOOLS if current_user.role == 'personal' else utils.ALL_TOOLS
+    bottom_nav_items = utils.PERSONAL_NAV if current_user.role == 'personal' else utils.ADMIN_NAV
     current_app.logger.error(f"CSRF error on {request.path}: {e.description}", extra={'session_id': session.get('sid', 'unknown')})
     flash(trans('emergency_fund_csrf_error', default='Form submission failed due to a missing security token. Please refresh and try again.'), 'danger')
     return render_template(
