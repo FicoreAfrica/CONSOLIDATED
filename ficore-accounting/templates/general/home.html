@@ -1,5 +1,5 @@
-{% extends 'personal/base.html' %}
-{% block title %}{{ t('general_welcome', default='Welcome to FiCore Africa') | e }}{% endblock title %}
+{% extends 'base.html' %}
+{% block title %}{{ t('general_business_home', default='Business & Agent Home') | e }}{% endblock %}
 
 {% block content %}
 <div class="container-fluid px-0">
@@ -10,14 +10,14 @@
                 <img src="{{ current_user.avatar_url or url_for('static', filename='img/default-profile.png') }}" class="rounded-circle" width="40" height="40" alt="{{ t('general_profile_alt', default='User profile picture') | e }}">
                 <span class="welcome-text text-truncate fw-bold">{{ t('general_hello_user', default='Hello') | e }}, {{ current_user.display_name | default(current_user.id) | e }}</span>
             </div>
-            <div class="header-actions d-flex justify-content-end align-items-center gap-2">
+            <div class="header-actions d-flex align-items-center gap-2">
                 <button class="notification-bell btn btn-link p-2 position-relative" id="notificationBell" data-bs-toggle="modal" data-bs-target="#notificationModal" data-bs-toggle="tooltip" data-bs-title="{{ t('general_notifications_tooltip', default='View notifications') | e }}" aria-label="{{ t('general_notifications', default='Notifications') | e }}">
                     <i class="bi bi-bell fs-4"></i>
                     <span class="notification-badge position-absolute top-0 end-0 translate-middle badge rounded-pill bg-danger d-none" id="notificationBadge"></span>
                 </button>
                 <div class="dropdown">
                     <button class="btn btn-link p-2" type="button" id="languageDropdown" data-bs-toggle="dropdown" aria-expanded="false" data-bs-toggle="tooltip" data-bs-title="{{ t('general_language', default='Language') | e }}">
-                        <i class="bi bi-translate fs-4"></i>
+                        <i class="bi bi-globe fs-4"></i>
                     </button>
                     <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="languageDropdown">
                         <li><a class="dropdown-item" href="{{ url_for('set_language', lang='en') | e }}">{{ t('general_english', default='English') | e }}</a></li>
@@ -25,7 +25,7 @@
                     </ul>
                 </div>
                 <button class="btn btn-link p-2" id="darkModeToggle" onclick="toggleDarkMode()" aria-label="{{ t('general_mode_toggle_dark', default='Toggle dark mode') | e }}" data-bs-toggle="tooltip" data-bs-title="{{ t('general_mode_toggle_dark', default='Toggle dark mode') | e }}">
-                    <i class="bi bi-moon fs-4"></i>
+                    <i class="bi bi-moon-stars fs-4"></i>
                 </button>
                 <a href="{{ url_for('users.logout') | e }}" class="logout-icon btn btn-link p-2 no-js-intercept" data-bs-toggle="tooltip" data-bs-title="{{ t('general_logout', default='Logout') | e }}" aria-label="{{ t('general_logout', default='Logout') | e }}" rel="external">
                     <i class="bi bi-box-arrow-right fs-4"></i>
@@ -37,24 +37,24 @@
         <div class="financial-summary mb-3 mx-2 rounded shadow-sm">
             <div class="row g-2 mb-3">
                 <div class="col-6">
-                    <div class="summary-card budget-card p-3 rounded shadow-sm">
+                    <div class="summary-card debt-card p-3 rounded shadow-sm">
                         <div class="card-header d-flex align-items-center gap-2">
-                            <i class="bi bi-calculator text-primary fs-4"></i>
-                            <span class="fw-bold">{{ t('budget_budget_status', default='Budget Status') | e }}</span>
+                            <i class="bi bi-arrow-up-circle text-danger fs-4"></i>
+                            <span class="fw-bold">{{ t('general_i_owe', default='I Owe') | e }}</span>
                         </div>
-                        <div class="card-amount text-primary mt-2" id="budgetStatus">
+                        <div class="card-amount text-danger mt-2" id="totalIOwe">
                             <span class="currency-symbol">₦</span>
                             <span class="amount-value" data-amount="0">0</span>
                         </div>
                     </div>
                 </div>
                 <div class="col-6">
-                    <div class="summary-card bills-card p-3 rounded shadow-sm">
+                    <div class="summary-card credit-card p-3 rounded shadow-sm">
                         <div class="card-header d-flex align-items-center gap-2">
-                            <i class="bi bi-receipt text-warning fs-4"></i>
-                            <span class="fw-bold">{{ t('bill_upcoming_bills', default='Upcoming Bills') | e }}</span>
+                            <i class="bi bi-arrow-down-circle text-success fs-4"></i>
+                            <span class="fw-bold">{{ t('general_i_am_owed', default='I Am Owed') | e }}</span>
                         </div>
-                        <div class="card-amount text-warning mt-2" id="upcomingBills">
+                        <div class="card-amount text-success mt-2" id="totalIAmOwed">
                             <span class="currency-symbol">₦</span>
                             <span class="amount-value" data-amount="0">0</span>
                         </div>
