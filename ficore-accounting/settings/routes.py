@@ -1,12 +1,13 @@
 from flask import Blueprint, render_template, redirect, url_for, flash, request, session, jsonify
 from flask_login import login_required, current_user
 from translations import trans
-from utils import trans_function, requires_role, is_valid_email, format_currency, get_mongo_db, is_admin, get_user_query, PERSONAL_TOOLS, PERSONAL_NAV, PERSONAL_EXPLORE_FEATURES, BUSINESS_TOOLS, BUSINESS_NAV, BUSINESS_EXPLORE_FEATURES, AGENT_TOOLS, AGENT_NAV, AGENT_EXPLORE_FEATURES, ALL_TOOLS, ADMIN_NAV, ADMIN_EXPLORE_FEATURES
+from utils import trans_function, requires_role, is_valid_email, format_currency, get_mongo_db, is_admin, get_user_query, initialize_tools_with_urls
 from bson import ObjectId
 from datetime import datetime
 from flask_wtf import FlaskForm
 from wtforms import StringField, TextAreaField, SelectField, BooleanField, SubmitField, validators
 import logging
+import utils  # Changed to import the module instead of individual variables
 
 logger = logging.getLogger(__name__)
 
@@ -86,13 +87,13 @@ class LanguageForm(FlaskForm):
 def get_role_based_nav():
     """Helper function to determine role-based navigation data."""
     if current_user.role == 'personal':
-        return PERSONAL_TOOLS, PERSONAL_EXPLORE_FEATURES, PERSONAL_NAV
+        return utils.PERSONAL_TOOLS, utils.PERSONAL_EXPLORE_FEATURES, utils.PERSONAL_NAV  # Updated to use utils. prefix
     elif current_user.role == 'trader':
-        return BUSINESS_TOOLS, BUSINESS_EXPLORE_FEATURES, BUSINESS_NAV
+        return utils.BUSINESS_TOOLS, utils.BUSINESS_EXPLORE_FEATURES, utils.BUSINESS_NAV  # Updated to use utils. prefix
     elif current_user.role == 'agent':
-        return AGENT_TOOLS, AGENT_EXPLORE_FEATURES, AGENT_NAV
+        return utils.AGENT_TOOLS, utils.AGENT_EXPLORE_FEATURES, utils.AGENT_NAV  # Updated to use utils. prefix
     elif current_user.role == 'admin':
-        return ALL_TOOLS, ADMIN_EXPLORE_FEATURES, ADMIN_NAV
+        return utils.ALL_TOOLS, utils.ADMIN_EXPLORE_FEATURES, utils.ADMIN_NAV  # Updated to use utils. prefix
     else:
         return [], [], []  # Fallback for unexpected roles
 
