@@ -261,7 +261,7 @@ def create_app():
         logger.info('MongoDB client initialized successfully')
         
         def shutdown_mongo_client():
-            with personally app.app_context():
+            with app.app_context():
                 try:
                     if hasattr(app, 'mongo_client') and app.mongo_client:
                         app.mongo_client.close()
