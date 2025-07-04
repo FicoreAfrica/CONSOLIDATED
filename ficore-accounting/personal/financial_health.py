@@ -10,7 +10,7 @@ from mailersend_email import send_email, EMAIL_CONFIG
 from translations import trans
 from models import log_tool_usage
 from session_utils import create_anonymous_session
-from utils import requires_role, is_admin, get_mongo_db, PERSONAL_TOOLS, PERSONAL_NAV, ALL_TOOLS, ADMIN_NAV, format_currency, limiter
+from utils import requires_role, is_admin, get_mongo_db, format_currency, limiter
 
 financial_health_bp = Blueprint(
     'financial_health',
@@ -337,8 +337,8 @@ def main():
                 if savings_possible > 0:
                     cross_tool_insights.append(trans('financial_health_cross_tool_savings_possible', default='Your budget shows {amount} available for savings monthly.', lang=lang, amount=format_currency(savings_possible)))
 
-        tools = PERSONAL_TOOLS if current_user.role == 'personal' else ALL_TOOLS
-        nav_items = PERSONAL_NAV if current_user.role == 'personal' else ADMIN_NAV
+        tools = utils.PERSONAL_TOOLS if current_user.role == 'personal' else utils.ALL_TOOLS
+        nav_items = utils.PERSONAL_NAV if current_user.role == 'personal' else utils.ADMIN_NAV
         return render_template(
             'personal/health_score/health_score_main.html',
             form=form,
@@ -363,10 +363,10 @@ def main():
         )
 
     except Exception as e:
-        current_app.logger.error(f"Error in financial_health.main for session {session.get('sid', 'unknown')}: {str(e)}", extra={'session_id': session.get('sid', 'unknown')})
+        current_app.logger.error(f"Error in financial_health.main for session {session.get('sid', 'unknown')}: {str(e)}", extra={'session_id': session['sid']})
         flash(trans("financial_health_dashboard_load_error", default='Error loading financial health dashboard.'), "danger")
-        tools = PERSONAL_TOOLS if current_user.role == 'personal' else ALL_TOOLS
-        nav_items = PERSONAL_NAV if current_user.role == 'personal' else ADMIN_NAV
+        tools = utils.PERSONAL_TOOLS if current_user.role == 'personal' else utils.ALL_TOOLS
+        nav_items = utils.PERSONAL_NAV if current_user.role == 'personal' else utils.ADMIN_NAV
         return render_template(
             'personal/health_score/health_score_main.html',
             form=form,
