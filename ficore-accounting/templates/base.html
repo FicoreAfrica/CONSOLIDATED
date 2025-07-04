@@ -22,6 +22,8 @@
 </head>
 <body>
     {% if current_user.is_authenticated %}
+    {# Commented out the top navbar block for authenticated users as per request #}
+    {#
     <nav class="navbar navbar-expand-lg navbar-dark bg-dark d-none d-lg-flex" role="navigation" aria-label="{{ t('general_main_navigation', default='Main navigation') | e }}">
         <div class="container-fluid">
             <a class="navbar-brand" href="{{ url_for('general_bp.home') | e }}" aria-label="{{ t('general_ficore_africa', default='Ficore Africa') | e }}">
@@ -71,6 +73,7 @@
             </div>
         </div>
     </nav>
+    #}
     {% else %}
     <nav class="navbar navbar-expand-lg navbar-dark bg-dark" role="navigation" aria-label="{{ t('general_main_navigation', default='Main navigation') | e }}">
         <div class="container-fluid">
