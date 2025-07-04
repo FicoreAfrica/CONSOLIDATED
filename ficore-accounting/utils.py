@@ -2,15 +2,15 @@ import re
 import logging
 import uuid
 from datetime import datetime
-from flask import session, has_request_context, current_app, g
+from flask import session, has_request_context, current_app, url_for
 from flask_mail import Mail
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
 from pymongo import MongoClient
 from pymongo.errors import ConnectionFailure
 from translations import trans
-from flask import url_for
 import requests
+from werkzeug.exceptions import BuildError
 
 # Flask extensions - defined here to avoid having too many files
 from flask_login import LoginManager
@@ -52,6 +52,142 @@ class SessionAdapter(logging.LoggerAdapter):
         return msg, kwargs
 
 logger = SessionAdapter(root_logger, {})
+
+# Helper function to generate URLs for tools/navigation
+def generate_tools_with_urls(tools):
+    '''
+    Generate a list of tools with resolved URLs.
+    
+    Args:
+        tools: List of dictionaries containing 'endpoint' keys
+    
+    Returns:
+        List of dictionaries with 'url' keys added
+    '''
+    result = []
+    for tool in tools:
+        try:
+            with current_app.app_context():
+                url = url_for(tool['endpoint'])
+                result.append({**tool, 'url': url})
+        except (BuildError, RuntimeError) as e:
+            logger.warning(f"Failed to generate URL for endpoint {tool.get('endpoint', 'unknown')}: {str(e)}")
+            result.append({**tool, 'url': '#'})  # Fallback URL
+    return result
+
+# Original tool/navigation lists with endpoints
+_PERSONAL_TOOLS = [
+    {"endpoint": "personal.budget.main", "label": "Budget", "label_key": "budget_budget_planner", "tooltip_key": "budget_tooltip", "icon": "bi-wallet"},
+    {"endpoint": "personal.quiz.main", "label": "Quiz", "label_key": "quiz_personality_quiz", "tooltip_key": "quiz_tooltip", "icon": "bi-question-circle"},
+    {"endpoint": "taxation_bp.calculate_tax", "label": "Taxation", "label_key": "taxation_calculator", "tooltip_key": "taxation_tooltip", "icon": "bi-calculator"},
+    {"endpoint": "news_bp.news_list", "label": "News", "label_key": "news_list", "tooltip_key": "news_tooltip", "icon": "bi-newspaper"},
+]
+
+_PERSONAL_NAV = [
+    {"endpoint": "personal.index", "label": "Home", "label_key": "general_home", "tooltip_key": "general_home_tooltip", "icon": "bi-house"},
+    {"endpoint": "personal.budget_main", "label": "Budget", "label_key": "budget_budget_planner", "tooltip_key": "budget_tooltip", "icon": "bi-wallet"},
+    {"endpoint": "personal.bill_main", "label": "Bills", "label_key": "bill_bill_planner", "tooltip_key": "bill_tooltip", "icon": "bi-receipt"},
+    {"endpoint": "personal.learning_hub_main", "label": "Learning Hub", "label_key": "learning_hub_courses", "tooltip_key": "learning_tooltip", "icon": "bi-book"},
+    {"endpoint": "settings.profile", "label": "Profile", "label_key": "profile_settings", "tooltip_key": "profile_tooltip", "icon": "bi-person"},
+]
+
+_PERSONAL_EXPLORE_FEATURES = [
+    {"endpoint": "personal.budget.main", "label": "Budget", "label_key": "budget_budget_planner", "tooltip_key": "budget_tooltip", "icon": "bi-wallet"},
+    {"endpoint": "personal.emergency_fund.main", "label": "Emergency Fund", "label_key": "emergency_fund_calculator", "tooltip_key": "emergency_fund_tooltip", "icon": "bi-shield"},
+    {"endpoint": "personal.health_score.main", "label": "Financial Health", "label_key": "financial_health_calculator", "tooltip_key": "financial_health_tooltip", "icon": "bi-heart"},
+    {"endpoint": "personal.net_worth.main", "label": "Net Worth", "label_key": "net_worth_calculator", "tooltip_key": "net_worth_tooltip", "icon": "bi-cash-stack"},
+]
+
+_BUSINESS_TOOLS = [
+    {"endpoint": "inventory.index", "label": "Inventory", "label_key": "inventory_dashboard", "tooltip_key": "inventory_tooltip", "icon": "bi-box"},
+    {"endpoint": "creditors.index", "label": "I Owe", "label_key": "creditors_dashboard", "tooltip_key": "creditors_tooltip", "icon": "bi-person-lines"},
+    {"endpoint": "debtors.index", "label": "They Owe", "label_key": "debtors_dashboard", "tooltip_key": "debtors_tooltip", "icon": "bi-person-plus"},
+    {"endpoint": "receipts.index", "label": "MoneyIn", "label_key": "receipts_dashboard", "tooltip_key": "receipts_tooltip", "icon": "bi-cash-coin"},
+    {"endpoint": "payments.index", "label": "MoneyOut", "label_key": "payments_dashboard", "tooltip_key": "payments_tooltip", "icon": "bi-person-minus"},
+]
+
+_BUSINESS_NAV = [
+    {"endpoint": "general_bp.home", "label": "Home", "label_key": "general_business_home", "tooltip_key": "general_business_home_tooltip", "icon": "bi-house"},
+    {"endpoint": "debtors.index", "label": "They Owe", "label_key": "debtors_dashboard", "tooltip_key": "debtors_tooltip", "icon": "bi-person-plus"},
+    {"endpoint": "receipts.index", "label": "MoneyIn", "label_key": "receipts_dashboard", "tooltip_key": "receipts_tooltip", "icon": "bi-cash-coin"},
+    {"endpoint": "inventory.index", "label": "Inventory", "label_key": "inventory_dashboard", "tooltip_key": "inventory_tooltip", "icon": "bi-box"},
+    {"endpoint": "settings.profile", "label": "Profile", "label_key": "profile_settings", "tooltip_key": "profile_tooltip", "icon": "bi-person"},
+]
+
+_BUSINESS_EXPLORE_FEATURES = [
+    {"endpoint": "inventory.index", "label": "Inventory", "label_key": "inventory_dashboard", "tooltip_key": "inventory_tooltip", "icon": "bi-box"},
+    {"endpoint": "taxation_bp.calculate_tax", "label": "Taxation", "label_key": "taxation_calculator", "tooltip_key": "taxation_tooltip", "icon": "bi-calculator"},
+    {"endpoint": "reports.index", "label": "Reports", "label_key": "reports_dashboard", "tooltip_key": "reports_tooltip", "icon": "bi-bar-chart"},
+    {"endpoint": "coins.history", "label": "Coins", "label_key": "coins_dashboard", "tooltip_key": "coins_tooltip", "icon": "bi-coin"},
+    {"endpoint": "news_bp.news_list", "label": "News", "label_key": "news_list", "tooltip_key": "news_tooltip", "icon": "bi-newspaper"},
+]
+
+_AGENT_TOOLS = [
+    {"endpoint": "agents_bp.agent_portal", "label": "Agent Portal", "label_key": "agents_dashboard", "tooltip_key": "agents_tooltip", "icon": "bi-person-workspace"},
+    {"endpoint": "coins.history", "label": "Coins", "label_key": "coins_dashboard", "tooltip_key": "coins_tooltip", "icon": "bi-coin"},
+    {"endpoint": "news_bp.news_list", "label": "News", "label_key": "news_list", "tooltip_key": "news_tooltip", "icon": "bi-newspaper"},
+]
+
+_AGENT_NAV = [
+    {"endpoint": "agents_bp.agent_portal", "label": "Agent Portal", "label_key": "agents_dashboard", "tooltip_key": "agents_tooltip", "icon": "bi-person-workspace"},
+    {"endpoint": "agents_bp.my_activity", "label": "My Activity", "label_key": "agents_my_activity", "tooltip_key": "agents_my_activity_tooltip", "icon": "bi-person-workspace"},
+    {"endpoint": "settings.profile", "label": "Profile", "label_key": "profile_settings", "tooltip_key": "profile_tooltip", "icon": "bi-person"},
+]
+
+_AGENT_EXPLORE_FEATURES = [
+    {"endpoint": "agents_bp.agent_portal", "label": "Agent Portal", "label_key": "agents_dashboard", "tooltip_key": "agents_tooltip", "icon": "bi-person-workspace"},
+]
+
+_ADMIN_NAV = [
+    {"endpoint": "admin.dashboard", "label": "Dashboard", "label_key": "admin_dashboard", "tooltip_key": "admin_dashboard_tooltip", "icon": "bi-speedometer"},
+    {"endpoint": "admin.manage_users", "label": "Manage Users", "label_key": "admin_manage_users", "tooltip_key": "admin_manage_users_tooltip", "icon": "bi-people"},
+    {"endpoint": "admin.credit_coins", "label": "Credit Coins", "label_key": "admin_credit_coins", "tooltip_key": "admin_credit_coins_tooltip", "icon": "bi-coin"},
+    {"endpoint": "admin.audit", "label": "View Audit Logs", "label_key": "admin_view_audit_logs", "tooltip_key": "admin_view_audit_logs_tooltip", "icon": "bi-file-earmark-text"},
+]
+
+_ADMIN_EXPLORE_FEATURES = [
+    {"endpoint": "admin.dashboard", "label": "Dashboard", "label_key": "admin_dashboard", "tooltip_key": "admin_dashboard_tooltip", "icon": "bi-speedometer"},
+    {"endpoint": "admin.manage_users", "label": "Manage Users", "label_key": "admin_manage_users", "tooltip_key": "admin_manage_users_tooltip", "icon": "bi-people"},
+    {"endpoint": "admin.manage_agents", "label": "Manage Agents", "label_key": "admin_manage_agents", "tooltip_key": "admin_manage_agents_tooltip", "icon": "bi-person-workspace"},
+    {"endpoint": "admin.admin_budgets", "label": "Manage Budgets", "label_key": "admin_manage_budgets", "tooltip_key": "admin_manage_budgets_tooltip", "icon": "bi-wallet"},
+    {"endpoint": "admin.admin_bills", "label": "Manage Bills", "label_key": "admin_manage_bills", "tooltip_key": "admin_manage_bills_tooltip", "icon": "bi-receipt"},
+    {"endpoint": "admin.admin_emergency_funds", "label": "Manage Emergency Funds", "label_key": "admin_manage_emergency_funds", "tooltip_key": "admin_manage_emergency_funds_tooltip", "icon": "bi-shield"},
+    {"endpoint": "admin.admin_net_worth", "label": "Manage Net Worth", "label_key": "admin_manage_net_worth", "tooltip_key": "admin_manage_net_worth_tooltip", "icon": "bi-cash-stack"},
+    {"endpoint": "admin.admin_quiz_results", "label": "Manage Quiz Results", "label_key": "admin_manage_quiz_results", "tooltip_key": "admin_manage_quiz_results_tooltip", "icon": "bi-question-circle"},
+    {"endpoint": "admin.admin_learning_hub", "label": "Manage Learning Hub", "label_key": "admin_manage_learning_hub", "tooltip_key": "admin_manage_learning_hub_tooltip", "icon": "bi-book"},
+]
+
+# Pre-generate tools/navigation with URLs at startup
+def initialize_tools_with_urls(app):
+    '''
+    Initialize all tool/navigation lists with resolved URLs.
+    
+    Args:
+        app: Flask application instance
+    '''
+    global PERSONAL_TOOLS, PERSONAL_NAV, PERSONAL_EXPLORE_FEATURES
+    global BUSINESS_TOOLS, BUSINESS_NAV, BUSINESS_EXPLORE_FEATURES
+    global AGENT_TOOLS, AGENT_NAV, AGENT_EXPLORE_FEATURES, ALL_TOOLS
+    global ADMIN_NAV, ADMIN_EXPLORE_FEATURES
+    
+    with app.app_context():
+        PERSONAL_TOOLS = generate_tools_with_urls(_PERSONAL_TOOLS)
+        PERSONAL_NAV = generate_tools_with_urls(_PERSONAL_NAV)
+        PERSONAL_EXPLORE_FEATURES = generate_tools_with_urls(_PERSONAL_EXPLORE_FEATURES)
+        BUSINESS_TOOLS = generate_tools_with_urls(_BUSINESS_TOOLS)
+        BUSINESS_NAV = generate_tools_with_urls(_BUSINESS_NAV)
+        BUSINESS_EXPLORE_FEATURES = generate_tools_with_urls(_BUSINESS_EXPLORE_FEATURES)
+        AGENT_TOOLS = generate_tools_with_urls(_AGENT_TOOLS)
+        AGENT_NAV = generate_tools_with_urls(_AGENT_NAV)
+        AGENT_EXPLORE_FEATURES = generate_tools_with_urls(_AGENT_EXPLORE_FEATURES)
+        ALL_TOOLS = (
+            PERSONAL_TOOLS +
+            BUSINESS_TOOLS +
+            AGENT_TOOLS +
+            generate_tools_with_urls([{"endpoint": "admin.dashboard", "label": "Management", "label_key": "admin_dashboard", "tooltip_key": "admin_dashboard_tooltip", "icon": "bi-people"}])
+        )
+        ADMIN_NAV = generate_tools_with_urls(_ADMIN_NAV)
+        ADMIN_EXPLORE_FEATURES = generate_tools_with_urls(_ADMIN_EXPLORE_FEATURES)
 
 def get_limiter():
     '''
@@ -690,147 +826,20 @@ def to_dict_tax_reminder(record):
         'payment_location_id': record.get('payment_location_id')
     }
 
-# Personal role tools and navigation
-PERSONAL_TOOLS = [
-    {"endpoint": "personal.budget.main", "label": "Budget", "label_key": "budget_budget_planner", "tooltip_key": "budget_tooltip", "icon": "bi-wallet"},
-    {"endpoint": "personal.quiz.main", "label": "Quiz", "label_key": "quiz_personality_quiz", "tooltip_key": "quiz_tooltip", "icon": "bi-question-circle"},
-    {"endpoint": "taxation_bp.calculate_tax", "label": "Taxation", "label_key": "taxation_calculator", "tooltip_key": "taxation_tooltip", "icon": "bi-calculator"},
-    {"endpoint": "news_bp.news_list", "label": "News", "label_key": "news_list", "tooltip_key": "news_tooltip", "icon": "bi-newspaper"},
-]
-
-PERSONAL_NAV = [
-    {"endpoint": "personal.index", "label": "Home", "label_key": "general_home", "tooltip_key": "general_home_tooltip", "icon": "bi-house"},
-    {"endpoint": "personal.budget_main", "label": "Budget", "label_key": "budget_budget_planner", "tooltip_key": "budget_tooltip", "icon": "bi-wallet"},
-    {"endpoint": "personal.bill_main", "label": "Bills", "label_key": "bill_bill_planner", "tooltip_key": "bill_tooltip", "icon": "bi-receipt"},
-    {"endpoint": "personal.learning_hub_main", "label": "Learning Hub", "label_key": "learning_hub_courses", "tooltip_key": "learning_tooltip", "icon": "bi-book"},
-    {"endpoint": "settings.profile", "label": "Profile", "label_key": "profile_settings", "tooltip_key": "profile_tooltip", "icon": "bi-person"},
-]
-
-PERSONAL_EXPLORE_FEATURES = [
-    {"endpoint": "personal.budget.main", "label": "Budget", "label_key": "budget_budget_planner", "tooltip_key": "budget_tooltip", "icon": "bi-wallet"},
-    {"endpoint": "personal.emergency_fund.main", "label": "Emergency Fund", "label_key": "emergency_fund_calculator", "tooltip_key": "emergency_fund_tooltip", "icon": "bi-shield"},
-    {"endpoint": "personal.health_score.main", "label": "Financial Health", "label_key": "financial_health_calculator", "tooltip_key": "financial_health_tooltip", "icon": "bi-heart"},
-    {"endpoint": "personal.net_worth.main", "label": "Net Worth", "label_key": "net_worth_calculator", "tooltip_key": "net_worth_tooltip", "icon": "bi-cash-stack"},
-
-]
-
-# Trader role tools and navigation
-BUSINESS_TOOLS = [
-    {"endpoint": "inventory.index", "label": "Inventory", "label_key": "inventory_dashboard", "tooltip_key": "inventory_tooltip", "icon": "bi-box"},
-    {"endpoint": "creditors.index", "label": "I Owe", "label_key": "creditors_dashboard", "tooltip_key": "creditors_tooltip", "icon": "bi-person-lines"},
-    {"endpoint": "debtors.index", "label": "They Owe", "label_key": "debtors_dashboard", "tooltip_key": "debtors_tooltip", "icon": "bi-person-plus"},
-    {"endpoint": "receipts.index", "label": "MoneyIn", "label_key": "receipts_dashboard", "tooltip_key": "receipts_tooltip", "icon": "bi-cash-coin"},
-    {"endpoint": "payments.index", "label": "MoneyOut", "label_key": "payments_dashboard", "tooltip_key": "payments_tooltip", "icon": "bi-person-minus"},
-    
-]
-
-BUSINESS_NAV = [
-    {"endpoint": "general_bp.home", "label": "Home", "label_key": "general_business_home", "tooltip_key": "general_business_home_tooltip", "icon": "bi-house"},
-    {"endpoint": "debtors.index", "label": "They Owe", "label_key": "debtors_dashboard", "tooltip_key": "debtors_tooltip", "icon": "bi-person-plus"},
-    {"endpoint": "receipts.index", "label": "MoneyIn", "label_key": "receipts_dashboard", "tooltip_key": "receipts_tooltip", "icon": "bi-cash-coin"},
-    {"endpoint": "inventory.index", "label": "Inventory", "label_key": "inventory_dashboard", "tooltip_key": "inventory_tooltip", "icon": "bi-box"},
-    {"endpoint": "settings.profile", "label": "Profile", "label_key": "profile_settings", "tooltip_key": "profile_tooltip", "icon": "bi-person"},
-]
-
-BUSINESS_EXPLORE_FEATURES = [
-    {"endpoint": "inventory.index", "label": "Inventory", "label_key": "inventory_dashboard", "tooltip_key": "inventory_tooltip", "icon": "bi-box"},
-    {"endpoint": "taxation_bp.calculate_tax", "label": "Taxation", "label_key": "taxation_calculator", "tooltip_key": "taxation_tooltip", "icon": "bi-calculator"},
-    {"endpoint": "reports.index", "label": "Reports", "label_key": "reports_dashboard", "tooltip_key": "reports_tooltip", "icon": "bi-bar-chart"},
-    {"endpoint": "coins.history", "label": "Coins", "label_key": "coins_dashboard", "tooltip_key": "coins_tooltip", "icon": "bi-coin"},
-    {"endpoint": "news_bp.news_list", "label": "News", "label_key": "news_list", "tooltip_key": "news_tooltip", "icon": "bi-newspaper"},
-]
-
-# Agent role tools and navigation
-AGENT_TOOLS = [
-    {"endpoint": "agents_bp.agent_portal", "label": "Agent Portal", "label_key": "agents_dashboard", "tooltip_key": "agents_tooltip", "icon": "bi-person-workspace"},
-    {"endpoint": "coins.history", "label": "Coins", "label_key": "coins_dashboard", "tooltip_key": "coins_tooltip", "icon": "bi-coin"},
-    {"endpoint": "news_bp.news_list", "label": "News", "label_key": "news_list", "tooltip_key": "news_tooltip", "icon": "bi-newspaper"},
-]
-
-AGENT_NAV = [
-    {"endpoint": "agents_bp.agent_portal", "label": "Agent Portal", "label_key": "agents_dashboard", "tooltip_key": "agents_tooltip", "icon": "bi-person-workspace"},
-    {"endpoint": "agents_bp.my_activity", "label": "My Activity", "label_key": "agents_my_activity", "tooltip_key": "agents_my_activity_tooltip", "icon": "bi-person-workspace"},
-    {"endpoint": "settings.profile", "label": "Profile", "label_key": "profile_settings", "tooltip_key": "profile_tooltip", "icon": "bi-person"},
-]
-
-AGENT_EXPLORE_FEATURES = [
-    {"endpoint": "agents_bp.agent_portal", "label": "Agent Portal", "label_key": "agents_dashboard", "tooltip_key": "agents_tooltip", "icon": "bi-person-workspace"},
-]
-
-# Admin role tools and navigation
-ALL_TOOLS = (
-    PERSONAL_TOOLS +
-    BUSINESS_TOOLS +
-    AGENT_TOOLS +
-    [
-        {"endpoint": "admin.dashboard", "label": "Management", "label_key": "admin_dashboard", "tooltip_key": "admin_dashboard_tooltip", "icon": "bi-people"},
-    ]
-)
-
-ADMIN_NAV = [
-    {"endpoint": "admin.dashboard", "label": "Dashboard", "label_key": "admin_dashboard", "tooltip_key": "admin_dashboard_tooltip", "icon": "bi-speedometer"},
-    {"endpoint": "admin.manage_users", "label": "Manage Users", "label_key": "admin_manage_users", "tooltip_key": "admin_manage_users_tooltip", "icon": "bi-people"},
-    {"endpoint": "admin.credit_coins", "label": "Credit Coins", "label_key": "admin_credit_coins", "tooltip_key": "admin_credit_coins_tooltip", "icon": "bi-coin"},
-    {"endpoint": "admin.audit", "label": "View Audit Logs", "label_key": "admin_view_audit_logs", "tooltip_key": "admin_view_audit_logs_tooltip", "icon": "bi-file-earmark-text"},
-    
-]
-
-ADMIN_EXPLORE_FEATURES = [
-    {"endpoint": "admin.dashboard", "label": "Dashboard", "label_key": "admin_dashboard", "tooltip_key": "admin_dashboard_tooltip", "icon": "bi-speedometer"},
-    {"endpoint": "admin.manage_users", "label": "Manage Users", "label_key": "admin_manage_users", "tooltip_key": "admin_manage_users_tooltip", "icon": "bi-people"},
-    {"endpoint": "admin.manage_agents", "label": "Manage Agents", "label_key": "admin_manage_agents", "tooltip_key": "admin_manage_agents_tooltip", "icon": "bi-person-workspace"},
-    {"endpoint": "admin.admin_budgets", "label": "Manage Budgets", "label_key": "admin_manage_budgets", "tooltip_key": "admin_manage_budgets_tooltip", "icon": "bi-wallet"},
-    {"endpoint": "admin.admin_bills", "label": "Manage Bills", "label_key": "admin_manage_bills", "tooltip_key": "admin_manage_bills_tooltip", "icon": "bi-receipt"},
-    {"endpoint": "admin.admin_emergency_funds", "label": "Manage Emergency Funds", "label_key": "admin_manage_emergency_funds", "tooltip_key": "admin_manage_emergency_funds_tooltip", "icon": "bi-shield"},
-    {"endpoint": "admin.admin_net_worth", "label": "Manage Net Worth", "label_key": "admin_manage_net_worth", "tooltip_key": "admin_manage_net_worth_tooltip", "icon": "bi-cash-stack"},
-    {"endpoint": "admin.admin_quiz_results", "label": "Manage Quiz Results", "label_key": "admin_manage_quiz_results", "tooltip_key": "admin_manage_quiz_results_tooltip", "icon": "bi-question-circle"},
-    {"endpoint": "admin.admin_learning_hub", "label": "Manage Learning Hub", "label_key": "admin_manage_learning_hub", "tooltip_key": "admin_manage_learning_hub_tooltip", "icon": "bi-book"},
-]
-
 # Export all functions for backward compatibility
 __all__ = [
     'login_manager', 'flask_session', 'csrf', 'babel', 'compress', 'limiter',
-    'get_limiter',
-    'create_anonymous_session',
-    'trans_function',
-    'is_valid_email',
-    'get_mongo_db',
-    'close_mongo_db',
-    'get_mail',
-    'requires_role',
-    'check_coin_balance',
-    'get_user_query',
-    'is_admin',
-    'format_currency',
-    'format_date',
-    'sanitize_input',
-    'generate_unique_id',
-    'validate_required_fields',
-    'get_user_language',
-    'log_user_action',
-    'send_sms_reminder',
-    'send_whatsapp_reminder',
-    'to_dict_financial_health',
-    'to_dict_budget',
-    'to_dict_bill',
-    'to_dict_net_worth',
-    'to_dict_emergency_fund',
-    'to_dict_learning_progress',
-    'to_dict_quiz_result',
-    'to_dict_news_article',
-    'to_dict_tax_rate',
-    'to_dict_payment_location',
-    'to_dict_tax_reminder',
-    'PERSONAL_TOOLS',
-    'PERSONAL_NAV',
-    'PERSONAL_EXPLORE_FEATURES',
-    'BUSINESS_TOOLS',
-    'BUSINESS_NAV',
-    'BUSINESS_EXPLORE_FEATURES',
-    'AGENT_TOOLS',
-    'AGENT_NAV',
-    'AGENT_EXPLORE_FEATURES',
-    'ALL_TOOLS',
-    'ADMIN_NAV',
-    'ADMIN_EXPLORE_FEATURES'
+    'get_limiter', 'create_anonymous_session', 'trans_function', 'is_valid_email',
+    'get_mongo_db', 'close_mongo_db', 'get_mail', 'requires_role', 'check_coin_balance',
+    'get_user_query', 'is_admin', 'format_currency', 'format_date', 'sanitize_input',
+    'generate_unique_id', 'validate_required_fields', 'get_user_language',
+    'log_user_action', 'send_sms_reminder', 'send_whatsapp_reminder',
+    'to_dict_financial_health', 'to_dict_budget', 'to_dict_bill', 'to_dict_net_worth',
+    'to_dict_emergency_fund', 'to_dict_learning_progress', 'to_dict_quiz_result',
+    'to_dict_news_article', 'to_dict_tax_rate', 'to_dict_payment_location',
+    'to_dict_tax_reminder', 'initialize_tools_with_urls',
+    'PERSONAL_TOOLS', 'PERSONAL_NAV', 'PERSONAL_EXPLORE_FEATURES',
+    'BUSINESS_TOOLS', 'BUSINESS_NAV', 'BUSINESS_EXPLORE_FEATURES',
+    'AGENT_TOOLS', 'AGENT_NAV', 'AGENT_EXPLORE_FEATURES',
+    'ALL_TOOLS', 'ADMIN_NAV', 'ADMIN_EXPLORE_FEATURES'
 ]
