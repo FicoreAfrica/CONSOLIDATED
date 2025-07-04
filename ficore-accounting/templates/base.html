@@ -20,26 +20,50 @@
     <link rel="icon" type="image/png" sizes="16x16" href="{{ url_for('static', filename='img/favicon-16x16.png') | e }}">
     {% block extra_head %}{% endblock %}
 </head>
-<body>
+<body class="{% if session.get('dark_mode', False) %}dark-mode{% endif %}">
     {% if current_user.is_authenticated %}
-        <div class="top-header container-fluid d-flex align-items-center mb-3">
-            <a class="navbar-brand" href="{{ url_for('general_bp.home') | e }}" aria-label="{{ t('general_ficore_africa', default='Ficore Africa') | e }}">
-                <img src="{{ url_for('static', filename='img/ficore_records_logo.png') | e }}" alt="{{ t('general_ficore_africa_logo', default='Ficore Africa Logo') | e }}" class="logo" style="border-radius: 50%; object-fit: contain; width: 40px; height: 40px;">
-                {{ t('general_ficore_africa', default='Ficore Africa') | e }}
-            </a>
+        <div class="top-header container-fluid d-flex align-items-center justify-content-between mb-3 py-2">
+            <div class="d-flex align-items-center text-truncate">
+                <a class="navbar-brand d-flex align-items-center" href="{{ url_for('general_bp.home') | e }}" aria-label="{{ t('general_ficore_africa', default='Ficore Africa') | e }}">
+                    <img src="{{ current_user.profile_picture if current_user.profile_picture else url_for('static', filename='img/default_profile.png') | e }}" alt="{{ t('general_user_profile_picture', default='User Profile Picture') | e }}" class="logo rounded-circle me-2" style="width: 40px; height: 40px; object-fit: cover;">
+                    <span class="welcome-text text-truncate" style="max-width: 150px;">{{ t('general_welcome', default='Welcome') | e }}, {{ current_user.name | e }}</span>
+                </a>
+            </div>
+            <div class="header-actions d-flex align-items-center gap-2">
+                <button class="notification-bell position-relative" data-bs-toggle="modal" data-bs-target="#notificationModal" aria-label="{{ t('general_notifications', default='Notifications') | e }}">
+                    <i class="bi bi-bell-fill fs-4"></i>
+                    <span class="notification-badge badge rounded-pill bg-danger d-none" id="notificationBadge">0</span>
+                </button>
+                <div class="dropdown">
+                    <button class="btn btn-link language-btn dropdown-toggle p-2" id="languageDropdown" data-bs-toggle="dropdown" aria-expanded="false" aria-label="{{ t('general_language', default='Language') | e }}">
+                        <i class="bi bi-globe fs-4 me-1"></i>
+                        <span>{{ session.get('lang', 'en').upper() | e }}</span>
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="languageDropdown">
+                        <li><a class="dropdown-item" href="{{ url_for('set_language', lang='en') | e }}">{{ t('general_english', default='English') | e }}</a></li>
+                        <li><a class="dropdown-item" href="{{ url_for('set_language', lang='ha') | e }}">{{ t('general_hausa', default='Hausa') | e }}</a></li>
+                    </ul>
+                </div>
+                <button class="btn btn-link p-2" id="darkModeToggle" onclick="toggleDarkMode()" aria-label="{{ t('general_mode_toggle_dark', default='Toggle dark mode') | e }}" data-bs-toggle="tooltip" data-bs-title="{{ t('general_mode_toggle_tooltip_switch_to_dark', default='Switch to dark mode') | e }}">
+                    <i class="bi bi-moon-stars fs-4"></i>
+                </button>
+                <a href="{{ url_for('users.logout') | e }}" class="logout-icon p-2" aria-label="{{ t('general_logout', default='Logout') | e }}" data-bs-toggle="tooltip" data-bs-title="{{ t('general_logout_tooltip', default='Log out of your account') | e }}">
+                    <i class="bi bi-box-arrow-right fs-4"></i>
+                </a>
+            </div>
         </div>
     {% else %}
-        <nav class="navbar navbar-expand-lg navbar-dark bg-dark" role="navigation" aria-label="{{ t('general_main_navigation', default='Main navigation') | e }}">
+        <nav class="navbar navbar-expand-lg fixed-top" role="navigation" aria-label="{{ t('general_main_navigation', default='Main navigation') | e }}">
             <div class="container-fluid">
-                <a class="navbar-brand" href="{{ url_for('general_bp.home') | e }}" aria-label="{{ t('general_ficore_africa', default='Ficore Africa') | e }}">
-                    <img src="{{ url_for('static', filename='img/ficore_logo.png') }}" alt="{{ t('general_ficore_africa_logo', default='Ficore Africa Logo') | e }}" class="logo" style="border-radius: 50%; object-fit: contain; width: 40px; height: 40px;">
-                    {{ t('general_ficore_africa', default='Ficore Africa') | e }}
+                <a class="navbar-brand d-flex align-items-center" href="{{ url_for('general_bp.home') | e }}" aria-label="{{ t('general_ficore_africa', default='Ficore Africa') | e }}">
+                    <img src="{{ url_for('static', filename='img/ficore_logo.png') | e }}" alt="{{ t('general_ficore_africa_logo', default='Ficore Africa Logo') | e }}" class="logo rounded-circle me-2" style="width: 40px; height: 40px; object-fit: contain;">
+                    <span>{{ t('general_ficore_africa', default='Ficore Africa') | e }}</span>
                 </a>
                 <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="{{ t('general_toggle_navigation', default='Toggle navigation') | e }}">
                     <span class="navbar-toggler-icon"></span>
                 </button>
-                <div class="collapse navbar-collapse" id="navbarNav">
-                    <ul class="navbar-nav me-auto">
+                <div class="collapse navbar-collapse justify-content-end" id="navbarNav">
+                    <ul class="navbar-nav gap-2">
                         <li class="nav-item">
                             <a class="nav-link {% if request.endpoint == 'general_bp.home' %}active{% endif %}" href="{{ url_for('general_bp.home') | e }}" data-bs-toggle="tooltip" data-bs-title="{{ t('general_home_tooltip', default='Go to homepage') | e }}" aria-current="{% if request.endpoint == 'general_bp.home' %}page{% endif %}">{{ t('general_home', default='Home') | e }}</a>
                         </li>
@@ -49,8 +73,6 @@
                         <li class="nav-item">
                             <a class="nav-link {% if request.endpoint == 'general_bp.contact' %}active{% endif %}" href="{{ url_for('general_bp.contact') | e }}" data-bs-toggle="tooltip" data-bs-title="{{ t('general_contact_tooltip', default='Get in touch') | e }}" aria-current="{% if request.endpoint == 'general_bp.contact' %}page{% endif %}">{{ t('general_contact', default='Contact') | e }}</a>
                         </li>
-                    </ul>
-                    <ul class="navbar-nav ms-auto align-items-center header-actions">
                         <li class="nav-item">
                             <a class="nav-link {% if request.endpoint == 'users.login' %}active{% endif %}" href="{{ url_for('users.login') | e }}" data-bs-toggle="tooltip" data-bs-title="{{ t('general_login_tooltip', default='Log in to your account') | e }}" aria-current="{% if request.endpoint == 'users.login' %}page{% endif %}">{{ t('general_login', default='Login') | e }}</a>
                         </li>
@@ -58,7 +80,8 @@
                             <a class="nav-link {% if request.endpoint == 'users.signup' %}active{% endif %}" href="{{ url_for('users.signup') | e }}" data-bs-toggle="tooltip" data-bs-title="{{ t('general_signup_tooltip', default='Create a new account') | e }}" aria-current="{% if request.endpoint == 'users.signup' %}page{% endif %}">{{ t('general_signup', default='Sign Up') | e }}</a>
                         </li>
                         <li class="nav-item dropdown">
-                            <a class="nav-link dropdown-toggle" href="#" id="languageDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false" data-bs-title="{{ t('general_language_tooltip', default='Change language') | e }}" aria-label="{{ t('general_language', default='Language') | e }}">
+                            <a class="nav-link dropdown-toggle" href="#" id="languageDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false" data-bs-toggle="tooltip" data-bs-title="{{ t('general_language_tooltip', default='Change language') | e }}" aria-label="{{ t('general_language', default='Language') | e }}">
+                                <i class="bi bi-globe fs-4 me-1"></i>
                                 {{ session.get('lang', 'en').upper() | e }}
                             </a>
                             <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="languageDropdown">
@@ -67,8 +90,8 @@
                             </ul>
                         </li>
                         <li class="nav-item">
-                            <button class="nav-link btn btn-link text-white" id="darkModeToggle" onclick="toggleDarkMode()" data-bs-toggle="tooltip" data-bs-title="{{ t('general_mode_toggle_tooltip_switch_to_dark', default='Switch to dark mode') | e }}" aria-label="{{ t('general_mode_toggle_dark', default='Toggle dark mode') | e }}">
-                                <i class="bi bi-moon-stars"></i>
+                            <button class="nav-link btn btn-link" id="darkModeToggle" onclick="toggleDarkMode()" data-bs-toggle="tooltip" data-bs-title="{{ t('general_mode_toggle_tooltip_switch_to_dark', default='Switch to dark mode') | e }}" aria-label="{{ t('general_mode_toggle_dark', default='Toggle dark mode') | e }}">
+                                <i class="bi bi-moon-stars fs-4"></i>
                             </button>
                         </li>
                     </ul>
@@ -78,17 +101,19 @@
     {% endif %}
 
     {% if not session.get('consent_acknowledged') %}
-    <div class="consent-banner alert alert-info alert-dismissible fade show" id="consentBanner" role="alert">
-        <i class="fas fa-shield-alt me-1" aria-hidden="true"></i> {{ t('general_consent_banner', default='By using Ficore, you understand that we provide tools for planning only, not banking.') | e }}
-        <button type="button" class="btn btn-primary btn-sm ms-2" id="acknowledgeConsentBtn">{{ t('general_accept', default='Accept') | e }}</button>
+    <div class="consent-banner alert alert-info alert-dismissible fade show fixed-bottom mb-0" id="consentBanner" role="alert">
+        <i class="fas fa-shield-alt me-2 fs-4" aria-hidden="true"></i>
+        <span>{{ t('general_consent_banner', default='By using Ficore, you understand that we provide tools for planning only, not banking.') | e }}</span>
+        <button type="button" class="btn btn-primary btn-sm ms-2 close-btn" id="acknowledgeConsentBtn">{{ t('general_accept', default='Accept') | e }}</button>
     </div>
     {% endif %}
 
-    <div class="container alert-container my-3">
+    <div class="alert-container container-fluid my-3 px-0">
         {% with messages = get_flashed_messages(with_categories=true) %}
             {% if messages %}
                 {% for category, message in messages %}
                     <div class="alert alert-{{ 'danger' if category == 'error' else category }} alert-dismissible fade show" role="alert">
+                        <i class="bi {% if category == 'success' %}bi-check-circle-fill{% elif category == 'error' or category == 'danger' %}bi-exclamation-circle-fill{% elif category == 'warning' %}bi-exclamation-triangle-fill{% else %}bi-info-circle-fill{% endif %} me-2 fs-4"></i>
                         {{ t(message, default=message) | e }}
                         <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="{{ t('general_close', default='Close') | e }}"></button>
                     </div>
@@ -97,20 +122,25 @@
         {% endwith %}
     </div>
 
-    <main class="main-content py-4" role="main">
-        <div class="container">
+    <main class="main-content py-0" role="main">
+        <div class="container-fluid px-0">
             {% block content %}{% endblock %}
         </div>
     </main>
 
     {% if current_user.is_authenticated %}
-    <nav class="navbar navbar-expand-lg navbar-dark bg-dark fixed-bottom d-lg-none mobile-bottom-nav">
-        <div class="container-fluid d-flex justify-content-around">
-            {% set bottom_nav_data = bottom_nav_items if bottom_nav_items is defined else [] %}
-            {% for item in bottom_nav_data %}
-                <a href="{{ url_for(item.endpoint) }}" class="nav-link text-center {% if request.endpoint == item.endpoint %}active{% endif %}" aria-label="{{ t(item.label_key, default=item.label) | e }}">
-                    <i class="{{ item.icon or 'fas fa-circle' }}"></i>
-                    <div>{{ t(item.label_key, default=item.label) | e }}</div>
+    <nav class="bottom-nav navbar fixed-bottom d-md-none shadow-sm" role="navigation" aria-label="{{ t('general_mobile_navigation', default='Mobile navigation') | e }}">
+        <div class="container-fluid d-flex justify-content-around align-items-center px-0">
+            {% set bottom_nav_data = bottom_nav_items if bottom_nav_items is defined else [
+                {'endpoint': 'personal_bp.dashboard', 'icon': 'bi bi-house-fill', 'label': 'Dashboard', 'label_key': 'general_dashboard'},
+                {'endpoint': 'personal_bp.tools', 'icon': 'bi bi-tools', 'label': 'Tools', 'label_key': 'general_tools'},
+                {'endpoint': 'personal_bp.transactions', 'icon': 'bi bi-receipt', 'label': 'Transactions', 'label_key': 'general_transactions'},
+                {'endpoint': 'personal_bp.profile', 'icon': 'bi bi-person-fill', 'label': 'Profile', 'label_key': 'general_profile'}
+            ] %}
+            {% for item in bottom_nav_data[:4] %}
+                <a href="{{ url_for(item.endpoint) | e }}" class="nav-item text-center text-truncate {% if request.endpoint == item.endpoint %}active{% endif %}" aria-label="{{ t(item.label_key, default=item.label) | e }}">
+                    <i class="{{ item.icon or 'bi bi-circle-fill' }} fs-3 mb-1"></i>
+                    <div class="nav-label text-truncate">{{ t(item.label_key, default=item.label) | e }}</div>
                 </a>
             {% endfor %}
         </div>
@@ -118,26 +148,26 @@
     {% endif %}
 
     {% if not current_user.is_authenticated %}
-    <footer class="footer mt-5 py-4" style="background: linear-gradient(90deg, #003087, #004D40); color: white;" role="contentinfo">
-        <div class="container text-center">
+    <footer class="footer mt-4 py-4" role="contentinfo">
+        <div class="container-fluid text-center">
             <p>{{ t('general_about_ficore_africa', default='About Ficore Africa') | e }}: {{ t('general_empowering_financial_growth', default='Empowering financial growth across Africa since 2025') | e }}</p>
-            <p class="footer-disclaimer"><i class="fas fa-shield-alt me-1" aria-hidden="true"></i> {{ t('general_disclaimer', default='Ficore is not a bank and does not hold or move funds.') | e }} <a href="{{ url_for('general_bp.about') | e }}" class="text-white text-decoration-underline">{{ t('general_learn_more', default='Learn more') | e }}</a></p>
-            <div class="footer-links mt-3 d-flex flex-wrap justify-content-center gap-3">
-                <a href="{{ url_for('general_bp.terms') | e }}" class="text-white">{{ t('general_terms_of_service', default='Terms of Service') | e }}</a>
-                <a href="{{ url_for('general_bp.privacy') | e }}" class="text-white">{{ t('general_privacy_policy', default='Privacy Policy') | e }}</a>
-                <a href="mailto:support@ficoreafrica.com" class="text-white"><i class="fas fa-envelope me-1" aria-hidden="true"></i> {{ t('general_contact_us', default='Contact Us') | e }}</a>
-                <a href="{{ url_for('general_bp.feedback') | e }}" class="text-white"><i class="fas fa-comment me-1" aria-hidden="true"></i> {{ t('general_provide_feedback', default='Provide Feedback') | e }}</a>
-                <a href="{{ url_for('users.login') | e }}" class="text-white"><i class="fas fa-sign-in-alt me-1" aria-hidden="true"></i> {{ t('general_login', default='Login') | e }}</a>
+            <p class="footer-disclaimer"><i class="bi bi-shield-fill-check me-2 fs-4" aria-hidden="true"></i> {{ t('general_disclaimer', default='Ficore is not a bank and does not hold or move funds.') | e }} <a href="{{ url_for('general_bp.about') | e }}">{{ t('general_learn_more', default='Learn more') | e }}</a></p>
+            <div class="footer-links d-flex flex-wrap justify-content-center gap-3 mt-3">
+                <a href="{{ url_for('general_bp.terms') | e }}">{{ t('general_terms_of_service', default='Terms of Service') | e }}</a>
+                <a href="{{ url_for('general_bp.privacy') | e }}">{{ t('general_privacy_policy', default='Privacy Policy') | e }}</a>
+                <a href="mailto:support@ficoreafrica.com"><i class="bi bi-envelope-fill me-2 fs-4" aria-hidden="true"></i> {{ t('general_contact_us', default='Contact Us') | e }}</a>
+                <a href="{{ url_for('general_bp.feedback') | e }}"><i class="bi bi-chat-fill me-2 fs-4" aria-hidden="true"></i> {{ t('general_provide_feedback', default='Provide Feedback') | e }}</a>
+                <a href="{{ url_for('users.login') | e }}"><i class="bi bi-box-arrow-in-right me-2 fs-4" aria-hidden="true"></i> {{ t('general_login', default='Login') | e }}</a>
             </div>
             <div class="social-icons d-flex justify-content-center gap-3 mt-3">
-                <a href="https://linkedin.com/company/ficoreafrica" target="_blank" aria-label="{{ t('general_connect_on_linkedin', default='Connect on LinkedIn') | e }}" class="d-flex align-items-center text-white">
-                    <i class="fab fa-linkedin me-1"></i> LinkedIn
+                <a href="https://linkedin.com/company/ficoreafrica" target="_blank" aria-label="{{ t('general_connect_on_linkedin', default='Connect on LinkedIn') | e }}">
+                    <i class="fab fa-linkedin fs-4 me-1"></i> LinkedIn
                 </a>
-                <a href="https://x.com/ficoreafrica" target="_blank" aria-label="{{ t('general_follow_on_twitter', default='Follow on Twitter') | e }}" class="d-flex align-items-center text-white">
-                    <i class="fab fa-x-twitter me-1"></i> Twitter
+                <a href="https://x.com/ficoreafrica" target="_blank" aria-label="{{ t('general_follow_on_twitter', default='Follow on Twitter') | e }}">
+                    <i class="fab fa-x-twitter fs-4 me-1"></i> Twitter
                 </a>
-                <a href="https://facebook.com/ficoreafrica" target="_blank" aria-label="{{ t('general_follow_on_facebook', default='Follow on Facebook') | e }}" class="d-flex align-items-center text-white">
-                    <i class="fab fa-facebook me-1"></i> Facebook
+                <a href="https://facebook.com/ficoreafrica" target="_blank" aria-label="{{ t('general_follow_on_facebook', default='Follow on Facebook') | e }}">
+                    <i class="fab fa-facebook fs-4 me-1"></i> Facebook
                 </a>
             </div>
         </div>
@@ -145,7 +175,7 @@
     {% endif %}
 
     <div class="modal fade" id="notificationModal" tabindex="-1" aria-labelledby="notificationModalLabel" aria-hidden="true">
-        <div class="modal-dialog">
+        <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">
                 <div class="modal-header">
                     <h5 class="modal-title" id="notificationModalLabel">{{ t('general_notifications', default='Notifications') | e }}</h5>
@@ -170,36 +200,16 @@
             const isDark = storedDarkMode === 'true';
             if (isDark) {
                 document.documentElement.classList.add('dark-mode');
-            } else {
-                document.documentElement.classList.remove('dark-mode');
+                const toggle = document.getElementById('darkModeToggle');
+                if (toggle) {
+                    toggle.querySelector('i').className = 'bi bi-sun fs-4';
+                    toggle.setAttribute('data-bs-title', '{{ t("general_mode_toggle_tooltip_switch_to_light", default="Switch to light mode") | e }}');
+                    toggle.setAttribute('aria-label', '{{ t("general_mode_toggle_light", default="Toggle light mode") | e }}');
+                }
             }
 
-            const darkModeToggle = document.getElementById('darkModeToggle');
-            if (darkModeToggle) {
-                darkModeToggle.querySelector('i').className = isDark ? 'bi bi-sun' : 'bi bi-moon-stars';
-                darkModeToggle.setAttribute('data-bs-title', isDark ? '{{ t("general_mode_toggle_tooltip_switch_to_light", default="Switch to light mode") | e }}' : '{{ t("general_mode_toggle_tooltip_switch_to_dark", default="Switch to dark mode") | e }}');
-                darkModeToggle.setAttribute('aria-label', isDark ? '{{ t("general_mode_toggle_light", default="Toggle light mode") | e }}' : '{{ t("general_mode_toggle_dark", default="Toggle dark mode") | e }}');
-            }
-
-            document.querySelectorAll('form.validate-form').forEach(form => {
-                form.addEventListener('submit', function(e) {
-                    if (!form.checkValidity()) {
-                        e.preventDefault();
-                        e.stopPropagation();
-                    }
-                    form.classList.add('was-validated');
-                    form.querySelectorAll('.form-control, .form-select').forEach(input => {
-                        if (!input.value.trim()) {
-                            input.classList.add('is-invalid');
-                        } else {
-                            input.classList.remove('is-invalid');
-                        }
-                    });
-                    if (!form.checkValidity()) {
-                        alert('{{ t('general_please_complete_all_fields', default='Please complete all required fields') | e }}');
-                    }
-                });
-            });
+            const tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]');
+            tooltipTriggerList.forEach(tooltipTriggerEl => new bootstrap.Tooltip(tooltipTriggerEl));
 
             const consentBtn = document.getElementById('acknowledgeConsentBtn');
             if (consentBtn) {
@@ -231,9 +241,6 @@
                 });
             }
 
-            const tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]');
-            tooltipTriggerList.forEach(tooltipTriggerEl => new bootstrap.Tooltip(tooltipTriggerEl));
-
             {% if current_user.is_authenticated %}
                 loadNotificationCount();
             {% endif %}
@@ -243,10 +250,9 @@
             const isDark = !document.documentElement.classList.contains('dark-mode');
             document.documentElement.classList.toggle('dark-mode', isDark);
             localStorage.setItem('dark_mode', isDark);
-
             const darkModeToggle = document.getElementById('darkModeToggle');
             if (darkModeToggle) {
-                darkModeToggle.querySelector('i').className = isDark ? 'bi bi-sun' : 'bi bi-moon-stars';
+                darkModeToggle.querySelector('i').className = isDark ? 'bi bi-sun fs-4' : 'bi bi-moon-stars fs-4';
                 darkModeToggle.setAttribute('data-bs-title', isDark ? '{{ t("general_mode_toggle_tooltip_switch_to_light", default="Switch to light mode") | e }}' : '{{ t("general_mode_toggle_tooltip_switch_to_dark", default="Switch to dark mode") | e }}');
                 darkModeToggle.setAttribute('aria-label', isDark ? '{{ t("general_mode_toggle_light", default="Toggle light mode") | e }}' : '{{ t("general_mode_toggle_dark", default="Toggle dark mode") | e }}');
                 const tooltip = bootstrap.Tooltip.getInstance(darkModeToggle);
@@ -292,8 +298,12 @@
                     body.innerHTML = `<p class="text-muted text-center">{{ t('general_no_notifications_yet', default='No new notifications.') | e }}</p>`;
                 } else {
                     body.innerHTML = data.map(notification => `
-                        <div class="notification-item ${notification.read ? 'read' : 'unread'}">
-                            <p>${notification.message} <small class="text-muted">${new Date(notification.timestamp).toLocaleString()}</small></p>
+                        <div class="notification-item d-flex align-items-center gap-3 p-2 ${notification.read ? 'read' : 'unread'}">
+                            <i class="bi bi-bell-fill fs-4 ${notification.read ? 'text-muted' : 'text-primary'}"></i>
+                            <div class="notification-content">
+                                <p class="notification-description mb-1">${notification.message}</p>
+                                <small class="notification-time">${new Date(notification.timestamp).toLocaleString()}</small>
+                            </div>
                         </div>
                     `).join('');
                 }
