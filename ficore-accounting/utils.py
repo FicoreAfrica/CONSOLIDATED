@@ -96,6 +96,9 @@ _PERSONAL_EXPLORE_FEATURES = [
     {"endpoint": "personal.emergency_fund.main", "label": "Emergency Fund", "label_key": "emergency_fund_calculator", "tooltip_key": "emergency_fund_tooltip", "icon": "bi-shield"},
     {"endpoint": "personal.health_score.main", "label": "Financial Health", "label_key": "financial_health_calculator", "tooltip_key": "financial_health_tooltip", "icon": "bi-heart"},
     {"endpoint": "personal.net_worth.main", "label": "Net Worth", "label_key": "net_worth_calculator", "tooltip_key": "net_worth_tooltip", "icon": "bi-cash-stack"},
+    {"endpoint": "personal.quiz.main", "label": "Quiz", "label_key": "quiz_personality_quiz", "tooltip_key": "quiz_tooltip", "icon": "bi-question-circle"},
+    {"endpoint": "taxation_bp.calculate_tax", "label": "Taxation", "label_key": "taxation_calculator", "tooltip_key": "taxation_tooltip", "icon": "bi-calculator"},
+    {"endpoint": "news_bp.news_list", "label": "News", "label_key": "news_list", "tooltip_key": "news_tooltip", "icon": "bi-newspaper"},
 ]
 
 _BUSINESS_TOOLS = [
@@ -120,6 +123,10 @@ _BUSINESS_EXPLORE_FEATURES = [
     {"endpoint": "reports.index", "label": "Reports", "label_key": "reports_dashboard", "tooltip_key": "reports_tooltip", "icon": "bi-bar-chart"},
     {"endpoint": "coins.history", "label": "Coins", "label_key": "coins_dashboard", "tooltip_key": "coins_tooltip", "icon": "bi-coin"},
     {"endpoint": "news_bp.news_list", "label": "News", "label_key": "news_list", "tooltip_key": "news_tooltip", "icon": "bi-newspaper"},
+    {"endpoint": "creditors.index", "label": "I Owe", "label_key": "creditors_dashboard", "tooltip_key": "creditors_tooltip", "icon": "bi-person-lines"},
+    {"endpoint": "debtors.index", "label": "They Owe", "label_key": "debtors_dashboard", "tooltip_key": "debtors_tooltip", "icon": "bi-person-plus"},
+    {"endpoint": "receipts.index", "label": "MoneyIn", "label_key": "receipts_dashboard", "tooltip_key": "receipts_tooltip", "icon": "bi-cash-coin"},
+    {"endpoint": "payments.index", "label": "MoneyOut", "label_key": "payments_dashboard", "tooltip_key": "payments_tooltip", "icon": "bi-person-minus"},
 ]
 
 _AGENT_TOOLS = [
@@ -136,6 +143,8 @@ _AGENT_NAV = [
 
 _AGENT_EXPLORE_FEATURES = [
     {"endpoint": "agents_bp.agent_portal", "label": "Agent Portal", "label_key": "agents_dashboard", "tooltip_key": "agents_tooltip", "icon": "bi-person-workspace"},
+    {"endpoint": "coins.history", "label": "Coins", "label_key": "coins_dashboard", "tooltip_key": "coins_tooltip", "icon": "bi-coin"},
+    {"endpoint": "news_bp.news_list", "label": "News", "label_key": "news_list", "tooltip_key": "news_tooltip", "icon": "bi-newspaper"},
 ]
 
 _ADMIN_NAV = [
