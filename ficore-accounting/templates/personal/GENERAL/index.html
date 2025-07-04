@@ -645,7 +645,7 @@ document.addEventListener('DOMContentLoaded', function() {
     function loadFinancialSummary() {
         Promise.all([
             fetch('{{ url_for("personal.budget.summary") | e }}').then(r => r.json()).catch(() => ({totalBudget: 0})),
-            fetch('{{ url_for("personal.bills.summary") | e }}').then(r => r.json()).catch(() => ({totalUpcomingBills: 0})),
+            fetch('{{ url_for("personal.bill.summary") | e }}').then(r => r.json()).catch(() => ({totalUpcomingBills: 0})),
             fetch('{{ url_for("personal.net_worth.summary") | e }}').then(r => r.json()).catch(() => ({netWorth: 0})),
             fetch('{{ url_for("personal.financial_health.summary") | e }}').then(r => r.json()).catch(() => ({score: 0})),
             fetch('{{ url_for("personal.emergency_fund.summary") | e }}').then(r => r.json()).catch(() => ({totalSavings: 0}))
