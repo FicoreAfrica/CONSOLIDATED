@@ -1,13 +1,7 @@
 from flask import Blueprint, render_template, redirect, url_for, flash, request, session
 from flask_login import login_required, current_user
 from translations import trans
-from utils import (
-    PERSONAL_TOOLS, PERSONAL_NAV, PERSONAL_EXPLORE_FEATURES,
-    BUSINESS_TOOLS, BUSINESS_NAV, BUSINESS_EXPLORE_FEATURES,
-    AGENT_TOOLS, AGENT_NAV, AGENT_EXPLORE_FEATURES,
-    ALL_TOOLS, ADMIN_NAV, ADMIN_EXPLORE_FEATURES,
-    trans_function, requires_role, check_coin_balance, format_currency, format_date, get_mongo_db, is_admin, get_user_query, limiter
-)
+import utils
 from bson import ObjectId
 from datetime import datetime
 from flask_wtf import FlaskForm
@@ -30,23 +24,23 @@ inventory_bp = Blueprint('inventory', __name__, url_prefix='/inventory')
 
 @inventory_bp.route('/')
 @login_required
-@requires_role('trader')
+@utils.requires_role('trader')
 def index():
     """List all inventory items for the current user."""
     try:
-        db = get_mongo_db()
-        query = {} if is_admin() else {'user_id': str(current_user.id)}
+        db = utils.get_mongo_db()
+        query = {} if utils.is_admin() else {'user_id': str(current_user.id)}
         items = list(db.inventory.find(query).sort('created_at', -1))
         
         # Role-based navigation data
         if current_user.role == 'trader':
-            tools_for_template = BUSINESS_TOOLS
-            explore_features_for_template = BUSINESS_EXPLORE_FEATURES
-            bottom_nav_items = BUSINESS_NAV
+            tools_for_template = utils.BUSINESS_TOOLS
+            explore_features_for_template = utils.BUSINESS_EXPLORE_FEATURES
+            bottom_nav_items = utils.BUSINESS_NAV
         elif current_user.role == 'admin':
-            tools_for_template = ALL_TOOLS
-            explore_features_for_template = ADMIN_EXPLORE_FEATURES
-            bottom_nav_items = ADMIN_NAV
+            tools_for_template = utils.ALL_TOOLS
+            explore_features_for_template = utils.ADMIN_EXPLORE_FEATURES
+            bottom_nav_items = utils.ADMIN_NAV
         else:
             tools_for_template = []
             explore_features_for_template = []
@@ -55,7 +49,7 @@ def index():
         return render_template(
             'inventory/index.html',
             items=items,
-            format_currency=format_currency,
+            format_currency=utils.format_currency,
             tools=tools_for_template,
             nav_items=explore_features_for_template,
             bottom_nav_items=bottom_nav_items,
@@ -69,24 +63,24 @@ def index():
 
 @inventory_bp.route('/low_stock')
 @login_required
-@requires_role('trader')
+@utils.requires_role('trader')
 def low_stock():
     """List inventory items with low stock."""
     try:
-        db = get_mongo_db()
-        base_query = {} if is_admin() else {'user_id': str(current_user.id)}
+        db = utils.get_mongo_db()
+        base_query = {} if utils.is_admin() else {'user_id': str(current_user.id)}
         query = {**base_query, '$expr': {'$lte': ['$qty', '$threshold']}}
         low_stock_items = list(db.inventory.find(query).sort('qty', 1))
         
         # Role-based navigation data
         if current_user.role == 'trader':
-            tools_for_template = BUSINESS_TOOLS
-            explore_features_for_template = BUSINESS_EXPLORE_FEATURES
-            bottom_nav_items = BUSINESS_NAV
+            tools_for_template = utils.BUSINESS_TOOLS
+            explore_features_for_template = utils.BUSINESS_EXPLORE_FEATURES
+            bottom_nav_items = utils.BUSINESS_NAV
         elif current_user.role == 'admin':
-            tools_for_template = ALL_TOOLS
-            explore_features_for_template = ADMIN_EXPLORE_FEATURES
-            bottom_nav_items = ADMIN_NAV
+            tools_for_template = utils.ALL_TOOLS
+            explore_features_for_template = utils.ADMIN_EXPLORE_FEATURES
+            bottom_nav_items = utils.ADMIN_NAV
         else:
             tools_for_template = []
             explore_features_for_template = []
@@ -95,7 +89,7 @@ def low_stock():
         return render_template(
             'inventory/low_stock.html',
             items=low_stock_items,
-            format_currency=format_currency,
+            format_currency=utils.format_currency,
             tools=tools_for_template,
             nav_items=explore_features_for_template,
             bottom_nav_items=bottom_nav_items,
@@ -109,16 +103,16 @@ def low_stock():
 
 @inventory_bp.route('/add', methods=['GET', 'POST'])
 @login_required
-@requires_role('trader')
+@utils.requires_role('trader')
 def add():
     """Add a new inventory item."""
     form = InventoryForm()
-    if not is_admin() and not check_coin_balance(1):
+    if not utils.is_admin() and not utils.check_coin_balance(1):
         flash(trans('inventory_insufficient_coins', default='Insufficient coins to add an item. Purchase more coins.'), 'danger')
         return redirect(url_for('coins.purchase'))
     if form.validate_on_submit():
         try:
-            db = get_mongo_db()
+            db = utils.get_mongo_db()
             item = {
                 'user_id': str(current_user.id),
                 'item_name': form.item_name.data,
@@ -130,8 +124,8 @@ def add():
                 'created_at': datetime.utcnow()
             }
             db.inventory.insert_one(item)
-            if not is_admin():
-                user_query = get_user_query(str(current_user.id))
+            if not utils.is_admin():
+                user_query = utils.get_user_query(str(current_user.id))
                 db.users.update_one(
                     user_query,
                     {'$inc': {'coin_balance': -1}}
@@ -151,13 +145,13 @@ def add():
     
         # Role-based navigation data
         if current_user.role == 'trader':
-            tools_for_template = BUSINESS_TOOLS
-            explore_features_for_template = BUSINESS_EXPLORE_FEATURES
-            bottom_nav_items = BUSINESS_NAV
+            tools_for_template = utils.BUSINESS_TOOLS
+            explore_features_for_template = utils.BUSINESS_EXPLORE_FEATURES
+            bottom_nav_items = utils.BUSINESS_NAV
         elif current_user.role == 'admin':
-            tools_for_template = ALL_TOOLS
-            explore_features_for_template = ADMIN_EXPLORE_FEATURES
-            bottom_nav_items = ADMIN_NAV
+            tools_for_template = utils.ALL_TOOLS
+            explore_features_for_template = utils.ADMIN_EXPLORE_FEATURES
+            bottom_nav_items = utils.ADMIN_NAV
         else:
             tools_for_template = []
             explore_features_for_template = []
@@ -175,12 +169,12 @@ def add():
 
 @inventory_bp.route('/edit/<id>', methods=['GET', 'POST'])
 @login_required
-@requires_role('trader')
+@utils.requires_role('trader')
 def edit(id):
     """Edit an existing inventory item."""
     try:
-        db = get_mongo_db()
-        query = {'_id': ObjectId(id)} if is_admin() else {'_id': ObjectId(id), 'user_id': str(current_user.id)}
+        db = utils.get_mongo_db()
+        query = {'_id': ObjectId(id)} if utils.is_admin() else {'_id': ObjectId(id), 'user_id': str(current_user.id)}
         item = db.inventory.find_one(query)
         if not item:
             flash(trans('inventory_item_not_found', default='Item not found'), 'danger')
@@ -216,13 +210,13 @@ def edit(id):
         
         # Role-based navigation data
         if current_user.role == 'trader':
-            tools_for_template = BUSINESS_TOOLS
-            explore_features_for_template = BUSINESS_EXPLORE_FEATURES
-            bottom_nav_items = BUSINESS_NAV
+            tools_for_template = utils.BUSINESS_TOOLS
+            explore_features_for_template = utils.BUSINESS_EXPLORE_FEATURES
+            bottom_nav_items = utils.BUSINESS_NAV
         elif current_user.role == 'admin':
-            tools_for_template = ALL_TOOLS
-            explore_features_for_template = ADMIN_EXPLORE_FEATURES
-            bottom_nav_items = ADMIN_NAV
+            tools_for_template = utils.ALL_TOOLS
+            explore_features_for_template = utils.ADMIN_EXPLORE_FEATURES
+            bottom_nav_items = utils.ADMIN_NAV
         else:
             tools_for_template = []
             explore_features_for_template = []
@@ -245,12 +239,12 @@ def edit(id):
 
 @inventory_bp.route('/delete/<id>', methods=['POST'])
 @login_required
-@requires_role('trader')
+@utils.requires_role('trader')
 def delete(id):
     """Delete an inventory item."""
     try:
-        db = get_mongo_db()
-        query = {'_id': ObjectId(id)} if is_admin() else {'_id': ObjectId(id), 'user_id': str(current_user.id)}
+        db = utils.get_mongo_db()
+        query = {'_id': ObjectId(id)} if utils.is_admin() else {'_id': ObjectId(id), 'user_id': str(current_user.id)}
         result = db.inventory.delete_one(query)
         if result.deleted_count:
             flash(trans('inventory_delete_success', default='Inventory item deleted successfully'), 'success')
