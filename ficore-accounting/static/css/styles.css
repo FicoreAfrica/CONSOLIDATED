@@ -161,6 +161,8 @@ body {
     letter-spacing: -0.01em;
     width: 100%;
     overflow-x: hidden;
+    padding: 0;
+    margin: 0;
 }
 
 h1, h2, h3 {
@@ -214,6 +216,8 @@ h3 { font-size: clamp(1.1rem, 2.5vw, 1.3rem); }
     .row {
         padding-left: 0.25rem;
         padding-right: 0.25rem;
+        overflow-x: auto;
+        flex-wrap: nowrap;
     }
     .quick-actions .row, .tools-section .row {
         overflow-x: auto;
@@ -1707,6 +1711,22 @@ h2.card-title {
     flex-basis: 0;
     min-width: 100px;
     position: relative;
+}
+.card, .action-card, .tool-card, .summary-card, .net-position-card, .stat-card, .nav-card {
+    border-radius: 10px; /* Matches suggestion */
+    border: none;
+    box-shadow: var(--shadow-sm);
+}
+
+a.card, a.action-card, a.tool-card {
+    display: block;
+    text-decoration: none;
+    color: inherit;
+    background-color: var(--card-bg); /* Uses variable for light/dark mode */
+}
+
+.dark-mode a.card, .dark-mode a.action-card, .dark-mode a.tool-card {
+    background-color: #2a3447; /* Matches dark mode gradient */
 }
 
 .action-card:hover {
