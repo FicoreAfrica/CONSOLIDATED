@@ -1,13 +1,7 @@
 from flask import Blueprint, render_template, redirect, url_for, flash, request, session, jsonify
 from flask_login import login_required, current_user
 from translations import trans
-from utils import (
-    requires_role, get_mongo_db,
-    PERSONAL_TOOLS, PERSONAL_NAV, PERSONAL_EXPLORE_FEATURES,
-    BUSINESS_TOOLS, BUSINESS_NAV, BUSINESS_EXPLORE_FEATURES,
-    AGENT_TOOLS, AGENT_NAV, AGENT_EXPLORE_FEATURES,
-    ALL_TOOLS, ADMIN_NAV, ADMIN_EXPLORE_FEATURES
-)
+import utils
 import bleach
 import datetime
 import logging
@@ -24,10 +18,10 @@ def sanitize_input(text):
     return bleach.clean(text, tags=allowed_tags, attributes=allowed_attributes)
 
 @news_bp.route('/news', methods=['GET'])
-@requires_role(['personal', 'trader', 'agent', 'admin'])
+@utils.requires_role(['personal', 'trader', 'agent', 'admin'])
 @login_required
 def news_list():
-    db = get_mongo_db()
+    db = utils.get_mongo_db()
     search_query = request.args.get('search', '')
     category = request.args.get('category', '')
     query = {'is_active': True}
@@ -55,9 +49,9 @@ def news_list():
             'content': article['content'][:100] + '...' if len(article['content']) > 100 else article['content']
         } for article in articles])
     
-    tools = PERSONAL_TOOLS if current_user.role == 'personal' else BUSINESS_TOOLS if current_user.role == 'trader' else AGENT_TOOLS if current_user.role == 'agent' else ALL_TOOLS
-    nav_items = PERSONAL_EXPLORE_FEATURES if current_user.role == 'personal' else BUSINESS_EXPLORE_FEATURES if current_user.role == 'trader' else AGENT_EXPLORE_FEATURES if current_user.role == 'agent' else ADMIN_EXPLORE_FEATURES
-    bottom_nav_items = PERSONAL_NAV if current_user.role == 'personal' else BUSINESS_NAV if current_user.role == 'trader' else AGENT_NAV if current_user.role == 'agent' else ADMIN_NAV
+    tools = utils.PERSONAL_TOOLS if current_user.role == 'personal' else utils.BUSINESS_TOOLS if current_user.role == 'trader' else utils.AGENT_TOOLS if current_user.role == 'agent' else utils.ALL_TOOLS
+    nav_items = utils.PERSONAL_EXPLORE_FEATURES if current_user.role == 'personal' else utils.BUSINESS_EXPLORE_FEATURES if current_user.role == 'trader' else utils.AGENT_EXPLORE_FEATURES if current_user.role == 'agent' else utils.ADMIN_EXPLORE_FEATURES
+    bottom_nav_items = utils.PERSONAL_NAV if current_user.role == 'personal' else utils.BUSINESS_NAV if current_user.role == 'trader' else utils.AGENT_NAV if current_user.role == 'agent' else utils.ADMIN_NAV
     return render_template(
         'news/news.html',
         section='list',
@@ -71,10 +65,10 @@ def news_list():
     )
 
 @news_bp.route('/news/<article_id>', methods=['GET'])
-@requires_role(['personal', 'trader', 'agent', 'admin'])
+@utils.requires_role(['personal', 'trader', 'agent', 'admin'])
 @login_required
 def news_detail(article_id):
-    db = get_mongo_db()
+    db = utils.get_mongo_db()
     try:
         article = db.news.find_one({'_id': ObjectId(article_id), 'is_active': True})
     except Exception as e:
@@ -88,9 +82,9 @@ def news_detail(article_id):
     
     article['_id'] = str(article['_id'])
     logger.info(f"News detail viewed: id={article_id}, title={article['title']}, user={current_user.id}")
-    tools = PERSONAL_TOOLS if current_user.role == 'personal' else BUSINESS_TOOLS if current_user.role == 'trader' else AGENT_TOOLS if current_user.role == 'agent' else ALL_TOOLS
-    nav_items = PERSONAL_EXPLORE_FEATURES if current_user.role == 'personal' else BUSINESS_EXPLORE_FEATURES if current_user.role == 'trader' else AGENT_EXPLORE_FEATURES if current_user.role == 'agent' else ADMIN_EXPLORE_FEATURES
-    bottom_nav_items = PERSONAL_NAV if current_user.role == 'personal' else BUSINESS_NAV if current_user.role == 'trader' else AGENT_NAV if current_user.role == 'agent' else ADMIN_NAV
+    tools = utils.PERSONAL_TOOLS if current_user.role == 'personal' else utils.BUSINESS_TOOLS if current_user.role == 'trader' else utils.AGENT_TOOLS if current_user.role == 'agent' else utils.ALL_TOOLS
+    nav_items = utils.PERSONAL_EXPLORE_FEATURES if current_user.role == 'personal' else utils.BUSINESS_EXPLORE_FEATURES if current_user.role == 'trader' else utils.AGENT_EXPLORE_FEATURES if current_user.role == 'agent' else utils.ADMIN_EXPLORE_FEATURES
+    bottom_nav_items = utils.PERSONAL_NAV if current_user.role == 'personal' else utils.BUSINESS_NAV if current_user.role == 'trader' else utils.AGENT_NAV if current_user.role == 'agent' else utils.ADMIN_NAV
     return render_template(
         'news/news.html',
         section='detail',
@@ -103,10 +97,10 @@ def news_detail(article_id):
     )
 
 @news_bp.route('/admin/news_management', methods=['GET', 'POST'])
-@requires_role('admin')
+@utils.requires_role('admin')
 @login_required
 def news_management():
-    db = get_mongo_db()
+    db = utils.get_mongo_db()
     if request.method == 'POST':
         title = request.form.get('title')
         content = request.form.get('content')
@@ -142,16 +136,16 @@ def news_management():
         articles=articles,
         t=trans,
         lang=session.get('lang', 'en'),
-        tools=ALL_TOOLS,
-        nav_items=ADMIN_EXPLORE_FEATURES,
-        bottom_nav_items=ADMIN_NAV
+        tools=utils.ALL_TOOLS,
+        nav_items=utils.ADMIN_EXPLORE_FEATURES,
+        bottom_nav_items=utils.ADMIN_NAV
     )
 
 @news_bp.route('/admin/news_management/edit/<article_id>', methods=['GET', 'POST'])
-@requires_role('admin')
+@utils.requires_role('admin')
 @login_required
 def edit_news(article_id):
-    db = get_mongo_db()
+    db = utils.get_mongo_db()
     try:
         article = db.news.find_one({'_id': ObjectId(article_id)})
     except Exception as e:
@@ -197,16 +191,16 @@ def edit_news(article_id):
         article=article,
         t=trans,
         lang=session.get('lang', 'en'),
-        tools=ALL_TOOLS,
-        nav_items=ADMIN_EXPLORE_FEATURES,
-        bottom_nav_items=ADMIN_NAV
+        tools=utils.ALL_TOOLS,
+        nav_items=utils.ADMIN_EXPLORE_FEATURES,
+        bottom_nav_items=utils.ADMIN_NAV
     )
 
 @news_bp.route('/admin/news_management/delete/<article_id>', methods=['POST'])
-@requires_role('admin')
+@utils.requires_role('admin')
 @login_required
 def delete_news(article_id):
-    db = get_mongo_db()
+    db = utils.get_mongo_db()
     try:
         result = db.news.delete_one({'_id': ObjectId(article_id)})
         if result.deleted_count > 0:
@@ -221,7 +215,7 @@ def delete_news(article_id):
     return redirect(url_for('news_bp.news_management'))
 
 def seed_news():
-    db = get_mongo_db()
+    db = utils.get_mongo_db()
     if db.news.count_documents({}) == 0:
         articles = [
             {
@@ -265,7 +259,7 @@ def seed_news():
                 'title': 'Nigeria’s Startup Ecosystem: Opportunities in 2025',
                 'content': """
                     <p>Nigeria’s startup ecosystem continues to thrive, with increased investments in fintech, agritech, and healthtech. Programs like iHatch Cohort 4 are empowering entrepreneurs with resources and mentorship.</p>
-                    <p>In  प्रयास करें 2025, expect more focus on AI-driven solutions and sustainable business models to address local challenges.</p>
+                    <p>In 2025, expect more focus on AI-driven solutions and sustainable business models to address local challenges.</p>
                 """,
                 'source_link': None,
                 'category': 'Startups',
