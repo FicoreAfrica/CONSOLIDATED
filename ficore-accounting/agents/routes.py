@@ -7,13 +7,7 @@ from datetime import datetime
 from werkzeug.security import generate_password_hash
 import logging
 import uuid
-from utils import (
-    AGENT_TOOLS, AGENT_NAV, AGENT_EXPLORE_FEATURES,
-    PERSONAL_TOOLS, PERSONAL_NAV, PERSONAL_EXPLORE_FEATURES,
-    BUSINESS_TOOLS, BUSINESS_NAV, BUSINESS_EXPLORE_FEATURES,
-    ALL_TOOLS, ADMIN_NAV, ADMIN_EXPLORE_FEATURES,
-    trans_function, requires_role, get_mongo_db, format_currency, format_date
-)
+import utils
 from translations import trans
 
 logger = logging.getLogger(__name__)
@@ -62,11 +56,11 @@ class TokenManagementForm(FlaskForm):
 
 @agents_bp.route('/')
 @login_required
-@requires_role('agent')
+@utils.requires_role('agent')
 def agent_portal():
     """Agent main dashboard."""
     try:
-        db = get_mongo_db()
+        db = utils.get_mongo_db()
         agent_id = current_user.id
         
         # Get agent's performance metrics
@@ -108,11 +102,11 @@ def agent_portal():
             tokens_today=tokens_today,
             recent_activities=recent_activities,
             assisted_traders=assisted_traders,
-            tools=AGENT_TOOLS,
-            nav_items=AGENT_EXPLORE_FEATURES,
-            bottom_nav_items=AGENT_NAV,
-            format_currency=format_currency,
-            format_date=format_date,
+            tools=utils.AGENT_TOOLS,
+            nav_items=utils.AGENT_EXPLORE_FEATURES,
+            bottom_nav_items=utils.AGENT_NAV,
+            format_currency=utils.format_currency,
+            format_date=utils.format_date,
             t=trans,
             lang=session.get('lang', 'en')
         )
@@ -121,22 +115,22 @@ def agent_portal():
         flash(trans('agents_dashboard_error', default='An error occurred while loading the dashboard'), 'danger')
         return render_template(
             'agents/error.html',
-            tools=AGENT_TOOLS,
-            nav_items=AGENT_EXPLORE_FEATURES,
-            bottom_nav_items=AGENT_NAV,
+            tools=utils.AGENT_TOOLS,
+            nav_items=utils.AGENT_EXPLORE_FEATURES,
+            bottom_nav_items=utils.AGENT_NAV,
             t=trans,
             lang=session.get('lang', 'en')
         )
 
 @agents_bp.route('/register_trader', methods=['GET', 'POST'])
 @login_required
-@requires_role('agent')
+@utils.requires_role('agent')
 def register_trader():
     """Register a new trader user."""
     form = RegisterTraderForm()
     if form.validate_on_submit():
         try:
-            db = get_mongo_db()
+            db = utils.get_mongo_db()
             username = form.username.data.strip().lower()
             email = form.email.data.strip().lower()
             
@@ -146,9 +140,9 @@ def register_trader():
                 return render_template(
                     'agents/register_trader.html',
                     form=form,
-                    tools=AGENT_TOOLS,
-                    nav_items=AGENT_EXPLORE_FEATURES,
-                    bottom_nav_items=AGENT_NAV,
+                    tools=utils.AGENT_TOOLS,
+                    nav_items=utils.AGENT_EXPLORE_FEATURES,
+                    bottom_nav_items=utils.AGENT_NAV,
                     t=trans,
                     lang=session.get('lang', 'en')
                 )
@@ -158,9 +152,9 @@ def register_trader():
                 return render_template(
                     'agents/register_trader.html',
                     form=form,
-                    tools=AGENT_TOOLS,
-                    nav_items=AGENT_EXPLORE_FEATURES,
-                    bottom_nav_items=AGENT_NAV,
+                    tools=utils.AGENT_TOOLS,
+                    nav_items=utils.AGENT_EXPLORE_FEATURES,
+                    bottom_nav_items=utils.AGENT_NAV,
                     t=trans,
                     lang=session.get('lang', 'en')
                 )
@@ -220,9 +214,9 @@ def register_trader():
             return render_template(
                 'agents/register_trader.html',
                 form=form,
-                tools=AGENT_TOOLS,
-                nav_items=AGENT_EXPLORE_FEATURES,
-                bottom_nav_items=AGENT_NAV,
+                tools=utils.AGENT_TOOLS,
+                nav_items=utils.AGENT_EXPLORE_FEATURES,
+                bottom_nav_items=utils.AGENT_NAV,
                 t=trans,
                 lang=session.get('lang', 'en')
             )
@@ -230,22 +224,22 @@ def register_trader():
     return render_template(
         'agents/register_trader.html',
         form=form,
-        tools=AGENT_TOOLS,
-        nav_items=AGENT_EXPLORE_FEATURES,
-        bottom_nav_items=AGENT_NAV,
+        tools=utils.AGENT_TOOLS,
+        nav_items=utils.AGENT_EXPLORE_FEATURES,
+        bottom_nav_items=utils.AGENT_NAV,
         t=trans,
         lang=session.get('lang', 'en')
     )
 
 @agents_bp.route('/manage_tokens', methods=['GET', 'POST'])
 @login_required
-@requires_role('agent')
+@utils.requires_role('agent')
 def manage_tokens():
     """Facilitate token purchases for traders."""
     form = TokenManagementForm()
     if form.validate_on_submit():
         try:
-            db = get_mongo_db()
+            db = utils.get_mongo_db()
             trader_username = form.trader_username.data.strip().lower()
             amount = form.token_amount.data
             
@@ -256,9 +250,9 @@ def manage_tokens():
                 return render_template(
                     'agents/manage_tokens.html',
                     form=form,
-                    tools=AGENT_TOOLS,
-                    nav_items=AGENT_EXPLORE_FEATURES,
-                    bottom_nav_items=AGENT_NAV,
+                    tools=utils.AGENT_TOOLS,
+                    nav_items=utils.AGENT_EXPLORE_FEATURES,
+                    bottom_nav_items=utils.AGENT_NAV,
                     t=trans,
                     lang=session.get('lang', 'en')
                 )
@@ -310,9 +304,9 @@ def manage_tokens():
             return render_template(
                 'agents/manage_tokens.html',
                 form=form,
-                tools=AGENT_TOOLS,
-                nav_items=AGENT_EXPLORE_FEATURES,
-                bottom_nav_items=AGENT_NAV,
+                tools=utils.AGENT_TOOLS,
+                nav_items=utils.AGENT_EXPLORE_FEATURES,
+                bottom_nav_items=utils.AGENT_NAV,
                 t=trans,
                 lang=session.get('lang', 'en')
             )
@@ -320,20 +314,20 @@ def manage_tokens():
     return render_template(
         'agents/manage_tokens.html',
         form=form,
-        tools=AGENT_TOOLS,
-        nav_items=AGENT_EXPLORE_FEATURES,
-        bottom_nav_items=AGENT_NAV,
+        tools=utils.AGENT_TOOLS,
+        nav_items=utils.AGENT_EXPLORE_FEATURES,
+        bottom_nav_items=utils.AGENT_NAV,
         t=trans,
         lang=session.get('lang', 'en')
     )
 
 @agents_bp.route('/assist_trader_records/<trader_id>')
 @login_required
-@requires_role('agent')
+@utils.requires_role('agent')
 def assist_trader_records(trader_id):
     """Assist a trader with their business records."""
     try:
-        db = get_mongo_db()
+        db = utils.get_mongo_db()
         trader_id = trader_id.strip()
         trader = db.users.find_one({'_id': trader_id, 'role': 'trader'})
         
@@ -373,11 +367,11 @@ def assist_trader_records(trader_id):
             recent_debtors=recent_debtors,
             recent_creditors=recent_creditors,
             recent_cashflows=recent_cashflows,
-            tools=AGENT_TOOLS,
-            nav_items=AGENT_EXPLORE_FEATURES,
-            bottom_nav_items=AGENT_NAV,
-            format_currency=format_currency,
-            format_date=format_date,
+            tools=utils.AGENT_TOOLS,
+            nav_items=utils.AGENT_EXPLORE_FEATURES,
+            bottom_nav_items=utils.AGENT_NAV,
+            format_currency=utils.format_currency,
+            format_date=utils.format_date,
             t=trans,
             lang=session.get('lang', 'en')
         )
@@ -387,20 +381,20 @@ def assist_trader_records(trader_id):
         flash(trans('agents_records_access_error', default='An error occurred while accessing trader records'), 'danger')
         return render_template(
             'agents/error.html',
-            tools=AGENT_TOOLS,
-            nav_items=AGENT_EXPLORE_FEATURES,
-            bottom_nav_items=AGENT_NAV,
+            tools=utils.AGENT_TOOLS,
+            nav_items=utils.AGENT_EXPLORE_FEATURES,
+            bottom_nav_items=utils.AGENT_NAV,
             t=trans,
             lang=session.get('lang', 'en')
         )
 
 @agents_bp.route('/generate_trader_report/<trader_id>')
 @login_required
-@requires_role('agent')
+@utils.requires_role('agent')
 def generate_trader_report(trader_id):
     """Generate comprehensive report for a trader."""
     try:
-        db = get_mongo_db()
+        db = utils.get_mongo_db()
         trader_id = trader_id.strip()
         trader = db.users.find_one({'_id': trader_id, 'role': 'trader'})
         
@@ -460,10 +454,10 @@ def generate_trader_report(trader_id):
             total_payments=total_payments_amount,
             net_position=total_debtors_amount - total_creditors_amount,
             net_cashflow=total_receipts_amount - total_payments_amount,
-            tools=AGENT_TOOLS,
-            nav_items=AGENT_EXPLORE_FEATURES,
-            bottom_nav_items=AGENT_NAV,
-            format_currency=format_currency,
+            tools=utils.AGENT_TOOLS,
+            nav_items=utils.AGENT_EXPLORE_FEATURES,
+            bottom_nav_items=utils.AGENT_NAV,
+            format_currency=utils.format_currency,
             t=trans,
             lang=session.get('lang', 'en')
         )
@@ -473,20 +467,20 @@ def generate_trader_report(trader_id):
         flash(trans('agents_report_generation_error', default='An error occurred while generating the report'), 'danger')
         return render_template(
             'agents/error.html',
-            tools=AGENT_TOOLS,
-            nav_items=AGENT_EXPLORE_FEATURES,
-            bottom_nav_items=AGENT_NAV,
+            tools=utils.AGENT_TOOLS,
+            nav_items=utils.AGENT_EXPLORE_FEATURES,
+            bottom_nav_items=utils.AGENT_NAV,
             t=trans,
             lang=session.get('lang', 'en')
         )
 
 @agents_bp.route('/my_activity')
 @login_required
-@requires_role('agent')
+@utils.requires_role('agent')
 def my_activity():
     """View agent's own performance metrics and activity log."""
     try:
-        db = get_mongo_db()
+        db = utils.get_mongo_db()
         agent_id = current_user.id
         
         # Get comprehensive metrics
@@ -516,11 +510,11 @@ def my_activity():
             total_traders_registered=total_traders_registered,
             total_tokens_amount=total_tokens_amount,
             activities=activities,
-            tools=AGENT_TOOLS,
-            nav_items=AGENT_EXPLORE_FEATURES,
-            bottom_nav_items=AGENT_NAV,
-            format_currency=format_currency,
-            format_date=format_date,
+            tools=utils.AGENT_TOOLS,
+            nav_items=utils.AGENT_EXPLORE_FEATURES,
+            bottom_nav_items=utils.AGENT_NAV,
+            format_currency=utils.format_currency,
+            format_date=utils.format_date,
             t=trans,
             lang=session.get('lang', 'en')
         )
@@ -530,16 +524,16 @@ def my_activity():
         flash(trans('agents_activity_load_error', default='An error occurred while loading activity log'), 'danger')
         return render_template(
             'agents/error.html',
-            tools=AGENT_TOOLS,
-            nav_items=AGENT_EXPLORE_FEATURES,
-            bottom_nav_items=AGENT_NAV,
+            tools=utils.AGENT_TOOLS,
+            nav_items=utils.AGENT_EXPLORE_FEATURES,
+            bottom_nav_items=utils.AGENT_NAV,
             t=trans,
             lang=session.get('lang', 'en')
         )
 
 @agents_bp.route('/api/search_traders')
 @login_required
-@requires_role('agent')
+@utils.requires_role('agent')
 def search_traders():
     """API endpoint to search for traders."""
     try:
@@ -547,7 +541,7 @@ def search_traders():
         if len(query) < 2:
             return jsonify([])
         
-        db = get_mongo_db()
+        db = utils.get_mongo_db()
         traders = list(db.users.find({
             'role': 'trader',
             '$or': [
