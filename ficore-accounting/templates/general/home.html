@@ -2,7 +2,7 @@
 {% block title %}{{ t('general_business_home', default='Business & Agent Home') | e }}{% endblock %}
 
 {% block content %}
-<div class="container-fluid px-3">
+<div class="container-fluid px-2">
     {% if current_user.is_authenticated %}
         <!-- Top Header -->
         <div class="top-header d-flex justify-content-between align-items-center mb-3 py-2 bg-white shadow-sm rounded">
@@ -128,12 +128,12 @@
             <div class="row g-2">
                 {% for tool in tools %}
                 <div class="col-4">
-                    <a href="{{ tool.url | e }}" class="action-card d-flex flex-column align-items-center justify-content-center position-relative p-3 rounded shadow-sm text-decoration-none" aria-label="{{ t(tool.label, default=tool.label) | e }}">
+                    <a href="{{ tool.url | e }}" class="card action-card text-center shadow-sm py-3 h-100" aria-label="{{ t(tool.label, default=tool.label) | e }}">
                         {% if tool.badge %}
                         <span class="badge bg-danger position-absolute top-0 end-0 translate-middle rounded-pill">{{ tool.badge }}</span>
                         {% endif %}
-                        <i class="{{ tool.icon | e }} fs-3 mb-2"></i>
-                        <div class="action-label text-center text-truncate fw-bold">{{ t(tool.label, default=tool.label) | e }}</div>
+                        <i class="bi {{ tool.icon | e }} fs-3 mb-2"></i>
+                        <small class="action-label text-center text-truncate fw-bold">{{ t(tool.label, default=tool.label) | e }}</small>
                     </a>
                 </div>
                 {% endfor %}
@@ -167,9 +167,9 @@
             <div class="row g-2">
                 {% for item in nav_items %}
                 <div class="col-6">
-                    <div class="nav-card p-3 rounded shadow-sm position-relative">
+                    <div class="card nav-card p-3 rounded shadow-sm position-relative">
                         <div class="nav-card-icon mb-2">
-                            <i class="{{ item.get('icon', '') | e }} fs-3"></i>
+                            <i class="bi {{ item.get('icon', '') | e }} fs-3"></i>
                         </div>
                         <div class="nav-card-content">
                             <h4 class="text-truncate">{{ t(item.get('label', ''), default=item.get('label', '')) | e }}</h4>
@@ -186,7 +186,7 @@
         <nav class="bottom-nav fixed-bottom bg-white border-top d-flex justify-content-around align-items-center py-2 d-lg-none" role="navigation">
             {% for item in bottom_nav_items %}
             <a href="{{ url_for(item.endpoint) if item.endpoint else item.get('url', '#') | e }}" aria-label="{{ t(item.label_key, default=item.label) | e }}" class="nav-item text-center text-dark text-decoration-none" data-bs-toggle="tooltip" data-bs-title="{{ t(item.tooltip_key, default=item.label) | e }}">
-                <i class="{{ item.icon | e }} fs-4"></i>
+                <i class="bi {{ item.icon | e }} fs-4"></i>
                 <div class="nav-label text-truncate">{{ t(item.label_key, default=item.label) | e }}</div>
             </a>
             {% endfor %}
@@ -203,60 +203,24 @@
             <h2 class="text-center"><i class="bi bi-tools"></i> {{ t('general_our_tools', default='Our Business & Agent Tools') | e }}</h2>
             <p class="text-center mb-3">{{ t('general_business_tools_desc', default='Discover powerful tools to manage your business or support traders as an agent.') | e }}</p>
             <div class="row g-2">
+                {% set explore_tools = [
+                    {'endpoint': 'users.signup', 'role': 'trader', 'icon': 'bi-person-dash', 'label': t('general_debtors_creditors', default='Debtors & Creditors'), 'desc': t('general_debtors_creditors_desc', default='Track who owes you and what you owe with ease.')},
+                    {'endpoint': 'users.signup', 'role': 'trader', 'icon': 'bi-box-seam', 'label': t('inventory_management', default='Inventory Management'), 'desc': t('inventory_desc', default='Monitor stock levels and inventory value for your business.')},
+                    {'endpoint': 'users.signup', 'role': 'trader', 'icon': 'bi-arrow-down-circle', 'label': t('general_money_in_out', default='Money In & Out'), 'desc': t('general_money_in_out_desc', default='Record receipts and payments to track cashflow.')},
+                    {'endpoint': 'users.signup', 'role': 'agent', 'icon': 'bi-person-plus', 'label': t('agents_register_trader', default='Register Traders'), 'desc': t('agents_register_trader_desc', default='Onboard new traders and manage their accounts as an agent.')},
+                    {'endpoint': 'users.signup', 'role': 'trader', 'icon': 'bi-coin', 'label': t('coins_your_wallet', default='Your Wallet'), 'desc': t('coins_wallet_desc', default='Manage coins for transactions and services.')},
+                    {'endpoint': 'users.signup', 'role': 'trader', 'icon': 'bi-calculator', 'label': t('general_taxation', default='Taxation'), 'desc': t('general_taxation_desc', default='Calculate and manage taxes for your business.')}
+                ] %}
+                {% for tool in explore_tools %}
                 <div class="col-6">
-                    <div class="card tool-card p-3 rounded shadow-sm">
-                        <div class="card-body p-0">
-                            <h3 class="fs-5"><i class="bi bi-person-dash me-2"></i>{{ t('general_debtors_creditors', default='Debtors & Creditors') | e }}</h3>
-                            <p class="text-muted text-truncate">{{ t('general_debtors_creditors_desc', default='Track who owes you and what you owe with ease.') | e }}</p>
-                            <a href="{{ url_for('users.signup', role='trader') | e }}" class="btn btn-primary btn-sm">{{ t('general_get_started', default='Get Started') | e }}</a>
-                        </div>
-                    </div>
+                    <a href="{{ url_for(tool.endpoint, role=tool.role) | e }}" class="card tool-card text-center shadow-sm py-3 h-100" aria-label="{{ tool.label | e }}">
+                        <i class="bi {{ tool.icon }} fs-4 d-block mb-1"></i>
+                        <small class="text-truncate">{{ tool.label | e }}</small>
+                        <p class="text-muted text-truncate mt-1">{{ tool.desc | e }}</p>
+                        <a href="{{ url_for(tool.endpoint, role=tool.role) | e }}" class="btn btn-primary btn-sm mt-2">{{ t('general_get_started', default='Get Started') | e }}</a>
+                    </a>
                 </div>
-                <div class="col-6">
-                    <div class="card tool-card p-3 rounded shadow-sm">
-                        <div class="card-body p-0">
-                            <h3 class="fs-5"><i class="bi bi-box-seam me-2"></i>{{ t('inventory_management', default='Inventory Management') | e }}</h3>
-                            <p class="text-muted text-truncate">{{ t('inventory_desc', default='Monitor stock levels and inventory value for your business.') | e }}</p>
-                            <a href="{{ url_for('users.signup', role='trader') | e }}" class="btn btn-primary btn-sm">{{ t('general_get_started', default='Get Started') | e }}</a>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-6">
-                    <div class="card tool-card p-3 rounded shadow-sm">
-                        <div class="card-body p-0">
-                            <h3 class="fs-5"><i class="bi bi-arrow-down-circle me-2"></i>{{ t('general_money_in_out', default='Money In & Out') | e }}</h3>
-                            <p class="text-muted text-truncate">{{ t('general_money_in_out_desc', default='Record receipts and payments to track cashflow.') | e }}</p>
-                            <a href="{{ url_for('users.signup', role='trader') | e }}" class="btn btn-primary btn-sm">{{ t('general_get_started', default='Get Started') | e }}</a>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-6">
-                    <div class="card tool-card p-3 rounded shadow-sm">
-                        <div class="card-body p-0">
-                            <h3 class="fs-5"><i class="bi bi-person-plus me-2"></i>{{ t('agents_register_trader', default='Register Traders') | e }}</h3>
-                            <p class="text-muted text-truncate">{{ t('agents_register_trader_desc', default='Onboard new traders and manage their accounts as an agent.') | e }}</p>
-                            <a href="{{ url_for('users.signup', role='agent') | e }}" class="btn btn-primary btn-sm">{{ t('general_get_started', default='Get Started') | e }}</a>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-6">
-                    <div class="card tool-card p-3 rounded shadow-sm">
-                        <div class="card-body p-0">
-                            <h3 class="fs-5"><i class="bi bi-coin me-2"></i>{{ t('coins_your_wallet', default='Your Wallet') | e }}</h3>
-                            <p class="text-muted text-truncate">{{ t('coins_wallet_desc', default='Manage coins for transactions and services.') | e }}</p>
-                            <a href="{{ url_for('users.signup', role='trader') | e }}" class="btn btn-primary btn-sm">{{ t('general_get_started', default='Get Started') | e }}</a>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-6">
-                    <div class="card tool-card p-3 rounded shadow-sm">
-                        <div class="card-body p-0">
-                            <h3 class="fs-5"><i class="bi bi-calculator me-2"></i>{{ t('general_taxation', default='Taxation') | e }}</h3>
-                            <p class="text-muted text-truncate">{{ t('general_taxation_desc', default='Calculate and manage taxes for your business.') | e }}</p>
-                            <a href="{{ url_for('users.signup', role='trader') | e }}" class="btn btn-primary btn-sm">{{ t('general_get_started', default='Get Started') | e }}</a>
-                        </div>
-                    </div>
-                </div>
+                {% endfor %}
             </div>
         </section>
 
