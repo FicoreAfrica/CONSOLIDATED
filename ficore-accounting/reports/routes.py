@@ -1,12 +1,7 @@
 from flask import Blueprint, render_template, Response, flash, request, session
 from flask_login import login_required, current_user
 from translations import trans
-from utils import (
-    trans_function, requires_role, check_coin_balance, format_currency, format_date,
-    get_mongo_db, is_admin, get_user_query,
-    BUSINESS_TOOLS, BUSINESS_NAV, BUSINESS_EXPLORE_FEATURES,
-    ALL_TOOLS, ADMIN_NAV, ADMIN_EXPLORE_FEATURES
-)
+import utils
 from bson import ObjectId
 from datetime import datetime
 from reportlab.lib.pagesizes import A4
@@ -36,13 +31,13 @@ reports_bp = Blueprint('reports', __name__, url_prefix='/reports')
 
 @reports_bp.route('/')
 @login_required
-@requires_role('trader')
+@utils.requires_role('trader')
 def index():
     """Display report selection page."""
     try:
-        tools = BUSINESS_TOOLS if current_user.role == 'trader' else ALL_TOOLS
-        nav_items = BUSINESS_EXPLORE_FEATURES if current_user.role == 'trader' else ADMIN_EXPLORE_FEATURES
-        bottom_nav_items = BUSINESS_NAV if current_user.role == 'trader' else ADMIN_NAV
+        tools = utils.BUSINESS_TOOLS if current_user.role == 'trader' else utils.ALL_TOOLS
+        nav_items = utils.BUSINESS_EXPLORE_FEATURES if current_user.role == 'trader' else utils.ADMIN_EXPLORE_FEATURES
+        bottom_nav_items = utils.BUSINESS_NAV if current_user.role == 'trader' else utils.ADMIN_NAV
         return render_template(
             'reports/index.html',
             t=trans,
@@ -58,22 +53,22 @@ def index():
 
 @reports_bp.route('/profit_loss', methods=['GET', 'POST'])
 @login_required
-@requires_role('trader')
+@utils.requires_role('trader')
 def profit_loss():
     """Generate profit/loss report with filters."""
     form = ReportForm()
     # TEMPORARY: Bypass coin check for admin during testing
     # TODO: Restore original check_coin_balance(1) for production
-    if not is_admin() and not check_coin_balance(1):
+    if not utils.is_admin() and not utils.check_coin_balance(1):
         flash(trans('reports_insufficient_coins', default='Insufficient coins to generate a report. Purchase more coins.'), 'danger')
         return redirect(url_for('coins.purchase'))
     cashflows = []
     # TEMPORARY: Allow admin to view all cashflows during testing
     # TODO: Restore original user_id filter {'user_id': str(current_user.id)} for production
-    query = {} if is_admin() else {'user_id': str(current_user.id)}
+    query = {} if utils.is_admin() else {'user_id': str(current_user.id)}
     if form.validate_on_submit():
         try:
-            db = get_mongo_db()
+            db = utils.get_mongo_db()
             if form.start_date.data:
                 query['created_at'] = {'$gte': form.start_date.data}
             if form.end_date.data:
@@ -88,8 +83,8 @@ def profit_loss():
                 return generate_profit_loss_csv(cashflows)
             # TEMPORARY: Skip coin deduction for admin during testing
             # TODO: Restore original coin deduction for production
-            if not is_admin():
-                user_query = get_user_query(str(current_user.id))
+            if not utils.is_admin():
+                user_query = utils.get_user_query(str(current_user.id))
                 db.users.update_one(
                     user_query,
                     {'$inc': {'coin_balance': -1}}
@@ -105,17 +100,17 @@ def profit_loss():
             logger.error(f"Error generating profit/loss report for user {current_user.id}: {str(e)}")
             flash(trans('reports_generation_error', default='An error occurred'), 'danger')
     else:
-        db = get_mongo_db()
+        db = utils.get_mongo_db()
         cashflows = list(db.cashflows.find(query).sort('created_at', -1))
-    tools = BUSINESS_TOOLS if current_user.role == 'trader' else ALL_TOOLS
-    nav_items = BUSINESS_EXPLORE_FEATURES if current_user.role == 'trader' else ADMIN_EXPLORE_FEATURES
-    bottom_nav_items = BUSINESS_NAV if current_user.role == 'trader' else ADMIN_NAV
+    tools = utils.BUSINESS_TOOLS if current_user.role == 'trader' else utils.ALL_TOOLS
+    nav_items = utils.BUSINESS_EXPLORE_FEATURES if current_user.role == 'trader' else utils.ADMIN_EXPLORE_FEATURES
+    bottom_nav_items = utils.BUSINESS_NAV if current_user.role == 'trader' else utils.ADMIN_NAV
     return render_template(
         'reports/profit_loss.html',
         form=form,
         cashflows=cashflows,
-        format_currency=format_currency,
-        format_date=format_date,
+        format_currency=utils.format_currency,
+        format_date=utils.format_date,
         t=trans,
         lang=session.get('lang', 'en'),
         tools=tools,
@@ -125,22 +120,22 @@ def profit_loss():
 
 @reports_bp.route('/inventory', methods=['GET', 'POST'])
 @login_required
-@requires_role('trader')
+@utils.requires_role('trader')
 def inventory():
     """Generate inventory report with filters."""
     form = InventoryReportForm()
     # TEMPORARY: Bypass coin check for admin during testing
     # TODO: Restore original check_coin_balance(1) for production
-    if not is_admin() and not check_coin_balance(1):
+    if not utils.is_admin() and not utils.check_coin_balance(1):
         flash(trans('reports_insufficient_coins', default='Insufficient coins to generate a report. Purchase more coins.'), 'danger')
         return redirect(url_for('coins.purchase'))
     items = []
     # TEMPORARY: Allow admin to view all inventory items during testing
     # TODO: Restore original user_id filter {'user_id': str(current_user.id)} for production
-    query = {} if is_admin() else {'user_id': str(current_user.id)}
+    query = {} if utils.is_admin() else {'user_id': str(current_user.id)}
     if form.validate_on_submit():
         try:
-            db = get_mongo_db()
+            db = utils.get_mongo_db()
             if form.item_name.data:
                 query['item_name'] = {'$regex': form.item_name.data, '$options': 'i'}
             items = list(db.inventory.find(query).sort('item_name', 1))
@@ -151,8 +146,8 @@ def inventory():
                 return generate_inventory_csv(items)
             # TEMPORARY: Skip coin deduction for admin during testing
             # TODO: Restore original coin deduction for production
-            if not is_admin():
-                user_query = get_user_query(str(current_user.id))
+            if not utils.is_admin():
+                user_query = utils.get_user_query(str(current_user.id))
                 db.users.update_one(
                     user_query,
                     {'$inc': {'coin_balance': -1}}
@@ -168,16 +163,16 @@ def inventory():
             logger.error(f"Error generating inventory report for user {current_user.id}: {str(e)}")
             flash(trans('reports_generation_error', default='An error occurred'), 'danger')
     else:
-        db = get_mongo_db()
+        db = utils.get_mongo_db()
         items = list(db.inventory.find(query).sort('item_name', 1))
-    tools = BUSINESS_TOOLS if current_user.role == 'trader' else ALL_TOOLS
-    nav_items = BUSINESS_EXPLORE_FEATURES if current_user.role == 'trader' else ADMIN_EXPLORE_FEATURES
-    bottom_nav_items = BUSINESS_NAV if current_user.role == 'trader' else ADMIN_NAV
+    tools = utils.BUSINESS_TOOLS if current_user.role == 'trader' else utils.ALL_TOOLS
+    nav_items = utils.BUSINESS_EXPLORE_FEATURES if current_user.role == 'trader' else utils.ADMIN_EXPLORE_FEATURES
+    bottom_nav_items = utils.BUSINESS_NAV if current_user.role == 'trader' else utils.ADMIN_NAV
     return render_template(
         'reports/inventory.html',
         form=form,
         items=items,
-        format_currency=format_currency,
+        format_currency=utils.format_currency,
         t=trans,
         lang=session.get('lang', 'en'),
         tools=tools,
@@ -191,7 +186,7 @@ def generate_profit_loss_pdf(cashflows):
     p = canvas.Canvas(buffer, pagesize=A4)
     p.setFont("Helvetica", 12)
     p.drawString(1 * inch, 10.5 * inch, trans('reports_profit_loss_report', default='Profit/Loss Report'))
-    p.drawString(1 * inch, 10.2 * inch, f"{trans('reports_generated_on', default='Generated on')}: {format_date(datetime.utcnow())}")
+    p.drawString(1 * inch, 10.2 * inch, f"{trans('reports_generated_on', default='Generated on')}: {utils.format_date(datetime.utcnow())}")
     y = 9.5 * inch
     p.setFillColor(colors.black)
     p.drawString(1 * inch, y, trans('general_date', default='Date'))
@@ -203,10 +198,10 @@ def generate_profit_loss_pdf(cashflows):
     total_income = 0
     total_expense = 0
     for t in cashflows:
-        p.drawString(1 * inch, y, format_date(t['created_at']))
+        p.drawString(1 * inch, y, utils.format_date(t['created_at']))
         p.drawString(2.5 * inch, y, t['party_name'])
         p.drawString(4 * inch, y, trans(t['type'], default=t['type']))
-        p.drawString(5 * inch, y, format_currency(t['amount']))
+        p.drawString(5 * inch, y, utils.format_currency(t['amount']))
         p.drawString(6.5 * inch, y, trans(t.get('category', ''), default=t.get('category', '')))
         if t['type'] == 'receipt':
             total_income += t['amount']
@@ -217,11 +212,11 @@ def generate_profit_loss_pdf(cashflows):
             p.showPage()
             y = 10.5 * inch
     y -= 0.3 * inch
-    p.drawString(1 * inch, y, f"{trans('reports_total_income', default='Total Income')}: {format_currency(total_income)}")
+    p.drawString(1 * inch, y, f"{trans('reports_total_income', default='Total Income')}: {utils.format_currency(total_income)}")
     y -= 0.3 * inch
-    p.drawString(1 * inch, y, f"{trans('reports_total_expense', default='Total Expense')}: {format_currency(total_expense)}")
+    p.drawString(1 * inch, y, f"{trans('reports_total_expense', default='Total Expense')}: {utils.format_currency(total_expense)}")
     y -= 0.3 * inch
-    p.drawString(1 * inch, y, f"{trans('reports_net_profit', default='Net Profit')}: {format_currency(total_income - total_expense)}")
+    p.drawString(1 * inch, y, f"{trans('reports_net_profit', default='Net Profit')}: {utils.format_currency(total_income - total_expense)}")
     p.showPage()
     p.save()
     buffer.seek(0)
@@ -234,14 +229,14 @@ def generate_profit_loss_csv(cashflows):
     total_income = 0
     total_expense = 0
     for t in cashflows:
-        output.append([format_date(t['created_at']), t['party_name'], trans(t['type'], default=t['type']), format_currency(t['amount']), trans(t.get('category', ''), default=t.get('category', ''))])
+        output.append([utils.format_date(t['created_at']), t['party_name'], trans(t['type'], default=t['type']), utils.format_currency(t['amount']), trans(t.get('category', ''), default=t.get('category', ''))])
         if t['type'] == 'receipt':
             total_income += t['amount']
         else:
             total_expense += t['amount']
-    output.append(['', '', '', f"{trans('reports_total_income', default='Total Income')}: {format_currency(total_income)}", ''])
-    output.append(['', '', '', f"{trans('reports_total_expense', default='Total Expense')}: {format_currency(total_expense)}", ''])
-    output.append(['', '', '', f"{trans('reports_net_profit', default='Net Profit')}: {format_currency(total_income - total_expense)}", ''])
+    output.append(['', '', '', f"{trans('reports_total_income', default='Total Income')}: {utils.format_currency(total_income)}", ''])
+    output.append(['', '', '', f"{trans('reports_total_expense', default='Total Expense')}: {utils.format_currency(total_expense)}", ''])
+    output.append(['', '', '', f"{trans('reports_net_profit', default='Net Profit')}: {utils.format_currency(total_income - total_expense)}", ''])
     buffer = BytesIO()
     writer = csv.writer(buffer, lineterminator='\n')
     writer.writerows(output)
@@ -254,7 +249,7 @@ def generate_inventory_pdf(items):
     p = canvas.Canvas(buffer, pagesize=A4)
     p.setFont("Helvetica", 12)
     p.drawString(1 * inch, 10.5 * inch, trans('reports_inventory_report', default='Inventory Report'))
-    p.drawString(1 * inch, 10.2 * inch, f"{trans('reports_generated_on', default='Generated on')}: {format_date(datetime.utcnow())}")
+    p.drawString(1 * inch, 10.2 * inch, f"{trans('reports_generated_on', default='Generated on')}: {utils.format_date(datetime.utcnow())}")
     y = 9.5 * inch
     p.setFillColor(colors.black)
     p.drawString(1 * inch, y, trans('inventory_item_name', default='Item Name'))
@@ -268,8 +263,8 @@ def generate_inventory_pdf(items):
         p.drawString(1 * inch, y, item['item_name'])
         p.drawString(2.5 * inch, y, str(item['qty']))
         p.drawString(3.5 * inch, y, trans(item['unit'], default=item['unit']))
-        p.drawString(4.5 * inch, y, format_currency(item['buying_price']))
-        p.drawString(5.5 * inch, y, format_currency(item['selling_price']))
+        p.drawString(4.5 * inch, y, utils.format_currency(item['buying_price']))
+        p.drawString(5.5 * inch, y, utils.format_currency(item['selling_price']))
         p.drawString(6.5 * inch, y, str(item.get('threshold', 5)))
         y -= 0.3 * inch
         if y < 1 * inch:
@@ -285,7 +280,7 @@ def generate_inventory_csv(items):
     output = []
     output.append([trans('inventory_item_name', default='Item Name'), trans('inventory_quantity', default='Quantity'), trans('inventory_unit', default='Unit'), trans('inventory_buying_price', default='Buying Price'), trans('inventory_selling_price', default='Selling Price'), trans('inventory_threshold', default='Threshold')])
     for item in items:
-        output.append([item['item_name'], item['qty'], trans(item['unit'], default=item['unit']), format_currency(item['buying_price']), format_currency(item['selling_price']), item.get('threshold', 5)])
+        output.append([item['item_name'], item['qty'], trans(item['unit'], default=item['unit']), utils.format_currency(item['buying_price']), utils.format_currency(item['selling_price']), item.get('threshold', 5)])
     buffer = BytesIO()
     writer = csv.writer(buffer, lineterminator='\n')
     writer.writerows(output)
