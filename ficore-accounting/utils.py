@@ -88,9 +88,9 @@ _PERSONAL_TOOLS = [
 
 _PERSONAL_NAV = [
     {"endpoint": "personal.index", "label": "Home", "label_key": "general_home", "tooltip_key": "general_home_tooltip", "icon": "bi-house"},
-    {"endpoint": "personal.budget_main", "label": "Budget", "label_key": "budget_budget_planner", "tooltip_key": "budget_tooltip", "icon": "bi-wallet"},
-    {"endpoint": "personal.bill_main", "label": "Bills", "label_key": "bill_bill_planner", "tooltip_key": "bill_tooltip", "icon": "bi-receipt"},
-    {"endpoint": "personal.learning_hub_main", "label": "Learning Hub", "label_key": "learning_hub_courses", "tooltip_key": "learning_tooltip", "icon": "bi-book"},
+    {"endpoint": "personal.budget.main", "label": "Budget", "label_key": "budget_budget_planner", "tooltip_key": "budget_tooltip", "icon": "bi-wallet"},
+    {"endpoint": "personal.bill.main", "label": "Bills", "label_key": "bill_bill_planner", "tooltip_key": "bill_tooltip", "icon": "bi-receipt"},
+    {"endpoint": "personal.learning_hub.main", "label": "Learning Hub", "label_key": "learning_hub_courses", "tooltip_key": "learning_tooltip", "icon": "bi-book"},
     {"endpoint": "settings.profile", "label": "Profile", "label_key": "profile_settings", "tooltip_key": "profile_tooltip", "icon": "bi-person"},
 ]
 
