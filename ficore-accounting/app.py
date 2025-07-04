@@ -7,6 +7,7 @@ from flask import (
     Flask, jsonify, request, render_template, redirect, url_for, flash,
     make_response, has_request_context, g, send_from_directory, session, Response, current_app, abort
 )
+from flask_session import Session
 from flask_cors import CORS
 from werkzeug.security import generate_password_hash
 from itsdangerous import URLSafeTimedSerializer
