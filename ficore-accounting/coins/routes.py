@@ -5,13 +5,7 @@ from flask_wtf.file import FileField, FileAllowed
 from gridfs import GridFS
 from wtforms import FloatField, StringField, SelectField, SubmitField, validators
 from translations import trans
-from utils import (
-    trans_function, requires_role, check_coin_balance, get_mongo_db, is_admin, get_user_query,
-    PERSONAL_TOOLS, PERSONAL_NAV, PERSONAL_EXPLORE_FEATURES,
-    BUSINESS_TOOLS, BUSINESS_NAV, BUSINESS_EXPLORE_FEATURES,
-    AGENT_TOOLS, AGENT_NAV, AGENT_EXPLORE_FEATURES,
-    ALL_TOOLS, ADMIN_NAV, ADMIN_EXPLORE_FEATURES, limiter
-)
+import utils
 from bson import ObjectId
 from datetime import datetime
 from logging import getLogger
@@ -52,9 +46,9 @@ class ReceiptUploadForm(FlaskForm):
 
 def credit_coins(user_id: str, amount: int, ref: str, type: str = 'purchase') -> None:
     """Credit coins to a user and log transaction using MongoDB transaction."""
-    db = get_mongo_db()
+    db = utils.get_mongo_db()
     client = db.client
-    user_query = get_user_query(user_id)
+    user_query = utils.get_user_query(user_id)
     with client.start_session() as session:
         with session.start_transaction():
             try:
@@ -90,8 +84,8 @@ def credit_coins(user_id: str, amount: int, ref: str, type: str = 'purchase') ->
 
 @coins_bp.route('/purchase', methods=['GET', 'POST'])
 @login_required
-@requires_role(['trader', 'personal'])
-@limiter.limit("50 per hour")
+@utils.requires_role(['trader', 'personal'])
+@utils.limiter.limit("50 per hour")
 def purchase():
     """Handle coin purchase requests."""
     form = PurchaseForm()
@@ -113,9 +107,9 @@ def purchase():
         except Exception as e:
             logger.error(f"Unexpected error purchasing coins for user {current_user.id}: {str(e)}")
             flash(trans('general_something_went_wrong', default='An error occurred'), 'danger')
-    tools = PERSONAL_TOOLS if current_user.role == 'personal' else BUSINESS_TOOLS if current_user.role == 'trader' else AGENT_TOOLS if current_user.role == 'agent' else ALL_TOOLS
-    nav_items = PERSONAL_EXPLORE_FEATURES if current_user.role == 'personal' else BUSINESS_EXPLORE_FEATURES if current_user.role == 'trader' else AGENT_EXPLORE_FEATURES if current_user.role == 'agent' else ADMIN_EXPLORE_FEATURES
-    bottom_nav_items = PERSONAL_NAV if current_user.role == 'personal' else BUSINESS_NAV if current_user.role == 'trader' else AGENT_NAV if current_user.role == 'agent' else ADMIN_NAV
+    tools = utils.PERSONAL_TOOLS if current_user.role == 'personal' else utils.BUSINESS_TOOLS if current_user.role == 'trader' else utils.AGENT_TOOLS if current_user.role == 'agent' else utils.ALL_TOOLS
+    nav_items = utils.PERSONAL_EXPLORE_FEATURES if current_user.role == 'personal' else utils.BUSINESS_EXPLORE_FEATURES if current_user.role == 'trader' else utils.AGENT_EXPLORE_FEATURES if current_user.role == 'agent' else utils.ADMIN_EXPLORE_FEATURES
+    bottom_nav_items = utils.PERSONAL_NAV if current_user.role == 'personal' else utils.BUSINESS_NAV if current_user.role == 'trader' else utils.AGENT_NAV if current_user.role == 'agent' else utils.ADMIN_NAV
     return render_template(
         'coins/purchase.html',
         form=form,
@@ -128,20 +122,20 @@ def purchase():
 
 @coins_bp.route('/history', methods=['GET'])
 @login_required
-@limiter.limit("100 per hour")
+@utils.limiter.limit("100 per hour")
 def history():
     """View coin transaction history."""
     try:
-        db = get_mongo_db()
-        user_query = get_user_query(str(current_user.id))
+        db = utils.get_mongo_db()
+        user_query = utils.get_user_query(str(current_user.id))
         user = db.users.find_one(user_query)
-        query = {} if is_admin() else {'user_id': str(current_user.id)}
+        query = {} if utils.is_admin() else {'user_id': str(current_user.id)}
         transactions = list(db.coin_transactions.find(query).sort('date', -1).limit(50))
         for tx in transactions:
             tx['_id'] = str(tx['_id'])
-        tools = PERSONAL_TOOLS if current_user.role == 'personal' else BUSINESS_TOOLS if current_user.role == 'trader' else AGENT_TOOLS if current_user.role == 'agent' else ALL_TOOLS
-        nav_items = PERSONAL_EXPLORE_FEATURES if current_user.role == 'personal' else BUSINESS_EXPLORE_FEATURES if current_user.role == 'trader' else AGENT_EXPLORE_FEATURES if current_user.role == 'agent' else ADMIN_EXPLORE_FEATURES
-        bottom_nav_items = PERSONAL_NAV if current_user.role == 'personal' else BUSINESS_NAV if current_user.role == 'trader' else AGENT_NAV if current_user.role == 'agent' else ADMIN_NAV
+        tools = utils.PERSONAL_TOOLS if current_user.role == 'personal' else utils.BUSINESS_TOOLS if current_user.role == 'trader' else utils.AGENT_TOOLS if current_user.role == 'agent' else utils.ALL_TOOLS
+        nav_items = utils.PERSONAL_EXPLORE_FEATURES if current_user.role == 'personal' else utils.BUSINESS_EXPLORE_FEATURES if current_user.role == 'trader' else utils.AGENT_EXPLORE_FEATURES if current_user.role == 'agent' else utils.ADMIN_EXPLORE_FEATURES
+        bottom_nav_items = utils.PERSONAL_NAV if current_user.role == 'personal' else utils.BUSINESS_NAV if current_user.role == 'trader' else utils.AGENT_NAV if current_user.role == 'agent' else utils.ADMIN_NAV
         return render_template(
             'coins/history.html',
             transactions=transactions,
@@ -155,9 +149,9 @@ def history():
     except Exception as e:
         logger.error(f"Error fetching coin history for user {current_user.id}: {str(e)}")
         flash(trans('general_something_went_wrong', default='An error occurred'), 'danger')
-        tools = PERSONAL_TOOLS if current_user.role == 'personal' else BUSINESS_TOOLS if current_user.role == 'trader' else AGENT_TOOLS if current_user.role == 'agent' else ALL_TOOLS
-        nav_items = PERSONAL_EXPLORE_FEATURES if current_user.role == 'personal' else BUSINESS_EXPLORE_FEATURES if current_user.role == 'trader' else AGENT_EXPLORE_FEATURES if current_user.role == 'agent' else ADMIN_EXPLORE_FEATURES
-        bottom_nav_items = PERSONAL_NAV if current_user.role == 'personal' else BUSINESS_NAV if current_user.role == 'trader' else AGENT_NAV if current_user.role == 'agent' else ADMIN_NAV
+        tools = utils.PERSONAL_TOOLS if current_user.role == 'personal' else utils.BUSINESS_TOOLS if current_user.role == 'trader' else utils.AGENT_TOOLS if current_user.role == 'agent' else utils.ALL_TOOLS
+        nav_items = utils.PERSONAL_EXPLORE_FEATURES if current_user.role == 'personal' else utils.BUSINESS_EXPLORE_FEATURES if current_user.role == 'trader' else utils.AGENT_EXPLORE_FEATURES if current_user.role == 'agent' else utils.ADMIN_EXPLORE_FEATURES
+        bottom_nav_items = utils.PERSONAL_NAV if current_user.role == 'personal' else utils.BUSINESS_NAV if current_user.role == 'trader' else utils.AGENT_NAV if current_user.role == 'agent' else utils.ADMIN_NAV
         return render_template(
             'coins/history.html',
             transactions=[],
@@ -171,17 +165,17 @@ def history():
 
 @coins_bp.route('/receipt_upload', methods=['GET', 'POST'])
 @login_required
-@requires_role(['trader', 'personal'])
-@limiter.limit("10 per hour")
+@utils.requires_role(['trader', 'personal'])
+@utils.limiter.limit("10 per hour")
 def receipt_upload():
     """Handle payment receipt uploads with transaction for coin deduction."""
     form = ReceiptUploadForm()
-    if not is_admin() and not check_coin_balance(1):
+    if not utils.is_admin() and not utils.check_coin_balance(1):
         flash(trans('coins_insufficient_coins', default='Insufficient coins to upload receipt. Purchase more coins.'), 'danger')
         return redirect(url_for('coins.purchase'))
     if form.validate_on_submit():
         try:
-            db = get_mongo_db()
+            db = utils.get_mongo_db()
             client = db.client
             fs = GridFS(db)
             receipt_file = form.receipt.data
@@ -195,8 +189,8 @@ def receipt_upload():
                         upload_date=datetime.utcnow(),
                         session=session
                     )
-                    if not is_admin():
-                        user_query = get_user_query(str(current_user.id))
+                    if not utils.is_admin():
+                        user_query = utils.get_user_query(str(current_user.id))
                         result = db.users.update_one(
                             user_query,
                             {'$inc': {'coin_balance': -1}},
@@ -230,9 +224,9 @@ def receipt_upload():
         except Exception as e:
             logger.error(f"Unexpected error uploading receipt for user {current_user.id}: {str(e)}")
             flash(trans('general_something_went_wrong', default='An error occurred'), 'danger')
-    tools = PERSONAL_TOOLS if current_user.role == 'personal' else BUSINESS_TOOLS if current_user.role == 'trader' else AGENT_TOOLS if current_user.role == 'agent' else ALL_TOOLS
-    nav_items = PERSONAL_EXPLORE_FEATURES if current_user.role == 'personal' else BUSINESS_EXPLORE_FEATURES if current_user.role == 'trader' else AGENT_EXPLORE_FEATURES if current_user.role == 'agent' else ADMIN_EXPLORE_FEATURES
-    bottom_nav_items = PERSONAL_NAV if current_user.role == 'personal' else BUSINESS_NAV if current_user.role == 'trader' else AGENT_NAV if current_user.role == 'agent' else ADMIN_NAV
+    tools = utils.PERSONAL_TOOLS if current_user.role == 'personal' else utils.BUSINESS_TOOLS if current_user.role == 'trader' else utils.AGENT_TOOLS if current_user.role == 'agent' else utils.ALL_TOOLS
+    nav_items = utils.PERSONAL_EXPLORE_FEATURES if current_user.role == 'personal' else utils.BUSINESS_EXPLORE_FEATURES if current_user.role == 'trader' else utils.AGENT_EXPLORE_FEATURES if current_user.role == 'agent' else utils.ADMIN_EXPLORE_FEATURES
+    bottom_nav_items = utils.PERSONAL_NAV if current_user.role == 'personal' else utils.BUSINESS_NAV if current_user.role == 'trader' else utils.AGENT_NAV if current_user.role == 'agent' else utils.ADMIN_NAV
     return render_template(
         'coins/receipt_upload.html',
         form=form,
@@ -245,12 +239,12 @@ def receipt_upload():
 
 @coins_bp.route('/receipts', methods=['GET'])
 @login_required
-@requires_role('admin')
-@limiter.limit("50 per hour")
+@utils.requires_role('admin')
+@utils.limiter.limit("50 per hour")
 def view_receipts():
     """View all uploaded receipts (admin only)."""
     try:
-        db = get_mongo_db()
+        db = utils.get_mongo_db()
         fs = GridFS(db)
         receipts = list(fs.find().sort('upload_date', -1).limit(50))
         for receipt in receipts:
@@ -261,9 +255,9 @@ def view_receipts():
             receipts=receipts,
             t=trans,
             lang=session.get('lang', 'en'),
-            tools=ALL_TOOLS,
-            nav_items=ADMIN_EXPLORE_FEATURES,
-            bottom_nav_items=ADMIN_NAV
+            tools=utils.ALL_TOOLS,
+            nav_items=utils.ADMIN_EXPLORE_FEATURES,
+            bottom_nav_items=utils.ADMIN_NAV
         )
     except Exception as e:
         logger.error(f"Error fetching receipts for admin {current_user.id}: {str(e)}")
@@ -273,19 +267,19 @@ def view_receipts():
             receipts=[],
             t=trans,
             lang=session.get('lang', 'en'),
-            tools=ALL_TOOLS,
-            nav_items=ADMIN_EXPLORE_FEATURES,
-            bottom_nav_items=ADMIN_NAV
+            tools=utils.ALL_TOOLS,
+            nav_items=utils.ADMIN_EXPLORE_FEATURES,
+            bottom_nav_items=utils.ADMIN_NAV
         )
 
 @coins_bp.route('/receipt/<file_id>', methods=['GET'])
 @login_required
-@requires_role('admin')
-@limiter.limit("10 per hour")
+@utils.requires_role('admin')
+@utils.limiter.limit("10 per hour")
 def view_receipt(file_id):
     """Serve a specific receipt file (admin only)."""
     try:
-        db = get_mongo_db()
+        db = utils.get_mongo_db()
         fs = GridFS(db)
         file = fs.get(ObjectId(file_id))
         response = current_app.response_class(
@@ -303,12 +297,12 @@ def view_receipt(file_id):
 
 @coins_bp.route('/api/balance', methods=['GET'])
 @login_required
-@limiter.limit("100 per hour")
+@utils.limiter.limit("100 per hour")
 def get_balance():
     """API endpoint to get current user's coin balance."""
     try:
-        db = get_mongo_db()
-        user_query = get_user_query(str(current_user.id))
+        db = utils.get_mongo_db()
+        user_query = utils.get_user_query(str(current_user.id))
         user = db.users.find_one(user_query)
         balance = user.get('coin_balance', 0) if user else 0
         return jsonify({'balance': balance})
