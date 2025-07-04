@@ -4,7 +4,7 @@ Debtors management translations for accounting tools
 
 DEBTORS_TRANSLATIONS = {
     'en': {
-        'debtors_dashboard': 'Debtors Dashboard',
+        'debtors_dashboard': 'Debtors',
         'debtors_list': 'Debtors List',
         'debtors_add_debtor': 'Add Debtor',
         'debtors_edit_debtor': 'Edit Debtor',
@@ -85,7 +85,7 @@ DEBTORS_TRANSLATIONS = {
         'debtors_search_debtors': 'Search debtors...',
     },
     'ha': {
-        'debtors_dashboard': 'Allon Masu Bin Bashi',
+        'debtors_dashboard': 'Bashi',
         'debtors_list': 'Jerin Masu Bin Bashi',
         'debtors_add_debtor': 'Ƙara Mai Bin Bashi',
         'debtors_edit_debtor': 'Gyara Mai Bin Bashi',
