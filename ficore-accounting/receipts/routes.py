@@ -1,12 +1,7 @@
 from flask import Blueprint, render_template, redirect, url_for, flash, request, Response, jsonify, session
 from flask_login import login_required, current_user
 from translations import trans
-from utils import (
-    trans_function, requires_role, check_coin_balance, format_currency, format_date,
-    get_mongo_db, is_admin, get_user_query,
-    BUSINESS_TOOLS, BUSINESS_NAV, BUSINESS_EXPLORE_FEATURES,
-    ALL_TOOLS, ADMIN_NAV, ADMIN_EXPLORE_FEATURES, limiter
-)
+import utils
 from bson import ObjectId
 from datetime import datetime
 from flask_wtf import FlaskForm
@@ -33,21 +28,21 @@ receipts_bp = Blueprint('receipts', __name__, url_prefix='/receipts')
 
 @receipts_bp.route('/')
 @login_required
-@requires_role('trader')
+@utils.requires_role('trader')
 def index():
     """List all receipt cashflows for the current user."""
     try:
-        db = get_mongo_db()
-        query = {'type': 'receipt'} if is_admin() else {'user_id': str(current_user.id), 'type': 'receipt'}
+        db = utils.get_mongo_db()
+        query = {'type': 'receipt'} if utils.is_admin() else {'user_id': str(current_user.id), 'type': 'receipt'}
         receipts = list(db.cashflows.find(query).sort('created_at', -1))
-        tools = BUSINESS_TOOLS if current_user.role == 'trader' else ALL_TOOLS
-        nav_items = BUSINESS_EXPLORE_FEATURES if current_user.role == 'trader' else ADMIN_EXPLORE_FEATURES
-        bottom_nav_items = BUSINESS_NAV if current_user.role == 'trader' else ADMIN_NAV
+        tools = utils.BUSINESS_TOOLS if current_user.role == 'trader' else utils.ALL_TOOLS
+        nav_items = utils.BUSINESS_EXPLORE_FEATURES if current_user.role == 'trader' else utils.ADMIN_EXPLORE_FEATURES
+        bottom_nav_items = utils.BUSINESS_NAV if current_user.role == 'trader' else utils.ADMIN_NAV
         return render_template(
             'receipts/index.html',
             receipts=receipts,
-            format_currency=format_currency,
-            format_date=format_date,
+            format_currency=utils.format_currency,
+            format_date=utils.format_date,
             tools=tools,
             nav_items=nav_items,
             bottom_nav_items=bottom_nav_items,
@@ -61,12 +56,12 @@ def index():
 
 @receipts_bp.route('/view/<id>')
 @login_required
-@requires_role('trader')
+@utils.requires_role('trader')
 def view(id):
     """View detailed information about a specific receipt."""
     try:
-        db = get_mongo_db()
-        query = {'_id': ObjectId(id), 'type': 'receipt'} if is_admin() else {'_id': ObjectId(id), 'user_id': str(current_user.id), 'type': 'receipt'}
+        db = utils.get_mongo_db()
+        query = {'_id': ObjectId(id), 'type': 'receipt'} if utils.is_admin() else {'_id': ObjectId(id), 'user_id': str(current_user.id), 'type': 'receipt'}
         receipt = db.cashflows.find_one(query)
         if not receipt:
             return jsonify({'error': trans('receipts_record_not_found', default='Record not found')}), 404
@@ -79,20 +74,20 @@ def view(id):
 
 @receipts_bp.route('/generate_pdf/<id>')
 @login_required
-@requires_role('trader')
+@utils.requires_role('trader')
 def generate_pdf(id):
     """Generate PDF receipt for a receipt transaction."""
     try:
         from reportlab.lib.pagesizes import letter
         from reportlab.pdfgen import canvas
         from reportlab.lib.units import inch
-        db = get_mongo_db()
-        query = {'_id': ObjectId(id), 'type': 'receipt'} if is_admin() else {'_id': ObjectId(id), 'user_id': str(current_user.id), 'type': 'receipt'}
+        db = utils.get_mongo_db()
+        query = {'_id': ObjectId(id), 'type': 'receipt'} if utils.is_admin() else {'_id': ObjectId(id), 'user_id': str(current_user.id), 'type': 'receipt'}
         receipt = db.cashflows.find_one(query)
         if not receipt:
             flash(trans('receipts_record_not_found', default='Record not found'), 'danger')
             return redirect(url_for('index'))
-        if not is_admin() and not check_coin_balance(1):
+        if not utils.is_admin() and not utils.check_coin_balance(1):
             flash(trans('receipts_insufficient_coins', default='Insufficient coins to generate receipt'), 'danger')
             return redirect(url_for('coins.purchase'))
         buffer = io.BytesIO()
@@ -104,21 +99,21 @@ def generate_pdf(id):
         y_position = height - inch - 0.5 * inch
         p.drawString(inch, y_position, f"Payer: {receipt['party_name']}")
         y_position -= 0.3 * inch
-        p.drawString(inch, y_position, f"Amount Received: {format_currency(receipt['amount'])}")
+        p.drawString(inch, y_position, f"Amount Received: {utils.format_currency(receipt['amount'])}")
         y_position -= 0.3 * inch
         p.drawString(inch, y_position, f"Payment Method: {receipt.get('method', 'N/A')}")
         y_position -= 0.3 * inch
         p.drawString(inch, y_position, f"Category: {receipt.get('category', 'No category provided')}")
         y_position -= 0.3 * inch
-        p.drawString(inch, y_position, f"Date: {format_date(receipt['created_at'])}")
+        p.drawString(inch, y_position, f"Date: {utils.format_date(receipt['created_at'])}")
         y_position -= 0.3 * inch
         p.drawString(inch, y_position, f"Receipt ID: {str(receipt['_id'])}")
         p.setFont("Helvetica-Oblique", 10)
         p.drawString(inch, inch, "This document serves as an official receipt generated by FiCore Records.")
         p.showPage()
         p.save()
-        if not is_admin():
-            user_query = get_user_query(str(current_user.id))
+        if not utils.is_admin():
+            user_query = utils.get_user_query(str(current_user.id))
             db.users.update_one(user_query, {'$inc': {'coin_balance': -1}})
             db.coin_transactions.insert_one({
                 'user_id': str(current_user.id),
@@ -142,16 +137,16 @@ def generate_pdf(id):
 
 @receipts_bp.route('/add', methods=['GET', 'POST'])
 @login_required
-@requires_role('trader')
+@utils.requires_role('trader')
 def add():
     """Add a new receipt cashflow."""
     form = ReceiptForm()
-    if not is_admin() and not check_coin_balance(1):
+    if not utils.is_admin() and not utils.check_coin_balance(1):
         flash(trans('receipts_insufficient_coins', default='Insufficient coins to add a receipt. Purchase more coins.'), 'danger')
         return redirect(url_for('coins.purchase'))
     if form.validate_on_submit():
         try:
-            db = get_mongo_db()
+            db = utils.get_mongo_db()
             receipt_date = datetime(form.date.data.year, form.date.data.month, form.date.data.day)
             cashflow = {
                 'user_id': str(current_user.id),
@@ -164,8 +159,8 @@ def add():
                 'updated_at': datetime.utcnow()
             }
             db.cashflows.insert_one(cashflow)
-            if not is_admin():
-                user_query = get_user_query(str(current_user.id))
+            if not utils.is_admin():
+                user_query = utils.get_user_query(str(current_user.id))
                 db.users.update_one(user_query, {'$inc': {'coin_balance': -1}})
                 db.coin_transactions.insert_one({
                     'user_id': str(current_user.id),
@@ -179,9 +174,9 @@ def add():
         except Exception as e:
             logger.error(f"Error adding receipt for user {current_user.id}: {str(e)}")
             flash(trans('receipts_add_error', default='An error occurred'), 'danger')
-    tools = BUSINESS_TOOLS if current_user.role == 'trader' else ALL_TOOLS
-    nav_items = BUSINESS_EXPLORE_FEATURES if current_user.role == 'trader' else ADMIN_EXPLORE_FEATURES
-    bottom_nav_items = BUSINESS_NAV if current_user.role == 'trader' else ADMIN_NAV
+    tools = utils.BUSINESS_TOOLS if current_user.role == 'trader' else utils.ALL_TOOLS
+    nav_items = utils.BUSINESS_EXPLORE_FEATURES if current_user.role == 'trader' else utils.ADMIN_EXPLORE_FEATURES
+    bottom_nav_items = utils.BUSINESS_NAV if current_user.role == 'trader' else utils.ADMIN_NAV
     return render_template(
         'receipts/add.html',
         form=form,
@@ -194,12 +189,12 @@ def add():
 
 @receipts_bp.route('/edit/<id>', methods=['GET', 'POST'])
 @login_required
-@requires_role('trader')
+@utils.requires_role('trader')
 def edit(id):
     """Edit an existing receipt cashflow."""
     try:
-        db = get_mongo_db()
-        query = {'_id': ObjectId(id), 'type': 'receipt'} if is_admin() else {'_id': ObjectId(id), 'user_id': str(current_user.id), 'type': 'receipt'}
+        db = utils.get_mongo_db()
+        query = {'_id': ObjectId(id), 'type': 'receipt'} if utils.is_admin() else {'_id': ObjectId(id), 'user_id': str(current_user.id), 'type': 'receipt'}
         receipt = db.cashflows.find_one(query)
         if not receipt:
             flash(trans('receipts_record_not_found', default='Cashflow not found'), 'danger')
@@ -228,9 +223,9 @@ def edit(id):
             except Exception as e:
                 logger.error(f"Error updating receipt {id} for user {current_user.id}: {str(e)}")
                 flash(trans('receipts_edit_error', default='An error occurred'), 'danger')
-        tools = BUSINESS_TOOLS if current_user.role == 'trader' else ALL_TOOLS
-        nav_items = BUSINESS_EXPLORE_FEATURES if current_user.role == 'trader' else ADMIN_EXPLORE_FEATURES
-        bottom_nav_items = BUSINESS_NAV if current_user.role == 'trader' else ADMIN_NAV
+        tools = utils.BUSINESS_TOOLS if current_user.role == 'trader' else utils.ALL_TOOLS
+        nav_items = utils.BUSINESS_EXPLORE_FEATURES if current_user.role == 'trader' else utils.ADMIN_EXPLORE_FEATURES
+        bottom_nav_items = utils.BUSINESS_NAV if current_user.role == 'trader' else utils.ADMIN_NAV
         return render_template(
             'receipts/edit.html',
             form=form,
@@ -248,12 +243,12 @@ def edit(id):
 
 @receipts_bp.route('/delete/<id>', methods=['POST'])
 @login_required
-@requires_role('trader')
+@utils.requires_role('trader')
 def delete(id):
     """Delete a receipt cashflow."""
     try:
-        db = get_mongo_db()
-        query = {'_id': ObjectId(id), 'type': 'receipt'} if is_admin() else {'_id': ObjectId(id), 'user_id': str(current_user.id), 'type': 'receipt'}
+        db = utils.get_mongo_db()
+        query = {'_id': ObjectId(id), 'type': 'receipt'} if utils.is_admin() else {'_id': ObjectId(id), 'user_id': str(current_user.id), 'type': 'receipt'}
         result = db.cashflows.delete_one(query)
         if result.deleted_count:
             flash(trans('receipts_delete_success', default='Receipt deleted successfully'), 'success')
