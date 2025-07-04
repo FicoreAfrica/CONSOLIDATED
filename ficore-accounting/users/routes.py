@@ -282,7 +282,7 @@ def get_explore_tools_redirect(user_role):
         return url_for('personal.index')  # Default fallback
 
 @users_bp.route('/login', methods=['GET', 'POST'])
-@limiter.limit("50/hour")
+@utils.limiter.limit("50/hour")
 def login():
     if current_user.is_authenticated:
         return redirect(get_post_login_redirect(current_user.role))
@@ -366,7 +366,7 @@ def login():
     )
 
 @users_bp.route('/verify_2fa', methods=['GET', 'POST'])
-@limiter.limit("50/hour")
+@utils.limiter.limit("50/hour")
 def verify_2fa():
     if current_user.is_authenticated:
         return redirect(get_post_login_redirect(current_user.role))
@@ -422,7 +422,7 @@ def verify_2fa():
     )
 
 @users_bp.route('/signup', methods=['GET', 'POST'])
-@limiter.limit("50/hour")
+@utils.limiter.limit("50/hour")
 def signup():
     if current_user.is_authenticated:
         return redirect(get_post_login_redirect(current_user.role))
@@ -524,7 +524,7 @@ def signup():
     )
 
 @users_bp.route('/forgot_password', methods=['GET', 'POST'])
-@limiter.limit("50/hour")
+@utils.limiter.limit("50/hour")
 def forgot_password():
     if current_user.is_authenticated:
         return redirect(get_post_login_redirect(current_user.role))
@@ -576,7 +576,7 @@ def forgot_password():
     )
 
 @users_bp.route('/reset_password', methods=['GET', 'POST'])
-@limiter.limit("50/hour")
+@utils.limiter.limit("50/hour")
 def reset_password():
     if current_user.is_authenticated:
         return redirect(get_post_login_redirect(current_user.role))
@@ -627,7 +627,7 @@ def reset_password():
 
 @users_bp.route('/setup_wizard', methods=['GET', 'POST'])
 @login_required
-@limiter.limit("50/hour")
+@utils.limiter.limit("50/hour")
 def setup_wizard():
     db = utils.get_mongo_db()
     user_id = request.args.get('user_id', current_user.id) if utils.is_admin() and request.args.get('user_id') else current_user.id
@@ -689,7 +689,7 @@ def setup_wizard():
 
 @users_bp.route('/personal_setup_wizard', methods=['GET', 'POST'])
 @login_required
-@limiter.limit("50/hour")
+@utils.limiter.limit("50/hour")
 def personal_setup_wizard():
     db = utils.get_mongo_db()
     user_id = request.args.get('user_id', current_user.id) if utils.is_admin() and request.args.get('user_id') else current_user.id
@@ -750,7 +750,7 @@ def personal_setup_wizard():
 
 @users_bp.route('/agent_setup_wizard', methods=['GET', 'POST'])
 @login_required
-@limiter.limit("50/hour")
+@utils.limiter.limit("50/hour")
 def agent_setup_wizard():
     db = utils.get_mongo_db()
     user_id = request.args.get('user_id', current_user.id) if utils.is_admin() and request.args.get('user_id') else current_user.id
@@ -813,7 +813,7 @@ def agent_setup_wizard():
 
 @users_bp.route('/logout')
 @login_required
-@limiter.limit("100/hour")
+@utils.limiter.limit("100/hour")
 def logout():
     user_id = current_user.id
     lang = session.get('lang', 'en')
