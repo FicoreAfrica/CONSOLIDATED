@@ -983,7 +983,7 @@ def create_app():
     @app.route('/api/notifications/count')
     @login_required
     @limiter.limit('10 per minute')
-    def notification_count keyframes
+    def notification_count():
         try:
             with app.app_context():
                 db = get_mongo_db()
