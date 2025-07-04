@@ -226,6 +226,10 @@ def create_app():
     if not app.config['SECRET_KEY']:
         logger.error('SECRET_KEY environment variable is not set')
         raise ValueError('SECRET_KEY must be set in environment variables')
+
+    app.config['SERVER_NAME'] = 'financial-health-score-8jvu.onrender.com'
+    app.config['APPLICATION_ROOT'] = '/'
+    app.config['PREFERRED_URL_SCHEME'] = 'https'
     
     app.config['MONGO_URI'] = os.getenv('MONGO_URI')
     if not app.config['MONGO_URI']:
