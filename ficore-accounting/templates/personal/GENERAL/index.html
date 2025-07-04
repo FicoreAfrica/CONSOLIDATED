@@ -5,104 +5,104 @@
 <div class="container-fluid px-0">
     {% if current_user.is_authenticated %}
         <!-- Top Header -->
-        <div class="top-header d-flex justify-content-between align-items-center mb-3 py-2 px-3 bg-white shadow-sm rounded mx-2">
-            <div class="d-flex align-items-center gap-2" style="min-width:0;">
-                <img src="{{ current_user.avatar_url or url_for('static', filename='img/default-profile.png') }}" class="rounded-circle" width="40" height="40" alt="{{ t('general_profile_alt', default='User profile picture') | e }}">
-                <span class="welcome-text text-truncate fw-bold">{{ t('general_hello_user', default='Hello') | e }}, {{ current_user.display_name | default(current_user.id) | e }}</span>
+        <div class="top-header d-flex justify-content-between align-items-center mb-4 py-3 px-4 bg-white shadow-sm rounded mx-3">
+            <div class="d-flex align-items-center gap-3" style="min-width:0;">
+                <img src="{{ current_user.avatar_url or url_for('static', filename='img/default-profile.png') }}" class="rounded-circle" width="48" height="48" alt="{{ t('general_profile_alt', default='User profile picture') | e }}">
+                <span class="welcome-text text-truncate fw-bold fs-5">{{ t('general_hello_user', default='Hello') | e }}, {{ current_user.display_name | default(current_user.id) | e }}</span>
             </div>
-            <div class="header-actions d-flex justify-content-end align-items-center gap-2">
+            <div class="header-actions d-flex justify-content-end align-items-center gap-3">
                 <button class="notification-bell btn btn-link p-2 position-relative" id="notificationBell" data-bs-toggle="modal" data-bs-target="#notificationModal" data-bs-toggle="tooltip" data-bs-title="{{ t('general_notifications_tooltip', default='View notifications') | e }}" aria-label="{{ t('general_notifications', default='Notifications') | e }}">
-                    <i class="bi bi-bell fs-4"></i>
+                    <i class="bi bi-bell fs-3"></i>
                     <span class="notification-badge position-absolute top-0 end-0 translate-middle badge rounded-pill bg-danger d-none" id="notificationBadge"></span>
                 </button>
                 <div class="dropdown">
                     <button class="btn btn-link p-2" type="button" id="languageDropdown" data-bs-toggle="dropdown" aria-expanded="false" data-bs-toggle="tooltip" data-bs-title="{{ t('general_language', default='Language') | e }}">
-                        <i class="bi bi-translate fs-4"></i>
+                        <i class="bi bi-translate fs-3"></i>
                     </button>
-                    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="languageDropdown">
+                    <ul class="dropdown-menu dropdown-menu-end shadow-sm" aria-labelledby="languageDropdown">
                         <li><a class="dropdown-item" href="{{ url_for('set_language', lang='en') | e }}">{{ t('general_english', default='English') | e }}</a></li>
                         <li><a class="dropdown-item" href="{{ url_for('set_language', lang='ha') | e }}">{{ t('general_hausa', default='Hausa') | e }}</a></li>
                     </ul>
                 </div>
                 <button class="btn btn-link p-2" id="darkModeToggle" onclick="toggleDarkMode()" aria-label="{{ t('general_mode_toggle_dark', default='Toggle dark mode') | e }}" data-bs-toggle="tooltip" data-bs-title="{{ t('general_mode_toggle_dark', default='Toggle dark mode') | e }}">
-                    <i class="bi bi-moon fs-4"></i>
+                    <i class="bi bi-moon-stars fs-3"></i>
                 </button>
                 <a href="{{ url_for('users.logout') | e }}" class="logout-icon btn btn-link p-2 no-js-intercept" data-bs-toggle="tooltip" data-bs-title="{{ t('general_logout', default='Logout') | e }}" aria-label="{{ t('general_logout', default='Logout') | e }}" rel="external">
-                    <i class="bi bi-box-arrow-right fs-4"></i>
+                    <i class="bi bi-box-arrow-right fs-3"></i>
                 </a>
             </div>
         </div>
 
         <!-- Financial Summary -->
-        <div class="financial-summary mb-3 mx-2 rounded shadow-sm">
-            <div class="row g-2 mb-3">
+        <div class="financial-summary mb-4 mx-3 rounded shadow-sm bg-white p-4">
+            <div class="row g-3 mb-3">
                 <div class="col-6">
-                    <div class="summary-card budget-card p-3 rounded shadow-sm">
-                        <div class="card-header d-flex align-items-center gap-2">
-                            <i class="bi bi-calculator text-primary fs-4"></i>
-                            <span class="fw-bold">{{ t('budget_budget_status', default='Budget Status') | e }}</span>
+                    <div class="summary-card budget-card p-4 rounded shadow-sm bg-light">
+                        <div class="card-header d-flex align-items-center gap-3">
+                            <i class="bi bi-calculator text-primary fs-3"></i>
+                            <span class="fw-bold fs-5">{{ t('budget_budget_status', default='Budget Status') | e }}</span>
                         </div>
-                        <div class="card-amount text-primary mt-2" id="budgetStatus">
+                        <div class="card-amount text-primary mt-3 fs-4" id="budgetStatus">
                             <span class="currency-symbol">₦</span>
                             <span class="amount-value" data-amount="0">0</span>
                         </div>
                     </div>
                 </div>
                 <div class="col-6">
-                    <div class="summary-card bills-card p-3 rounded shadow-sm">
-                        <div class="card-header d-flex align-items-center gap-2">
-                            <i class="bi bi-receipt text-warning fs-4"></i>
-                            <span class="fw-bold">{{ t('bill_upcoming_bills', default='Upcoming Bills') | e }}</span>
+                    <div class="summary-card bills-card p-4 rounded shadow-sm bg-light">
+                        <div class="card-header d-flex align-items-center gap-3">
+                            <i class="bi bi-receipt text-warning fs-3"></i>
+                            <span class="fw-bold fs-5">{{ t('bill_upcoming_bills', default='Upcoming Bills') | e }}</span>
                         </div>
-                        <div class="card-amount text-warning mt-2" id="upcomingBills">
+                        <div class="card-amount text-warning mt-3 fs-4" id="upcomingBills">
                             <span class="currency-symbol">₦</span>
                             <span class="amount-value" data-amount="0">0</span>
                         </div>
                     </div>
                 </div>
             </div>
-            <div class="net-position-card p-3 rounded shadow-sm">
+            <div class="net-position-card p-4 rounded shadow-sm bg-light">
                 <div class="d-flex justify-content-between align-items-center">
                     <div class="net-position-info">
-                        <span class="net-label fw-bold">{{ t('net_worth_net_worth', default='Net Worth') | e }}:</span>
-                        <span class="net-amount" id="netWorth">₦0</span>
+                        <span class="net-label fw-bold fs-5">{{ t('net_worth_net_worth', default='Net Worth') | e }}:</span>
+                        <span class="net-amount fs-4" id="netWorth">₦0</span>
                     </div>
                     <button class="visibility-toggle btn btn-link p-2" onclick="toggleAmountVisibility()" aria-label="{{ t('general_toggle_visibility', default='Toggle amount visibility') | e }}">
-                        <i class="bi bi-eye fs-4" id="visibilityIcon"></i>
+                        <i class="bi bi-eye fs-3" id="visibilityIcon"></i>
                     </button>
                 </div>
             </div>
-            <div class="text-center mt-3">
-                <a href="{{ url_for('personal.index') | e }}" class="btn btn-primary btn-sm">
+            <div class="text-center mt-4">
+                <a href="{{ url_for('personal.index') | e }}" class="btn btn-primary btn-sm px-4">
                     {{ t('general_view_detailed_summary', default='View Detailed Summary') | e }}
-                    <i class="bi bi-arrow-right ms-1"></i>
+                    <i class="bi bi-arrow-right ms-2"></i>
                 </a>
             </div>
         </div>
 
         <!-- Financial Snapshots -->
-        <div class="financial-snapshots mb-3 mx-2">
-            <h3 class="section-title mb-3 mx-3">{{ t('general_snapshots', default='Financial Snapshots') | e }}</h3>
-            <div class="row g-2">
+        <div class="financial-snapshots mb-4 mx-3 rounded shadow-sm bg-white p-4">
+            <h3 class="section-title mb-4 fs-4 fw-bold mx-3">{{ t('general_snapshots', default='Financial Snapshots') | e }}</h3>
+            <div class="row g-3">
                 <div class="col-6">
-                    <div class="stat-card p-3 rounded shadow-sm text-center">
-                        <div class="snapshot-icon mb-2">
-                            <i class="bi bi-heartbeat fs-3"></i>
+                    <div class="stat-card p-3 rounded shadow-sm text-center bg-light">
+                        <div class="snapshot-icon mb-3">
+                            <i class="bi bi-heartbeat fs-3 text-success"></i>
                         </div>
                         <div class="snapshot-info">
-                            <div class="snapshot-label fw-bold text-truncate">{{ t('financial_health_financial_health_score', default='Financial Health') | e }}</div>
-                            <div class="stat-card-value" id="financialHealthScore">0%</div>
+                            <div class="snapshot-label fw-bold text-truncate fs-6">{{ t('financial_health_financial_health_score', default='Financial Health') | e }}</div>
+                            <div class="stat-card-value fs-5" id="financialHealthScore">0%</div>
                         </div>
                     </div>
                 </div>
                 <div class="col-6">
-                    <div class="stat-card p-3 rounded shadow-sm text-center">
-                        <div class="snapshot-icon mb-2">
-                            <i class="bi bi-shield-check fs-3"></i>
+                    <div class="stat-card p-3 rounded shadow-sm text-center bg-light">
+                        <div class="snapshot-icon mb-3">
+                            <i class="bi bi-shield-check fs-3 text-info"></i>
                         </div>
                         <div class="snapshot-info">
-                            <div class="snapshot-label fw-bold text-truncate">{{ t('emergency_fund_savings', default='Emergency Fund') | e }}</div>
-                            <div class="stat-card-value" id="emergencyFund">₦0</div>
+                            <div class="snapshot-label fw-bold text-truncate fs-6">{{ t('emergency_fund_savings', default='Emergency Fund') | e }}</div>
+                            <div class="stat-card-value fs-5" id="emergencyFund">₦0</div>
                         </div>
                     </div>
                 </div>
@@ -110,18 +110,18 @@
         </div>
 
         <!-- Quick Actions -->
-        <div class="quick-actions mb-3 mx-2 rounded shadow-sm">
-            <h3 class="section-title mb-3 mx-3">{{ t('general_quick_actions', default='Quick Actions') | e }}</h3>
-            <div class="row g-2">
+        <div class="quick-actions mb-4 mx-3 rounded shadow-sm bg-white p-4">
+            <h3 class="section-title mb-4 fs-4 fw-bold mx-3">{{ t('general_quick_actions', default='Quick Actions') | e }}</h3>
+            <div class="row g-3">
                 {% for tool in tools %}
                 <div class="col-4 col-sm-4 col-md-3">
-                    <a href="{{ url_for(tool.get('endpoint', '')) | e }}" class="action-card d-flex flex-column align-items-center justify-content-center position-relative p-3 rounded shadow-sm text-decoration-none h-100" aria-label="{{ t(tool.get('label_key', ''), default=tool.get('label', '')) | e }}">
+                    <a href="{{ url_for(tool.get('endpoint', '')) | e }}" class="action-card d-flex flex-column align-items-center justify-content-center position-relative p-4 rounded shadow-sm text-decoration-none h-100 bg-light" aria-label="{{ t(tool.get('label_key', ''), default=tool.get('label', '')) | e }}">
                         {% if tool.badge %}
                         <span class="badge bg-danger position-absolute top-0 end-0 translate-middle rounded-pill">{{ tool.badge }}</span>
                         {% endif %}
-                        <i class="{{ tool.get('icon', '') | e }} fs-3 mb-2"></i>
-                        <small class="action-label text-center text-truncate fw-bold">{{ t(tool.get('label_key', ''), default=tool.get('label', '')) | e }}</small>
-                        <p class="text-muted text-truncate mt-1">{{ t(tool.get('desc_key', ''), default=tool.get('label', '') + '_desc') | e }}</p>
+                        <i class="{{ tool.get('icon', '') | e }} fs-3 mb-3 text-primary"></i>
+                        <small class="action-label text-center text-truncate fw-bold fs-6">{{ t(tool.get('label_key', ''), default=tool.get('label', '')) | e }}</small>
+                        <p class="text-muted text-truncate mt-2 fs-7">{{ t(tool.get('desc_key', ''), default=tool.get('label', '') + '_desc') | e }}</p>
                     </a>
                 </div>
                 {% endfor %}
@@ -129,60 +129,60 @@
         </div>
 
         <!-- Notifications -->
-        <div class="notifications mb-3 mx-2 rounded shadow-sm">
-            <div class="d-flex justify-content-between align-items-center mb-3 mx-3">
-                <h3 class="section-title mb-0">{{ t('general_notifications', default='Notifications') | e }}</h3>
-                <a href="{{ url_for('personal.notifications') | e }}" class="btn btn-link btn-sm p-0">
+        <div class="notifications mb-4 mx-3 rounded shadow-sm bg-white p-4">
+            <div class="d-flex justify-content-between align-items-center mb-4 mx-3">
+                <h3 class="section-title mb-0 fs-4 fw-bold">{{ t('general_notifications', default='Notifications') | e }}</h3>
+                <a href="{{ url_for('personal.notifications') | e }}" class="btn btn-link btn-sm p-0 text-decoration-none">
                     {{ t('general_view_all', default='View All') | e }}
                 </a>
             </div>
-            <div class="notification-list rounded shadow-sm" id="notificationList">
-                <div class="notification-item d-flex align-items-center gap-2 p-2">
+            <div class="notification-list rounded shadow-sm bg-light p-3" id="notificationList">
+                <div class="notification-item d-flex align-items-center gap-3 p-3">
                     <div class="notification-icon">
-                        <i class="bi bi-bell text-muted"></i>
+                        <i class="bi bi-bell text-muted fs-4"></i>
                     </div>
                     <div class="notification-content flex-grow-1">
-                        <div class="notification-description text-truncate">{{ t('general_loading_notifications', default='Loading notifications...') | e }}</div>
-                        <div class="notification-time text-muted">{{ t('general_just_now', default='Just now') | e }}</div>
+                        <div class="notification-description text-truncate fs-6">{{ t('general_loading_notifications', default='Loading notifications...') | e }}</div>
+                        <div class="notification-time text-muted fs-7">{{ t('general_just_now', default='Just now') | e }}</div>
                     </div>
                 </div>
             </div>
         </div>
 
         <!-- Recent Activity -->
-        <div class="recent-activity mb-3 mx-2 rounded shadow-sm">
-            <div class="d-flex justify-content-between align-items-center mb-3 mx-3">
-                <h3 class="section-title mb-0">{{ t('general_recent_activity', default='Recent Activity') | e }}</h3>
-                <a href="{{ url_for('personal.index') | e }}" class="btn btn-link btn-sm p-0">
+        <div class="recent-activity mb-4 mx-3 rounded shadow-sm bg-white p-4">
+            <div class="d-flex justify-content-between align-items-center mb-4 mx-3">
+                <h3 class="section-title mb-0 fs-4 fw-bold">{{ t('general_recent_activity', default='Recent Activity') | e }}</h3>
+                <a href="{{ url_for('personal.index') | e }}" class="btn btn-link btn-sm p-0 text-decoration-none">
                     {{ t('general_view_all', default='View All') | e }}
                 </a>
             </div>
-            <div class="activity-list rounded shadow-sm" id="recentActivityList">
-                <div class="activity-item d-flex align-items-center gap-2 p-2">
+            <div class="activity-list rounded shadow-sm bg-light p-3" id="recentActivityList">
+                <div class="activity-item d-flex align-items-center gap-3 p-3">
                     <div class="activity-icon">
-                        <i class="bi bi-info-circle text-muted"></i>
+                        <i class="bi bi-info-circle text-muted fs-4"></i>
                     </div>
                     <div class="activity-content flex-grow-1">
-                        <div class="activity-description text-truncate">{{ t('general_loading_activities', default='Loading recent activities...') | e }}</div>
-                        <div class="activity-time text-muted">{{ t('general_just_now', default='Just now') | e }}</div>
+                        <div class="activity-description text-truncate fs-6">{{ t('general_loading_activities', default='Loading recent activities...') | e }}</div>
+                        <div class="activity-time text-muted fs-7">{{ t('general_just_now', default='Just now') | e }}</div>
                     </div>
                 </div>
             </div>
         </div>
 
         <!-- Navigation Cards -->
-        <div class="navigation-cards mb-3 mx-2 rounded shadow-sm">
-            <h3 class="section-title mb-3 mx-3">{{ t('general_explore_features', default='Explore Features') | e }}</h3>
-            <div class="row g-2">
+        <div class="navigation-cards mb-4 mx-3 rounded shadow-sm bg-white p-4">
+            <h3 class="section-title mb-4 fs-4 fw-bold mx-3">{{ t('general_explore_features', default='Explore Features') | e }}</h3>
+            <div class="row g-3">
                 {% if is_admin() %}
                 <div class="col-6 col-md-4">
-                    <div class="nav-card p-3 rounded shadow-sm position-relative h-100">
-                        <div class="nav-card-icon mb-2">
-                            <i class="bi bi-gear fs-3"></i>
+                    <div class="card nav-card p-4 rounded shadow-sm position-relative h-100 bg-light">
+                        <div class="nav-card-icon mb-3">
+                            <i class="bi bi-gear fs-3 text-primary"></i>
                         </div>
                         <div class="nav-card-content">
-                            <h4 class="text-truncate">{{ t('admin_dashboard', default='Admin Dashboard') | e }}</h4>
-                            <p class="text-muted text-truncate">{{ t('admin_dashboard_desc', default='Manage users and settings') | e }}</p>
+                            <h4 class="text-truncate fs-5 fw-bold">{{ t('admin_dashboard', default='Admin Dashboard') | e }}</h4>
+                            <p class="text-muted text-truncate fs-6">{{ t('admin_dashboard_desc', default='Manage users and settings') | e }}</p>
                         </div>
                         <a href="{{ url_for('admin.dashboard') | e }}" class="nav-card-link stretched-link" aria-label="{{ t('admin_dashboard', default='Admin Dashboard') | e }}"></a>
                     </div>
@@ -190,13 +190,13 @@
                 {% endif %}
                 {% for item in explore_features %}
                 <div class="col-6 col-md-4">
-                    <div class="nav-card p-3 rounded shadow-sm position-relative h-100">
-                        <div class="nav-card-icon mb-2">
-                            <i class="{{ item.get('icon', '') | e }} fs-3"></i>
+                    <div class="card nav-card p-4 rounded shadow-sm position-relative h-100 bg-light">
+                        <div class="nav-card-icon mb-3">
+                            <i class="{{ item.get('icon', '') | e }} fs-3 text-primary"></i>
                         </div>
                         <div class="nav-card-content">
-                            <h4 class="text-truncate">{{ t(item.get('label_key', ''), default=item.get('label', '')) | e }}</h4>
-                            <p class="text-muted text-truncate">{{ t(item.get('desc_key', ''), default=item.get('description', item.get('label', '') + '_desc')) | e }}</p>
+                            <h4 class="text-truncate fs-5 fw-bold">{{ t(item.get('label_key', ''), default=item.get('label', '')) | e }}</h4>
+                            <p class="text-muted text-truncate fs-6">{{ t(item.get('desc_key', ''), default=item.get('description', item.get('label', '') + '_desc')) | e }}</p>
                         </div>
                         <a href="{{ url_for(item.get('endpoint', '')) | e }}" class="nav-card-link stretched-link" aria-label="{{ t(item.get('label_key', ''), default=item.get('label', '')) | e }}"></a>
                     </div>
@@ -206,12 +206,12 @@
         </div>
 
         <!-- Bottom Navigation -->
-        <nav class="bottom-nav fixed-bottom bg-white border-top d-flex justify-content-around align-items-center py-2 d-lg-none shadow-sm" role="navigation" style="z-index: 1050;">
+        <nav class="bottom-nav fixed-bottom bg-white border-top d-flex justify-content-around align-items-center py-3 d-lg-none shadow-sm" role="navigation" style="z-index: 1050;">
             {% set max_items = 4 %}
             {% for item in bottom_nav_items[:max_items] %}
             <a href="{{ url_for(item.endpoint) if item.endpoint else item.get('url', '#') | e }}" aria-label="{{ t(item.label_key, default=item.label) | e }}" class="nav-item text-center text-dark text-decoration-none {{ 'active' if request.endpoint == item.endpoint }} d-flex flex-column align-items-center" data-bs-toggle="tooltip" data-bs-title="{{ t(item.tooltip_key, default=item.label) | e }}">
-                <i class="{{ item.icon | e }} fs-3 mb-1"></i>
-                <div class="nav-label text-truncate fw-bold" style="font-size: 0.75rem; max-width: 80px;">{{ t(item.label_key, default=item.label) | e }}</div>
+                <i class="{{ item.icon | e }} fs-3 mb-2"></i>
+                <div class="nav-label text-truncate fw-bold fs-7" style="max-width: 80px;">{{ t(item.label_key, default=item.label) | e }}</div>
             </a>
             {% endfor %}
         </nav>
@@ -219,20 +219,20 @@
         <!-- Notification Modal -->
         <div class="modal fade" id="notificationModal" tabindex="-1" aria-labelledby="notificationModalLabel" aria-hidden="true">
             <div class="modal-dialog modal-dialog-centered">
-                <div class="modal-content">
+                <div class="modal-content shadow-lg">
                     <div class="modal-header">
-                        <h5 class="modal-title" id="notificationModalLabel">{{ t('general_notifications', default='Notifications') | e }}</h5>
+                        <h5 class="modal-title fs-5 fw-bold" id="notificationModalLabel">{{ t('general_notifications', default='Notifications') | e }}</h5>
                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="{{ t('general_close', default='Close') | e }}"></button>
                     </div>
                     <div class="modal-body p-0">
                         <div class="notification-list" id="notificationList">
-                            <div class="notification-item d-flex align-items-center gap-2 p-2">
+                            <div class="notification-item d-flex align-items-center gap-3 p-3">
                                 <div class="notification-icon">
-                                    <i class="bi bi-bell text-muted"></i>
+                                    <i class="bi bi-bell text-muted fs-4"></i>
                                 </div>
                                 <div class="notification-content flex-grow-1">
-                                    <div class="notification-description text-truncate">{{ t('general_loading_notifications', default='Loading notifications...') | e }}</div>
-                                    <div class="notification-time text-muted">{{ t('general_just_now', default='Just now') | e }}</div>
+                                    <div class="notification-description text-truncate fs-6">{{ t('general_loading_notifications', default='Loading notifications...') | e }}</div>
+                                    <div class="notification-time text-muted fs-7">{{ t('general_just_now', default='Just now') | e }}</div>
                                 </div>
                             </div>
                         </div>
@@ -242,15 +242,15 @@
         </div>
     {% else %}
         <!-- Hero Section -->
-        <section class="hero text-center my-4 mx-2 rounded shadow-sm">
-            <h1 class="fw-bold"><i class="bi bi-wallet fs-3 me-2"></i>{{ t('general_welcome', default='Manage Your Finances in Minutes with FiCore Africa') | e }}</h1>
-            <p class="lead text-muted">{{ t('general_ficore_desc', default='Africa’s #1 localized platform for personal finance, business management, and agent services.') | e }}</p>
-            <div class="d-flex justify-content-center gap-2 flex-wrap mt-3">
+        <section class="hero text-center my-5 mx-3 rounded shadow-sm bg-white p-5">
+            <h1 class="fw-bold fs-2"><i class="bi bi-wallet fs-3 me-2"></i>{{ t('general_welcome', default='Manage Your Finances in Minutes with FiCore Africa') | e }}</h1>
+            <p class="lead text-muted fs-5">{{ t('general_ficore_desc', default='Africa’s #1 localized platform for personal finance, business management, and agent services.') | e }}</p>
+            <div class="d-flex justify-content-center gap-3 flex-wrap mt-4">
                 <div class="dropdown">
-                    <button class="btn btn-primary btn-sm dropdown-toggle" type="button" id="getStartedDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                    <button class="btn btn-primary btn-sm px-4 dropdown-toggle" type="button" id="getStartedDropdown" data-bs-toggle="dropdown" aria-expanded="false">
                         {{ t('general_get_started', default='Get Started') | e }}
                     </button>
-                    <ul class="dropdown-menu" aria-labelledby="getStartedDropdown">
+                    <ul class="dropdown-menu shadow-sm" aria-labelledby="getStartedDropdown">
                         <li><a class="dropdown-item" href="{{ url_for('users.signup', role='personal') | e }}">{{ t('general_signup_personal', default='Personal Sign Up') | e }}</a></li>
                         <li><a class="dropdown-item" href="{{ url_for('users.signup', role='trader') | e }}">{{ t('general_signup_business', default='Business Sign Up') | e }}</a></li>
                         <li><a class="dropdown-item" href="{{ url_for('users.signup', role='agent') | e }}">{{ t('general_signup_agent', default='Agent Sign Up') | e }}</a></li>
@@ -258,39 +258,39 @@
                         <li><a class="dropdown-item" href="{{ url_for('users.login') | e }}">{{ t('general_login', default='Log In') | e }}</a></li>
                     </ul>
                 </div>
-                <a href="{{ url_for('personal.quiz.main') | e }}" class="btn btn-outline-primary btn-sm" aria-label="{{ t('quiz_take_quiz', default='Discover Your Financial Personality') | e }}">{{ t('quiz_take_quiz', default='Take Our Quiz') | e }}</a>
+                <a href="{{ url_for('personal.quiz.main') | e }}" class="btn btn-outline-primary btn-sm px-4" aria-label="{{ t('quiz_take_quiz', default='Discover Your Financial Personality') | e }}">{{ t('quiz_take_quiz', default='Take Our Quiz') | e }}</a>
             </div>
         </section>
 
         <!-- Role-Based Value Proposition -->
-        <section class="roles-section my-4 mx-2 rounded shadow-sm">
-            <h2 class="section-title text-center mb-3"><i class="bi bi-people fs-3 me-2"></i>{{ t('general_who_we_serve', default='Who We Serve') | e }}</h2>
-            <p class="text-center mb-3 text-muted">{{ t('general_who_we_serve_desc', default='FiCore empowers individuals, businesses, and agents with tools tailored to their needs.') | e }}</p>
-            <div class="row g-2">
+        <section class="roles-section my-5 mx-3 rounded shadow-sm bg-white p-4">
+            <h2 class="section-title text-center mb-4 fs-3 fw-bold"><i class="bi bi-people fs-3 me-2"></i>{{ t('general_who_we_serve', default='Who We Serve') | e }}</h2>
+            <p class="text-center mb-4 text-muted fs-5">{{ t('general_who_we_serve_desc', default='FiCore empowers individuals, businesses, and agents with tools tailored to their needs.') | e }}</p>
+            <div class="row g-3">
                 <div class="col-6 col-md-4">
-                    <div class="card role-card role-personal p-3 rounded shadow-sm h-100">
+                    <div class="card role-card role-personal p-4 rounded shadow-sm h-100 bg-light">
                         <div class="card-body p-0 text-center">
                             <h3 class="fs-5 fw-bold"><i class="bi bi-person fs-3 me-2"></i>{{ t('general_personal', default='Personal Users') | e }}</h3>
-                            <p class="text-muted text-truncate">{{ t('general_personal_desc', default='Track budgets, bills, and financial health to achieve your goals.') | e }}</p>
-                            <a href="{{ url_for('users.signup', role='personal') | e }}" class="btn btn-primary btn-sm">{{ t('general_get_started', default='Get Started') | e }}</a>
+                            <p class="text-muted text-truncate fs-6">{{ t('general_personal_desc', default='Track budgets, bills, and financial health to achieve your goals.') | e }}</p>
+                            <a href="{{ url_for('users.signup', role='personal') | e }}" class="btn btn-primary btn-sm px-4">{{ t('general_get_started', default='Get Started') | e }}</a>
                         </div>
                     </div>
                 </div>
                 <div class="col-6 col-md-4">
-                    <div class="card role-card role-business p-3 rounded shadow-sm h-100">
+                    <div class="card role-card role-business p-4 rounded shadow-sm h-100 bg-light">
                         <div class="card-body p-0 text-center">
                             <h3 class="fs-5 fw-bold"><i class="bi bi-briefcase fs-3 me-2"></i>{{ t('general_trader', default='Business Owners') | e }}</h3>
-                            <p class="text-muted text-truncate">{{ t('general_trader_desc', default='Manage debtors, creditors, inventory, and cashflow for your business.') | e }}</p>
-                            <a href="{{ url_for('users.signup', role='trader') | e }}" class="btn btn-primary btn-sm">{{ t('general_get_started', default='Get Started') | e }}</a>
+                            <p class="text-muted text-truncate fs-6">{{ t('general_trader_desc', default='Manage debtors, creditors, inventory, and cashflow for your business.') | e }}</p>
+                            <a href="{{ url_for('users.signup', role='trader') | e }}" class="btn btn-primary btn-sm px-4">{{ t('general_get_started', default='Get Started') | e }}</a>
                         </div>
                     </div>
                 </div>
                 <div class="col-6 col-md-4">
-                    <div class="card role-card role-agent p-3 rounded shadow-sm h-100">
+                    <div class="card role-card role-agent p-4 rounded shadow-sm h-100 bg-light">
                         <div class="card-body p-0 text-center">
                             <h3 class="fs-5 fw-bold"><i class="bi bi-handshake fs-3 me-2"></i>{{ t('general_agent', default='Agents') | e }}</h3>
-                            <p class="text-muted text-truncate">{{ t('general_agent_desc', default='Register traders, facilitate token purchases, and support client records.') | e }}</p>
-                            <a href="{{ url_for('users.signup', role='agent') | e }}" class="btn btn-primary btn-sm">{{ t('general_get_started', default='Get Started') | e }}</a>
+                            <p class="text-muted text-truncate fs-6">{{ t('general_agent_desc', default='Register traders, facilitate token purchases, and support client records.') | e }}</p>
+                            <a href="{{ url_for('users.signup', role='agent') | e }}" class="btn btn-primary btn-sm px-4">{{ t('general_get_started', default='Get Started') | e }}</a>
                         </div>
                     </div>
                 </div>
@@ -298,26 +298,26 @@
         </section>
 
         <!-- Tools Overview -->
-        <section class="tools-section my-4 mx-2 rounded shadow-sm">
-            <h2 class="section-title text-center mb-3"><i class="bi bi-tools fs-3 me-2"></i>{{ t('general_our_tools', default='Explore Our Tools') | e }}</h2>
-            <p class="text-center mb-3 text-muted">{{ t('general_tools_desc', default='Discover powerful tools tailored for personal finance, business management, and agent services.') | e }}</p>
+        <section class="tools-section my-5 mx-3 rounded shadow-sm bg-white p-4">
+            <h2 class="section-title text-center mb-4 fs-3 fw-bold"><i class="bi bi-tools fs-3 me-2"></i>{{ t('general_our_tools', default='Explore Our Tools') | e }}</h2>
+            <p class="text-center mb-4 text-muted fs-5">{{ t('general_tools_desc', default='Discover powerful tools tailored for personal finance, business management, and agent services.') | e }}</p>
             <div class="accordion" id="toolsAccordion">
                 <div class="accordion-item">
                     <h3 class="accordion-header" id="personalToolsHeading">
-                        <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#personalToolsCollapse" aria-expanded="true" aria-controls="personalToolsCollapse">
+                        <button class="accordion-button fs-5 fw-bold" type="button" data-bs-toggle="collapse" data-bs-target="#personalToolsCollapse" aria-expanded="true" aria-controls="personalToolsCollapse">
                             <i class="bi bi-person fs-3 me-2"></i>{{ t('general_personal_tools', default='Personal Finance Tools') | e }}
                         </button>
                     </h3>
                     <div id="personalToolsCollapse" class="accordion-collapse collapse show" aria-labelledby="personalToolsHeading" data-bs-parent="#toolsAccordion">
                         <div class="accordion-body">
-                            <div class="row g-2">
+                            <div class="row g-3">
                                 {% for tool in tools %}
                                 <div class="col-6 col-md-4">
-                                    <div class="card tool-card tool-personal p-3 rounded shadow-sm h-100">
+                                    <div class="card tool-card tool-personal p-4 rounded shadow-sm h-100 bg-light">
                                         <div class="card-body p-0">
-                                            <h4 class="fs-5 fw-bold"><i class="{{ tool.get('icon', '') | e }} fs-3 me-2"></i>{{ t(tool.get('label_key', ''), default=tool.get('label', '')) | e }}</h4>
-                                            <p class="text-muted text-truncate">{{ t(tool.get('desc_key', ''), default=tool.get('description', tool.get('label', '') + '_desc')) | e }}</p>
-                                            <a href="{{ url_for('users.signup', role='personal') | e }}" class="btn btn-primary btn-sm">{{ t('general_get_started', default='Get Started') | e }}</a>
+                                            <h4 class="fs-5 fw-bold"><i class="{{ tool.get('icon', '') | e }} fs-3 me-2 text-primary"></i>{{ t(tool.get('label_key', ''), default=tool.get('label', '')) | e }}</h4>
+                                            <p class="text-muted text-truncate fs-6">{{ t(tool.get('desc_key', ''), default=tool.get('description', tool.get('label', '') + '_desc')) | e }}</p>
+                                            <a href="{{ url_for('users.signup', role='personal') | e }}" class="btn btn-primary btn-sm px-4">{{ t('general_get_started', default='Get Started') | e }}</a>
                                         </div>
                                     </div>
                                 </div>
@@ -328,28 +328,28 @@
                 </div>
                 <div class="accordion-item">
                     <h3 class="accordion-header" id="businessToolsHeading">
-                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#businessToolsCollapse" aria-expanded="false" aria-controls="businessToolsCollapse">
+                        <button class="accordion-button collapsed fs-5 fw-bold" type="button" data-bs-toggle="collapse" data-bs-target="#businessToolsCollapse" aria-expanded="false" aria-controls="businessToolsCollapse">
                             <i class="bi bi-briefcase fs-3 me-2"></i>{{ t('general_business_tools', default='Business Management Tools') | e }}
                         </button>
                     </h3>
                     <div id="businessToolsCollapse" class="accordion-collapse collapse" aria-labelledby="businessToolsHeading" data-bs-parent="#toolsAccordion">
                         <div class="accordion-body">
-                            <div class="row g-2">
+                            <div class="row g-3">
                                 <div class="col-6 col-md-4">
-                                    <div class="card tool-card tool-business p-3 rounded shadow-sm h-100">
+                                    <div class="card tool-card tool-business p-4 rounded shadow-sm h-100 bg-light">
                                         <div class="card-body p-0">
-                                            <h4 class="fs-5 fw-bold"><i class="bi bi-person-dash fs-3 me-2"></i>{{ t('general_debtors_creditors', default='Debtors & Creditors') | e }}</h4>
-                                            <p class="text-muted text-truncate">{{ t('general_debtors_creditors_desc', default='Track who owes you and what you owe with ease.') | e }}</p>
-                                            <a href="{{ url_for('users.signup', role='trader') | e }}" class="btn btn-primary btn-sm">{{ t('general_get_started', default='Get Started') | e }}</a>
+                                            <h4 class="fs-5 fw-bold"><i class="bi bi-person-dash fs-3 me-2 text-primary"></i>{{ t('general_debtors_creditors', default='Debtors & Creditors') | e }}</h4>
+                                            <p class="text-muted text-truncate fs-6">{{ t('general_debtors_creditors_desc', default='Track who owes you and what you owe with ease.') | e }}</p>
+                                            <a href="{{ url_for('users.signup', role='trader') | e }}" class="btn btn-primary btn-sm px-4">{{ t('general_get_started', default='Get Started') | e }}</a>
                                         </div>
                                     </div>
                                 </div>
                                 <div class="col-6 col-md-4">
-                                    <div class="card tool-card tool-business p-3 rounded shadow-sm h-100">
+                                    <div class="card tool-card tool-business p-4 rounded shadow-sm h-100 bg-light">
                                         <div class="card-body p-0">
-                                            <h4 class="fs-5 fw-bold"><i class="bi bi-box-seam fs-3 me-2"></i>{{ t('inventory_management', default='Inventory Management') | e }}</h4>
-                                            <p class="text-muted text-truncate">{{ t('inventory_desc', default='Monitor stock levels and inventory value for your business.') | e }}</p>
-                                            <a href="{{ url_for('users.signup', role='trader') | e }}" class="btn btn-primary btn-sm">{{ t('general_get_started', default='Get Started') | e }}</a>
+                                            <h4 class="fs-5 fw-bold"><i class="bi bi-box-seam fs-3 me-2 text-primary"></i>{{ t('inventory_management', default='Inventory Management') | e }}</h4>
+                                            <p class="text-muted text-truncate fs-6">{{ t('inventory_desc', default='Monitor stock levels and inventory value for your business.') | e }}</p>
+                                            <a href="{{ url_for('users.signup', role='trader') | e }}" class="btn btn-primary btn-sm px-4">{{ t('general_get_started', default='Get Started') | e }}</a>
                                         </div>
                                     </div>
                                 </div>
@@ -359,19 +359,19 @@
                 </div>
                 <div class="accordion-item">
                     <h3 class="accordion-header" id="agentToolsHeading">
-                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#agentToolsCollapse" aria-expanded="false" aria-controls="agentToolsCollapse">
+                        <button class="accordion-button collapsed fs-5 fw-bold" type="button" data-bs-toggle="collapse" data-bs-target="#agentToolsCollapse" aria-expanded="false" aria-controls="agentToolsCollapse">
                             <i class="bi bi-handshake fs-3 me-2"></i>{{ t('general_agent_tools', default='Agent Services Tools') | e }}
                         </button>
                     </h3>
                     <div id="agentToolsCollapse" class="accordion-collapse collapse" aria-labelledby="agentToolsHeading" data-bs-parent="#toolsAccordion">
                         <div class="accordion-body">
-                            <div class="row g-2">
+                            <div class="row g-3">
                                 <div class="col-6 col-md-4">
-                                    <div class="card tool-card tool-agent p-3 rounded shadow-sm h-100">
+                                    <div class="card tool-card tool-agent p-4 rounded shadow-sm h-100 bg-light">
                                         <div class="card-body p-0">
-                                            <h4 class="fs-5 fw-bold"><i class="bi bi-person-plus fs-3 me-2"></i>{{ t('agents_register_trader', default='Register Traders') | e }}</h4>
-                                            <p class="text-muted text-truncate">{{ t('agents_register_trader_desc', default='Onboard new traders and manage their accounts.') | e }}</p>
-                                            <a href="{{ url_for('users.signup', role='agent') | e }}" class="btn btn-primary btn-sm">{{ t('general_get_started', default='Get Started') | e }}</a>
+                                            <h4 class="fs-5 fw-bold"><i class="bi bi-person-plus fs-3 me-2 text-primary"></i>{{ t('agents_register_trader', default='Register Traders') | e }}</h4>
+                                            <p class="text-muted text-truncate fs-6">{{ t('agents_register_trader_desc', default='Onboard new traders and manage their accounts.') | e }}</p>
+                                            <a href="{{ url_for('users.signup', role='agent') | e }}" class="btn btn-primary btn-sm px-4">{{ t('general_get_started', default='Get Started') | e }}</a>
                                         </div>
                                     </div>
                                 </div>
@@ -381,37 +381,37 @@
                 </div>
                 <div class="accordion-item">
                     <h3 class="accordion-header" id="sharedToolsHeading">
-                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#sharedToolsCollapse" aria-expanded="false" aria-controls="sharedToolsCollapse">
+                        <button class="accordion-button collapsed fs-5 fw-bold" type="button" data-bs-toggle="collapse" data-bs-target="#sharedToolsCollapse" aria-expanded="false" aria-controls="sharedToolsCollapse">
                             <i class="bi bi-share fs-3 me-2"></i>{{ t('general_shared_tools', default='Shared Tools') | e }}
                         </button>
                     </h3>
                     <div id="sharedToolsCollapse" class="accordion-collapse collapse" aria-labelledby="sharedToolsHeading" data-bs-parent="#toolsAccordion">
                         <div class="accordion-body">
-                            <div class="row g-2">
+                            <div class="row g-3">
                                 <div class="col-6 col-md-4">
-                                    <div class="card tool-card tool-shared p-3 rounded shadow-sm h-100">
+                                    <div class="card tool-card tool-shared p-4 rounded shadow-sm h-100 bg-light">
                                         <div class="card-body p-0">
-                                            <h4 class="fs-5 fw-bold"><i class="bi bi-book fs-3 me-2"></i>{{ t('learning_hub_courses', default='Learning Hub') | e }}</h4>
-                                            <p class="text-muted text-truncate">{{ t('learning_hub_dashboard', default='Access courses to improve your financial literacy.') | e }}</p>
-                                            <a href="{{ url_for('users.signup', role='personal') | e }}" class="btn btn-primary btn-sm">{{ t('general_get_started', default='Get Started') | e }}</a>
+                                            <h4 class="fs-5 fw-bold"><i class="bi bi-book fs-3 me-2 text-primary"></i>{{ t('learning_hub_courses', default='Learning Hub') | e }}</h4>
+                                            <p class="text-muted text-truncate fs-6">{{ t('learning_hub_dashboard', default='Access courses to improve your financial literacy.') | e }}</p>
+                                            <a href="{{ url_for('users.signup', role='personal') | e }}" class="btn btn-primary btn-sm px-4">{{ t('general_get_started', default='Get Started') | e }}</a>
                                         </div>
                                     </div>
                                 </div>
                                 <div class="col-6 col-md-4">
-                                    <div class="card tool-card tool-shared p-3 rounded shadow-sm h-100">
+                                    <div class="card tool-card tool-shared p-4 rounded shadow-sm h-100 bg-light">
                                         <div class="card-body p-0">
-                                            <h4 class="fs-5 fw-bold"><i class="bi bi-calculator fs-3 me-2"></i>{{ t('general_your_taxation_tool', default='Your Taxation Tool') | e }}</h4>
-                                            <p class="text-muted text-truncate">{{ t('general_taxation_desc', default='Calculate and manage your taxes with ease.') | e }}</p>
-                                            <a href="{{ url_for('users.signup', role='personal') | e }}" class="btn btn-primary btn-sm">{{ t('general_get_started', default='Get Started') | e }}</a>
+                                            <h4 class="fs-5 fw-bold"><i class="bi bi-calculator fs-3 me-2 text-primary"></i>{{ t('general_your_taxation_tool', default='Your Taxation Tool') | e }}</h4>
+                                            <p class="text-muted text-truncate fs-6">{{ t('general_taxation_desc', default='Calculate and manage your taxes with ease.') | e }}</p>
+                                            <a href="{{ url_for('users.signup', role='personal') | e }}" class="btn btn-primary btn-sm px-4">{{ t('general_get_started', default='Get Started') | e }}</a>
                                         </div>
                                     </div>
                                 </div>
                                 <div class="col-6 col-md-4">
-                                    <div class="card tool-card tool-shared p-3 rounded shadow-sm h-100">
+                                    <div class="card tool-card tool-shared p-4 rounded shadow-sm h-100 bg-light">
                                         <div class="card-body p-0">
-                                            <h4 class="fs-5 fw-bold"><i class="bi bi-newspaper fs-3 me-2"></i>{{ t('general_finance_news', default='Finance News Highlights') | e }}</h4>
-                                            <p class="text-muted text-truncate">{{ t('general_news_desc', default='Stay updated with the latest financial news and insights.') | e }}</p>
-                                            <a href="{{ url_for('news_bp.news_list') | e }}" class="btn btn-primary btn-sm">{{ t('general_get_started', default='Get Started') | e }}</a>
+                                            <h4 class="fs-5 fw-bold"><i class="bi bi-newspaper fs-3 me-2 text-primary"></i>{{ t('general_finance_news', default='Finance News Highlights') | e }}</h4>
+                                            <p class="text-muted text-truncate fs-6">{{ t('general_news_desc', default='Stay updated with the latest financial news and insights.') | e }}</p>
+                                            <a href="{{ url_for('news_bp.news_list') | e }}" class="btn btn-primary btn-sm px-4">{{ t('general_get_started', default='Get Started') | e }}</a>
                                         </div>
                                     </div>
                                 </div>
@@ -423,64 +423,64 @@
         </section>
 
         <!-- Why FiCore -->
-        <section class="why-section my-4 mx-2 rounded shadow-sm">
-            <h2 class="section-title text-center mb-3"><i class="bi bi-info-circle fs-3 me-2"></i>{{ t('general_why_ficore', default='Why FiCore Africa?') | e }}</h2>
-            <p class="text-center mb-3 text-muted">{{ t('general_ficore_highlight', default='Africa’s #1 Localized Financial Management Platform') | e }}</p>
-            <div class="row g-2">
+        <section class="why-section my-5 mx-3 rounded shadow-sm bg-white p-4">
+            <h2 class="section-title text-center mb-4 fs-3 fw-bold"><i class="bi bi-info-circle fs-3 me-2"></i>{{ t('general_why_ficore', default='Why FiCore Africa?') | e }}</h2>
+            <p class="text-center mb-4 text-muted fs-5">{{ t('general_ficore_highlight', default='Africa’s #1 Localized Financial Management Platform') | e }}</p>
+            <div class="row g-3">
                 <div class="col-6 col-md-3">
-                    <div class="why-item text-center p-3 rounded shadow-sm">
-                        <i class="bi bi-check-circle-fill fs-3 mb-2"></i>
-                        <p class="text-muted text-truncate">{{ t('general_localized', default='Built for Africa with Naira support and regional insights') | e }}</p>
+                    <div class="why-item text-center p-4 rounded shadow-sm bg-light">
+                        <i class="bi bi-check-circle-fill fs-3 mb-3 text-success"></i>
+                        <p class="text-muted text-truncate fs-6">{{ t('general_localized', default='Built for Africa with Naira support and regional insights') | e }}</p>
                     </div>
                 </div>
                 <div class="col-6 col-md-3">
-                    <div class="why-item text-center p-3 rounded shadow-sm">
-                        <i class="bi bi-check-circle-fill fs-3 mb-2"></i>
-                        <p class="text-muted text-truncate">{{ t('general_empowers', default='Empowers individuals, businesses, and agents with tailored tools') | e }}</p>
+                    <div class="why-item text-center p-4 rounded shadow-sm bg-light">
+                        <i class="bi bi-check-circle-fill fs-3 mb-3 text-success"></i>
+                        <p class="text-muted text-truncate fs-6">{{ t('general_empowers', default='Empowers individuals, businesses, and agents with tailored tools') | e }}</p>
                     </div>
                 </div>
                 <div class="col-6 col-md-3">
-                    <div class="why-item text-center p-3 rounded shadow-sm">
-                        <i class="bi bi-check-circle-fill fs-3 mb-2"></i>
-                        <p class="text-muted text-truncate">{{ t('general_actionable', default='Actionable insights for smarter financial decisions') | e }}</p>
+                    <div class="why-item text-center p-4 rounded shadow-sm bg-light">
+                        <i class="bi bi-check-circle-fill fs-3 mb-3 text-success"></i>
+                        <p class="text-muted text-truncate fs-6">{{ t('general_actionable', default='Actionable insights for smarter financial decisions') | e }}</p>
                     </div>
                 </div>
                 <div class="col-6 col-md-3">
-                    <div class="why-item text-center p-3 rounded shadow-sm">
-                        <i class="bi bi-check-circle-fill fs-3 mb-2"></i>
-                        <p class="text-muted text-truncate">{{ t('general_secure', default='Advisory-only platform – we don’t store or access your funds') | e }}</p>
+                    <div class="why-item text-center p-4 rounded shadow-sm bg-light">
+                        <i class="bi bi-check-circle-fill fs-3 mb-3 text-success"></i>
+                        <p class="text-muted text-truncate fs-6">{{ t('general_secure', default='Advisory-only platform – we don’t store or access your funds') | e }}</p>
                     </div>
                 </div>
             </div>
-            <div class="text-center mt-3">
-                <span class="animated-counter" data-count="10000">0</span> {{ t('general_users_served', default='Users Served') | e }}
+            <div class="text-center mt-4">
+                <span class="animated-counter fs-4" data-count="10000">0</span> <span class="fs-5">{{ t('general_users_served', default='Users Served') | e }}</span>
             </div>
         </section>
 
         <!-- Testimonials -->
-        <section class="testimonials-section my-4 mx-2 rounded shadow-sm">
-            <h2 class="section-title text-center mb-3"><i class="bi bi-quote fs-3 me-2"></i>{{ t('general_testimonials', default='What Our Users Say') | e }}</h2>
+        <section class="testimonials-section my-5 mx-3 rounded shadow-sm bg-white p-4">
+            <h2 class="section-title text-center mb-4 fs-3 fw-bold"><i class="bi bi-quote fs-3 me-2"></i>{{ t('general_testimonials', default='What Our Users Say') | e }}</h2>
             <div id="testimonialCarousel" class="carousel slide" data-bs-ride="carousel">
                 <div class="carousel-inner">
                     <div class="carousel-item active">
-                        <div class="testimonial text-center p-3">
-                            <div class="avatar-circle gradient-bg" data-initials="MU">MU</div>
-                            <p class="text-muted">{{ t('general_impressed_features', default='FiCore’s tools are intuitive and perfect for managing my personal finances!') | e }}</p>
-                            <p class="name fw-bold">Maisarata Uqubatu, {{ t('general_personal_user', default='Personal User') | e }}</p>
+                        <div class="testimonial text-center p-4">
+                            <div class="avatar-circle gradient-bg fs-5" data-initials="MU">MU</div>
+                            <p class="text-muted fs-6">{{ t('general_impressed_features', default='FiCore’s tools are intuitive and perfect for managing my personal finances!') | e }}</p>
+                            <p class="name fw-bold fs-6">Maisarata Uqubatu, {{ t('general_personal_user', default='Personal User') | e }}</p>
                         </div>
                     </div>
                     <div class="carousel-item">
-                        <div class="testimonial text-center p-3">
-                            <div class="avatar-circle gradient-bg" data-initials="AA">AA</div>
-                            <p class="text-muted">{{ t('general_ficore_praise', default='Managing my business’s debtors and inventory has never been easier!') | e }}</p>
-                            <p class="name fw-bold">Abubakar Abdulkadir, {{ t('general_business_owner', default='Business Owner') | e }}</p>
+                        <div class="testimonial text-center p-4">
+                            <div class="avatar-circle gradient-bg fs-5" data-initials="AA">AA</div>
+                            <p class="text-muted fs-6">{{ t('general_ficore_praise', default='Managing my business’s debtors and inventory has never been easier!') | e }}</p>
+                            <p class="name fw-bold fs-6">Abubakar Abdulkadir, {{ t('general_business_owner', default='Business Owner') | e }}</p>
                         </div>
                     </div>
                     <div class="carousel-item">
-                        <div class="testimonial text-center p-3">
-                            <div class="avatar-circle gradient-bg" data-initials="ASU">ASU</div>
-                            <p class="text-muted">{{ t('general_potential_support', default='As an agent, FiCore makes onboarding traders seamless and efficient.') | e }}</p>
-                            <p class="name fw-bold">Aminu Sani Usman, {{ t('general_agent', default='Agent') | e }}</p>
+                        <div class="testimonial text-center p-4">
+                            <div class="avatar-circle gradient-bg fs-5" data-initials="ASU">ASU</div>
+                            <p class="text-muted fs-6">{{ t('general_potential_support', default='As an agent, FiCore makes onboarding traders seamless and efficient.') | e }}</p>
+                            <p class="name fw-bold fs-6">Aminu Sani Usman, {{ t('general_agent', default='Agent') | e }}</p>
                         </div>
                     </div>
                 </div>
@@ -493,54 +493,54 @@
                     <span class="visually-hidden">{{ t('general_next', default='Next') | e }}</span>
                 </button>
             </div>
-            <div class="text-center mt-3">
-                <a href="{{ url_for('general_bp.about') | e }}" class="btn btn-primary btn-sm">{{ t('general_see_more_testimonials', default='See More Testimonials') | e }}</a>
+            <div class="text-center mt-4">
+                <a href="{{ url_for('general_bp.about') | e }}" class="btn btn-primary btn-sm px-4">{{ t('general_see_more_testimonials', default='See More Testimonials') | e }}</a>
             </div>
         </section>
 
         <!-- FAQ Section -->
-        <section class="faq-section my-4 mx-2 rounded shadow-sm">
-            <h2 class="section-title text-center mb-3"><i class="bi bi-question-circle fs-3 me-2"></i>{{ t('general_faq', default='Frequently Asked Questions') | e }}</h2>
+        <section class="faq-section my-5 mx-3 rounded shadow-sm bg-white p-4">
+            <h2 class="section-title text-center mb-4 fs-3 fw-bold"><i class="bi bi-question-circle fs-3 me-2"></i>{{ t('general_faq', default='Frequently Asked Questions') | e }}</h2>
             <div class="accordion" id="faqAccordion">
                 <div class="accordion-item">
                     <h3 class="accordion-header" id="faqFundHandling">
-                        <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapseFundHandling" aria-expanded="true" aria-controls="collapseFundHandling">
+                        <button class="accordion-button fs-5 fw-bold" type="button" data-bs-toggle="collapse" data-bs-target="#collapseFundHandling" aria-expanded="true" aria-controls="collapseFundHandling">
                             {{ t('general_faq_fund_handling', default='Does FiCore store or manage my money?') | e }}
                         </button>
                     </h3>
                     <div id="collapseFundHandling" class="accordion-collapse collapse show" aria-labelledby="faqFundHandling" data-bs-parent="#faqAccordion">
-                        <div class="accordion-body">
+                        <div class="accordion-body fs-6">
                             {{ t('general_faq_fund_handling_answer', default='No. FiCore provides advisory and tracking tools only. Your money stays with you.') | e }}
                         </div>
                     </div>
                 </div>
                 <div class="accordion-item">
                     <h3 class="accordion-header" id="faqRoles">
-                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseRoles" aria-expanded="false" aria-controls="collapseRoles">
+                        <button class="accordion-button collapsed fs-5 fw-bold" type="button" data-bs-toggle="collapse" data-bs-target="#collapseRoles" aria-expanded="false" aria-controls="collapseRoles">
                             {{ t('general_faq_roles', default='What types of users can use FiCore?') | e }}
                         </button>
                     </h3>
                     <div id="collapseRoles" class="accordion-collapse collapse" aria-labelledby="faqRoles" data-bs-parent="#faqAccordion">
-                        <div class="accordion-body">
+                        <div class="accordion-body fs-6">
                             {{ t('general_faq_roles_answer', default='FiCore supports personal users with budgeting and financial health tools, business owners with debtor and inventory management, and agents with trader onboarding and token management.') | e }}
                         </div>
                     </div>
                 </div>
                 <div class="accordion-item">
                     <h3 class="accordion-header" id="faqBusinessAgent">
-                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseBusinessAgent" aria-expanded="false" aria-controls="collapseBusinessAgent">
+                        <button class="accordion-button collapsed fs-5 fw-bold" type="button" data-bs-toggle="collapse" data-bs-target="#collapseBusinessAgent" aria-expanded="false" aria-controls="collapseBusinessAgent">
                             {{ t('general_faq_business_agent', default='How does FiCore support businesses and agents?') | e }}
                         </button>
                     </h3>
                     <div id="collapseBusinessAgent" class="accordion-collapse collapse" aria-labelledby="faqBusinessAgent" data-bs-parent="#faqAccordion">
-                        <div class="accordion-body">
+                        <div class="accordion-body fs-6">
                             {{ t('general_faq_business_agent_answer', default='Business owners can track debtors, creditors, and inventory, while agents can register traders and manage tokens. Sign up to explore these tools.') | e }}
                         </div>
                     </div>
                 </div>
                 <div class="accordion-item">
                     <h3 class="accordion-header" id="faqPricing">
-                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapsePricing" aria-expanded="false" aria-controls="collapsePricing">
+                        <button class="accordion-button collapsed fs-5 fw-bold" type="button" data-bs-toggle="collapse" data-bs-target="#collapsePricing" aria-expanded="false" aria-controls="collapsePricing">
                             {{ t('general_faq_pricing', default='Is FiCore free to use?') | e }}
                         </button>
                     </h3>
