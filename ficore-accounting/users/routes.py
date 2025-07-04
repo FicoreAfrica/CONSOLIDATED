@@ -9,14 +9,7 @@ import logging
 import uuid
 from datetime import datetime, timedelta
 from translations import trans
-from utils import (
-    trans_function, requires_role, check_coin_balance, format_currency, format_date,
-    is_valid_email, get_mongo_db, is_admin, get_mail, limiter,
-    PERSONAL_TOOLS, PERSONAL_NAV, PERSONAL_EXPLORE_FEATURES,
-    BUSINESS_TOOLS, BUSINESS_NAV, BUSINESS_EXPLORE_FEATURES,
-    AGENT_TOOLS, AGENT_NAV, AGENT_EXPLORE_FEATURES,
-    ALL_TOOLS, ADMIN_NAV, ADMIN_EXPLORE_FEATURES
-)
+import utils  # Changed to import the module instead of individual variables
 import re
 import random
 from itsdangerous import URLSafeTimedSerializer
@@ -60,7 +53,7 @@ class SignupForm(FlaskForm):
         validators.DataRequired(message=trans('general_email_required', default='Email is required')),
         validators.Email(message=trans('general_email_invalid', default='Invalid email address')),
         validators.Length(max=254),
-        lambda form, field: is_valid_email(field.data) or validators.ValidationError(trans('general_email_domain_invalid', default='Invalid email domain'))
+        lambda form, field: utils.is_valid_email(field.data) or validators.ValidationError(trans('general_email_domain_invalid', default='Invalid email domain'))
     ], render_kw={'class': 'form-control'})
     password = PasswordField(trans('general_password', default='Password'), [
         validators.DataRequired(message=trans('general_password_required', default='Password is required')),
@@ -201,7 +194,7 @@ class AgentSetupForm(FlaskForm):
                            validators.DataRequired(message=trans('general_email_required', default='Email is required')),
                            validators.Email(message=trans('general_email_invalid', default='Invalid email address')),
                            validators.Length(max=254),
-                           lambda form, field: is_valid_email(field.data) or validators.ValidationError(trans('general_email_domain_invalid', default='Invalid email domain'))
+                           lambda form, field: utils.is_valid_email(field.data) or validators.ValidationError(trans('general_email_domain_invalid', default='Invalid email domain'))
                        ],
                        render_kw={'class': 'form-control'})
     phone = StringField(trans('general_phone', default='Phone Number'),
@@ -225,7 +218,7 @@ class AgentSetupForm(FlaskForm):
 
 def log_audit_action(action, details=None):
     try:
-        db = get_mongo_db()
+        db = utils.get_mongo_db()
         db.audit_logs.insert_one({
             'admin_id': str(current_user.id) if current_user.is_authenticated else 'system',
             'action': action,
@@ -238,7 +231,7 @@ def log_audit_action(action, details=None):
 def validate_agent_id(agent_id):
     """Validate agent ID against the agents collection."""
     try:
-        db = get_mongo_db()
+        db = utils.get_mongo_db()
         agent = db.agents.find_one({'_id': agent_id, 'status': 'active'})
         if not agent:
             return False
@@ -265,28 +258,28 @@ def get_setup_wizard_route(role):
 def get_post_login_redirect(user_role):
     """Determine where to redirect user after login based on their role."""
     if user_role == 'personal':
-        return url_for('index')  # Personal users go to personal finance home
+        return url_for('personal.index')  # Personal users go to personal finance home
     elif user_role == 'trader':
-        return url_for('index')  # Traders go to business tools home
+        return url_for('general_bp.home')  # Traders go to business tools home
     elif user_role == 'agent':
         return url_for('agents.dashboard')
     elif user_role == 'admin':
         return url_for('admin.dashboard')
     else:
-        return url_for('index')  # Default fallback
+        return url_for('personal.index')  # Default fallback
 
 def get_explore_tools_redirect(user_role):
     """Determine where to redirect user when they click 'Explore Your Tools' based on their role."""
     if user_role == 'personal':
-        return url_for('index')  # Personal users go to personal finance tools
+        return url_for('personal.index')  # Personal users go to personal finance tools
     elif user_role == 'trader':
-        return url_for('index')  # Traders go to business tools
+        return url_for('general_bp.home')  # Traders go to business tools
     elif user_role == 'agent':
         return url_for('agents.dashboard')  # Agents go to agent dashboard
     elif user_role == 'admin':
         return url_for('admin.dashboard')  # Admins go to admin dashboard
     else:
-        return url_for('index')  # Default fallback
+        return url_for('personal.index')  # Default fallback
 
 @users_bp.route('/login', methods=['GET', 'POST'])
 @limiter.limit("50/hour")
@@ -304,7 +297,7 @@ def login():
                 flash(trans('general_username_format', default='Username must be alphanumeric with underscores'), 'danger')
                 logger.warning(f"Invalid username format: {username}")
                 return render_template('users/login.html', form=form, t=trans, lang=session.get('lang', 'en'), tools=None, nav_items=None, bottom_nav_items=[]), 401
-            db = get_mongo_db()
+            db = utils.get_mongo_db()
             user = db.users.find_one({'_id': username})
             if not user:
                 flash(trans('general_username_not_found', default='Username does not exist. Please check your signup details.'), 'danger')
@@ -322,7 +315,7 @@ def login():
                         {'_id': username},
                         {'$set': {'otp': otp, 'otp_expiry': datetime.utcnow() + timedelta(minutes=5)}}
                     )
-                    mail = get_mail(current_app)
+                    mail = utils.get_mail(current_app)
                     msg = EmailMessage(
                         subject=trans('general_otp_subject', default='Your One-Time Password'),
                         body=trans('general_otp_body', default=f'Your OTP is {otp}. It expires in 5 minutes.'),
@@ -385,7 +378,7 @@ def verify_2fa():
         try:
             username = session['pending_user_id']
             logger.info(f"2FA verification attempt for username: {username}")
-            db = get_mongo_db()
+            db = utils.get_mongo_db()
             user = db.users.find_one({'_id': username})
             if not user:
                 flash(trans('general_user_not_found', default='User not found'), 'danger')
@@ -443,7 +436,7 @@ def signup():
             language = form.language.data
             logger.debug(f"Signup attempt: {username}, {email}, role={role}, agent_id={agent_id}")
             logger.info(f"Signup attempt: username={username}, email={email}, role={role}, language={language}")
-            db = get_mongo_db()
+            db = utils.get_mongo_db()
 
             # Validate agent ID if role is 'agent'
             if role == 'agent':
@@ -540,7 +533,7 @@ def forgot_password():
         try:
             email = form.email.data.strip().lower()
             logger.info(f"Forgot password request for email: {email}")
-            db = get_mongo_db()
+            db = utils.get_mongo_db()
             user = db.users.find_one({'email': email})
             if not user:
                 flash(trans('general_email_not_found', default='No user found with this email'), 'danger')
@@ -552,7 +545,7 @@ def forgot_password():
                 {'_id': user['_id']},
                 {'$set': {'reset_token': reset_token, 'reset_token_expiry': expiry}}
             )
-            mail = get_mail(current_app)
+            mail = utils.get_mail(current_app)
             reset_url = url_for('users.reset_password', token=reset_token, _external=True)
             msg = EmailMessage(
                 subject=trans('general_reset_password_subject', default='Reset Your Password'),
@@ -598,7 +591,7 @@ def reset_password():
     form = ResetPasswordForm()
     if form.validate_on_submit():
         try:
-            db = get_mongo_db()
+            db = utils.get_mongo_db()
             user = db.users.find_one({'email': email})
             if not user:
                 flash(trans('general_invalid_email', default='No user found with this email'), 'danger')
@@ -636,8 +629,8 @@ def reset_password():
 @login_required
 @limiter.limit("50/hour")
 def setup_wizard():
-    db = get_mongo_db()
-    user_id = request.args.get('user_id', current_user.id) if is_admin() and request.args.get('user_id') else current_user.id
+    db = utils.get_mongo_db()
+    user_id = request.args.get('user_id', current_user.id) if utils.is_admin() and request.args.get('user_id') else current_user.id
     user = db.users.find_one({'_id': user_id})
     if user.get('setup_complete', False):
         return redirect(get_post_login_redirect(user.get('role', 'trader')))
@@ -647,7 +640,7 @@ def setup_wizard():
             if form.back.data:
                 flash(trans('general_setup_canceled', default='Business setup canceled'), 'info')
                 logger.info(f"Business setup canceled for user: {user_id}")
-                return redirect(url_for('settings.profile', user_id=user_id) if is_admin() else url_for('settings.profile'))
+                return redirect(url_for('settings.profile', user_id=user_id) if utils.is_admin() else url_for('settings.profile'))
             db.users.update_one(
                 {'_id': user_id},
                 {
@@ -667,7 +660,7 @@ def setup_wizard():
             log_audit_action('complete_setup_wizard', {'user_id': user_id, 'updated_by': current_user.id})
             logger.info(f"Business setup completed for user: {user_id} by {current_user.id}")
             flash(trans('general_business_setup_success', default='Business setup completed'), 'success')
-            return redirect(url_for('settings.profile', user_id=user_id) if is_admin() else get_post_login_redirect(user.get('role', 'trader')))
+            return redirect(url_for('settings.profile', user_id=user_id) if utils.is_admin() else get_post_login_redirect(user.get('role', 'trader')))
         except errors.PyMongoError as e:
             logger.error(f"MongoDB error during business setup for {user_id}: {str(e)}")
             flash(trans('general_database_error', default='An error occurred while accessing the database. Please try again later.'), 'danger')
@@ -676,9 +669,9 @@ def setup_wizard():
                 form=form,
                 t=trans,
                 lang=session.get('lang', 'en'),
-                tools=BUSINESS_TOOLS,
-                nav_items=BUSINESS_EXPLORE_FEATURES,
-                bottom_nav_items=BUSINESS_NAV
+                tools=utils.BUSINESS_TOOLS,
+                nav_items=utils.BUSINESS_EXPLORE_FEATURES,
+                bottom_nav_items=utils.BUSINESS_NAV
             ), 500
     else:
         for field, errors in form.errors.items():
@@ -689,17 +682,17 @@ def setup_wizard():
         form=form,
         t=trans,
         lang=session.get('lang', 'en'),
-        tools=BUSINESS_TOOLS,
-        nav_items=BUSINESS_EXPLORE_FEATURES,
-        bottom_nav_items=BUSINESS_NAV
+        tools=utils.BUSINESS_TOOLS,
+        nav_items=utils.BUSINESS_EXPLORE_FEATURES,
+        bottom_nav_items=utils.BUSINESS_NAV
     )
 
 @users_bp.route('/personal_setup_wizard', methods=['GET', 'POST'])
 @login_required
 @limiter.limit("50/hour")
 def personal_setup_wizard():
-    db = get_mongo_db()
-    user_id = request.args.get('user_id', current_user.id) if is_admin() and request.args.get('user_id') else current_user.id
+    db = utils.get_mongo_db()
+    user_id = request.args.get('user_id', current_user.id) if utils.is_admin() and request.args.get('user_id') else current_user.id
     user = db.users.find_one({'_id': user_id})
     if user.get('setup_complete', False):
         return redirect(get_post_login_redirect(user.get('role', 'personal')))
@@ -709,7 +702,7 @@ def personal_setup_wizard():
             if form.back.data:
                 flash(trans('general_setup_canceled', default='Personal setup canceled'), 'info')
                 logger.info(f"Personal setup canceled for user: {user_id}")
-                return redirect(url_for('settings.profile', user_id=user_id) if is_admin() else url_for('settings.profile'))
+                return redirect(url_for('settings.profile', user_id=user_id) if utils.is_admin() else url_for('settings.profile'))
             db.users.update_one(
                 {'_id': user_id},
                 {
@@ -728,7 +721,7 @@ def personal_setup_wizard():
             log_audit_action('complete_personal_setup_wizard', {'user_id': user_id, 'updated_by': current_user.id})
             logger.info(f"Personal setup completed for user: {user_id} by {current_user.id}")
             flash(trans('general_personal_setup_success', default='Personal setup completed'), 'success')
-            return redirect(url_for('settings.profile', user_id=user_id) if is_admin() else get_post_login_redirect(user.get('role', 'personal')))
+            return redirect(url_for('settings.profile', user_id=user_id) if utils.is_admin() else get_post_login_redirect(user.get('role', 'personal')))
         except errors.PyMongoError as e:
             logger.error(f"MongoDB error during personal setup for {user_id}: {str(e)}")
             flash(trans('general_database_error', default='An error occurred while accessing the database. Please try again later.'), 'danger')
@@ -737,9 +730,9 @@ def personal_setup_wizard():
                 form=form,
                 t=trans,
                 lang=session.get('lang', 'en'),
-                tools=PERSONAL_TOOLS,
-                nav_items=PERSONAL_EXPLORE_FEATURES,
-                bottom_nav_items=PERSONAL_NAV
+                tools=utils.PERSONAL_TOOLS,
+                nav_items=utils.PERSONAL_EXPLORE_FEATURES,
+                bottom_nav_items=utils.PERSONAL_NAV
             ), 500
     else:
         for field, errors in form.errors.items():
@@ -750,17 +743,17 @@ def personal_setup_wizard():
         form=form,
         t=trans,
         lang=session.get('lang', 'en'),
-        tools=PERSONAL_TOOLS,
-        nav_items=PERSONAL_EXPLORE_FEATURES,
-        bottom_nav_items=PERSONAL_NAV
+        tools=utils.PERSONAL_TOOLS,
+        nav_items=utils.PERSONAL_EXPLORE_FEATURES,
+        bottom_nav_items=utils.PERSONAL_NAV
     )
 
 @users_bp.route('/agent_setup_wizard', methods=['GET', 'POST'])
 @login_required
 @limiter.limit("50/hour")
 def agent_setup_wizard():
-    db = get_mongo_db()
-    user_id = request.args.get('user_id', current_user.id) if is_admin() and request.args.get('user_id') else current_user.id
+    db = utils.get_mongo_db()
+    user_id = request.args.get('user_id', current_user.id) if utils.is_admin() and request.args.get('user_id') else current_user.id
     user = db.users.find_one({'_id': user_id})
     if user.get('setup_complete', False):
         return redirect(get_post_login_redirect(user.get('role', 'agent')))
@@ -770,7 +763,7 @@ def agent_setup_wizard():
             if form.back.data:
                 flash(trans('general_setup_canceled', default='Agent setup canceled'), 'info')
                 logger.info(f"Agent setup canceled for user: {user_id}")
-                return redirect(url_for('settings.profile', user_id=user_id) if is_admin() else url_for('settings.profile'))
+                return redirect(url_for('settings.profile', user_id=user_id) if utils.is_admin() else url_for('settings.profile'))
             db.users.update_one(
                 {'_id': user_id},
                 {
@@ -791,7 +784,7 @@ def agent_setup_wizard():
             log_audit_action('complete_agent_setup_wizard', {'user_id': user_id, 'updated_by': current_user.id})
             logger.info(f"Agent setup completed for user: {user_id} by {current_user.id}")
             flash(trans('agents_setup_success', default='Agent setup completed'), 'success')
-            return redirect(url_for('settings.profile', user_id=user_id) if is_admin() else get_post_login_redirect(user.get('role', 'agent')))
+            return redirect(url_for('settings.profile', user_id=user_id) if utils.is_admin() else get_post_login_redirect(user.get('role', 'agent')))
         except errors.PyMongoError as e:
             logger.error(f"MongoDB error during agent setup for {user_id}: {str(e)}")
             flash(trans('general_database_error', default='An error occurred while accessing the database. Please try again later.'), 'danger')
@@ -800,9 +793,9 @@ def agent_setup_wizard():
                 form=form,
                 t=trans,
                 lang=session.get('lang', 'en'),
-                tools=AGENT_TOOLS,
-                nav_items=AGENT_EXPLORE_FEATURES,
-                bottom_nav_items=AGENT_NAV
+                tools=utils.AGENT_TOOLS,
+                nav_items=utils.AGENT_EXPLORE_FEATURES,
+                bottom_nav_items=utils.AGENT_NAV
             ), 500
     else:
         for field, errors in form.errors.items():
@@ -813,9 +806,9 @@ def agent_setup_wizard():
         form=form,
         t=trans,
         lang=session.get('lang', 'en'),
-        tools=AGENT_TOOLS,
-        nav_items=AGENT_EXPLORE_FEATURES,
-        bottom_nav_items=AGENT_NAV
+        tools=utils.AGENT_TOOLS,
+        nav_items=utils.AGENT_EXPLORE_FEATURES,
+        bottom_nav_items=utils.AGENT_NAV
     )
 
 @users_bp.route('/logout')
@@ -834,7 +827,7 @@ def logout():
         # Explicitly delete session from MongoDB if used
         if current_app.config.get('SESSION_TYPE') == 'mongodb':
             try:
-                db = get_mongo_db()
+                db = utils.get_mongo_db()
                 db.sessions.delete_one({'_id': sid})
                 logger.info(f"Deleted MongoDB session for user {user_id}, SID: {sid}")
             except Exception as e:
@@ -845,7 +838,7 @@ def logout():
         log_audit_action('logout', {'user_id': user_id, 'session_id': sid})
         logger.info(f"User {user_id} logged out successfully. After logout - Session: {dict(session)}, Authenticated: {current_user.is_authenticated}")
         # Create response with no-cache headers
-        response = make_response(redirect(url_for('index')))
+        response = make_response(redirect(url_for('personal.index')))
         response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, max-age=0'
         response.headers['Pragma'] = 'no-cache'
         response.headers['Expires'] = '0'
@@ -854,7 +847,7 @@ def logout():
     except Exception as e:
         logger.error(f"Error during logout for user {user_id}: {str(e)}")
         flash(trans('general_error', default='An error occurred during logout'), 'danger')
-        response = make_response(redirect(url_for('index')))
+        response = make_response(redirect(url_for('personal.index')))
         response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, max-age=0'
         return response
 
