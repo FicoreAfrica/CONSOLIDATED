@@ -100,14 +100,6 @@
         </nav>
     {% endif %}
 
-    {% if not session.get('consent_acknowledged') %}
-    <div class="consent-banner alert alert-info alert-dismissible fade show fixed-bottom mb-0" id="consentBanner" role="alert">
-        <i class="fas fa-shield-alt me-2 fs-4" aria-hidden="true"></i>
-        <span>{{ t('general_consent_banner', default='By using Ficore, you understand that we provide tools for planning only, not banking.') | e }}</span>
-        <button type="button" class="btn btn-primary btn-sm ms-2 close-btn" id="acknowledgeConsentBtn">{{ t('general_accept', default='Accept') | e }}</button>
-    </div>
-    {% endif %}
-
     <div class="alert-container container-fluid my-3 px-0">
         {% with messages = get_flashed_messages(with_categories=true) %}
             {% if messages %}
@@ -150,7 +142,7 @@
                 <a href="{{ url_for('general_bp.terms') | e }}">{{ t('general_terms_of_service', default='Terms of Service') | e }}</a>
                 <a href="{{ url_for('general_bp.privacy') | e }}">{{ t('general_privacy_policy', default='Privacy Policy') | e }}</a>
                 <a href="mailto:support@ficoreafrica.com"><i class="bi bi-envelope-fill me-2 fs-4" aria-hidden="true"></i> {{ t('general_contact_us', default='Contact Us') | e }}</a>
-                <a href="{{ url_for('general_bp.feedback') | e }}"><i class="bi bi-chat-fill me-2 fs-4" aria-hidden="true"></i> {{ t('general_provide_feedback', default='Provide Feedback') | e }}</a>
+                <a href="{{ url_for('generalinted_bp.feedback') | e }}"><i class="bi bi-chat-fill me-2 fs-4" aria-hidden="true"></i> {{ t('general_provide_feedback', default='Provide Feedback') | e }}</a>
                 <a href="{{ url_for('users.login') | e }}"><i class="bi bi-box-arrow-in-right me-2 fs-4" aria-hidden="true"></i> {{ t('general_login', default='Login') | e }}</a>
             </div>
             <div class="social-icons d-flex justify-content-center gap-3 mt-3">
@@ -219,37 +211,6 @@
                     toggle.setAttribute('data-bs-title', '{{ t("general_mode_toggle_tooltip_switch_to_light", default="Switch to light mode") | e }}');
                     toggle.setAttribute('aria-label', '{{ t("general_mode_toggle_light", default="Toggle light mode") | e }}');
                 }
-            }
-
-            // Consent banner handling
-            const consentBtn = document.getElementById('acknowledgeConsentBtn');
-            if (consentBtn) {
-                consentBtn.addEventListener('click', function() {
-                    const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
-                    fetch('{{ url_for("acknowledge_consent") | e }}', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'X-CSRF-Token': csrfToken
-                        },
-                        body: '{}'
-                    })
-                    .then(response => {
-                        if (response.ok) {
-                            const banner = document.getElementById('consentBanner');
-                            if (banner) {
-                                banner.classList.remove('show');
-                                setTimeout(() => banner.remove(), 300);
-                            }
-                        } else {
-                            alert('{{ t("general_error_acknowledging_consent", default="Error acknowledging consent. Please try again.") | e }}');
-                        }
-                    })
-                    .catch(error => {
-                        console.error('Error acknowledging consent:', error);
-                        alert('{{ t("general_network_error", default="Network error. Please try again.") | e }}');
-                    });
-                });
             }
 
             {% if current_user.is_authenticated %}
