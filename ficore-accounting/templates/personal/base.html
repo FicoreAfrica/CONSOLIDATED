@@ -79,14 +79,6 @@
         </div>
     {% endif %}
 
-    {% if not session.get('consent_acknowledged') %}
-    <div class="consent-banner alert alert-info alert-dismissible fade show fixed-bottom mb-0" id="consentBanner" role="alert">
-        <i class="fas fa-shield-alt me-2 fs-4" aria-hidden="true"></i>
-        <span>{{ t('general_consent_banner', default='By using Ficore, you understand that we provide tools for planning only, not banking.') | e }}</span>
-        <button type="button" class="btn btn-primary btn-sm ms-2 close-btn" id="acknowledgeConsentBtn">{{ t('general_accept', default='Accept') | e }}</button>
-    </div>
-    {% endif %}
-
     <div class="alert-container container-fluid my-3 px-0">
         {% with messages = get_flashed_messages(with_categories=true) %}
             {% if messages %}
@@ -200,36 +192,6 @@
 
             const tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]');
             tooltipTriggerList.forEach(tooltipTriggerEl => new bootstrap.Tooltip(tooltipTriggerEl));
-
-            const consentBtn = document.getElementById('acknowledgeConsentBtn');
-            if (consentBtn) {
-                consentBtn.addEventListener('click', function() {
-                    const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
-                    fetch('{{ url_for("acknowledge_consent") | e }}', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'X-CSRF-Token': csrfToken
-                        },
-                        body: '{}'
-                    })
-                    .then(response => {
-                        if (response.ok) {
-                            const banner = document.getElementById('consentBanner');
-                            if (banner) {
-                                banner.classList.remove('show');
-                                setTimeout(() => banner.remove(), 300);
-                            }
-                        } else {
-                            alert('{{ t("general_error_acknowledging_consent", default="Error acknowledging consent. Please try again.") | e }}');
-                        }
-                    })
-                    .catch(error => {
-                        console.error('Error acknowledging consent:', error);
-                        alert('{{ t("general_network_error", default="Network error. Please try again.") | e }}');
-                    });
-                });
-            }
 
             {% if current_user.is_authenticated %}
                 loadNotificationCount();
