@@ -208,16 +208,6 @@
                 }
             });
 
-            // Debug navigation duplication
-            const topNav = document.querySelector('.top-header');
-            const bottomNav = document.querySelector('.bottom-nav');
-            if (topNav && bottomNav) {
-                const topNavItems = topNav.querySelectorAll('.nav-item');
-                if (topNavItems.length > 0) {
-                    console.warn('Unexpected navigation items in top-header:', topNavItems);
-                }
-            }
-
             // Dark mode initialization
             const storedDarkMode = localStorage.getItem('dark_mode');
             const isDark = storedDarkMode === 'true';
