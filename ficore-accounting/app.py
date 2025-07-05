@@ -480,6 +480,7 @@ def create_app():
         trans=trans,
         trans_function=utils.trans_function,
         get_translations=get_translations
+        is_admin=utils.is_admin
     )
     
     @app.template_filter('safe_nav')
