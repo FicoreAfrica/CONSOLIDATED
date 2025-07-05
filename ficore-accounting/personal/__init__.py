@@ -54,6 +54,7 @@ def index():
             t=trans,
             lang=session.get('lang', 'en'),
             title=trans('general_welcome', default='Welcome')
+            is_admin=utils.is_admin
         )
     except Exception as e:
         current_app.logger.error(f"Error rendering personal index: {str(e)}", extra={'session_id': session.get('sid', 'unknown')})
@@ -68,6 +69,7 @@ def index():
             t=trans,
             lang=session.get('lang', 'en'),
             title=trans('general_welcome', default='Welcome')
+            is_admin=utils.is_admin
         ), 500
 
 @personal_bp.route('/notification_count')
