@@ -820,28 +820,7 @@ def create_app():
             logger.error(f'Session operation failed: {str(e)}', extra={'ip_address': request.remote_addr})
             flash(utils.trans('general_invalid_language', default='Invalid language'), 'danger')
         return redirect(request.referrer or url_for('index'))
-    
-    @app.route('/acknowledge_consent', methods=['POST'])
-    @utils.limiter.limit('10 per minute')
-    def acknowledge_consent():
-        if request.method != 'POST':
-            logger.warning(f'Invalid method {request.method} for consent acknowledgement', extra={'ip_address': request.remote_addr})
-            return '', 400
-        try:
-            session['consent_acknowledged'] = {
-                'status': True,
-                'timestamp': datetime.utcnow().isoformat(),
-                'ip': request.remote_addr,
-                'user_agent': request.headers.get('User-Agent')
-            }
-            logger.info(f'Consent acknowledged for session {session.get("sid", "no-session-id")}', extra={'ip_address': request.remote_addr})
-        except Exception as e:
-            logger.error(f'Session operation failed: {str(e)}', extra={'ip_address': request.remote_addr})
-        response = make_response('', 204)
-        response.headers['Cache-Control'] = 'no-store'
-        response.headers['X-Content-Type-Options'] = 'nosniff'
-        return response
-    
+        
     # Accounting API routes (for non-personal users)
     @app.route('/api/debt-summary')
     @login_required
