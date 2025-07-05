@@ -147,16 +147,6 @@
                 {% endfor %}
             </div>
         </div>
-
-        <!-- Bottom Navigation -->
-        <nav class="bottom-nav fixed-bottom bg-white border-top d-flex justify-content-around align-items-center py-3 d-md-none shadow-sm" role="navigation" style="z-index: 1050;">
-            {% for item in bottom_nav_items[:4] %}
-            <a href="{{ url_for(item.endpoint) if item.endpoint else item.url | default('#') | e }}" aria-label="{{ t(item.label_key, default=item.label) | e }}" class="nav-item text-center text-dark text-decoration-none {% if request.endpoint == item.endpoint %}active{% endif %} d-flex flex-column align-items-center" data-bs-toggle="tooltip" data-bs-title="{{ t(item.tooltip_key, default=item.label) | e }}">
-                <i class="bi {{ item.icon | default('bi-circle') | e }} fs-3 mb-2"></i>
-                <div class="nav-label text-truncate fw-bold fs-7" style="max-width: 80px;">{{ t(item.label_key, default=item.label) | e }}</div>
-            </a>
-            {% endfor %}
-        </nav>
     {% else %}
         <!-- Unauthenticated User Section -->
         <div class="text-center px-3 py-5">
@@ -216,6 +206,16 @@ document.addEventListener('DOMContentLoaded', function() {
             console.warn('Invalid or missing Bootstrap Icon class:', icon.className);
         }
     });
+
+    // Debug navigation duplication
+    const topNav = document.querySelector('.top-header');
+    const bottomNav = document.querySelector('.bottom-nav');
+    if (topNav && bottomNav) {
+        const topNavItems = topNav.querySelectorAll('.nav-item');
+        if (topNavItems.length > 0) {
+            console.warn('Unexpected navigation items in top-header:', topNavItems);
+        }
+    }
 
     // Navigation highlighting
     const currentPath = window.location.pathname;
