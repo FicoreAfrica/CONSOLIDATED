@@ -22,7 +22,7 @@
 </head>
 <body class="{% if session.get('dark_mode', False) %}dark-mode{% endif %}">
     {% if current_user.is_authenticated %}
-        <div class="top-header container-fluid d-flex align-items-center justify-content-between mb-4 py-3 px-4 bg-white shadow-sm rounded mx-3">
+        <div class="top-header container-fluid d-flex align-items-center justify-content-between mb-4 py-3 px-4 bg-white shadow-sm rounded mx-3" style="z-index: 1000;">
             <div class="d-flex align-items-center gap-3" style="min-width:0;">
                 <a class="navbar-brand d-flex align-items-center" href="{{ url_for('general_bp.home') | e }}" aria-label="{{ t('general_ficore_africa', default='Ficore Africa') | e }}">
                     <img src="{{ current_user.profile_picture if current_user.profile_picture else url_for('static', filename='img/default_profile.png') | e }}" alt="{{ t('general_user_profile_picture', default='User Profile Picture') | e }}" class="rounded-circle me-2" style="width: 48px; height: 48px; object-fit: cover;">
@@ -114,14 +114,14 @@
         {% endwith %}
     </div>
 
-    <main class="main-content" style="padding-top: calc(var(--navbar-height) + 2rem); padding-bottom: calc(var(--bottom-nav-height) + 2rem); min-height: calc(100vh - var(--navbar-height) - var(--bottom-nav-height));" role="main">
+    <main class="main-content" style="padding-top: calc(var(--navbar-height) + 3rem); padding-bottom: calc(var(--bottom-nav-height) + 2rem); min-height: calc(100vh - var(--navbar-height) - var(--bottom-nav-height));" role="main">
         <div class="container-fluid px-0">
             {% block content %}{% endblock %}
         </div>
     </main>
 
     {% if current_user.is_authenticated %}
-    <nav class="bottom-navigation navbar" style="position: fixed; bottom: 0; left: 0; right: 0; z-index: 1050;" role="navigation" aria-label="{{ t('general_mobile_navigation', default='Mobile navigation') | e }}">
+    <nav class="bottom-navigation navbar bg-white border-top shadow-sm" role="navigation" aria-label="{{ t('general_mobile_navigation', default='Mobile navigation') | e }}">
         <div class="nav-container">
             {% for item in bottom_nav_items[:4] %}
                 <a href="{{ url_for(item.endpoint) if item.endpoint else item.url | default('#') | e }}" class="nav-item text-center text-dark text-decoration-none {% if request.endpoint == item.endpoint %}active{% endif %} d-flex flex-column align-items-center" aria-label="{{ t(item.label_key, default=item.label) | e }}" data-bs-toggle="tooltip" data-bs-title="{{ t(item.tooltip_key, default=item.label) | e }}">
