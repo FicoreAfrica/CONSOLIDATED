@@ -467,7 +467,7 @@ def create_app():
     
     # Initialize tools with URLs
     utils.initialize_tools_with_urls(app)
-    logger.info('Initialized tools and navigation with resolved URLs')
+    logger.DEBUG('Initialized tools and navigation with resolved URLs')
     
     # Jinja2 globals and filters
     app.jinja_env.globals.update(
