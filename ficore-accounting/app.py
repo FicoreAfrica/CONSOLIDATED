@@ -48,7 +48,7 @@ load_dotenv()
 
 # Set up logging
 root_logger = logging.getLogger('ficore_app')
-root_logger.setLevel(logging.WARNING)
+root_logger.setLevel(logging.DEBUG)
 
 class SessionFormatter(logging.Formatter):
     def format(self, record):
