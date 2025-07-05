@@ -479,7 +479,7 @@ def create_app():
         CONSULTANCY_FORM_URL=app.config.get('CONSULTANCY_FORM_URL', '#'),
         trans=trans,
         trans_function=utils.trans_function,
-        get_translations=get_translations
+        get_translations=get_translations,
         is_admin=utils.is_admin
     )
     
