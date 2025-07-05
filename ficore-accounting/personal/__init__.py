@@ -5,6 +5,10 @@ import utils  # Changed to import the module instead of individual variables
 from translations import trans
 from datetime import datetime
 from bson import ObjectId
+import logging
+
+# Configure logging
+logging.basicConfig(level=logging.DEBUG)
 
 personal_bp = Blueprint('personal', __name__, url_prefix='/personal', template_folder='templates/personal')
 
@@ -44,12 +48,32 @@ def init_app(app):
 def index():
     """Render the personal finance dashboard."""
     try:
-        tools = utils.PERSONAL_TOOLS if current_user.role == 'personal' else utils.ALL_TOOLS  # Updated to use utils. prefix
-        # Use bottom_nav_items for consistency in passing navigation data to templates
-        bottom_nav_items = utils.PERSONAL_NAV if current_user.role == 'personal' else utils.ADMIN_NAV  # Updated to use utils. prefix
+        tools = utils.PERSONAL_TOOLS if current_user.role == 'personal' else utils.ALL_TOOLS
+        bottom_nav_items = utils.PERSONAL_NAV if current_user.role == 'personal' else utils.ADMIN_NAV
+        
+        # Log the tools data to debug the structure
+        for tool in tools:
+            logging.debug(f"Tool: {tool}, description_key: {tool.get('description_key', 'N/A')}, description: {tool.get('description', 'N/A')}")
+
+        # Validate and clean tools data to ensure description_key and description are strings
+        cleaned_tools = []
+        for tool in tools:
+            if not isinstance(tool, dict):
+                logging.warning(f"Invalid tool format, expected dict, got {type(tool)}: {tool}")
+                continue
+            cleaned_tool = {
+                'description_key': str(tool.get('description_key', '')),
+                'description': str(tool.get('description', '')),
+                # Include other expected keys (add based on your utils.PERSONAL_TOOLS structure)
+                'name': tool.get('name', ''),
+                'url': tool.get('url', ''),
+                # Add other keys as needed
+            }
+            cleaned_tools.append(cleaned_tool)
+
         return render_template(
             'personal/GENERAL/index.html',
-            tools=tools,
+            tools=cleaned_tools,  # Use cleaned data
             bottom_nav_items=bottom_nav_items,
             t=trans,
             lang=session.get('lang', 'en'),
@@ -59,14 +83,10 @@ def index():
     except Exception as e:
         current_app.logger.error(f"Error rendering personal index: {str(e)}", extra={'session_id': session.get('sid', 'unknown')})
         flash(trans('general_error', default='An error occurred'), 'danger')
-        tools = utils.PERSONAL_TOOLS if current_user.role == 'personal' else utils.ALL_TOOLS  # Updated to use utils. prefix
-        # Use bottom_nav_items in error case for consistency
-        bottom_nav_items = utils.PERSONAL_NAV if current_user.role == 'personal' else utils.ADMIN_NAV  # Updated to use utils. prefix
+        # Render a fallback template without relying on tools
         return render_template(
-            'personal/GENERAL/index.html',
-            tools=tools,
-            bottom_nav_items=bottom_nav_items,
-            t=trans,
+            'error.html',
+            error_message="Unable to load the personal finance dashboard due to an internal error.",
             lang=session.get('lang', 'en'),
             title=trans('general_welcome', default='Welcome'),
             is_admin=utils.is_admin
@@ -130,12 +150,12 @@ def recent_activity():
         for bill in bills:
             activities.append({
                 'type': 'bill',
-                'description': trans('recent_activity_bill_added', default='Added bill: {name}', name=bill['bill_name']),
+                'description': trans('recent_activity_bill_added', default='Added bill: {name}', name=bill.get('bill_name', 'Unknown')),
                 'timestamp': bill['created_at'].isoformat(),
                 'details': {
-                    'amount': bill['amount'],
-                    'due_date': bill['due_date'],
-                    'status': bill['status']
+                    'amount': bill.get('amount', 0),
+                    'due_date': bill.get('due_date', 'N/A'),
+                    'status': bill.get('status', 'Unknown')
                 }
             })
 
@@ -144,11 +164,11 @@ def recent_activity():
         for budget in budgets:
             activities.append({
                 'type': 'budget',
-                'description': trans('recent_activity_budget_created', default='Created budget with income: {amount}', amount=budget['income']),
+                'description': trans('recent_activity_budget_created', default='Created budget with income: {amount}', amount=budget.get('income', 0)),
                 'timestamp': budget['created_at'].isoformat(),
                 'details': {
-                    'income': budget['income'],
-                    'surplus_deficit': budget['surplus_deficit']
+                    'income': budget.get('income', 0),
+                    'surplus_deficit': budget.get('surplus_deficit', 0)
                 }
             })
 
@@ -157,12 +177,12 @@ def recent_activity():
         for nw in net_worths:
             activities.append({
                 'type': 'net_worth',
-                'description': trans('recent_activity_net_worth_calculated', default='Calculated net worth: {amount}', amount=nw['net_worth']),
+                'description': trans('recent_activity_net_worth_calculated', default='Calculated net worth: {amount}', amount=nw.get('net_worth', 0)),
                 'timestamp': nw['created_at'].isoformat(),
                 'details': {
-                    'net_worth': nw['net_worth'],
-                    'total_assets': nw['total_assets'],
-                    'total_liabilities': nw['total_liabilities']
+                    'net_worth': nw.get('net_worth', 0),
+                    'total_assets': nw.get('total_assets', 0),
+                    'total_liabilities': nw.get('total_liabilities', 0)
                 }
             })
 
@@ -171,11 +191,11 @@ def recent_activity():
         for hs in health_scores:
             activities.append({
                 'type': 'financial_health',
-                'description': trans('recent_activity_health_score', default='Calculated financial health score: {score}', score=hs['score']),
+                'description': trans('recent_activity_health_score', default='Calculated financial health score: {score}', score=hs.get('score', 0)),
                 'timestamp': hs['created_at'].isoformat(),
                 'details': {
-                    'score': hs['score'],
-                    'status': hs['status']
+                    'score': hs.get('score', 0),
+                    'status': hs.get('status', 'Unknown')
                 }
             })
 
@@ -184,12 +204,12 @@ def recent_activity():
         for ef in emergency_funds:
             activities.append({
                 'type': 'emergency_fund',
-                'description': trans('recent_activity_emergency_fund_created', default='Created emergency fund plan with target: {amount}', amount=ef['target_amount']),
+                'description': trans('recent_activity_emergency_fund_created', default='Created emergency fund plan with target: {amount}', amount=ef.get('target_amount', 0)),
                 'timestamp': ef['created_at'].isoformat(),
                 'details': {
-                    'target_amount': ef['target_amount'],
-                    'savings_gap': ef['savings_gap'],
-                    'monthly_savings': ef['monthly_savings']
+                    'target_amount': ef.get('target_amount', 0),
+                    'savings_gap': ef.get('savings_gap', 0),
+                    'monthly_savings': ef.get('monthly_savings', 0)
                 }
             })
 
@@ -198,11 +218,11 @@ def recent_activity():
         for quiz in quizzes:
             activities.append({
                 'type': 'quiz',
-                'description': trans('recent_activity_quiz_completed', default='Completed financial quiz with score: {score}', score=quiz['score']),
+                'description': trans('recent_activity_quiz_completed', default='Completed financial quiz with score: {score}', score=quiz.get('score', 0)),
                 'timestamp': quiz['created_at'].isoformat(),
                 'details': {
-                    'score': quiz['score'],
-                    'personality': quiz['personality']
+                    'score': quiz.get('score', 0),
+                    'personality': quiz.get('personality', 'N/A')
                 }
             })
 
@@ -212,10 +232,10 @@ def recent_activity():
             if progress.get('course_id'):
                 activities.append({
                     'type': 'learning_hub',
-                    'description': trans('recent_activity_learning_hub_progress', default='Progress in course: {course_id}', course_id=progress['course_id']),
+                    'description': trans('recent_activity_learning_hub_progress', default='Progress in course: {course_id}', course_id=progress.get('course_id', 'N/A')),
                     'timestamp': progress['updated_at'].isoformat(),
                     'details': {
-                        'course_id': progress['course_id'],
+                        'course_id': progress.get('course_id', 'N/A'),
                         'lessons_completed': len(progress.get('lessons_completed', [])),
                         'current_lesson': progress.get('current_lesson', 'N/A')
                     }
