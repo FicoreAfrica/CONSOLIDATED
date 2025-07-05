@@ -22,33 +22,33 @@
 </head>
 <body class="{% if session.get('dark_mode', False) %}dark-mode{% endif %}">
     {% if current_user.is_authenticated %}
-        <div class="top-header container-fluid d-flex align-items-center justify-content-between mb-3 py-2">
-            <div class="d-flex align-items-center text-truncate">
+        <div class="top-header container-fluid d-flex align-items-center justify-content-between mb-4 py-3 px-4 bg-white shadow-sm rounded mx-3">
+            <div class="d-flex align-items-center gap-3" style="min-width:0;">
                 <a class="navbar-brand d-flex align-items-center" href="{{ url_for('general_bp.home') | e }}" aria-label="{{ t('general_ficore_africa', default='Ficore Africa') | e }}">
-                    <img src="{{ current_user.profile_picture if current_user.profile_picture else url_for('static', filename='img/default_profile.png') | e }}" alt="{{ t('general_user_profile_picture', default='User Profile Picture') | e }}" class="logo rounded-circle me-2" style="width: 40px; height: 40px; object-fit: cover;">
-                    <span class="welcome-text text-truncate" style="max-width: 150px;">{{ t('general_welcome', default='Welcome') | e }}, {{ current_user.name | e }}</span>
+                    <img src="{{ current_user.profile_picture if current_user.profile_picture else url_for('static', filename='img/default_profile.png') | e }}" alt="{{ t('general_user_profile_picture', default='User Profile Picture') | e }}" class="rounded-circle me-2" style="width: 48px; height: 48px; object-fit: cover;">
+                    <span class="welcome-text text-truncate fw-bold fs-5">{{ t('general_hello_user', default='Hello') | e }}, {{ current_user.name | default(current_user.id) | e }}</span>
                 </a>
             </div>
-            <div class="header-actions d-flex align-items-center gap-2">
-                <button class="notification-bell position-relative" data-bs-toggle="modal" data-bs-target="#notificationModal" aria-label="{{ t('general_notifications', default='Notifications') | e }}">
-                    <i class="bi bi-bell-fill fs-4"></i>
-                    <span class="notification-badge badge rounded-pill bg-danger d-none" id="notificationBadge">0</span>
+            <div class="header-actions d-flex align-items-center gap-3">
+                <button class="notification-bell btn btn-link p-2 position-relative" id="notificationBell" data-bs-toggle="modal" data-bs-target="#notificationModal" data-bs-toggle="tooltip" data-bs-title="{{ t('general_notifications_tooltip', default='View notifications') | e }}" aria-label="{{ t('general_notifications', default='Notifications') | e }}">
+                    <i class="bi bi-bell fs-3"></i>
+                    <span class="notification-badge position-absolute top-0 end-0 translate-middle badge rounded-pill bg-danger d-none" id="notificationBadge"></span>
                 </button>
                 <div class="dropdown">
-                    <button class="btn btn-link language-btn dropdown-toggle p-2" id="languageDropdown" data-bs-toggle="dropdown" aria-expanded="false" aria-label="{{ t('general_language', default='Language') | e }}">
-                        <i class="bi bi-globe fs-4 me-1"></i>
+                    <button class="btn btn-link p-2" type="button" id="languageDropdown" data-bs-toggle="dropdown" aria-expanded="false" data-bs-toggle="tooltip" data-bs-title="{{ t('general_language', default='Language') | e }}">
+                        <i class="bi bi-translate fs-3"></i>
                         <span>{{ session.get('lang', 'en').upper() | e }}</span>
                     </button>
-                    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="languageDropdown">
+                    <ul class="dropdown-menu dropdown-menu-end shadow-sm" aria-labelledby="languageDropdown">
                         <li><a class="dropdown-item" href="{{ url_for('set_language', lang='en') | e }}">{{ t('general_english', default='English') | e }}</a></li>
                         <li><a class="dropdown-item" href="{{ url_for('set_language', lang='ha') | e }}">{{ t('general_hausa', default='Hausa') | e }}</a></li>
                     </ul>
                 </div>
-                <button class="btn btn-link p-2" id="darkModeToggle" onclick="toggleDarkMode()" aria-label="{{ t('general_mode_toggle_dark', default='Toggle dark mode') | e }}" data-bs-toggle="tooltip" data-bs-title="{{ t('general_mode_toggle_tooltip_switch_to_dark', default='Switch to dark mode') | e }}">
-                    <i class="bi bi-moon-stars fs-4"></i>
+                <button class="btn btn-link p-2" id="darkModeToggle" onclick="toggleDarkMode()" aria-label="{{ t('general_mode_toggle_dark', default='Toggle dark mode') | e }}" data-bs-toggle="tooltip" data-bs-title="{{ t('general_mode_toggle_dark', default='Toggle dark mode') | e }}">
+                    <i class="bi bi-moon-stars fs-3"></i>
                 </button>
-                <a href="{{ url_for('users.logout') | e }}" class="logout-icon p-2" aria-label="{{ t('general_logout', default='Logout') | e }}" data-bs-toggle="tooltip" data-bs-title="{{ t('general_logout_tooltip', default='Log out of your account') | e }}">
-                    <i class="bi bi-box-arrow-right fs-4"></i>
+                <a href="{{ url_for('users.logout') | e }}" class="logout-icon btn btn-link p-2 no-js-intercept" data-bs-toggle="tooltip" data-bs-title="{{ t('general_logout', default='Logout') | e }}" aria-label="{{ t('general_logout', default='Logout') | e }}" rel="external">
+                    <i class="bi bi-box-arrow-right fs-3"></i>
                 </a>
             </div>
         </div>
@@ -129,18 +129,12 @@
     </main>
 
     {% if current_user.is_authenticated %}
-    <nav class="bottom-nav navbar fixed-bottom d-md-none shadow-sm" role="navigation" aria-label="{{ t('general_mobile_navigation', default='Mobile navigation') | e }}">
+    <nav class="bottom-nav navbar fixed-bottom bg-white border-top d-md-none shadow-sm" role="navigation" aria-label="{{ t('general_mobile_navigation', default='Mobile navigation') | e }}" style="z-index: 1050;">
         <div class="container-fluid d-flex justify-content-around align-items-center px-0">
-            {% set bottom_nav_data = bottom_nav_items if bottom_nav_items is defined else [
-                {'endpoint': 'personal_bp.dashboard', 'icon': 'bi bi-house-fill', 'label': 'Dashboard', 'label_key': 'general_dashboard'},
-                {'endpoint': 'personal_bp.tools', 'icon': 'bi bi-tools', 'label': 'Tools', 'label_key': 'general_tools'},
-                {'endpoint': 'personal_bp.transactions', 'icon': 'bi bi-receipt', 'label': 'Transactions', 'label_key': 'general_transactions'},
-                {'endpoint': 'personal_bp.profile', 'icon': 'bi bi-person-fill', 'label': 'Profile', 'label_key': 'general_profile'}
-            ] %}
-            {% for item in bottom_nav_data[:4] %}
-                <a href="{{ url_for(item.endpoint) | e }}" class="nav-item text-center text-truncate {% if request.endpoint == item.endpoint %}active{% endif %}" aria-label="{{ t(item.label_key, default=item.label) | e }}">
-                    <i class="{{ item.icon or 'bi bi-circle-fill' }} fs-3 mb-1"></i>
-                    <div class="nav-label text-truncate">{{ t(item.label_key, default=item.label) | e }}</div>
+            {% for item in bottom_nav_items[:4] %}
+                <a href="{{ url_for(item.endpoint) if item.endpoint else item.url | default('#') | e }}" class="nav-item text-center text-dark text-decoration-none {% if request.endpoint == item.endpoint %}active{% endif %} d-flex flex-column align-items-center" aria-label="{{ t(item.label_key, default=item.label) | e }}" data-bs-toggle="tooltip" data-bs-title="{{ t(item.tooltip_key, default=item.label) | e }}">
+                    <i class="bi {{ item.icon | default('bi-circle') | e }} fs-3 mb-2"></i>
+                    <div class="nav-label text-truncate fw-bold fs-7" style="max-width: 80px;">{{ t(item.label_key, default=item.label) | e }}</div>
                 </a>
             {% endfor %}
         </div>
@@ -176,16 +170,23 @@
 
     <div class="modal fade" id="notificationModal" tabindex="-1" aria-labelledby="notificationModalLabel" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content">
+            <div class="modal-content shadow-lg">
                 <div class="modal-header">
-                    <h5 class="modal-title" id="notificationModalLabel">{{ t('general_notifications', default='Notifications') | e }}</h5>
+                    <h5 class="modal-title fs-5 fw-bold" id="notificationModalLabel">{{ t('general_notifications', default='Notifications') | e }}</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="{{ t('general_close', default='Close') | e }}"></button>
                 </div>
-                <div class="modal-body" id="notificationBody">
-                    <p>{{ t('general_loading_notifications', default='Loading notifications...') | e }}</p>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{{ t('general_close', default='Close') | e }}</button>
+                <div class="modal-body p-0" id="notificationBody">
+                    <div class="notification-list" id="notificationList">
+                        <div class="notification-item d-flex align-items-center gap-3 p-3">
+                            <div class="notification-icon">
+                                <i class="bi bi-bell text-muted fs-4"></i>
+                            </div>
+                            <div class="notification-content flex-grow-1">
+                                <div class="notification-description text-truncate fs-6">{{ t('general_loading_notifications', default='Loading notifications...') | e }}</div>
+                                <div class="notification-time text-muted fs-7">{{ t('general_just_now', default='Just now') | e }}</div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -196,21 +197,31 @@
     <script src="{{ url_for('static', filename='js/scripts.js') | e }}"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function() {
+            // Initialize tooltips
+            const tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]');
+            tooltipTriggerList.forEach(tooltipTriggerEl => new bootstrap.Tooltip(tooltipTriggerEl));
+
+            // Debug icons
+            document.querySelectorAll('.bi').forEach(icon => {
+                if (!icon.className.includes('bi-')) {
+                    console.warn('Invalid or missing Bootstrap Icon class:', icon.className);
+                }
+            });
+
+            // Dark mode initialization
             const storedDarkMode = localStorage.getItem('dark_mode');
             const isDark = storedDarkMode === 'true';
             if (isDark) {
                 document.documentElement.classList.add('dark-mode');
                 const toggle = document.getElementById('darkModeToggle');
                 if (toggle) {
-                    toggle.querySelector('i').className = 'bi bi-sun fs-4';
+                    toggle.querySelector('i').className = 'bi bi-sun fs-3';
                     toggle.setAttribute('data-bs-title', '{{ t("general_mode_toggle_tooltip_switch_to_light", default="Switch to light mode") | e }}');
                     toggle.setAttribute('aria-label', '{{ t("general_mode_toggle_light", default="Toggle light mode") | e }}');
                 }
             }
 
-            const tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]');
-            tooltipTriggerList.forEach(tooltipTriggerEl => new bootstrap.Tooltip(tooltipTriggerEl));
-
+            // Consent banner handling
             const consentBtn = document.getElementById('acknowledgeConsentBtn');
             if (consentBtn) {
                 consentBtn.addEventListener('click', function() {
@@ -252,7 +263,7 @@
             localStorage.setItem('dark_mode', isDark);
             const darkModeToggle = document.getElementById('darkModeToggle');
             if (darkModeToggle) {
-                darkModeToggle.querySelector('i').className = isDark ? 'bi bi-sun fs-4' : 'bi bi-moon-stars fs-4';
+                darkModeToggle.querySelector('i').className = isDark ? 'bi bi-sun fs-3' : 'bi bi-moon-stars fs-3';
                 darkModeToggle.setAttribute('data-bs-title', isDark ? '{{ t("general_mode_toggle_tooltip_switch_to_light", default="Switch to light mode") | e }}' : '{{ t("general_mode_toggle_tooltip_switch_to_dark", default="Switch to dark mode") | e }}');
                 darkModeToggle.setAttribute('aria-label', isDark ? '{{ t("general_mode_toggle_light", default="Toggle light mode") | e }}' : '{{ t("general_mode_toggle_dark", default="Toggle dark mode") | e }}');
                 const tooltip = bootstrap.Tooltip.getInstance(darkModeToggle);
@@ -263,7 +274,7 @@
 
         async function loadNotificationCount() {
             try {
-                const response = await fetch('{{ url_for('personal.notification_count') | e }}');
+                const response = await fetch('{{ url_for("notification_count") | e }}');
                 if (!response.ok) throw new Error('Network response was not ok');
                 const data = await response.json();
                 const badge = document.getElementById('notificationBadge');
@@ -287,7 +298,7 @@
                 return;
             }
             try {
-                const response = await fetch('{{ url_for('personal.notifications') | e }}');
+                const response = await fetch('{{ url_for("notifications") | e }}');
                 if (!response.ok) throw new Error('Network response was not ok');
                 const data = await response.json();
                 if (data.error) {
@@ -298,11 +309,13 @@
                     body.innerHTML = `<p class="text-muted text-center">{{ t('general_no_notifications_yet', default='No new notifications.') | e }}</p>`;
                 } else {
                     body.innerHTML = data.map(notification => `
-                        <div class="notification-item d-flex align-items-center gap-3 p-2 ${notification.read ? 'read' : 'unread'}">
-                            <i class="bi bi-bell-fill fs-4 ${notification.read ? 'text-muted' : 'text-primary'}"></i>
-                            <div class="notification-content">
-                                <p class="notification-description mb-1">${notification.message}</p>
-                                <small class="notification-time">${new Date(notification.timestamp).toLocaleString()}</small>
+                        <div class="notification-item d-flex align-items-center gap-3 p-3 ${notification.read ? 'read' : 'unread'}">
+                            <div class="notification-icon">
+                                <i class="bi bi-bell ${notification.read ? 'text-muted' : 'text-primary'} fs-4"></i>
+                            </div>
+                            <div class="notification-content flex-grow-1">
+                                <div class="notification-description text-truncate fs-6">${notification.message}</div>
+                                <div class="notification-time text-muted fs-7">${formatTimeAgo(notification.timestamp)}</div>
                             </div>
                         </div>
                     `).join('');
@@ -311,6 +324,22 @@
                 body.innerHTML = `<p class="text-danger">{{ t('general_notification_load_error', default='Failed to load notifications') | e }}</p>`;
                 console.error('Failed to load notifications:', error);
             }
+        }
+
+        function formatTimeAgo(timestamp) {
+            const translations = {
+                just_now: '{{ t("general_just_now", default="Just now") | e }}',
+                minutes_ago: '{{ t("general_minutes_ago", default="m ago") | e }}',
+                hours_ago: '{{ t("general_hours_ago", default="h ago") | e }}',
+                days_ago: '{{ t("general_days_ago", default="d ago") | e }}'
+            };
+            const now = new Date();
+            const time = new Date(timestamp);
+            const diffInSeconds = Math.floor((now - time) / 1000);
+            if (diffInSeconds < 60) return translations.just_now;
+            if (diffInSeconds < 3600) return Math.floor(diffInSeconds / 60) + ' ' + translations.minutes_ago;
+            if (diffInSeconds < 86400) return Math.floor(diffInSeconds / 3600) + ' ' + translations.hours_ago;
+            return Math.floor(diffInSeconds / 86400) + ' ' + translations.days_ago;
         }
 
         document.getElementById('notificationModal')?.addEventListener('show.bs.modal', loadNotifications);
