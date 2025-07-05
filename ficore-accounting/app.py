@@ -48,7 +48,7 @@ load_dotenv()
 
 # Set up logging
 root_logger = logging.getLogger('ficore_app')
-root_logger.setLevel(logging.DEBUG)
+root_logger.setLevel(logging.WARMING)
 
 class SessionFormatter(logging.Formatter):
     def format(self, record):
@@ -467,7 +467,7 @@ def create_app():
     
     # Initialize tools with URLs
     utils.initialize_tools_with_urls(app)
-    logger.debug('Initialized tools and navigation with resolved URLs')
+    logger.INFO('Initialized tools and navigation with resolved URLs')
     
     # Jinja2 globals and filters
     app.jinja_env.globals.update(
