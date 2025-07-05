@@ -1,6 +1,6 @@
 from flask import Blueprint, render_template, redirect, url_for, flash, session, request, jsonify, make_response
 from flask_login import login_required, current_user
-import utils  # Changed to import the module instead of individual variables
+import utils
 from translations import trans
 from jinja2.exceptions import TemplateNotFound
 from datetime import datetime
@@ -20,17 +20,23 @@ def home():
     
     # Role-based navigation data
     if current_user.role == 'trader':
-        tools_for_template = utils.BUSINESS_TOOLS  # Updated to use utils. prefix
-        explore_features_for_template = utils.BUSINESS_EXPLORE_FEATURES  # Updated to use utils. prefix
-        bottom_nav_items = utils.BUSINESS_NAV  # Updated to use utils. prefix
+        tools_for_template = utils.BUSINESS_TOOLS
+        explore_features_for_template = utils.BUSINESS_EXPLORE_FEATURES
+        bottom_nav_items = utils.BUSINESS_NAV
     elif current_user.role == 'admin':
-        tools_for_template = utils.ALL_TOOLS  # Updated to use utils. prefix
-        explore_features_for_template = utils.ADMIN_EXPLORE_FEATURES  # Updated to use utils. prefix
-        bottom_nav_items = utils.ADMIN_NAV  # Updated to use utils. prefix
+        tools_for_template = utils.ALL_TOOLS
+        explore_features_for_template = utils.ADMIN_EXPLORE_FEATURES
+        bottom_nav_items = utils.ADMIN_NAV
     else:
         tools_for_template = []
         explore_features_for_template = []
         bottom_nav_items = []
+
+    # --- DEBUGGING ICONS: Add these logging statements ---
+    current_app.logger.debug(f"DEBUGGING ICONS (home): tools_for_template (first 2 items): {tools_for_template[:2]}")
+    current_app.logger.debug(f"DEBUGGING ICONS (home): explore_features_for_template (first 2 items): {explore_features_for_template[:2]}")
+    current_app.logger.debug(f"DEBUGGING ICONS (home): bottom_nav_items (first 2 items): {bottom_nav_items[:2]}")
+    # --- END DEBUGGING ICONS ---
 
     return render_template(
         'general/home.html',
@@ -46,31 +52,33 @@ def home():
 def about():
     """Public about page."""
     # Role-based navigation data (optional, for consistency if navigation is displayed)
+    tools_for_template = []
+    explore_features_for_template = []
+    bottom_nav_items = []
+
     if current_user.is_authenticated:
         if current_user.role == 'personal':
-            tools_for_template = utils.PERSONAL_TOOLS  # Updated to use utils. prefix
-            explore_features_for_template = utils.PERSONAL_EXPLORE_FEATURES  # Updated to use utils. prefix
-            bottom_nav_items = utils.PERSONAL_NAV  # Updated to use utils. prefix
+            tools_for_template = utils.PERSONAL_TOOLS
+            explore_features_for_template = utils.PERSONAL_EXPLORE_FEATURES
+            bottom_nav_items = utils.PERSONAL_NAV
         elif current_user.role == 'trader':
-            tools_for_template = utils.BUSINESS_TOOLS  # Updated to use utils. prefix
-            explore_features_for_template = utils.BUSINESS_EXPLORE_FEATURES  # Updated to use utils. prefix
-            bottom_nav_items = utils.BUSINESS_NAV  # Updated to use utils. prefix
+            tools_for_template = utils.BUSINESS_TOOLS
+            explore_features_for_template = utils.BUSINESS_EXPLORE_FEATURES
+            bottom_nav_items = utils.BUSINESS_NAV
         elif current_user.role == 'agent':
-            tools_for_template = utils.AGENT_TOOLS  # Updated to use utils. prefix
-            explore_features_for_template = utils.AGENT_EXPLORE_FEATURES  # Updated to use utils. prefix
-            bottom_nav_items = utils.AGENT_NAV  # Updated to use utils. prefix
+            tools_for_template = utils.AGENT_TOOLS
+            explore_features_for_template = utils.AGENT_EXPLORE_FEATURES
+            bottom_nav_items = utils.AGENT_NAV
         elif current_user.role == 'admin':
-            tools_for_template = utils.ALL_TOOLS  # Updated to use utils. prefix
-            explore_features_for_template = utils.ADMIN_EXPLORE_FEATURES  # Updated to use utils. prefix
-            bottom_nav_items = utils.ADMIN_NAV  # Updated to use utils. prefix
-        else:
-            tools_for_template = []
-            explore_features_for_template = []
-            bottom_nav_items = []
-    else:
-        tools_for_template = []
-        explore_features_for_template = []
-        bottom_nav_items = []
+            tools_for_template = utils.ALL_TOOLS
+            explore_features_for_template = utils.ADMIN_EXPLORE_FEATURES
+            bottom_nav_items = utils.ADMIN_NAV
+    
+    # --- DEBUGGING ICONS: Add these logging statements ---
+    current_app.logger.debug(f"DEBUGGING ICONS (about): tools_for_template (first 2 items): {tools_for_template[:2]}")
+    current_app.logger.debug(f"DEBUGGING ICONS (about): explore_features_for_template (first 2 items): {explore_features_for_template[:2]}")
+    current_app.logger.debug(f"DEBUGGING ICONS (about): bottom_nav_items (first 2 items): {bottom_nav_items[:2]}")
+    # --- END DEBUGGING ICONS ---
 
     return render_template(
         'general/about.html',
@@ -86,31 +94,33 @@ def about():
 def contact():
     """Public contact page."""
     # Role-based navigation data (optional, for consistency if navigation is displayed)
+    tools_for_template = []
+    explore_features_for_template = []
+    bottom_nav_items = []
+
     if current_user.is_authenticated:
         if current_user.role == 'personal':
-            tools_for_template = utils.PERSONAL_TOOLS  # Updated to use utils. prefix
-            explore_features_for_template = utils.PERSONAL_EXPLORE_FEATURES  # Updated to use utils. prefix
-            bottom_nav_items = utils.PERSONAL_NAV  # Updated to use utils. prefix
+            tools_for_template = utils.PERSONAL_TOOLS
+            explore_features_for_template = utils.PERSONAL_EXPLORE_FEATURES
+            bottom_nav_items = utils.PERSONAL_NAV
         elif current_user.role == 'trader':
-            tools_for_template = utils.BUSINESS_TOOLS  # Updated to use utils. prefix
-            explore_features_for_template = utils.BUSINESS_EXPLORE_FEATURES  # Updated to use utils. prefix
-            bottom_nav_items = utils.BUSINESS_NAV  # Updated to use utils. prefix
+            tools_for_template = utils.BUSINESS_TOOLS
+            explore_features_for_template = utils.BUSINESS_EXPLORE_FEATURES
+            bottom_nav_items = utils.BUSINESS_NAV
         elif current_user.role == 'agent':
-            tools_for_template = utils.AGENT_TOOLS  # Updated to use utils. prefix
-            explore_features_for_template = utils.AGENT_EXPLORE_FEATURES  # Updated to use utils. prefix
-            bottom_nav_items = utils.AGENT_NAV  # Updated to use utils. prefix
+            tools_for_template = utils.AGENT_TOOLS
+            explore_features_for_template = utils.AGENT_EXPLORE_FEATURES
+            bottom_nav_items = utils.AGENT_NAV
         elif current_user.role == 'admin':
-            tools_for_template = utils.ALL_TOOLS  # Updated to use utils. prefix
-            explore_features_for_template = utils.ADMIN_EXPLORE_FEATURES  # Updated to use utils. prefix
-            bottom_nav_items = utils.ADMIN_NAV  # Updated to use utils. prefix
-        else:
-            tools_for_template = []
-            explore_features_for_template = []
-            bottom_nav_items = []
-    else:
-        tools_for_template = []
-        explore_features_for_template = []
-        bottom_nav_items = []
+            tools_for_template = utils.ALL_TOOLS
+            explore_features_for_template = utils.ADMIN_EXPLORE_FEATURES
+            bottom_nav_items = utils.ADMIN_NAV
+    
+    # --- DEBUGGING ICONS: Add these logging statements ---
+    current_app.logger.debug(f"DEBUGGING ICONS (contact): tools_for_template (first 2 items): {tools_for_template[:2]}")
+    current_app.logger.debug(f"DEBUGGING ICONS (contact): explore_features_for_template (first 2 items): {explore_features_for_template[:2]}")
+    current_app.logger.debug(f"DEBUGGING ICONS (contact): bottom_nav_items (first 2 items): {bottom_nav_items[:2]}")
+    # --- END DEBUGGING ICONS ---
 
     return render_template(
         'general/contact.html',
@@ -136,7 +146,7 @@ def privacy():
     except TemplateNotFound as e:
         current_app.logger.error(f'Template not found: {str(e)}', exc_info=True)
         return render_template(
-            'personal/GENERAL/error.html',
+            'personal/GENERAL/error.html', # Assuming this is a fallback error template path
             t=trans,
             lang=lang,
             error=str(e),
@@ -157,7 +167,7 @@ def terms():
     except TemplateNotFound as e:
         current_app.logger.error(f'Template not found: {str(e)}', exc_info=True)
         return render_template(
-            'personal/GENERAL/error.html',
+            'personal/GENERAL/error.html', # Assuming this is a fallback error template path
             t=trans,
             lang=lang,
             error=str(e),
