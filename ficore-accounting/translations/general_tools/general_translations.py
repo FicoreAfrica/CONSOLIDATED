@@ -10,7 +10,7 @@ GENERAL_TRANSLATIONS = {
         'general_login_required': 'Please log in to access this page.',
         'general_no_permission': 'You do not have permission to access this page.',
         'They Owe': 'They Owe',
-        '"': 'none...',
+        '': 'none...',
             'Something went wrong. Please try again later.': 'Something went wrong. Please try again later.',
             'general_no_notifications_yet': 'No notifications yet',
             'general_missing_key': 'Translation key is missing',
