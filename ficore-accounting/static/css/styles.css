@@ -1699,3 +1699,104 @@ h3 { font-size: clamp(1.1rem, 2.5vw, 1.3rem); }
 .dark-mode .tooltip.bs-tooltip-bottom .tooltip-arrow::before { border-bottom-color: var(--navbar-bg); }
 .dark-mode .tooltip.bs-tooltip-start .tooltip-arrow::before { border-left-color: var(--navbar-bg); }
 .dark-mode .tooltip.bs-tooltip-end .tooltip-arrow::before { border-right-color: var(--navbar-bg); }
+/* Financial Summary Cards */
+.summary-card.budget-card {
+    background: linear-gradient(135deg, var(--alert-info-bg) 60%, var(--alert-info-border) 100%);
+    color: var(--alert-info-text);
+    border-left: 4px solid var(--accent-blue);
+}
+
+.dark-mode .summary-card.budget-card {
+    background: linear-gradient(135deg, var(--alert-info-bg) 60%, var(--alert-info-border) 100%);
+}
+
+.summary-card.bills-card {
+    background: linear-gradient(135deg, var(--alert-warning-bg) 60%, var(--alert-warning-border) 100%);
+    color: var(--alert-warning-text);
+    border-left: 4px solid var(--button-warning-bg);
+}
+
+.dark-mode .summary-card.bills-card {
+    background: linear-gradient(135deg, var(--alert-warning-bg) 60%, var(--alert-warning-border) 100%);
+}
+
+/* Navigation Cards Section */
+.navigation-cards {
+    padding: var(--padding-md);
+    background: linear-gradient(135deg, var(--card-bg), rgba(255, 255, 255, 0.9));
+    border-radius: 0.75rem;
+    box-shadow: var(--card-shadow);
+    margin-bottom: 0.75rem;
+}
+
+.dark-mode .navigation-cards {
+    background: linear-gradient(135deg, #1e293b, #2a3447);
+}
+
+/* Quick Actions Badge */
+.action-card .badge {
+    background: var(--button-danger-bg);
+    color: #fff;
+    font-size: 0.7rem;
+    padding: 0.25rem 0.5rem;
+    border-radius: 0.25rem;
+    position: absolute;
+    top: 0.5rem;
+    right: 0.5rem;
+}
+
+.dark-mode .action-card .badge {
+    background: #ef4444;
+}
+
+/* Testimonials Avatar Fallback */
+.avatar-circle.gradient-bg {
+    background: linear-gradient(135deg, var(--button-primary-bg), var(--button-primary-hover));
+}
+
+/* CTA Section */
+.cta-section h3 {
+    font-size: clamp(1.5rem, 3.5vw, 1.8rem);
+    font-weight: 700;
+    color: var(--text-color);
+    margin-bottom: 0.75rem;
+}
+
+.cta-section p {
+    font-size: clamp(0.9rem, 2vw, 1.1rem);
+    color: var(--text-muted);
+    margin-bottom: 1.5rem;
+    max-width: 600px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+/* Responsive Adjustments for Very Small Screens */
+@media (max-width: 360px) {
+    .quick-actions .action-card,
+    .tools-section .tool-card {
+        padding: 0.5rem;
+    }
+    .action-label,
+    .tool-label {
+        font-size: 0.75rem;
+        max-width: 100%;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+    .quick-actions .row,
+    .tools-section .row {
+        gap: 0.5rem;
+    }
+    .financial-summary .card-amount,
+    .net-amount {
+        font-size: 1rem;
+    }
+    .financial-snapshots .stat-card-value {
+        font-size: 0.75rem;
+    }
+    .notification-description,
+    .activity-description {
+        font-size: 0.8rem;
+    }
+}
