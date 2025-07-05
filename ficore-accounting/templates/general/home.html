@@ -4,35 +4,6 @@
 {% block content %}
 <div class="container-fluid px-0">
     {% if current_user.is_authenticated %}
-        <!-- Top Header -->
-        <div class="top-header d-flex justify-content-between align-items-center mb-4 py-3 px-4 bg-white shadow-sm rounded mx-3">
-            <div class="d-flex align-items-center gap-3" style="min-width:0;">
-                <img src="{{ current_user.avatar_url or url_for('static', filename='img/default_profile.png') }}" class="rounded-circle" width="48" height="48" alt="{{ t('general_profile_alt', default='User profile picture') | e }}">
-                <span class="welcome-text text-truncate fw-bold fs-5">{{ t('general_hello_user', default='Hello') | e }}, {{ current_user.display_name | default(current_user.id) | e }}</span>
-            </div>
-            <div class="header-actions d-flex justify-content-end align-items-center gap-3">
-                <button class="notification-bell btn btn-link p-2 position-relative" id="notificationBell" data-bs-toggle="modal" data-bs-target="#notificationModal" data-bs-toggle="tooltip" data-bs-title="{{ t('general_notifications_tooltip', default='View notifications') | e }}" aria-label="{{ t('general_notifications', default='Notifications') | e }}">
-                    <i class="bi bi-bell fs-3"></i>
-                    <span class="notification-badge position-absolute top-0 end-0 translate-middle badge rounded-pill bg-danger d-none" id="notificationBadge"></span>
-                </button>
-                <div class="dropdown">
-                    <button class="btn btn-link p-2" type="button" id="languageDropdown" data-bs-toggle="dropdown" aria-expanded="false" data-bs-toggle="tooltip" data-bs-title="{{ t('general_language', default='Language') | e }}">
-                        <i class="bi bi-translate fs-3"></i>
-                    </button>
-                    <ul class="dropdown-menu dropdown-menu-end shadow-sm" aria-labelledby="languageDropdown">
-                        <li><a class="dropdown-item" href="{{ url_for('set_language', lang='en') | e }}">{{ t('general_english', default='English') | e }}</a></li>
-                        <li><a class="dropdown-item" href="{{ url_for('set_language', lang='ha') | e }}">{{ t('general_hausa', default='Hausa') | e }}</a></li>
-                    </ul>
-                </div>
-                <button class="btn btn-link p-2" id="darkModeToggle" onclick="toggleDarkMode()" aria-label="{{ t('general_mode_toggle_dark', default='Toggle dark mode') | e }}" data-bs-toggle="tooltip" data-bs-title="{{ t('general_mode_toggle_dark', default='Toggle dark mode') | e }}">
-                    <i class="bi bi-moon-stars fs-3"></i>
-                </button>
-                <a href="{{ url_for('users.logout') | e }}" class="logout-icon btn btn-link p-2 no-js-intercept" data-bs-toggle="tooltip" data-bs-title="{{ t('general_logout', default='Logout') | e }}" aria-label="{{ t('general_logout', default='Logout') | e }}" rel="external">
-                    <i class="bi bi-box-arrow-right fs-3"></i>
-                </a>
-            </div>
-        </div>
-
         <!-- Financial Summary -->
         <div class="financial-summary mb-4 mx-3 rounded shadow-sm bg-white p-4">
             <div class="row g-3 mb-3">
@@ -178,10 +149,9 @@
         </div>
 
         <!-- Bottom Navigation -->
-        <nav class="bottom-nav fixed-bottom bg-white border-top d-flex justify-content-around align-items-center py-3 d-lg-none shadow-sm" role="navigation" style="z-index: 1050;">
-            {% set max_items = 4 %}
-            {% for item in bottom_nav_items[:max_items] %}
-            <a href="{{ url_for(item.endpoint) if item.endpoint else item.url | default('#') | e }}" aria-label="{{ t(item.label_key, default=item.label) | e }}" class="nav-item text-center text-dark text-decoration-none {{ 'active' if request.endpoint == item.endpoint }} d-flex flex-column align-items-center" data-bs-toggle="tooltip" data-bs-title="{{ t(item.tooltip_key, default=item.label) | e }}">
+        <nav class="bottom-nav fixed-bottom bg-white border-top d-flex justify-content-around align-items-center py-3 d-md-none shadow-sm" role="navigation" style="z-index: 1050;">
+            {% for item in bottom_nav_items[:4] %}
+            <a href="{{ url_for(item.endpoint) if item.endpoint else item.url | default('#') | e }}" aria-label="{{ t(item.label_key, default=item.label) | e }}" class="nav-item text-center text-dark text-decoration-none {% if request.endpoint == item.endpoint %}active{% endif %} d-flex flex-column align-items-center" data-bs-toggle="tooltip" data-bs-title="{{ t(item.tooltip_key, default=item.label) | e }}">
                 <i class="bi {{ item.icon | default('bi-circle') | e }} fs-3 mb-2"></i>
                 <div class="nav-label text-truncate fw-bold fs-7" style="max-width: 80px;">{{ t(item.label_key, default=item.label) | e }}</div>
             </a>
@@ -230,31 +200,6 @@
             </div>
         </section>
     {% endif %}
-</div>
-
-<!-- Notification Modal -->
-<div class="modal fade" id="notificationModal" tabindex="-1" aria-labelledby="notificationModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content shadow-lg">
-            <div class="modal-header">
-                <h5 class="modal-title fs-5 fw-bold" id="notificationModalLabel">{{ t('general_notifications', default='Notifications') | e }}</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="{{ t('general_close', default='Close') | e }}"></button>
-            </div>
-            <div class="modal-body p-0">
-                <div class="notification-list" id="notificationList">
-                    <div class="notification-item d-flex align-items-center gap-3 p-3">
-                        <div class="notification-icon">
-                            <i class="bi bi-bell text-muted fs-4"></i>
-                        </div>
-                        <div class="notification-content flex-grow-1">
-                            <div class="notification-description text-truncate fs-6">{{ t('general_loading_notifications', default='Loading notifications...') | e }}</div>
-                            <div class="notification-time text-muted fs-7">{{ t('general_just_now', default='Just now') | e }}</div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
 </div>
 
 {% block extra_scripts %}
@@ -367,11 +312,13 @@ document.addEventListener('DOMContentLoaded', function() {
             .then(data => {
                 const count = data.count || 0;
                 const badge = document.getElementById('notificationBadge');
-                if (count > 0) {
-                    badge.textContent = count;
-                    badge.classList.remove('d-none');
-                } else {
-                    badge.classList.add('d-none');
+                if (badge) {
+                    if (count > 0) {
+                        badge.textContent = count;
+                        badge.classList.remove('d-none');
+                    } else {
+                        badge.classList.add('d-none');
+                    }
                 }
             })
             .catch(error => {
@@ -525,6 +472,9 @@ document.addEventListener('DOMContentLoaded', function() {
         document.body.classList.toggle('dark-mode');
         const icon = document.getElementById('darkModeToggle').querySelector('i');
         icon.className = document.body.classList.contains('dark-mode') ? 'bi bi-sun fs-3' : 'bi bi-moon-stars fs-3';
+        const tooltip = bootstrap.Tooltip.getInstance(document.getElementById('darkModeToggle'));
+        if (tooltip) tooltip.dispose();
+        new bootstrap.Tooltip(document.getElementById('darkModeToggle'));
     };
 });
 </script>
