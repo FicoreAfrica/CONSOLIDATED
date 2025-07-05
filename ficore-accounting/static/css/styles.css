@@ -1838,3 +1838,11 @@ body.dark-mode {
         padding-bottom: calc(var(--bottom-nav-height) + 2rem) !important;
     }
 }
+.main-content {
+    flex: 1 0 auto;
+    padding-top: calc(var(--navbar-height) + 1rem);
+    padding-bottom: calc(var(--bottom-nav-height) + 1rem);
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem; /* <--- Add this line */
+}
