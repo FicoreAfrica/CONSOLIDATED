@@ -8,6 +8,7 @@ from mailersend_email import send_email, EMAIL_CONFIG
 from datetime import datetime, date, timedelta
 from translations import trans
 from pymongo.errors import DuplicateKeyError
+from flask import jsonify
 from bson import ObjectId
 from utils import requires_role, is_admin, get_mongo_db, limiter
 from models import log_tool_usage
