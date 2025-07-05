@@ -53,7 +53,7 @@ def index():
             bottom_nav_items=bottom_nav_items,
             t=trans,
             lang=session.get('lang', 'en'),
-            title=trans('general_welcome', default='Welcome')
+            title=trans('general_welcome', default='Welcome'),
             is_admin=utils.is_admin
         )
     except Exception as e:
@@ -68,7 +68,7 @@ def index():
             bottom_nav_items=bottom_nav_items,
             t=trans,
             lang=session.get('lang', 'en'),
-            title=trans('general_welcome', default='Welcome')
+            title=trans('general_welcome', default='Welcome'),
             is_admin=utils.is_admin
         ), 500
 
