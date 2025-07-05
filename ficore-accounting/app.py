@@ -137,14 +137,18 @@ def setup_logging(app):
     
     flask_logger = logging.getLogger('flask')
     werkzeug_logger = logging.getLogger('werkzeug')
+    pymongo_logger = logging.getLogger('pymongo')
     flask_logger.handlers = []
     werkzeug_logger.handlers = []
+    pymongo_logger.handlers = []
     flask_logger.addHandler(handler)
     werkzeug_logger.addHandler(handler)
+    pymongo_logger.addHandler(handler)
     flask_logger.setLevel(logging.INFO)
     werkzeug_logger.setLevel(logging.INFO)
+    pymongo_logger.setLevel(logging.INFO)
     
-    logger.info('Logging setup complete with StreamHandler for ficore_app, flask, and werkzeug')
+    logger.info('Logging setup complete with StreamHandler for ficore_app, flask, werkzeug, and pymongo')
 
 def check_mongodb_connection(app):
     with app.app_context():
@@ -254,7 +258,9 @@ def create_app():
             app.config['MONGO_URI'],
             serverSelectionTimeoutMS=5000,
             tls=True,
-            tlsCAFile=certifi.where() if os.getenv('MONGO_CA_FILE') is None else os.getenv('MONGO_CA_FILE')
+            tlsCAFile=certifi.where() if os.getenv('MONGO_CA_FILE') is None else os.getenv('MONGO_CA_FILE'),
+            maxPoolSize=50,
+            minPoolSize=5
         )
         client.admin.command('ping')
         app.mongo_client = client
@@ -346,7 +352,7 @@ def create_app():
                 db.budgets.create_index([('session_id', 1), ('created_at', -1)])
                 db.emergency_funds.create_index([('user_id', 1), ('created_at', -1)])
                 db.emergency_funds.create_index([('session_id', 1), ('created_at', -1)])
-                db.financial_health_scores.create_index([('user_id', 1), ('created_at', -1)])
+                db.financial_health_scores.create_index([('user_id',承办: 1), ('created_at', -1)])
                 db.financial_health_scores.create_index([('session_id', 1), ('created_at', -1)])
                 db.net_worth_data.create_index([('user_id', 1), ('created_at', -1)])
                 db.net_worth_data.create_index([('session_id', 1), ('created_at', -1)])
