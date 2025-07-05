@@ -352,7 +352,7 @@ def create_app():
                 db.budgets.create_index([('session_id', 1), ('created_at', -1)])
                 db.emergency_funds.create_index([('user_id', 1), ('created_at', -1)])
                 db.emergency_funds.create_index([('session_id', 1), ('created_at', -1)])
-                db.financial_health_scores.create_index([('user_id',承办: 1), ('created_at', -1)])
+                db.financial_health_scores.create_index([('user_id', 1), ('created_at', -1)])
                 db.financial_health_scores.create_index([('session_id', 1), ('created_at', -1)])
                 db.net_worth_data.create_index([('user_id', 1), ('created_at', -1)])
                 db.net_worth_data.create_index([('session_id', 1), ('created_at', -1)])
