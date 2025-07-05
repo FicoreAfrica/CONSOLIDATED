@@ -5,47 +5,45 @@
 <div class="container-fluid px-0">
     {% if current_user.is_authenticated %}
         <!-- Financial Summary -->
-        <div class="financial-summary mb-4 mx-3">
+        <div class="financial-summary mb-3 mx-2 rounded shadow-sm">
             <div class="row g-3 mb-3">
-                <div class="col-6">
-                    <div class="summary-card debt-card">
+                <div class="col-6 col-md-4">
+                    <div class="summary-card cta-debtor-card d-flex flex-column align-items-center justify-content-center">
                         <div class="card-header d-flex align-items-center gap-3">
-                            <i class="bi bi-arrow-up-circle"></i>
-                            <span>{{ t('general_i_owe', default='I Owe') | e }}</span>
+                            <i class="bi bi-arrow-up-circle text-danger"></i>
+                            <span class="card-title">{{ t('general_i_owe', default='I Owe') | e }}</span>
                         </div>
-                        <div class="card-amount" id="totalIOwe">
+                        <div class="card-amount text-danger mt-3" id="totalIOwe">
                             <span class="currency-symbol">₦</span>
                             <span class="amount-value" data-amount="0">0</span>
                         </div>
                     </div>
                 </div>
-                <div class="col-6">
-                    <div class="summary-card credit-card">
+                <div class="col-6 col-md-4">
+                    <div class="summary-card cta-creditor-card d-flex flex-column align-items-center justify-content-center">
                         <div class="card-header d-flex align-items-center gap-3">
-                            <i class="bi bi-arrow-down-circle"></i>
-                            <span>{{ t('general_i_am_owed', default='I Am Owed') | e }}</span>
+                            <i class="bi bi-arrow-down-circle text-success"></i>
+                            <span class="card-title">{{ t('general_i_am_owed', default='I Am Owed') | e }}</span>
                         </div>
-                        <div class="card-amount" id="totalIAmOwed">
+                        <div class="card-amount text-success mt-3" id="totalIAmOwed">
                             <span class="currency-symbol">₦</span>
                             <span class="amount-value" data-amount="0">0</span>
                         </div>
                     </div>
                 </div>
             </div>
-            <div class="net-position-card">
-                <div class="d-flex justify-content-between align-items-center">
-                    <div class="net-position-info">
-                        <span class="net-label">{{ t('general_net_position', default='Net Position') | e }}:</span>
-                        <span class="net-amount" id="netPosition">₦0</span>
-                        <span class="net-status" id="netStatus"></span>
-                    </div>
+            <div class="net-position-card d-flex flex-column align-items-center justify-content-center">
+                <div class="net-position-info d-flex align-items-center flex-wrap gap-3">
+                    <span class="net-label">{{ t('general_net_position', default='Net Position') | e }}:</span>
+                    <span class="net-amount" id="netPosition">₦0</span>
+                    <span class="net-status" id="netStatus"></span>
                     <button class="visibility-toggle btn btn-link p-2" onclick="toggleAmountVisibility()" aria-label="{{ t('general_toggle_visibility', default='Toggle amount visibility') | e }}">
                         <i class="bi bi-eye" id="visibilityIcon"></i>
                     </button>
                 </div>
             </div>
-            <div class="text-center mt-4">
-                <a href="{{ url_for('dashboard.index') | e }}" class="btn btn-primary btn-sm px-4">
+            <div class="text-center mt-3">
+                <a href="{{ url_for('dashboard.index') | e }}" class="btn btn-primary btn-sm w-100">
                     {{ t('general_view_detailed_summary', default='View Detailed Summary') | e }}
                     <i class="bi bi-arrow-right ms-2"></i>
                 </a>
@@ -53,66 +51,58 @@
         </div>
 
         <!-- Financial Snapshots -->
-        <div class="financial-snapshots mb-4 mx-3">
-            <h3 class="section-title mb-4 mx-3">{{ t('general_snapshots', default='Financial Snapshots') | e }}</h3>
-            <div class="row g-3">
-                <div class="col-4">
-                    <div class="stat-card">
-                        <div class="snapshot-icon mb-3">
-                            <i class="bi bi-wallet2"></i>
-                        </div>
-                        <div class="snapshot-info">
-                            <div class="snapshot-label">{{ t('general_wallet_balance', default='Wallet') | e }}</div>
-                            <div class="stat-card-value" id="walletBalance">₦0</div>
-                        </div>
+        <div class="financial-snapshots mb-3 mx-2 rounded shadow-sm">
+            <h3 class="section-title mb-3">{{ t('general_snapshots', default='Financial Snapshots') | e }}</h3>
+            <div class="stat-cards-container">
+                <div class="stat-card d-flex align-items-center gap-3">
+                    <div class="snapshot-icon">
+                        <i class="bi bi-wallet2"></i>
+                    </div>
+                    <div class="snapshot-info">
+                        <div class="snapshot-label">{{ t('general_wallet_balance', default='Wallet') | e }}</div>
+                        <div class="stat-card-value" id="walletBalance">₦0</div>
                     </div>
                 </div>
-                <div class="col-4">
-                    <div class="stat-card">
-                        <div class="snapshot-icon mb-3">
-                            <i class="bi bi-graph-up"></i>
-                        </div>
-                        <div class="snapshot-info">
-                            <div class="snapshot-label">{{ t('general_net_cashflow_mtd', default='Net Flow') | e }}</div>
-                            <div class="stat-card-value" id="netCashflow">₦0</div>
-                        </div>
+                <div class="stat-card d-flex align-items-center gap-3">
+                    <div class="snapshot-icon">
+                        <i class="bi bi-graph-up"></i>
+                    </div>
+                    <div class="snapshot-info">
+                        <div class="snapshot-label">{{ t('general_net_cashflow_mtd', default='Net Flow') | e }}</div>
+                        <div class="stat-card-value" id="netCashflow">₦0</div>
                     </div>
                 </div>
-                <div class="col-4">
-                    <div class="stat-card">
-                        <div class="snapshot-icon mb-3">
-                            <i class="bi bi-box-seam"></i>
-                        </div>
-                        <div class="snapshot-info">
-                            <div class="snapshot-label">{{ t('general_inventory_value', default='Inventory') | e }}</div>
-                            <div class="stat-card-value" id="inventoryValue">₦0</div>
-                        </div>
+                <div class="stat-card d-flex align-items-center gap-3">
+                    <div class="snapshot-icon">
+                        <i class="bi bi-box-seam"></i>
+                    </div>
+                    <div class="snapshot-info">
+                        <div class="snapshot-label">{{ t('general_inventory_value', default='Inventory') | e }}</div>
+                        <div class="stat-card-value" id="inventoryValue">₦0</div>
                     </div>
                 </div>
             </div>
         </div>
 
         <!-- Quick Actions -->
-        <div class="quick-actions mb-4 mx-3">
-            <h3 class="section-title mb-4 mx-3">{{ t('general_quick_actions', default='Quick Actions') | e }}</h3>
-            <div class="row g-3">
+        <div class="quick-actions mb-3 mx-2 rounded shadow-sm">
+            <h3 class="section-title mb-3">{{ t('general_quick_actions', default='Quick Actions') | e }}</h3>
+            <div class="actions-container">
                 {% for tool in tools %}
-                <div class="col-4 col-sm-4 col-md-3">
-                    <a href="{{ tool.url | default('#') | e }}" class="card action-card text-decoration-none position-relative d-flex flex-column align-items-center justify-content-center" aria-label="{{ t(tool.label_key, default=tool.label) | e }}">
-                        {% if tool.badge %}
-                        <span class="badge position-absolute top-0 end-0 translate-middle rounded-pill">{{ tool.badge }}</span>
-                        {% endif %}
-                        <i class="bi {{ tool.icon | default('bi-circle') | e }} mb-3"></i>
-                        <small class="action-label">{{ t(tool.label_key, default=tool.label) | e }}</small>
-                    </a>
-                </div>
+                <a href="{{ tool.url | default('#') | e }}" class="action-card d-flex flex-column align-items-center justify-content-center position-relative" aria-label="{{ t(tool.label_key, default=tool.label) | e }}">
+                    {% if tool.badge %}
+                    <span class="badge bg-danger position-absolute top-0 end-0 translate-middle rounded-pill">{{ tool.badge }}</span>
+                    {% endif %}
+                    <i class="bi {{ tool.icon | default('bi-circle') | e }} action-icon"></i>
+                    <span class="action-label">{{ t(tool.label_key, default=tool.label) | e }}</span>
+                </a>
                 {% endfor %}
             </div>
         </div>
 
         <!-- Recent Activity -->
-        <div class="recent-activity mb-4 mx-3">
-            <div class="d-flex justify-content-between align-items-center mb-4 mx-3">
+        <div class="recent-activity mb-3 mx-2 rounded shadow-sm">
+            <div class="d-flex justify-content-between align-items-center mb-3">
                 <h3 class="section-title mb-0">{{ t('general_recent_activity', default='Recent Activity') | e }}</h3>
                 <a href="{{ url_for('dashboard.index') | e }}" class="btn btn-link btn-sm p-0 text-decoration-none">
                     {{ t('general_view_all', default='View All') | e }}
@@ -121,27 +111,29 @@
             <div class="activity-list" id="recentActivityList">
                 <div class="activity-item d-flex align-items-center gap-3">
                     <div class="activity-icon">
-                        <i class="bi bi-plus-circle"></i>
+                        <i class="bi bi-plus-circle text-success"></i>
                     </div>
-                    <div class="activity-content flex-grow-1">
+                    <div class="activity-content">
                         <div class="activity-description">{{ t('general_loading_activities', default='Loading recent activities...') | e }}</div>
-                        <div class="activity-time">{{ t('general_just_now', default='Just now') | e }}</div>
+                        <div class="activity-time text-muted">{{ t('general_just_now', default='Just now') | e }}</div>
                     </div>
                 </div>
             </div>
         </div>
 
         <!-- Navigation Cards -->
-        <div class="navigation-cards mb-4 mx-3">
-            <h3 class="section-title mb-4 mx-3">{{ t('general_explore_features', default='Explore Features') | e }}</h3>
+        <div class="navigation-cards mb-3 mx-2 rounded shadow-sm">
+            <h3 class="section-title mb-3">{{ t('general_explore_features', default='Explore Features') | e }}</h3>
             <div class="row g-3">
                 {% for item in nav_items %}
                 <div class="col-6 col-md-4">
-                    <a href="{{ item.url | default('#') | e }}" class="card nav-card text-decoration-none d-flex flex-column align-items-center justify-content-center" aria-label="{{ t(item.label_key, default=item.label) | e }}">
-                        <div class="nav-card-icon mb-3">
+                    <a href="{{ item.url | default('#') | e }}" class="nav-card d-flex flex-column align-items-center justify-content-center" aria-label="{{ t(item.label_key, default=item.label) | e }}">
+                        <div class="nav-card-icon">
                             <i class="bi {{ item.icon | default('bi-circle') | e }}"></i>
                         </div>
-                        <h4>{{ t(item.label_key, default=item.label) | e }}</h4>
+                        <div class="nav-card-content">
+                            <h4>{{ t(item.label_key, default=item.label) | e }}</h4>
+                        </div>
                     </a>
                 </div>
                 {% endfor %}
@@ -149,17 +141,17 @@
         </div>
     {% else %}
         <!-- Unauthenticated User Section -->
-        <div class="text-center px-3 py-5">
-            <div class="page-title mb-4">
+        <div class="text-center px-2 py-5">
+            <div class="page-title mb-3">
                 <h1>{{ t('general_business_home', default='Welcome to Ficore Business & Agent Tools') | e }}</h1>
-                <p class="subtext">{{ t('general_business_welcome_desc', default='Explore tools designed for business owners and agents to streamline financial management, track debtors, manage inventory, and more.') | e }}</p>
+                <p class="subtext text-muted">{{ t('general_business_welcome_desc', default='Explore tools designed for business owners and agents to streamline financial management, track debtors, manage inventory, and more.') | e }}</p>
             </div>
         </div>
 
         <!-- Tools Section -->
-        <section class="tools-section mb-4 mx-3">
-            <h2 class="text-center mb-4"><i class="bi bi-tools me-2"></i>{{ t('general_our_tools', default='Our Business & Agent Tools') | e }}</h2>
-            <p class="text-center mb-4">{{ t('general_business_tools_desc', default='Discover powerful tools to manage your business or support traders as an agent.') | e }}</p>
+        <section class="tools-section mb-3 mx-2 rounded shadow-sm">
+            <h2 class="text-center mb-3"><i class="bi bi-tools me-2"></i>{{ t('general_our_tools', default='Our Business & Agent Tools') | e }}</h2>
+            <p class="text-center mb-3 text-muted">{{ t('general_business_tools_desc', default='Discover powerful tools to manage your business or support traders as an agent.') | e }}</p>
             <div class="row g-3">
                 {% set explore_tools = [
                     {'endpoint': 'users.signup', 'role': 'trader', 'icon': 'bi-person-dash', 'label': t('general_debtors_creditors', default='Debtors & Creditors')},
@@ -171,9 +163,9 @@
                 ] %}
                 {% for tool in explore_tools %}
                 <div class="col-6 col-md-4">
-                    <a href="{{ url_for(tool.endpoint, role=tool.role) | e }}" class="card tool-card text-decoration-none d-flex flex-column align-items-center justify-content-center" aria-label="{{ tool.label | e }}">
-                        <i class="bi {{ tool.icon | default('bi-circle') | e }} mb-3"></i>
-                        <small class="tool-label">{{ tool.label | e }}</small>
+                    <a href="{{ url_for(tool.endpoint, role=tool.role) | e }}" class="toolcard d-flex flex-column align-items-center justify-content-center" aria-label="{{ tool.label | e }}">
+                        <i class="bi {{ tool.icon | default('bi-circle') | e }} action-icon"></i>
+                        <span class="action-label">{{ tool.label | e }}</span>
                     </a>
                 </div>
                 {% endfor %}
@@ -181,12 +173,12 @@
         </section>
 
         <!-- CTA Section -->
-        <section class="cta-section mb-4 mx-3 text-center">
+        <section class="cta-section mb-3 mx-2 rounded shadow-sm text-center">
             <h3>{{ t('general_ready_to_start', default='Ready to Take Control of Your Finances?') | e }}</h3>
-            <p>{{ t('general_business_signup_prompt', default='Sign up as a business owner or agent to access powerful financial management tools.') | e }}</p>
-            <div class="d-flex justify-content-center gap-3 flex-wrap">
-                <a href="{{ url_for('users.signup', role='trader') | e }}" class="btn btn-primary btn-sm px-4">{{ t('general_signup_business', default='Business Sign Up') | e }}</a>
-                <a href="{{ url_for('users.signup', role='agent') | e }}" class="btn btn-primary btn-sm px-4">{{ t('general_signup_agent', default='Agent Sign Up') | e }}</a>
+            <p class="text-muted">{{ t('general_business_signup_prompt', default='Sign up as a business owner or agent to access powerful financial management tools.') | e }}</p>
+            <div class="responsive-btn-group">
+                <a href="{{ url_for('users.signup', role='trader') | e }}" class="btn btn-primary btn-sm">{{ t('general_signup_business', default='Business Sign Up') | e }}</a>
+                <a href="{{ url_for('users.signup', role='agent') | e }}" class="btn btn-primary btn-sm">{{ t('general_signup_agent', default='Agent Sign Up') | e }}</a>
             </div>
         </section>
     {% endif %}
@@ -283,17 +275,17 @@ document.addEventListener('DOMContentLoaded', function() {
         netPositionEl.dataset.amount = netPosition;
 
         if (netPosition > 0) {
-            netPositionEl.classList.add('text-success');
+            netPositionEl.className = 'net-amount text-success';
             netStatusEl.textContent = `(${translations.owed_to_you})`;
-            netStatusEl.classList.add('text-success');
+            netStatusEl.className = 'net-status text-success';
         } else if (netPosition < 0) {
-            netPositionEl.classList.add('text-danger');
+            netPositionEl.className = 'net-amount text-danger';
             netStatusEl.textContent = `(${translations.you_owe})`;
-            netStatusEl.classList.add('text-danger');
+            netStatusEl.className = 'net-status text-danger';
         } else {
-            netPositionEl.classList.add('text-muted');
+            netPositionEl.className = 'net-amount text-muted';
             netStatusEl.textContent = `(${translations.balanced})`;
-            netStatusEl.classList.add('text-muted');
+            netStatusEl.className = 'net-status text-muted';
         }
     }
 
@@ -338,7 +330,7 @@ document.addEventListener('DOMContentLoaded', function() {
                                 </div>
                                 <div class="notification-content flex-grow-1">
                                     <div class="notification-description">${notification.message}</div>
-                                    <div class="notification-time">${formatTimeAgo(notification.timestamp)}</div>
+                                    <div class="notification-time text-muted">${formatTimeAgo(notification.timestamp)}</div>
                                 </div>
                             </div>
                         `).join('');
@@ -350,7 +342,7 @@ document.addEventListener('DOMContentLoaded', function() {
                                 </div>
                                 <div class="notification-content flex-grow-1">
                                     <div class="notification-description">${translations.no_notifications}</div>
-                                    <div class="notification-time">${translations.check_back_later}</div>
+                                    <div class="notification-time text-muted">${translations.check_back_later}</div>
                                 </div>
                             </div>
                         `;
@@ -373,22 +365,22 @@ document.addEventListener('DOMContentLoaded', function() {
                             <div class="activity-icon">
                                 <i class="bi ${getActivityIcon(activity.type)} ${getActivityColor(activity.type)}"></i>
                             </div>
-                            <div class="activity-content flex-grow-1">
+                            <div class="activity-content">
                                 <div class="activity-description">${activity.description}</div>
-                                <div class="activity-time">${formatTimeAgo(activity.timestamp)}</div>
+                                <div class="activity-time text-muted">${formatTimeAgo(activity.timestamp)}</div>
                             </div>
-                            ${activity.amount ? `<div class="activity-amount">${formatCurrency(activity.amount)}</div>` : ''}
+                            ${activity.amount ? `<div class="activity-amount text-nowrap">${formatCurrency(activity.amount)}</div>` : ''}
                         </div>
                     `).join('');
                 } else {
                     activityList.innerHTML = `
                         <div class="activity-item d-flex align-items-center gap-3">
                             <div class="activity-icon">
-                                <i class="bi bi-info-circle"></i>
+                                <i class="bi bi-info-circle text-muted"></i>
                             </div>
-                            <div class="activity-content flex-grow-1">
+                            <div class="activity-content">
                                 <div class="activity-description">${translations.no_recent_activity}</div>
-                                <div class="activity-time">${translations.start_by_adding_debt}</div>
+                                <div class="activity-time text-muted">${translations.start_by_adding_debt}</div>
                             </div>
                         </div>
                     `;
