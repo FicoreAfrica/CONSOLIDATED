@@ -111,7 +111,7 @@
                                 <div class="card-body text-center">
                                     <i class="{{ item.icon or 'bi bi-circle-fill' }} fs-1 mb-3"></i>
                                     <h5 class="card-title">{{ t(item.label_key, default=item.label) | e }}</h5>
-                                    <p class="card-text">{{ t(item['description_key'], default=item['description']) | e }}</p>
+                                    <p class="card-text">{{ t(item.get('description_key', ''), default=item.get('description', '')) | e }}</p>
                                     <a href="{{ url_for(item.endpoint) | e }}" class="btn btn-primary">{{ t('general_explore', default='Explore') | e }}</a>
                                 </div>
                             </div>
