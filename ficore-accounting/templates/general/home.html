@@ -7,7 +7,7 @@
         <!-- Top Header -->
         <div class="top-header d-flex justify-content-between align-items-center mb-4 py-3 px-4 bg-white shadow-sm rounded mx-3">
             <div class="d-flex align-items-center gap-3" style="min-width:0;">
-                <img src="{{ current_user.avatar_url or url_for('static', filename='img/default-profile.png') }}" class="rounded-circle" width="48" height="48" alt="{{ t('general_profile_alt', default='User profile picture') | e }}">
+                <img src="{{ current_user.avatar_url or url_for('static', filename='img/default_profile.png') }}" class="rounded-circle" width="48" height="48" alt="{{ t('general_profile_alt', default='User profile picture') | e }}">
                 <span class="welcome-text text-truncate fw-bold fs-5">{{ t('general_hello_user', default='Hello') | e }}, {{ current_user.display_name | default(current_user.id) | e }}</span>
             </div>
             <div class="header-actions d-flex justify-content-end align-items-center gap-3">
