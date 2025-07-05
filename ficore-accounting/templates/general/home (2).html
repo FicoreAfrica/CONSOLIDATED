@@ -1,0 +1,214 @@
+<script type="text/javascript">
+        var gk_isXlsx = false;
+        var gk_xlsxFileLookup = {};
+        var gk_fileData = {};
+        function filledCell(cell) {
+          return cell !== '' && cell != null;
+        }
+        function loadFileData(filename) {
+        if (gk_isXlsx && gk_xlsxFileLookup[filename]) {
+            try {
+                var workbook = XLSX.read(gk_fileData[filename], { type: 'base64' });
+                var firstSheetName = workbook.SheetNames[0];
+                var worksheet = workbook.Sheets[firstSheetName];
+
+                // Convert sheet to JSON to filter blank rows
+                var jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1, blankrows: false, defval: '' });
+                // Filter out blank rows (rows where all cells are empty, null, or undefined)
+                var filteredData = jsonData.filter(row => row.some(filledCell));
+
+                // Heuristic to find the header row by ignoring rows with fewer filled cells than the next row
+                var headerRowIndex = filteredData.findIndex((row, index) =>
+                  row.filter(filledCell).length >= filteredData[index + 1]?.filter(filledCell).length
+                );
+                // Fallback
+                if (headerRowIndex === -1 || headerRowIndex > 25) {
+                  headerRowIndex = 0;
+                }
+
+                // Convert filtered JSON back to CSV
+                var csv = XLSX.utils.aoa_to_sheet(filteredData.slice(headerRowIndex)); // Create a new sheet from filtered array of arrays
+                csv = XLSX.utils.sheet_to_csv(csv, { header: 1 });
+                return csv;
+            } catch (e) {
+                console.error(e);
+                return "";
+            }
+        }
+        return gk_fileData[filename] || "";
+        }
+        </script>{% extends 'base.html' %}
+{% block title %}{{ t('general_business_home', default='Business & Agent Home') | e }}{% endblock %}
+
+{% block content %}
+<div class="container">
+    {% if current_user.is_authenticated %}
+        <!-- Financial Summary -->
+        <section class="financial-summary">
+            <h2 class="section-title">{{ t('general_financial_summary', default='Financial Summary') | e }}</h2>
+            <div class="row row-cols-1 row-cols-md-2 g-3">
+                <div class="col">
+                    <div class="cta-debtor-card card">
+                        <div class="card-body">
+                            <h3 class="card-title">{{ t('general_i_owe', default='I Owe') | e }}</h3>
+                            <p class="card-text card-amount">
+                                <span class="currency-symbol">₦</span>0
+                            </p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col">
+                    <div class="cta-creditor-card card">
+                        <div class="card-body">
+                            <h3 class="card-title">{{ t('general_i_am_owed', default='I Am Owed') | e }}</h3>
+                            <p class="card-text card-amount">
+                                <span class="currency-symbol">₦</span>0
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="net-position-card card">
+                <div class="card-body">
+                    <div class="net-position-info">
+                        <span class="net-label card-title">{{ t('general_net_position', default='Net Position') | e }}:</span>
+                        <span class="net-amount">₦0</span>
+                    </div>
+                </div>
+            </div>
+
+            <a href="#" class="btn btn-primary w-100">{{ t('general_view_detailed_summary', default='View Detailed Summary') | e }}</a>
+        </section>
+
+        <!-- Financial Snapshots -->
+        <section class="financial-snapshots">
+            <h2 class="section-title">{{ t('general_snapshots', default='Financial Snapshots') | e }}</h2>
+            <div class="stat-cards-container">
+                <div class="stat-card card">
+                    <div class="snapshot-icon"><i class="bi bi-wallet2"></i></div>
+                    <div class="snapshot-info">
+                        <div class="snapshot-label">{{ t('general_wallet_balance', default='Wallet') | e }}</div>
+                        <div class="stat-card-value">₦0</div>
+                    </div>
+                </div>
+                <div class="stat-card card">
+                    <div class="snapshot-icon"><i class="bi bi-arrow-left-right"></i></div>
+                    <div class="snapshot-info">
+                        <div class="snapshot-label">{{ t('general_net_cashflow_mtd', default='Net Flow') | e }}</div>
+                        <div class="stat-card-value">₦0</div>
+                    </div>
+                </div>
+                <div class="stat-card card">
+                    <div class="snapshot-icon"><i class="bi bi-box-seam"></i></div>
+                    <div class="snapshot-info">
+                        <div class="snapshot-label">{{ t('general_inventory_value', default='Inventory') | e }}</div>
+                        <div class="stat-card-value">₦0</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Quick Actions -->
+        <section class="quick-actions">
+            <h2 class="section-title">{{ t('general_quick_actions', default='Quick Actions') | e }}</h2>
+            <div class="actions-grid">
+                {% for tool in tools %}
+                <a href="{{ url_for(tool.endpoint) }}" class="action-card card {{ tool.role }}">
+                    <div class="action-icon"><i class="{{ tool.icon }}"></i></div>
+                    <div class="action-label">
+                        {{ t(tool.label_key, default=tool.label) | e }}
+                        {% if tool.badge %}
+                        <span class="badge bg-primary">{{ tool.badge }}</span>
+                        {% endif %}
+                    </div>
+                </a>
+                {% endfor %}
+            </div>
+        </section>
+
+        <!-- Recent Activity -->
+        <section class="recent-activity">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h2 class="section-title">{{ t('general_recent_activity', default='Recent Activity') | e }}</h2>
+                <a href="#" class="btn btn-link">{{ t('general_view_all', default='View All') | e }}</a>
+            </div>
+            <div class="activity-list">
+                <div class="activity-item">
+                    <div class="activity-icon"><i class="bi bi-arrow-down-circle"></i></div>
+                    <div class="activity-content">
+                        <div class="activity-description">{{ t('general_loading_activities', default='Loading recent activities...') | e }}</div>
+                        <div class="activity-time">{{ t('general_just_now', default='Just now') | e }}</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Explore Features -->
+        <section class="navigation-cards">
+            <h2 class="section-title">{{ t('general_explore_features', default='Explore Features') | e }}</h2>
+            <div class="row row-cols-1 row-cols-md-2 g-3">
+                {% for item in nav_items %}
+                <div class="col">
+                    <a href="{{ url_for(item.endpoint) }}" class="nav-card card">
+                        <div class="nav-card-icon"><i class="{{ item.icon }}"></i></div>
+                        <div class="nav-card-content">
+                            <h4 class="card-title">{{ t(item.label_key, default=item.label) | e }}</h4>
+                        </div>
+                    </a>
+                </div>
+                {% endfor %}
+            </div>
+        </section>
+
+    {% else %}
+        <!-- Welcome Section -->
+        <section class="card card-wide">
+            <div class="card-body">
+                <h1 class="card-title">{{ t('general_business_home', default='Welcome to Ficore Business & Agent Tools') | e }}</h1>
+                <p class="card-text">{{ t('general_business_welcome_desc', default='Explore tools designed for business owners and agents to streamline financial management, track debtors, manage inventory, and more.') | e }}</p>
+            </div>
+        </section>
+
+        <!-- Our Tools -->
+        <section class="navigation-cards">
+            <h2 class="section-title">{{ t('general_our_tools', default='Our Business & Agent Tools') | e }}</h2>
+            <p class="card-text mb-3">{{ t('general_business_tools_desc', default='Discover powerful tools to manage your business or support traders as an agent.') | e }}</p>
+            <div class="row row-cols-1 row-cols-md-2 g-3">
+                {% set explore_tools = [
+                    {'endpoint': 'users.signup', 'role': 'trader', 'icon': 'bi-person-dash', 'label': t('general_debtors_creditors', default='Debtors & Creditors')},
+                    {'endpoint': 'users.signup', 'role': 'trader', 'icon': 'bi-box-seam', 'label': t('inventory_management', default='Inventory Management')},
+                    {'endpoint': 'users.signup', 'role': 'trader', 'icon': 'bi-arrow-down-circle', 'label': t('general_money_in_out', default='Money In & Out')},
+                    {'endpoint': 'users.signup', 'role': 'agent', 'icon': 'bi-person-plus', 'label': t('agents_register_trader', default='Register Traders')},
+                    {'endpoint': 'users.signup', 'role': 'trader', 'icon': 'bi-coin', 'label': t('coins_your_wallet', default='Your Wallet')},
+                    {'endpoint': 'users.signup', 'role': 'trader', 'icon': 'bi-calculator', 'label': t('general_taxation', default='Taxation')}
+                ] %}
+                {% for tool in explore_tools %}
+                <div class="col">
+                    <a href="{{ url_for(tool.endpoint) }}" class="toolcard card">
+                        <div class="card-icon"><i class="{{ tool.icon }}"></i></div>
+                        <h3 class="card-title">{{ tool.label | e }}</h3>
+                    </a>
+                </div>
+                {% endfor %}
+            </div>
+        </section>
+
+        <!-- Call to Action -->
+        <section class="card card-wide">
+            <div class="card-body">
+                <h2 class="card-title">{{ t('general_ready_to_start', default='Ready to Take Control of Your Finances?') | e }}</h2>
+                <p class="card-text">{{ t('general_business_signup_prompt', default='Sign up as a business owner or agent to access powerful financial management tools.') | e }}</p>
+                <div class="d-grid gap-2 responsive-btn-group">
+                    <a href="{{ url_for('users.signup', role='trader') }}" class="btn btn-primary">{{ t('general_signup_business', default='Business Sign Up') | e }}</a>
+                    <a href="{{ url_for('users.signup', role='agent') }}" class="btn btn-secondary">{{ t('general_signup_agent', default='Agent Sign Up') | e }}</a>
+                </div>
+            </div>
+        </section>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+{% endblock extra_scripts %}
+{% endblock %}
