@@ -127,12 +127,12 @@
             <div class="row g-3">
                 {% for tool in tools %}
                 <div class="col-4 col-sm-4 col-md-3">
-                    <a href="{{ tool.url | e }}" class="card action-card text-center shadow-sm py-4 h-100 text-decoration-none position-relative d-flex flex-column align-items-center justify-content-center" aria-label="{{ t(tool.label, default=tool.label) | e }}">
+                    <a href="{{ tool.url | default('#') | e }}" class="card action-card text-center shadow-sm py-4 h-100 text-decoration-none position-relative d-flex flex-column align-items-center justify-content-center" aria-label="{{ t(tool.label_key, default=tool.label) | e }}">
                         {% if tool.badge %}
                         <span class="badge bg-danger position-absolute top-0 end-0 translate-middle rounded-pill">{{ tool.badge }}</span>
                         {% endif %}
-                        <i class="bi {{ tool.icon | e }} fs-3 mb-3 text-primary"></i>
-                        <small class="action-label text-center text-truncate fw-bold fs-6">{{ t(tool.label, default=tool.label) | e }}</small>
+                        <i class="bi {{ tool.icon | default('bi-circle') | e }} fs-3 mb-3 text-primary"></i>
+                        <small class="action-label text-center text-truncate fw-bold fs-6">{{ t(tool.label_key, default=tool.label) | e }}</small>
                     </a>
                 </div>
                 {% endfor %}
@@ -166,11 +166,11 @@
             <div class="row g-3">
                 {% for item in nav_items %}
                 <div class="col-6 col-md-4">
-                    <a href="{{ item.get('url', '#') | e }}" class="card nav-card p-4 rounded shadow-sm h-100 bg-light text-decoration-none d-flex flex-column align-items-center justify-content-center" aria-label="{{ t(item.get('label', ''), default=item.get('label', '')) | e }}">
+                    <a href="{{ item.url | default('#') | e }}" class="card nav-card p-4 rounded shadow-sm h-100 bg-light text-decoration-none d-flex flex-column align-items-center justify-content-center" aria-label="{{ t(item.label_key, default=item.label) | e }}">
                         <div class="nav-card-icon mb-3">
-                            <i class="bi {{ item.get('icon', '') | e }} fs-3 text-primary"></i>
+                            <i class="bi {{ item.icon | default('bi-circle') | e }} fs-3 text-primary"></i>
                         </div>
-                        <h4 class="text-truncate fs-5 fw-bold">{{ t(item.get('label', ''), default=item.get('label', '')) | e }}</h4>
+                        <h4 class="text-truncate fs-5 fw-bold">{{ t(item.label_key, default=item.label) | e }}</h4>
                     </a>
                 </div>
                 {% endfor %}
@@ -181,8 +181,8 @@
         <nav class="bottom-nav fixed-bottom bg-white border-top d-flex justify-content-around align-items-center py-3 d-lg-none shadow-sm" role="navigation" style="z-index: 1050;">
             {% set max_items = 4 %}
             {% for item in bottom_nav_items[:max_items] %}
-            <a href="{{ url_for(item.endpoint) if item.endpoint else item.get('url', '#') | e }}" aria-label="{{ t(item.label_key, default=item.label) | e }}" class="nav-item text-center text-dark text-decoration-none {{ 'active' if request.endpoint == item.endpoint }} d-flex flex-column align-items-center" data-bs-toggle="tooltip" data-bs-title="{{ t(item.tooltip_key, default=item.label) | e }}">
-                <i class="bi {{ item.icon | e }} fs-3 mb-2"></i>
+            <a href="{{ url_for(item.endpoint) if item.endpoint else item.url | default('#') | e }}" aria-label="{{ t(item.label_key, default=item.label) | e }}" class="nav-item text-center text-dark text-decoration-none {{ 'active' if request.endpoint == item.endpoint }} d-flex flex-column align-items-center" data-bs-toggle="tooltip" data-bs-title="{{ t(item.tooltip_key, default=item.label) | e }}">
+                <i class="bi {{ item.icon | default('bi-circle') | e }} fs-3 mb-2"></i>
                 <div class="nav-label text-truncate fw-bold fs-7" style="max-width: 80px;">{{ t(item.label_key, default=item.label) | e }}</div>
             </a>
             {% endfor %}
@@ -212,8 +212,8 @@
                 {% for tool in explore_tools %}
                 <div class="col-6 col-md-4">
                     <a href="{{ url_for(tool.endpoint, role=tool.role) | e }}" class="card tool-card text-center shadow-sm py-4 h-100 text-decoration-none d-flex flex-column align-items-center justify-content-center" aria-label="{{ tool.label | e }}">
-                        <i class="bi {{ tool.icon }} fs-3 mb-3 text-primary"></i>
-                        <small class="tool-label text-truncate fw-bold fs-6">{{ tool.label | e }}</small>
+                        <i class="bi {{ tool.icon | default('bi-circle') | e }} fs-3 mb-3 text-primary"></i>
+                        <small class="tool-label text-center text-truncate fw-bold fs-6">{{ tool.label | e }}</small>
                     </a>
                 </div>
                 {% endfor %}
@@ -263,6 +263,13 @@ document.addEventListener('DOMContentLoaded', function() {
     // Initialize tooltips
     document.querySelectorAll('[data-bs-toggle="tooltip"]').forEach(tooltipTriggerEl => {
         new bootstrap.Tooltip(tooltipTriggerEl);
+    });
+
+    // Debug icons
+    document.querySelectorAll('.bi').forEach(icon => {
+        if (!icon.className.includes('bi-')) {
+            console.warn('Invalid or missing Bootstrap Icon class:', icon.className);
+        }
     });
 
     // Navigation highlighting
