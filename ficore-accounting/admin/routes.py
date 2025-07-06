@@ -92,8 +92,8 @@ def dashboard():
                 'learning_progress': learning_progress_count
             },
             recent_users=recent_users,
-            tools=utils.ALL_TOOLS,
-            nav_items=utils.ADMIN_EXPLORE_FEATURES,
+            tools_for_template=utils.ALL_TOOLS,
+            explore_features_for_template=utils.ADMIN_EXPLORE_FEATURES,
             bottom_nav_items=utils.ADMIN_NAV,
             t=trans,
             lang=session.get('lang', 'en')
@@ -104,8 +104,8 @@ def dashboard():
         return render_template(
             '500.html',
             error=str(e),
-            tools=utils.ALL_TOOLS,
-            nav_items=utils.ADMIN_EXPLORE_FEATURES,
+            tools_for_template=utils.ALL_TOOLS,
+            explore_features_for_template=utils.ADMIN_EXPLORE_FEATURES,
             bottom_nav_items=utils.ADMIN_NAV,
             t=trans,
             lang=session.get('lang', 'en')
@@ -125,8 +125,8 @@ def manage_users():
         return render_template(
             'admin/users.html',
             users=users,
-            tools=utils.ALL_TOOLS,
-            nav_items=utils.ADMIN_EXPLORE_FEATURES,
+            tools_for_template=utils.ALL_TOOLS,
+            explore_features_for_template=utils.ADMIN_EXPLORE_FEATURES,
             bottom_nav_items=utils.ADMIN_NAV,
             t=trans,
             lang=session.get('lang', 'en')
@@ -137,8 +137,8 @@ def manage_users():
         return render_template(
             'admin/users.html',
             users=[],
-            tools=utils.ALL_TOOLS,
-            nav_items=utils.ADMIN_EXPLORE_FEATURES,
+            tools_for_template=utils.ALL_TOOLS,
+            explore_features_for_template=utils.ADMIN_EXPLORE_FEATURES,
             bottom_nav_items=utils.ADMIN_NAV,
             t=trans,
             lang=session.get('lang', 'en')
@@ -253,8 +253,8 @@ def credit_coins():
                 return render_template(
                     'admin/reset.html',
                     form=form,
-                    tools=utils.ALL_TOOLS,
-                    nav_items=utils.ADMIN_EXPLORE_FEATURES,
+                    tools_for_template=utils.ALL_TOOLS,
+                    explore_features_for_template=utils.ADMIN_EXPLORE_FEATURES,
                     bottom_nav_items=utils.ADMIN_NAV,
                     t=trans,
                     lang=session.get('lang', 'en')
@@ -282,8 +282,8 @@ def credit_coins():
             return render_template(
                 'admin/reset.html',
                 form=form,
-                tools=utils.ALL_TOOLS,
-                nav_items=utils.ADMIN_EXPLORE_FEATURES,
+                tools_for_template=utils.ALL_TOOLS,
+                explore_features_for_template=utils.ADMIN_EXPLORE_FEATURES,
                 bottom_nav_items=utils.ADMIN_NAV,
                 t=trans,
                 lang=session.get('lang', 'en')
@@ -291,8 +291,8 @@ def credit_coins():
     return render_template(
         'admin/reset.html',
         form=form,
-        tools=utils.ALL_TOOLS,
-        nav_items=utils.ADMIN_EXPLORE_FEATURES,
+        tools_for_template=utils.ALL_TOOLS,
+        explore_features_for_template=utils.ADMIN_EXPLORE_FEATURES,
         bottom_nav_items=utils.ADMIN_NAV,
         t=trans,
         lang=session.get('lang', 'en')
@@ -312,8 +312,8 @@ def audit():
         return render_template(
             'admin/audit.html',
             logs=logs,
-            tools=utils.ALL_TOOLS,
-            nav_items=utils.ADMIN_EXPLORE_FEATURES,
+            tools_for_template=utils.ALL_TOOLS,
+            explore_features_for_template=utils.ADMIN_EXPLORE_FEATURES,
             bottom_nav_items=utils.ADMIN_NAV,
             t=trans,
             lang=session.get('lang', 'en')
@@ -324,8 +324,8 @@ def audit():
         return render_template(
             'admin/audit.html',
             logs=[],
-            tools=utils.ALL_TOOLS,
-            nav_items=utils.ADMIN_EXPLORE_FEATURES,
+            tools_for_template=utils.ALL_TOOLS,
+            explore_features_for_template=utils.ADMIN_EXPLORE_FEATURES,
             bottom_nav_items=utils.ADMIN_NAV,
             t=trans,
             lang=session.get('lang', 'en')
@@ -377,8 +377,8 @@ def manage_agents():
             'admin/manage_agents.html',
             form=form,
             agents=agents,
-            tools=utils.ALL_TOOLS,
-            nav_items=utils.ADMIN_EXPLORE_FEATURES,
+            tools_for_template=utils.ALL_TOOLS,
+            explore_features_for_template=utils.ADMIN_EXPLORE_FEATURES,
             bottom_nav_items=utils.ADMIN_NAV,
             t=trans,
             lang=session.get('lang', 'en')
@@ -391,8 +391,8 @@ def manage_agents():
             'admin/manage_agents.html',
             form=form,
             agents=[],
-            tools=utils.ALL_TOOLS,
-            nav_items=utils.ADMIN_EXPLORE_FEATURES,
+            tools_for_template=utils.ALL_TOOLS,
+            explore_features_for_template=utils.ADMIN_EXPLORE_FEATURES,
             bottom_nav_items=utils.ADMIN_NAV,
             t=trans,
             lang=session.get('lang', 'en')
@@ -412,8 +412,8 @@ def admin_budgets():
         return render_template(
             'admin/budgets.html',
             budgets=budgets,
-            tools=utils.ALL_TOOLS,
-            nav_items=utils.ADMIN_EXPLORE_FEATURES,
+            tools_for_template=utils.ALL_TOOLS,
+            explore_features_for_template=utils.ADMIN_EXPLORE_FEATURES,
             bottom_nav_items=utils.ADMIN_NAV,
             t=trans,
             lang=session.get('lang', 'en')
@@ -424,8 +424,8 @@ def admin_budgets():
         return render_template(
             'admin/budgets.html',
             budgets=[],
-            tools=utils.ALL_TOOLS,
-            nav_items=utils.ADMIN_EXPLORE_FEATURES,
+            tools_for_template=utils.ALL_TOOLS,
+            explore_features_for_template=utils.ADMIN_EXPLORE_FEATURES,
             bottom_nav_items=utils.ADMIN_NAV,
             t=trans,
             lang=session.get('lang', 'en')
@@ -466,8 +466,8 @@ def admin_bills():
         return render_template(
             'admin/bills.html',
             bills=bills,
-            tools=utils.ALL_TOOLS,
-            nav_items=utils.ADMIN_EXPLORE_FEATURES,
+            tools_for_template=utils.ALL_TOOLS,
+            explore_features_for_template=utils.ADMIN_EXPLORE_FEATURES,
             bottom_nav_items=utils.ADMIN_NAV,
             t=trans,
             lang=session.get('lang', 'en')
@@ -478,8 +478,8 @@ def admin_bills():
         return render_template(
             'admin/bills.html',
             bills=[],
-            tools=utils.ALL_TOOLS,
-            nav_items=utils.ADMIN_EXPLORE_FEATURES,
+            tools_for_template=utils.ALL_TOOLS,
+            explore_features_for_template=utils.ADMIN_EXPLORE_FEATURES,
             bottom_nav_items=utils.ADMIN_NAV,
             t=trans,
             lang=session.get('lang', 'en')
@@ -544,8 +544,8 @@ def admin_emergency_funds():
         return render_template(
             'admin/emergency_funds.html',
             funds=funds,
-            tools=utils.ALL_TOOLS,
-            nav_items=utils.ADMIN_EXPLORE_FEATURES,
+            tools_for_template=utils.ALL_TOOLS,
+            explore_features_for_template=utils.ADMIN_EXPLORE_FEATURES,
             bottom_nav_items=utils.ADMIN_NAV,
             t=trans,
             lang=session.get('lang', 'en')
@@ -556,8 +556,8 @@ def admin_emergency_funds():
         return render_template(
             'admin/emergency_funds.html',
             funds=[],
-            tools=utils.ALL_TOOLS,
-            nav_items=utils.ADMIN_EXPLORE_FEATURES,
+            tools_for_template=utils.ALL_TOOLS,
+            explore_features_for_template=utils.ADMIN_EXPLORE_FEATURES,
             bottom_nav_items=utils.ADMIN_NAV,
             t=trans,
             lang=session.get('lang', 'en')
@@ -598,8 +598,8 @@ def admin_net_worth():
         return render_template(
             'admin/net_worth.html',
             net_worths=net_worths,
-            tools=utils.ALL_TOOLS,
-            nav_items=utils.ADMIN_EXPLORE_FEATURES,
+            tools_for_template=utils.ALL_TOOLS,
+            explore_features_for_template=utils.ADMIN_EXPLORE_FEATURES,
             bottom_nav_items=utils.ADMIN_NAV,
             t=trans,
             lang=session.get('lang', 'en')
@@ -610,8 +610,8 @@ def admin_net_worth():
         return render_template(
             'admin/net_worth.html',
             net_worths=[],
-            tools=utils.ALL_TOOLS,
-            nav_items=utils.ADMIN_EXPLORE_FEATURES,
+            tools_for_template=utils.ALL_TOOLS,
+            explore_features_for_template=utils.ADMIN_EXPLORE_FEATURES,
             bottom_nav_items=utils.ADMIN_NAV,
             t=trans,
             lang=session.get('lang', 'en')
@@ -652,8 +652,8 @@ def admin_quiz_results():
         return render_template(
             'admin/quiz_results.html',
             quiz_results=quiz_results,
-            tools=utils.ALL_TOOLS,
-            nav_items=utils.ADMIN_EXPLORE_FEATURES,
+            tools_for_template=utils.ALL_TOOLS,
+            explore_features_for_template=utils.ADMIN_EXPLORE_FEATURES,
             bottom_nav_items=utils.ADMIN_NAV,
             t=trans,
             lang=session.get('lang', 'en')
@@ -664,8 +664,8 @@ def admin_quiz_results():
         return render_template(
             'admin/quiz_results.html',
             quiz_results=[],
-            tools=utils.ALL_TOOLS,
-            nav_items=utils.ADMIN_EXPLORE_FEATURES,
+            tools_for_template=utils.ALL_TOOLS,
+            explore_features_for_template=utils.ADMIN_EXPLORE_FEATURES,
             bottom_nav_items=utils.ADMIN_NAV,
             t=trans,
             lang=session.get('lang', 'en')
@@ -706,8 +706,8 @@ def admin_learning_hub():
         return render_template(
             'admin/learning_hub.html',
             progress=progress,
-            tools=utils.ALL_TOOLS,
-            nav_items=utils.ADMIN_EXPLORE_FEATURES,
+            tools_for_template=utils.ALL_TOOLS,
+            explore_features_for_template=utils.ADMIN_EXPLORE_FEATURES,
             bottom_nav_items=utils.ADMIN_NAV,
             t=trans,
             lang=session.get('lang', 'en')
@@ -718,8 +718,8 @@ def admin_learning_hub():
         return render_template(
             'admin/learning_hub.html',
             progress=[],
-            tools=utils.ALL_TOOLS,
-            nav_items=utils.ADMIN_EXPLORE_FEATURES,
+            tools_for_template=utils.ALL_TOOLS,
+            explore_features_for_template=utils.ADMIN_EXPLORE_FEATURES,
             bottom_nav_items=utils.ADMIN_NAV,
             t=trans,
             lang=session.get('lang', 'en')
