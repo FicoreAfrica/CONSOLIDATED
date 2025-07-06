@@ -13,6 +13,7 @@ CREDITORS_TRANSLATIONS = {
         'creditors_delete_creditor': 'Delete Creditor',
         'creditors_create_what_you_owe': 'Create What You Owe',
                 # creditors module (English)
+        'creditors_tooltip': 'I Owe',
         'creditors_create_what_you_owe_desc': 'Create a record of what you owe',
         'creditors_details': 'Creditor Details',
         'creditors_send_delivery_reminder': 'Send Delivery Reminder',
@@ -103,6 +104,7 @@ CREDITORS_TRANSLATIONS = {
         # Creditors
         'creditors_amount_owed': 'Adadin Bashi',
         'creditors_30_days': 'Kwanaki 0-30',
+        'creditors_tooltip': 'Masu binka',
         'creditors_60_days': 'Kwanaki 31-60',
         'creditors_90_days': 'Kwanaki 61-90',
         'creditors_over_90_days': 'Sama da Kwanaki 90',
