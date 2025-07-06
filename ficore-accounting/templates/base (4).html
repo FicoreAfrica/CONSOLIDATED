@@ -1,0 +1,281 @@
+<script type="text/javascript">
+        var gk_isXlsx = false;
+        var gk_xlsxFileLookup = {};
+        var gk_fileData = {};
+        function filledCell(cell) {
+          return cell !== '' && cell != null;
+        }
+        function loadFileData(filename) {
+        if (gk_isXlsx && gk_xlsxFileLookup[filename]) {
+            try {
+                var workbook = XLSX.read(gk_fileData[filename], { type: 'base64' });
+                var firstSheetName = workbook.SheetNames[0];
+                var worksheet = workbook.Sheets[firstSheetName];
+
+                // Convert sheet to JSON to filter blank rows
+                var jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1, blankrows: false, defval: '' });
+                // Filter out blank rows (rows where all cells are empty, null, or undefined)
+                var filteredData = jsonData.filter(row => row.some(filledCell));
+
+                // Heuristic to find the header row by ignoring rows with fewer filled cells than the next row
+                var headerRowIndex = filteredData.findIndex((row, index) =>
+                  row.filter(filledCell).length >= filteredData[index + 1]?.filter(filledCell).length
+                );
+                // Fallback
+                if (headerRowIndex === -1 || headerRowIndex > 25) {
+                  headerRowIndex = 0;
+                }
+
+                // Convert filtered JSON back to CSV
+                var csv = XLSX.utils.aoa_to_sheet(filteredData.slice(headerRowIndex)); // Create a new sheet from filtered array of arrays
+                csv = XLSX.utils.sheet_to_csv(csv, { header: 1 });
+                return csv;
+            } catch (e) {
+                console.error(e);
+                return "";
+            }
+        }
+        return gk_fileData[filename] || "";
+        }
+        </script><!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}{% endblock %}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+    {% block extra_head %}{% endblock %}
+</head>
+<body>
+    {% if current_user.is_authenticated %}
+    <div class="top-header">
+        <div>
+            <p>{{ t('general_hello_user', default='Hello') | e }}, {{ current_user.name | default(current_user.id) | e }}</p>
+        </div>
+        <div>
+            <div>
+                <a href="{{ url_for('main.index') }}">{{ t('general_ficore_africa', default='Ficore Africa') | e }}</a>
+            </div>
+            <div>
+                <span>{{ session.get('lang', 'en').upper() | e }}</span>
+                <a href="{{ url_for('main.set_language', lang='en') }}">{{ t('general_english', default='English') | e }}</a>
+                <a href="{{ url_for('main.set_language', lang='ha') }}">{{ t('general_hausa', default='Hausa') | e }}</a>
+            </div>
+        </div>
+    </div>
+    {% else %}
+    <div class="top-header">
+        <div>
+            <a href="{{ url_for('main.index') }}">{{ t('general_ficore_africa', default='Ficore Africa') | e }}</a>
+        </div>
+        <nav>
+            <a href="{{ url_for('main.index') }}">{{ t('general_home', default='Home') | e }}</a>
+            <a href="{{ url_for('main.about') }}">{{ t('general_about', default='About') | e }}</a>
+            <a href="{{ url_for('main.contact') }}">{{ t('general_contact', default='Contact') | e }}</a>
+            <a href="{{ url_for('auth.login') }}">{{ t('general_login', default='Login') | e }}</a>
+            <a href="{{ url_for('auth.signup') }}">{{ t('general_signup', default='Sign Up') | e }}</a>
+            <div>
+                <span>{{ session.get('lang', 'en').upper() | e }}</span>
+                <a href="{{ url_for('main.set_language', lang='en') }}">{{ t('general_english', default='English') | e }}</a>
+                <a href="{{ url_for('main.set_language', lang='ha') }}">{{ t('general_hausa', default='Hausa') | e }}</a>
+            </div>
+        </nav>
+    </div>
+    {% endif %}
+
+    <main class="main-content">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }}">
+                        <p>{{ t(message, default=message) | e }}</p>
+                        <button class="close" data-dismiss="alert">×</button>
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+        {% block content %}{% endblock %}
+    </main>
+
+    {% if current_user.is_authenticated %}
+    <nav class="bottom-navigation navbar bg-white border-top shadow-sm" role="navigation" aria-label="Bottom navigation">
+        <div class="nav-container">
+            {% if bottom_nav_items %}
+                {% for item in bottom_nav_items[:4] %}
+                    <a href="{{ url_for(item.endpoint) }}" class="nav-item">
+                        <i class="bi {{ item.icon }}" aria-hidden="true"></i>
+                        <span class="nav-label">{{ t(item.label_key, default=item.label) | e }}</span>
+                    </a>
+                {% endfor %}
+            {% endif %}
+        </div>
+    </nav>
+    {% endif %}
+
+    {% if not current_user.is_authenticated %}
+    <footer class="footer">
+        <p>{{ t('general_about_ficore_africa', default='About Ficore Africa') | e }}: {{ t('general_empowering_financial_growth', default='Empowering financial growth across Africa since 2025') | e }}</p>
+        <p>{{ t('general_disclaimer', default='Ficore is not a bank and does not hold or move funds.') | e }} <a href="{{ url_for('main.about') }}">{{ t('general_learn_more', default='Learn more') | e }}</a></p>
+        <nav>
+            <a href="{{ url_for('main.terms') }}">{{ t('general_terms_of_service', default='Terms of Service') | e }}</a>
+            <a href="{{ url_for('main.privacy') }}">{{ t('general_privacy_policy', default='Privacy Policy') | e }}</a>
+            <a href="{{ url_for('main.contact') }}">{{ t('general_contact_us', default='Contact Us') | e }}</a>
+            <a href="{{ url_for('main.feedback') }}">{{ t('general_provide_feedback', default='Provide Feedback') | e }}</a>
+            <a href="{{ url_for('auth.login') }}">{{ t('general_login', default='Login') | e }}</a>
+        </nav>
+        <div>
+            <a href="https://linkedin.com/company/ficore-africa" target="_blank">LinkedIn</a>
+            <a href="https://twitter.com/ficore_africa" target="_blank">Twitter</a>
+            <a href="https://facebook.com/ficore.africa" target="_blank">Facebook</a>
+        </div>
+    </footer>
+    {% endif %}
+
+    <div class="notifications">
+        <div>
+            <h3>{{ t('general_notifications', default='Notifications') | e }}</h3>
+            <button class="close" data-dismiss="notifications">{{ t('general_close', default='Close') | e }}</button>
+        </div>
+        <div>
+            <div class="notification-item">
+                <p>{{ t('general_loading_notifications', default='Loading notifications...') | e }}</p>
+                <span>{{ t('general_just_now', default='Just now') | e }}</span>
+            </div>
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/scripts.js') }}"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Initialize tooltips
+            const tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]');
+            tooltipTriggerList.forEach(tooltipTriggerEl => new bootstrap.Tooltip(tooltipTriggerEl));
+
+            // Debug icons
+            document.querySelectorAll('.bi').forEach(icon => {
+                if (!icon.className.includes('bi-')) {
+                    console.warn('Invalid or missing Bootstrap Icon class:', icon.className);
+                }
+            });
+
+            // Debug bottom navigation positioning
+            const bottomNav = document.querySelector('.bottom-navigation');
+            if (bottomNav) {
+                const computedStyle = window.getComputedStyle(bottomNav);
+                if (computedStyle.position !== 'fixed' || computedStyle.bottom !== '0px') {
+                    console.warn('Bottom navigation positioning issue detected:', {
+                        position: computedStyle.position,
+                        bottom: computedStyle.bottom,
+                        top: computedStyle.top
+                    });
+                }
+            }
+
+            // Dark mode initialization
+            const storedDarkMode = localStorage.getItem('dark_mode');
+            const isDark = storedDarkMode === 'true';
+            if (isDark) {
+                document.documentElement.classList.add('dark-mode');
+                const toggle = document.getElementById('darkModeToggle');
+                if (toggle) {
+                    toggle.querySelector('i').className = 'bi bi-sun fs-3';
+                    toggle.setAttribute('data-bs-title', '{{ t("general_mode_toggle_tooltip_switch_to_light", default="Switch to light mode") | e }}');
+                    toggle.setAttribute('aria-label', '{{ t("general_mode_toggle_light", default="Toggle light mode") | e }}');
+                }
+            }
+
+            {% if current_user.is_authenticated %}
+                loadNotificationCount();
+            {% endif %}
+        });
+
+        window.toggleDarkMode = function () {
+            const isDark = !document.documentElement.classList.contains('dark-mode');
+            document.documentElement.classList.toggle('dark-mode', isDark);
+            localStorage.setItem('dark_mode', isDark);
+            const darkModeToggle = document.getElementById('darkModeToggle');
+            if (darkModeToggle) {
+                darkModeToggle.querySelector('i').className = isDark ? 'bi bi-sun fs-3' : 'bi bi-moon-stars fs-3';
+                darkModeToggle.setAttribute('data-bs-title', isDark ? '{{ t("general_mode_toggle_tooltip_switch_to_light", default="Switch to light mode") | e }}' : '{{ t("general_mode_toggle_tooltip_switch_to_dark", default="Switch to dark mode") | e }}');
+                darkModeToggle.setAttribute('aria-label', isDark ? '{{ t("general_mode_toggle_light", default="Toggle light mode") | e }}' : '{{ t("general_mode_toggle_dark", default="Toggle dark mode") | e }}');
+                const tooltip = bootstrap.Tooltip.getInstance(darkModeToggle);
+                if (tooltip) tooltip.dispose();
+                new bootstrap.Tooltip(darkModeToggle);
+            }
+        };
+
+        async function loadNotificationCount() {
+            try {
+                const response = await fetch('{{ url_for("notification_count") | e }}');
+                if (!response.ok) throw new Error('Network response was not ok');
+                const data = await response.json();
+                const badge = document.getElementById('notificationBadge');
+                if (badge) {
+                    if (data.count > 0) {
+                        badge.textContent = data.count;
+                        badge.classList.remove('d-none');
+                    } else {
+                        badge.classList.add('d-none');
+                    }
+                }
+            } catch (error) {
+                console.error('Failed to load notification count:', error);
+            }
+        }
+
+        async function loadNotifications()            const body = document.getElementById('notificationBody');
+            if (!body) {
+                console.warn('Notification modal body (#notificationBody) not found.');
+                return;
+            }
+            try {
+                const response = await fetch('{{ url_for("notifications") | e }}');
+                if (!response.ok) throw new Error('Network response was not ok');
+                const data = await response.json();
+                if (data.error) {
+                    body.innerHTML = `<p class="text-danger">{{ t('general_notification_load_error', default='Failed to load notifications') | e }}</p>`;
+                    return;
+                }
+                if (data.length === 0) {
+                    body.innerHTML = `<p class="text-muted text-center">{{ t('general_no_notifications_yet', default='No new notifications.') | e }}</p>`;
+                } else {
+                    body.innerHTML = data.map(notification => `
+                        <div class="notification-item d-flex align-items-center gap-3 p-3 ${notification.read ? 'read' : 'unread'}">
+                            <div class="notification-icon">
+                                <i class="bi bi-bell ${notification.read ? 'text-muted' : 'text-primary'} fs-4"></i>
+                            </div>
+                            <div class="notification-content flex-grow-1">
+                                <div class="notification-description text-truncate fs-6">${notification.message}</div>
+                                <div class="notification-time text-muted fs-7">${formatTimeAgo(notification.timestamp)}</div>
+                            </div>
+                        </div>
+                    `).join('');
+                }
+            } catch (error) {
+                body.innerHTML = `<p class="text-danger">{{ t('general_notification_load_error', default='Failed to load notifications') | e }}</p>`;
+                console.error('Failed to load notifications:', error);
+            }
+        }
+
+        function formatTimeAgo(timestamp) {
+            const translations = {
+                just_now: '{{ t("general_just_now", default="Just now") | e }}',
+                minutes_ago: '{{ t("general_minutes_ago", default="m ago") | e }}',
+                hours_ago: '{{ t("general_hours_ago", default="h ago") | e }}',
+                days_ago: '{{ t("general_days_ago", default="d ago") | e }}'
+            };
+            const now = new Date();
+            const time = new Date(timestamp);
+            const diffInSeconds = Math.floor((now - time) / 1000);
+            if (diffInSeconds < 60) return translations.just_now;
+            if (diffInSeconds < 3600) return Math.floor(diffInSeconds / 60) + ' ' + translations.minutes_ago;
+            if (diffInSeconds < 86400) return Math.floor(diffInSeconds / 3600) + ' ' + translations.hours_ago;
+            return Math.floor(diffInSeconds / 86400) + ' ' + translations.days_ago;
+        }
+
+        document.getElementById('notificationModal')?.addEventListener('show.bs.modal', loadNotifications);
+    </script>
+    {% block base_scripts %}{% endblock %}
+    {% block extra_scripts %}{% endblock %}
+</body>
+</html>
