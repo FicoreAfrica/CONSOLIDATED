@@ -8,6 +8,7 @@ INVENTORY_TRANSLATIONS = {
         'inventory_list': 'Inventory List',
         'inventory_add_item': 'Add Item',
         'inventory_hausa': 'Inventory',
+        'inventory_dashboard_desc': 'Inventory',
         'inventory_management_tab': 'Inventory',
         'inventory_tooltip': 'Manage your inventory',
         'inventory_title': 'Inventory Management',
@@ -119,6 +120,7 @@ INVENTORY_TRANSLATIONS = {
         'inventory_no_inventory': 'Babu jari da aka rubuta',
         # Inventory
         'inventory_unit': 'Naúri',
+        'inventory_dashboard_desc': 'Haja',
         'inventory_buying_price': 'Farashin Saye',
         'inventory_selling_price': 'Farashin Sayarwa',
         'inventory_threshold': 'Ƙofa',
