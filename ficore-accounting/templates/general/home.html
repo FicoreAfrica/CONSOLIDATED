@@ -224,7 +224,7 @@
                         </a>
                     </div>
                     <div class="col-6">
-                        <a href="{{ url_for('wallet.index') }}" class="d-block text-decoration-none h-100">
+                        <a href="{{ url_for('reports.index') }}" class="d-block text-decoration-none h-100">
                             <div class="p-3 rounded-4 h-100 d-flex flex-column align-items-start justify-content-center"
                                  style="border: 1.5px solid #E3E7EF;">
                                 <i class="bi bi-cash-coin" style="font-size: 2rem; color: #2563eb;"></i>
@@ -234,7 +234,7 @@
                         </a>
                     </div>
                     <div class="col-6">
-                        <a href="{{ url_for('cashflow.index') }}" class="d-block text-decoration-none h-100">
+                        <a href="{{ url_for('receipts.index') }}" class="d-block text-decoration-none h-100">
                             <div class="p-3 rounded-4 h-100 d-flex flex-column align-items-start justify-content-center"
                                  style="border: 1.5px solid #E3E7EF;">
                                 <i class="bi bi-graph-up" style="font-size: 2rem; color: #2563eb;"></i>
@@ -254,7 +254,7 @@
                         </a>
                     </div>
                     <div class="col-6">
-                        <a href="{{ url_for('feedback.index') }}" class="d-block text-decoration-none h-100">
+                        <a href="{{ url_for('general_bp.feedback') }}" class="d-block text-decoration-none h-100">
                             <div class="p-3 rounded-4 h-100 d-flex flex-column align-items-start justify-content-center"
                                  style="border: 1.5px solid #E3E7EF;">
                                 <i class="bi bi-chat-dots" style="font-size: 2rem; color: #2563eb;"></i>
@@ -270,19 +270,19 @@
         <!-- Bottom Navigation Bar -->
         <nav class="navbar fixed-bottom d-block d-md-none" style="background: #fff; border-top: 1px solid #e2e8f0; box-shadow: 0 -2px 12px rgba(0,0,0,0.05);">
             <div class="d-flex justify-content-around align-items-center py-1">
-                <a href="{{ url_for('general.home') }}" class="text-decoration-none d-flex flex-column align-items-center {{ 'active' if request.endpoint == 'general.home' else '' }}">
+                <a href="{{ url_for('general_bp.home') }}" class="text-decoration-none d-flex flex-column align-items-center {{ 'active' if request.endpoint == 'general.home' else '' }}">
                     <span class="d-block rounded-3 {{ 'bg-primary bg-opacity-10' if request.endpoint == 'general.home' else '' }}" style="padding: 0.5rem;">
                         <i class="bi bi-house-door{{ '-fill' if request.endpoint == 'general.home' else '' }}" style="font-size: 1.4rem; color: #2563eb;"></i>
                     </span>
                     <span class="fw-bold" style="font-size: 0.85rem; color: #2563eb;">Home</span>
                 </a>
-                <a href="{{ url_for('debt.index') }}" class="text-decoration-none d-flex flex-column align-items-center {{ 'active' if request.endpoint == 'debt.index' else '' }}">
+                <a href="{{ url_for('debtors.index') }}" class="text-decoration-none d-flex flex-column align-items-center {{ 'active' if request.endpoint == 'debt.index' else '' }}">
                     <span class="d-block rounded-3 {{ 'bg-primary bg-opacity-10' if request.endpoint == 'debt.index' else '' }}" style="padding: 0.5rem;">
                         <i class="bi bi-list-ul" style="font-size: 1.4rem; color: #2563eb;"></i>
                     </span>
                     <span class="fw-bold" style="font-size: 0.85rem; color: #2563eb;">Debts</span>
                 </a>
-                <a href="{{ url_for('cashflow.index') }}" class="text-decoration-none d-flex flex-column align-items-center {{ 'active' if request.endpoint == 'cashflow.index' else '' }}">
+                <a href="{{ url_for('receips.index') }}" class="text-decoration-none d-flex flex-column align-items-center {{ 'active' if request.endpoint == 'cashflow.index' else '' }}">
                     <span class="d-block rounded-3 {{ 'bg-primary bg-opacity-10' if request.endpoint == 'cashflow.index' else '' }}" style="padding: 0.5rem;">
                         <i class="bi bi-arrow-left-right" style="font-size: 1.4rem; color: #2563eb;"></i>
                     </span>
