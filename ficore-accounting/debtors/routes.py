@@ -46,30 +46,9 @@ def index():
         query = {'type': 'debtor'} if utils.is_admin() else {'user_id': str(current_user.id), 'type': 'debtor'}
         debtors = list(db.records.find(query).sort('created_at', -1))
         
-        # Role-based navigation data
-        if current_user.role == 'trader':
-            tools_for_template = utils.BUSINESS_TOOLS
-            explore_features_for_template = utils.BUSINESS_EXPLORE_FEATURES
-            bottom_nav_items = utils.BUSINESS_NAV
-        elif current_user.role == 'admin':
-            tools_for_template = utils.ALL_TOOLS
-            explore_features_for_template = utils.ADMIN_EXPLORE_FEATURES
-            bottom_nav_items = utils.ADMIN_NAV
-        else:
-            tools_for_template = []
-            explore_features_for_template = []
-            bottom_nav_items = []
-
         return render_template(
             'debtors/index.html',
-            debtors=debtors,
-            tools=tools_for_template,
-            nav_items=explore_features_for_template,
-            bottom_nav_items=bottom_nav_items,
-            format_currency=utils.format_currency,
-            format_date=utils.format_date,
-            t=trans,
-            lang=session.get('lang', 'en')
+            debtors=debtors
         )
     except Exception as e:
         logger.error(f"Error fetching debtors for user {current_user.id}: {str(e)}")
@@ -110,30 +89,9 @@ def view_page(id):
             flash(trans('debtors_record_not_found', default='Record not found'), 'danger')
             return redirect(url_for('debtors.index'))
         
-        # Role-based navigation data
-        if current_user.role == 'trader':
-            tools_for_template = utils.BUSINESS_TOOLS
-            explore_features_for_template = utils.BUSINESS_EXPLORE_FEATURES
-            bottom_nav_items = utils.BUSINESS_NAV
-        elif current_user.role == 'admin':
-            tools_for_template = utils.ALL_TOOLS
-            explore_features_for_template = utils.ADMIN_EXPLORE_FEATURES
-            bottom_nav_items = utils.ADMIN_NAV
-        else:
-            tools_for_template = []
-            explore_features_for_template = []
-            bottom_nav_items = []
-
         return render_template(
             'debtors/view.html',
-            debtor=debtor,
-            tools=tools_for_template,
-            nav_items=explore_features_for_template,
-            bottom_nav_items=bottom_nav_items,
-            format_currency=utils.format_currency,
-            format_date=utils.format_date,
-            t=trans,
-            lang=session.get('lang', 'en')
+            debtor=debtor
         )
     except Exception as e:
         logger.error(f"Error rendering debtor view page {id} for user {current_user.id}: {str(e)}")
@@ -369,28 +327,9 @@ def add():
             logger.error(f"Error adding debtor for user {current_user.id}: {str(e)}")
             flash(trans('debtors_add_error', default='An error occurred while adding debtor'), 'danger')
 
-    # Role-based navigation data
-    if current_user.role == 'trader':
-        tools_for_template = utils.BUSINESS_TOOLS
-        explore_features_for_template = utils.BUSINESS_EXPLORE_FEATURES
-        bottom_nav_items = utils.BUSINESS_NAV
-    elif current_user.role == 'admin':
-        tools_for_template = utils.ALL_TOOLS
-        explore_features_for_template = utils.ADMIN_EXPLORE_FEATURES
-        bottom_nav_items = utils.ADMIN_NAV
-    else:
-        tools_for_template = []
-        explore_features_for_template = []
-        bottom_nav_items = []
-
     return render_template(
         'debtors/add.html',
-        form=form,
-        tools=tools_for_template,
-        nav_items=explore_features_for_template,
-        bottom_nav_items=bottom_nav_items,
-        t=trans,
-        lang=session.get('lang', 'en')
+        form=form
     )
 
 @debtors_bp.route('/edit/<id>', methods=['GET', 'POST'])
@@ -433,29 +372,10 @@ def edit(id):
                 logger.error(f"Error updating debtor {id} for user {current_user.id}: {str(e)}")
                 flash(trans('debtors_edit_error', default='An error occurred'), 'danger')
 
-        # Role-based navigation data
-        if current_user.role == 'trader':
-            tools_for_template = utils.BUSINESS_TOOLS
-            explore_features_for_template = utils.BUSINESS_EXPLORE_FEATURES
-            bottom_nav_items = utils.BUSINESS_NAV
-        elif current_user.role == 'admin':
-            tools_for_template = utils.ALL_TOOLS
-            explore_features_for_template = utils.ADMIN_EXPLORE_FEATURES
-            bottom_nav_items = utils.ADMIN_NAV
-        else:
-            tools_for_template = []
-            explore_features_for_template = []
-            bottom_nav_items = []
-
         return render_template(
             'debtors/edit.html',
             form=form,
-            debtor=debtor,
-            tools=tools_for_template,
-            nav_items=explore_features_for_template,
-            bottom_nav_items=bottom_nav_items,
-            t=trans,
-            lang=session.get('lang', 'en')
+            debtor=debtor
         )
     except Exception as e:
         logger.error(f"Error fetching debtor {id} for user {current_user.id}: {str(e)}")
