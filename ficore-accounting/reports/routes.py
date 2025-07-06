@@ -35,16 +35,9 @@ reports_bp = Blueprint('reports', __name__, url_prefix='/reports')
 def index():
     """Display report selection page."""
     try:
-        tools = utils.BUSINESS_TOOLS if current_user.role == 'trader' else utils.ALL_TOOLS
-        nav_items = utils.BUSINESS_EXPLORE_FEATURES if current_user.role == 'trader' else utils.ADMIN_EXPLORE_FEATURES
-        bottom_nav_items = utils.BUSINESS_NAV if current_user.role == 'trader' else utils.ADMIN_NAV
         return render_template(
             'reports/index.html',
-            t=trans,
-            lang=session.get('lang', 'en'),
-            tools=tools,
-            nav_items=nav_items,
-            bottom_nav_items=bottom_nav_items
+            title=utils.trans('reports_index', default='Reports', lang=session.get('lang', 'en'))
         )
     except Exception as e:
         logger.error(f"Error loading reports index for user {current_user.id}: {str(e)}")
@@ -102,20 +95,11 @@ def profit_loss():
     else:
         db = utils.get_mongo_db()
         cashflows = list(db.cashflows.find(query).sort('created_at', -1))
-    tools = utils.BUSINESS_TOOLS if current_user.role == 'trader' else utils.ALL_TOOLS
-    nav_items = utils.BUSINESS_EXPLORE_FEATURES if current_user.role == 'trader' else utils.ADMIN_EXPLORE_FEATURES
-    bottom_nav_items = utils.BUSINESS_NAV if current_user.role == 'trader' else utils.ADMIN_NAV
     return render_template(
         'reports/profit_loss.html',
         form=form,
         cashflows=cashflows,
-        format_currency=utils.format_currency,
-        format_date=utils.format_date,
-        t=trans,
-        lang=session.get('lang', 'en'),
-        tools=tools,
-        nav_items=nav_items,
-        bottom_nav_items=bottom_nav_items
+        title=utils.trans('reports_profit_loss', default='Profit/Loss Report', lang=session.get('lang', 'en'))
     )
 
 @reports_bp.route('/inventory', methods=['GET', 'POST'])
@@ -165,19 +149,11 @@ def inventory():
     else:
         db = utils.get_mongo_db()
         items = list(db.inventory.find(query).sort('item_name', 1))
-    tools = utils.BUSINESS_TOOLS if current_user.role == 'trader' else utils.ALL_TOOLS
-    nav_items = utils.BUSINESS_EXPLORE_FEATURES if current_user.role == 'trader' else utils.ADMIN_EXPLORE_FEATURES
-    bottom_nav_items = utils.BUSINESS_NAV if current_user.role == 'trader' else utils.ADMIN_NAV
     return render_template(
         'reports/inventory.html',
         form=form,
         items=items,
-        format_currency=utils.format_currency,
-        t=trans,
-        lang=session.get('lang', 'en'),
-        tools=tools,
-        nav_items=nav_items,
-        bottom_nav_items=bottom_nav_items
+        title=utils.trans('reports_inventory', default='Inventory Report', lang=session.get('lang', 'en'))
     )
 
 def generate_profit_loss_pdf(cashflows):
@@ -193,7 +169,7 @@ def generate_profit_loss_pdf(cashflows):
     p.drawString(2.5 * inch, y, trans('general_party_name', default='Party Name'))
     p.drawString(4 * inch, y, trans('general_type', default='Type'))
     p.drawString(5 * inch, y, trans('general_amount', default='Amount'))
-    p.drawString(6.5 * inch, y, trans('general_category', default='Category'))
+    p.drawString(6.5 * inch, y, trans('general PX0Hgeneral_category', default='Category'))
     y -= 0.3 * inch
     total_income = 0
     total_expense = 0
