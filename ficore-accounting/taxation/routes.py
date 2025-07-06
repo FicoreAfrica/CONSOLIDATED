@@ -262,11 +262,6 @@ def calculate_tax():
         } for rule in vat_rules
     ]
 
-    # Define navigation based on user role
-    tools = utils.PERSONAL_TOOLS if current_user.role == 'personal' else utils.BUSINESS_TOOLS if current_user.role == 'trader' else utils.AGENT_TOOLS if current_user.role == 'agent' else utils.ALL_TOOLS
-    nav_items = utils.PERSONAL_EXPLORE_FEATURES if current_user.role == 'personal' else utils.BUSINESS_EXPLORE_FEATURES if current_user.role == 'trader' else utils.AGENT_EXPLORE_FEATURES if current_user.role == 'agent' else utils.ADMIN_EXPLORE_FEATURES
-    bottom_nav_items = utils.PERSONAL_NAV if current_user.role == 'personal' else utils.BUSINESS_NAV if current_user.role == 'trader' else utils.AGENT_NAV if current_user.role == 'agent' else utils.ADMIN_NAV
-
     if request.method == 'POST':
         if form.validate_on_submit():
             amount = form.amount.data
@@ -295,12 +290,8 @@ def calculate_tax():
                         form=form,
                         tax_rates=serialized_tax_rates,
                         vat_rules=serialized_vat_rules,
-                        t=trans,
-                        lang=session.get('lang', 'en'),
-                        tools=tools,
-                        nav_items=nav_items,
-                        bottom_nav_items=bottom_nav_items,
-                        policy_notice=trans('tax_policy_notice', default='New tax laws effective 1 January 2026: Rent relief of ₦200,000 for income ≤ ₦1M, VAT exemptions for essentials, 0% CIT for small businesses ≤ ₦50M with simplified returns, 30% CIT for large businesses, VAT credits for businesses.')
+                        policy_notice=trans('tax_policy_notice', default='New tax laws effective 1 January 2026: Rent relief of ₦200,000 for income ≤ ₦1M, VAT exemptions for essentials, 0% CIT for small businesses ≤ ₦50M with simplified returns, 30% CIT for large businesses, VAT credits for businesses.'),
+                        title=trans('tax_calculate_title', default='Calculate Tax', lang=session.get('lang', 'en'))
                     )
                 total_tax, explanation, simplified_return, audit_required = calculate_cit(amount, tax_year)
             elif taxpayer_type == 'vat':
@@ -312,12 +303,8 @@ def calculate_tax():
                         form=form,
                         tax_rates=serialized_tax_rates,
                         vat_rules=serialized_vat_rules,
-                        t=trans,
-                        lang=session.get('lang', 'en'),
-                        tools=tools,
-                        nav_items=nav_items,
-                        bottom_nav_items=bottom_nav_items,
-                        policy_notice=trans('tax_policy_notice', default='New tax laws effective 1 January 2026: Rent relief of ₦200,000 for income ≤ ₦1M, VAT exemptions for essentials, 0% CIT for small businesses ≤ ₦50M with simplified returns, 30% CIT for large businesses, VAT credits for businesses.')
+                        policy_notice=trans('tax_policy_notice', default='New tax laws effective 1 January 2026: Rent relief of ₦200,000 for income ≤ ₦1M, VAT exemptions for essentials, 0% CIT for small businesses ≤ ₦50M with simplified returns, 30% CIT for large businesses, VAT credits for businesses.'),
+                        title=trans('tax_calculate_title', default='Calculate Tax', lang=session.get('lang', 'en'))
                     )
                 total_tax, explanation = calculate_vat(amount, vat_category, is_business_vat)
 
@@ -345,12 +332,8 @@ def calculate_tax():
                 form=form,
                 tax_rates=serialized_tax_rates,
                 vat_rules=serialized_vat_rules,
-                t=trans,
-                lang=session.get('lang', 'en'),
-                tools=tools,
-                nav_items=nav_items,
-                bottom_nav_items=bottom_nav_items,
-                policy_notice=trans('tax_policy_notice', default='New tax laws effective 1 January 2026: Rent relief of ₦200,000 for income ≤ ₦1M, VAT exemptions for essentials, 0% CIT for small businesses ≤ ₦50M with simplified returns, 30% CIT for large businesses, VAT credits for businesses.')
+                policy_notice=trans('tax_policy_notice', default='New tax laws effective 1 January 2026: Rent relief of ₦200,000 for income ≤ ₦1M, VAT exemptions for essentials, 0% CIT for small businesses ≤ ₦50M with simplified returns, 30% CIT for large businesses, VAT credits for businesses.'),
+                title=trans('tax_result_title', default='Tax Calculation Result', lang=session.get('lang', 'en'))
             )
         else:
             logger.error(f"Form validation failed: user={current_user.id}, errors={form.errors}")
@@ -365,12 +348,8 @@ def calculate_tax():
         role=current_user.role,
         tax_rates=serialized_tax_rates,
         vat_rules=serialized_vat_rules,
-        t=trans,
-        lang=session.get('lang', 'en'),
-        tools=tools,
-        nav_items=nav_items,
-        bottom_nav_items=bottom_nav_items,
-        policy_notice=trans('tax_policy_notice', default='New tax laws effective 1 January 2026: Rent relief of ₦200,000 for income ≤ ₦1M, VAT exemptions for essentials, 0% CIT for small businesses ≤ ₦50M with simplified returns, 30% CIT for large businesses, VAT credits for businesses.')
+        policy_notice=trans('tax_policy_notice', default='New tax laws effective 1 January 2026: Rent relief of ₦200,000 for income ≤ ₦1M, VAT exemptions for essentials, 0% CIT for small businesses ≤ ₦50M with simplified returns, 30% CIT for large businesses, VAT credits for businesses.'),
+        title=trans('tax_calculate_title', default='Calculate Tax', lang=session.get('lang', 'en'))
     )
 
 @taxation_bp.route('/payment_info', methods=['GET'])
@@ -387,19 +366,12 @@ def payment_info():
             '_id': str(loc['_id'])
         } for loc in locations
     ]
-    tools = utils.PERSONAL_TOOLS if current_user.role == 'personal' else utils.BUSINESS_TOOLS if current_user.role == 'trader' else utils.AGENT_TOOLS if current_user.role == 'agent' else utils.ALL_TOOLS
-    nav_items = utils.PERSONAL_EXPLORE_FEATURES if current_user.role == 'personal' else utils.BUSINESS_EXPLORE_FEATURES if current_user.role == 'trader' else utils.AGENT_EXPLORE_FEATURES if current_user.role == 'agent' else utils.ADMIN_EXPLORE_FEATURES
-    bottom_nav_items = utils.PERSONAL_NAV if current_user.role == 'personal' else utils.BUSINESS_NAV if current_user.role == 'trader' else utils.AGENT_NAV if current_user.role == 'agent' else utils.ADMIN_NAV
     return render_template(
         'taxation/taxation.html',
         section='payment_info',
         locations=serialized_locations,
-        t=trans,
-        lang=session.get('lang', 'en'),
-        tools=tools,
-        nav_items=nav_items,
-        bottom_nav_items=bottom_nav_items,
-        policy_notice=trans('tax_policy_notice', default='New tax laws effective 1 January 2026: Rent relief of ₦200,000 for income ≤ ₦1M, VAT exemptions for essentials, 0% CIT for small businesses ≤ ₦50M with simplified returns, 30% CIT for large businesses, VAT credits for businesses.')
+        policy_notice=trans('tax_policy_notice', default='New tax laws effective 1 January 2026: Rent relief of ₦200,000 for income ≤ ₦1M, VAT exemptions for essentials, 0% CIT for small businesses ≤ ₦50M with simplified returns, 30% CIT for large businesses, VAT credits for businesses.'),
+        title=trans('tax_payment_info_title', default='Tax Payment Information', lang=session.get('lang', 'en'))
     )
 
 @taxation_bp.route('/reminders', methods=['GET', 'POST'])
@@ -429,20 +401,13 @@ def reminders():
             'user_id': str(rem['user_id'])
         } for rem in reminders
     ]
-    tools = utils.PERSONAL_TOOLS if current_user.role == 'personal' else utils.BUSINESS_TOOLS if current_user.role == 'trader' else utils.AGENT_TOOLS if current_user.role == 'agent' else utils.ALL_TOOLS
-    nav_items = utils.PERSONAL_EXPLORE_FEATURES if current_user.role == 'personal' else utils.BUSINESS_EXPLORE_FEATURES if current_user.role == 'trader' else utils.AGENT_EXPLORE_FEATURES if current_user.role == 'agent' else utils.ADMIN_EXPLORE_FEATURES
-    bottom_nav_items = utils.PERSONAL_NAV if current_user.role == 'personal' else utils.BUSINESS_NAV if current_user.role == 'trader' else utils.AGENT_NAV if current_user.role == 'agent' else utils.ADMIN_NAV
     return render_template(
         'taxation/taxation.html',
         section='reminders',
         form=form,
         reminders=serialized_reminders,
-        t=trans,
-        lang=session.get('lang', 'en'),
-        tools=tools,
-        nav_items=nav_items,
-        bottom_nav_items=bottom_nav_items,
-        policy_notice=trans('tax_policy_notice', default='New tax laws effective 1 January 2026: Rent relief of ₦200,000 for income ≤ ₦1M, VAT exemptions for essentials, 0% CIT for small businesses ≤ ₦50M with simplified returns, 30% CIT for large businesses, VAT credits for businesses.')
+        policy_notice=trans('tax_policy_notice', default='New tax laws effective 1 January 2026: Rent relief of ₦200,000 for income ≤ ₦1M, VAT exemptions for essentials, 0% CIT for small businesses ≤ ₦50M with simplified returns, 30% CIT for large businesses, VAT credits for businesses.'),
+        title=trans('tax_reminders_title', default='Tax Reminders', lang=session.get('lang', 'en'))
     )
 
 @taxation_bp.route('/admin/rates', methods=['GET', 'POST'])
@@ -490,12 +455,8 @@ def manage_tax_rates():
         form=form,
         rates=serialized_rates,
         vat_rules=serialized_vat_rules,
-        t=trans,
-        lang=session.get('lang', 'en'),
-        tools=utils.ALL_TOOLS,
-        nav_items=utils.ADMIN_EXPLORE_FEATURES,
-        bottom_nav_items=utils.ADMIN_NAV,
-        policy_notice=trans('tax_policy_notice', default='New tax laws effective 1 January 2026: Rent relief of ₦200,000 for income ≤ ₦1M, VAT exemptions for essentials, 0% CIT for small businesses ≤ ₦50M with simplified returns, 30% CIT for large businesses, VAT credits for businesses.')
+        policy_notice=trans('tax_policy_notice', default='New tax laws effective 1 January 2026: Rent relief of ₦200,000 for income ≤ ₦1M, VAT exemptions for essentials, 0% CIT for small businesses ≤ ₦50M with simplified returns, 30% CIT for large businesses, VAT credits for businesses.'),
+        title=trans('tax_manage_rates_title', default='Manage Tax Rates', lang=session.get('lang', 'en'))
     )
 
 @taxation_bp.route('/admin/locations', methods=['GET', 'POST'])
@@ -532,12 +493,8 @@ def manage_payment_locations():
         'taxation/taxation.html',
         section='admin_locations',
         locations=serialized_locations,
-        t=trans,
-        lang=session.get('lang', 'en'),
-        tools=utils.ALL_TOOLS,
-        nav_items=utils.ADMIN_EXPLORE_FEATURES,
-        bottom_nav_items=utils.ADMIN_NAV,
-        policy_notice=trans('tax_policy_notice', default='New tax laws effective 1 January 2026: Rent relief of ₦200,000 for income ≤ ₦1M, VAT exemptions for essentials, 0% CIT for small businesses ≤ ₦50M with simplified returns, 30% CIT for large businesses, VAT credits for businesses.')
+        policy_notice=trans('tax_policy_notice', default='New tax laws effective 1 January 2026: Rent relief of ₦200,000 for income ≤ ₦1M, VAT exemptions for essentials, 0% CIT for small businesses ≤ ₦50M with simplified returns, 30% CIT for large businesses, VAT credits for businesses.'),
+        title=trans('tax_manage_locations_title', default='Manage Payment Locations', lang=session.get('lang', 'en'))
     )
 
 @taxation_bp.route('/admin/deadlines', methods=['GET', 'POST'])
@@ -576,10 +533,6 @@ def manage_tax_deadlines():
         'taxation/taxation.html',
         section='admin_deadlines',
         deadlines=serialized_deadlines,
-        t=trans,
-        lang=session.get('lang', 'en'),
-        tools=utils.ALL_TOOLS,
-        nav_items=utils.ADMIN_EXPLORE_FEATURES,
-        bottom_nav_items=utils.ADMIN_NAV,
-        policy_notice=trans('tax_policy_notice', default='New tax laws effective 1 January 2026: Rent relief of ₦200,000 for income ≤ ₦1M, VAT exemptions for essentials, 0% CIT for small businesses ≤ ₦50M with simplified returns, 30% CIT for large businesses, VAT credits for businesses.')
+        policy_notice=trans('tax_policy_notice', default='New tax laws effective 1 January 2026: Rent relief of ₦200,000 for income ≤ ₦1M, VAT exemptions for essentials, 0% CIT for small businesses ≤ ₦50M with simplified returns, 30% CIT for large businesses, VAT credits for businesses.'),
+        title=trans('tax_manage_deadlines_title', default='Manage Tax Deadlines', lang=session.get('lang', 'en'))
     )
