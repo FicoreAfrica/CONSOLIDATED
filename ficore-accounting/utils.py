@@ -10,7 +10,7 @@ from pymongo import MongoClient
 from pymongo.errors import ConnectionFailure
 from translations import trans
 import requests
-from werkzeug.routing import BuildError  # Corrected import
+from werkzeug.routing import BuildError
 
 # Flask extensions - defined here to avoid having too many files
 from flask_login import LoginManager
@@ -68,7 +68,7 @@ def generate_tools_with_urls(tools):
     for tool in tools:
         try:
             with current_app.app_context():
-                url = url_for(tool['endpoint'], _external=True)  # Use _external=True for absolute URLs
+                url = url_for(tool['endpoint'], _external=True)
                 result.append({**tool, 'url': url})
         except BuildError as e:
             logger.error(f"Failed to generate URL for endpoint {tool.get('endpoint', 'unknown')}: {str(e)}. Ensure endpoint is defined in blueprint.")
@@ -78,7 +78,7 @@ def generate_tools_with_urls(tools):
             result.append({**tool, 'url': '#'})
     return result
 
-# Original tool/navigation lists with endpoints
+# Tool/navigation lists with endpoints
 _PERSONAL_TOOLS = [
     {"endpoint": "personal.budget.main", "label": "Budget", "label_key": "budget_budget_planner", "tooltip_key": "budget_tooltip", "icon": "bi-wallet"},
     {"endpoint": "personal.quiz.main", "label": "Quiz", "label_key": "quiz_personality_quiz", "tooltip_key": "quiz_tooltip", "icon": "bi-question-circle"},
@@ -104,30 +104,20 @@ _PERSONAL_EXPLORE_FEATURES = [
 ]
 
 _BUSINESS_TOOLS = [
-    {"endpoint": "inventory.index", "label": "Inventory", "label_key": "inventory_dashboard", "tooltip_key": "inventory_tooltip", "icon": "bi-box"},
-    {"endpoint": "creditors.index", "label": "I Owe", "label_key": "creditors_dashboard", "tooltip_key": "creditors_tooltip", "icon": "bi-person-lines"},
-    {"endpoint": "debtors.index", "label": "They Owe", "label_key": "debtors_dashboard", "tooltip_key": "debtors_tooltip", "icon": "bi-person-plus"},
-    {"endpoint": "receipts.index", "label": "MoneyIn", "label_key": "receipts_dashboard", "tooltip_key": "receipts_tooltip", "icon": "bi-cash-coin"},
-    {"endpoint": "payments.index", "label": "MoneyOut", "label_key": "payments_dashboard", "tooltip_key": "payments_tooltip", "icon": "bi-person-minus"},
-]
-
-_BUSINESS_NAV = [
-    {"endpoint": "general_bp.home", "label": "Home", "label_key": "general_business_home", "tooltip_key": "general_business_home_tooltip", "icon": "bi-house"},
-    {"endpoint": "debtors.index", "label": "They Owe", "label_key": "debtors_dashboard", "tooltip_key": "debtors_tooltip", "icon": "bi-person-plus"},
-    {"endpoint": "receipts.index", "label": "MoneyIn", "label_key": "receipts_dashboard", "tooltip_key": "receipts_tooltip", "icon": "bi-cash-coin"},
-    {"endpoint": "settings.profile", "label": "Profile", "label_key": "profile_settings", "tooltip_key": "profile_tooltip", "icon": "bi-person"},
+    {"endpoint": "inventory.index", "label": "Inventory", "label_key": "inventory_dashboard", "tooltip_key": "inventory_tooltip", "icon": "bi-box", "url": "https://financial-health-score-8jvu.onrender.com/inventory/"},
+    {"endpoint": "creditors.index", "label": "I Owe", "label_key": "creditors_dashboard", "tooltip_key": "creditors_tooltip", "icon": "bi-person-lines", "url": "https://financial-health-score-8jvu.onrender.com/creditors/"},
 ]
 
 _BUSINESS_EXPLORE_FEATURES = [
-    {"endpoint": "inventory.index", "label": "Inventory", "label_key": "inventory_dashboard", "tooltip_key": "inventory_tooltip", "icon": "bi-box"},
-    {"endpoint": "taxation_bp.calculate_tax", "label": "Taxation", "label_key": "taxation_calculator", "tooltip_key": "taxation_tooltip", "icon": "bi-calculator"},
-    {"endpoint": "reports.index", "label": "Reports", "label_key": "reports_dashboard", "tooltip_key": "reports_tooltip", "icon": "bi-bar-chart"},
-    {"endpoint": "coins.history", "label": "Coins", "label_key": "coins_dashboard", "tooltip_key": "coins_tooltip", "icon": "bi-coin"},
-    {"endpoint": "news_bp.news_list", "label": "News", "label_key": "news_list", "tooltip_key": "news_tooltip", "icon": "bi-newspaper"},
-    {"endpoint": "creditors.index", "label": "I Owe", "label_key": "creditors_dashboard", "tooltip_key": "creditors_tooltip", "icon": "bi-person-lines"},
-    {"endpoint": "debtors.index", "label": "They Owe", "label_key": "debtors_dashboard", "tooltip_key": "debtors_tooltip", "icon": "bi-person-plus"},
-    {"endpoint": "receipts.index", "label": "MoneyIn", "label_key": "receipts_dashboard", "tooltip_key": "receipts_tooltip", "icon": "bi-cash-coin"},
-    {"endpoint": "payments.index", "label": "MoneyOut", "label_key": "payments_dashboard", "tooltip_key": "payments_tooltip", "icon": "bi-person-minus"},
+    {"endpoint": "inventory.index", "label": "Inventory", "label_key": "inventory_dashboard", "tooltip_key": "inventory_tooltip", "icon": "bi-box", "url": "https://financial-health-score-8jvu.onrender.com/inventory/"},
+    {"endpoint": "taxation_bp.calculate_tax", "label": "Taxation", "label_key": "taxation_calculator", "tooltip_key": "taxation_tooltip", "icon": "bi-calculator", "url": "https://financial-health-score-8jvu.onrender.com/taxation/calculate"},
+]
+
+_BUSINESS_NAV = [
+    {"endpoint": "general_bp.home", "label": "Home", "label_key": "general_business_home", "tooltip_key": "general_business_home_tooltip", "icon": "bi-house", "url": "https://financial-health-score-8jvu.onrender.com/general/home"},
+    {"endpoint": "debtors.index", "label": "They Owe", "label_key": "debtors_dashboard", "tooltip_key": "debtors_tooltip", "icon": "bi-person-plus", "url": "https://financial-health-score-8jvu.onrender.com/debtors/"},
+    {"endpoint": "creditors.index", "label": "I Owe", "label_key": "creditors_dashboard", "tooltip_key": "creditors_tooltip", "icon": "bi-person-lines", "url": "https://financial-health-score-8jvu.onrender.com/creditors/"},
+    {"endpoint": "inventory.index", "label": "Inventory", "label_key": "inventory_dashboard", "tooltip_key": "inventory_tooltip", "icon": "bi-box", "url": "https://financial-health-score-8jvu.onrender.com/inventory/"},
 ]
 
 _AGENT_TOOLS = [
@@ -139,13 +129,19 @@ _AGENT_TOOLS = [
 _AGENT_NAV = [
     {"endpoint": "agents_bp.agent_portal", "label": "Agent Portal", "label_key": "agents_dashboard", "tooltip_key": "agents_tooltip", "icon": "bi-person-workspace"},
     {"endpoint": "agents_bp.my_activity", "label": "My Activity", "label_key": "agents_my_activity", "tooltip_key": "agents_my_activity_tooltip", "icon": "bi-person-workspace"},
-    {"endpoint": "settings.profile", "label": "Profile", "label_key": "profile表的_settings", "tooltip_key": "profile_tooltip", "icon": "bi-person"},
+    {"endpoint": "settings.profile", "label": "Profile", "label_key": "profile_settings", "tooltip_key": "profile_tooltip", "icon": "bi-person"},
 ]
 
 _AGENT_EXPLORE_FEATURES = [
     {"endpoint": "agents_bp.agent_portal", "label": "Agent Portal", "label_key": "agents_dashboard", "tooltip_key": "agents_tooltip", "icon": "bi-person-workspace"},
     {"endpoint": "coins.history", "label": "Coins", "label_key": "coins_dashboard", "tooltip_key": "coins_tooltip", "icon": "bi-coin"},
     {"endpoint": "news_bp.news_list", "label": "News", "label_key": "news_list", "tooltip_key": "news_tooltip", "icon": "bi-newspaper"},
+]
+
+_ADMIN_TOOLS = [
+    {"endpoint": "admin.dashboard", "label": "Dashboard", "label_key": "admin_dashboard", "tooltip_key": "admin_dashboard_tooltip", "icon": "bi-speedometer"},
+    {"endpoint": "admin.manage_users", "label": "Manage Users", "label_key": "admin_manage_users", "tooltip_key": "admin_manage_users_tooltip", "icon": "bi-people"},
+    {"endpoint": "admin.credit_coins", "label": "Credit Coins", "label_key": "admin_credit_coins", "tooltip_key": "admin_credit_coins_tooltip", "icon": "bi-coin"},
 ]
 
 _ADMIN_NAV = [
@@ -177,9 +173,10 @@ BUSINESS_EXPLORE_FEATURES = []
 AGENT_TOOLS = []
 AGENT_NAV = []
 AGENT_EXPLORE_FEATURES = []
-ALL_TOOLS = []
+ADMIN_TOOLS = []
 ADMIN_NAV = []
 ADMIN_EXPLORE_FEATURES = []
+ALL_TOOLS = []
 
 # Pre-generate tools/navigation with URLs at startup
 def initialize_tools_with_urls(app):
@@ -191,8 +188,9 @@ def initialize_tools_with_urls(app):
     '''
     global PERSONAL_TOOLS, PERSONAL_NAV, PERSONAL_EXPLORE_FEATURES
     global BUSINESS_TOOLS, BUSINESS_NAV, BUSINESS_EXPLORE_FEATURES
-    global AGENT_TOOLS, AGENT_NAV, AGENT_EXPLORE_FEATURES, ALL_TOOLS
-    global ADMIN_NAV, ADMIN_EXPLORE_FEATURES
+    global AGENT_TOOLS, AGENT_NAV, AGENT_EXPLORE_FEATURES
+    global ADMIN_TOOLS, ADMIN_NAV, ADMIN_EXPLORE_FEATURES
+    global ALL_TOOLS
     
     with app.app_context():
         PERSONAL_TOOLS = generate_tools_with_urls(_PERSONAL_TOOLS)
@@ -204,14 +202,17 @@ def initialize_tools_with_urls(app):
         AGENT_TOOLS = generate_tools_with_urls(_AGENT_TOOLS)
         AGENT_NAV = generate_tools_with_urls(_AGENT_NAV)
         AGENT_EXPLORE_FEATURES = generate_tools_with_urls(_AGENT_EXPLORE_FEATURES)
+        ADMIN_TOOLS = generate_tools_with_urls(_ADMIN_TOOLS)
+        ADMIN_NAV = generate_tools_with_urls(_ADMIN_NAV)
+        ADMIN_EXPLORE_FEATURES = generate_tools_with_urls(_ADMIN_EXPLORE_FEATURES)
         ALL_TOOLS = (
             PERSONAL_TOOLS +
             BUSINESS_TOOLS +
             AGENT_TOOLS +
-            generate_tools_with_urls([{"endpoint": "admin.dashboard", "label": "Management", "label_key": "admin_dashboard", "tooltip_key": "admin_dashboard_tooltip", "icon": "bi-people"}])
+            ADMIN_TOOLS +
+            generate_tools_with_urls([{"endpoint": "admin.dashboard", "label": "Management", "label_key": "admin_dashboard", "tooltip_key": "admin_dashboard_tooltip", "icon": "bi-speedometer"}])
         )
-        ADMIN_NAV = generate_tools_with_urls(_ADMIN_NAV)
-        ADMIN_EXPLORE_FEATURES = generate_tools_with_urls(_ADMIN_EXPLORE_FEATURES)
+        logger.info('Initialized tools and navigation with resolved URLs')
 
 def get_limiter():
     '''
@@ -223,12 +224,13 @@ def get_limiter():
     return limiter
 
 def create_anonymous_session():
-    '''Create a guest session for anonymous access.'''
+    '''
+    Create a guest session for anonymous access.
+    '''
     try:
         session['sid'] = str(uuid.uuid4())
         session['is_anonymous'] = True
         session['created_at'] = datetime.utcnow().isoformat()
-        # Set default language if not already set
         if 'lang' not in session:
             session['lang'] = 'en'
         logger.info(f"{trans('general_anonymous_session_created', default='Created anonymous session')}: {session['sid']}")
@@ -238,7 +240,6 @@ def create_anonymous_session():
 def trans_function(key, lang=None, **kwargs):
     '''
     Translation function wrapper for backward compatibility.
-    This function provides the same interface as the old trans_function.
     
     Args:
         key: Translation key
@@ -266,24 +267,19 @@ def is_valid_email(email):
     '''
     if not email or not isinstance(email, str):
         return False
-    
-    # Basic email regex pattern
     pattern = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
     return re.match(pattern, email.strip()) is not None
 
 def get_mongo_db():
     '''
     Get MongoDB database connection.
-    Uses the single client stored in current_app._get_current_object().mongo_client.
     
     Returns:
         Database object
     '''
     try:
-        # Check if client exists in application context
         if not hasattr(current_app._get_current_object(), 'mongo_client'):
             raise RuntimeError('MongoDB client not initialized in application context')
-        
         return current_app._get_current_object().mongo_client[current_app.config.get('SESSION_MONGODB_DB', 'ficodb')]
     except Exception as e:
         logger.error(f"{trans('general_mongo_connection_error', default='Error getting MongoDB connection')}: {str(e)}", exc_info=True)
@@ -292,7 +288,6 @@ def get_mongo_db():
 def close_mongo_db():
     '''
     No-op function for backward compatibility.
-    MongoDB client is now closed at application shutdown via atexit.
     '''
     pass
 
@@ -316,7 +311,7 @@ def get_mail(app):
 
 def requires_role(role):
     '''
-    Decorator to require specific user role.
+    Dec jackets for men Decorator to require specific user role.
     
     Args:
         role: Required role (e.g., 'admin', 'agent', 'personal') or list of roles
@@ -334,17 +329,12 @@ def requires_role(role):
             if not current_user.is_authenticated:
                 flash(trans('general_login_required', default='Please log in to access this page.'), 'warning')
                 return redirect(url_for('users.login'))
-            
-            # Allow admins to access all tools
             if is_admin():
                 return f(*args, **kwargs)
-            
-            # Handle both single role and list of roles
             allowed_roles = role if isinstance(role, list) else [role]
             if current_user.role not in allowed_roles:
                 flash(trans('general_access_denied', default='You do not have permission to access this page.'), 'danger')
                 return redirect(url_for('dashboard.index'))
-            
             return f(*args, **kwargs)
         return decorated_function
     return decorator
@@ -362,22 +352,17 @@ def check_coin_balance(required_amount=1, user_id=None):
     '''
     try:
         from flask_login import current_user
-        
         if user_id is None and current_user.is_authenticated:
             user_id = current_user.id
-        
         if not user_id:
             return False
-        
         db = get_mongo_db()
         if db is None:
             return False
-        
         user_query = get_user_query(user_id)
         user = db.users.find_one(user_query)
         if not user:
             return False
-        
         coin_balance = user.get('coin_balance', 0)
         return coin_balance >= required_amount
     except Exception as e:
@@ -424,9 +409,7 @@ def format_currency(amount, currency='₦', lang=None):
     try:
         if lang is None:
             lang = session.get('lang', 'en') if has_request_context() else 'en'
-        
         amount = float(amount) if amount is not None else 0
-        
         if amount.is_integer():
             return f"{currency}{int(amount):,}"
         return f"{currency}{amount:,.2f}"
@@ -449,10 +432,8 @@ def format_date(date_obj, lang=None, format_type='short'):
     try:
         if lang is None:
             lang = session.get('lang', 'en') if has_request_context() else 'en'
-        
         if not date_obj:
             return ''
-        
         if isinstance(date_obj, str):
             try:
                 date_obj = datetime.strptime(date_obj, '%Y-%m-%d')
@@ -461,7 +442,6 @@ def format_date(date_obj, lang=None, format_type='short'):
                     date_obj = datetime.fromisoformat(date_obj.replace('Z', '+00:00'))
                 except ValueError:
                     return date_obj
-        
         if format_type == 'iso':
             return date_obj.strftime('%Y-%m-%d')
         elif format_type == 'long':
@@ -469,7 +449,7 @@ def format_date(date_obj, lang=None, format_type='short'):
                 return date_obj.strftime('%d %B %Y')
             else:
                 return date_obj.strftime('%B %d, %Y')
-        else:  # short format
+        else:
             if lang == 'ha':
                 return date_obj.strftime('%d/%m/%Y')
             else:
@@ -491,17 +471,10 @@ def sanitize_input(input_string, max_length=None):
     '''
     if not input_string:
         return ''
-    
-    # Convert to string and strip whitespace
     sanitized = str(input_string).strip()
-    
-    # Remove potentially dangerous characters
     sanitized = re.sub(r'[<>"\']', '', sanitized)
-    
-    # Limit length if specified
     if max_length and len(sanitized) > max_length:
         sanitized = sanitized[:max_length]
-    
     return sanitized
 
 def generate_unique_id(prefix=''):
@@ -531,11 +504,9 @@ def validate_required_fields(data, required_fields):
         tuple: (is_valid, missing_fields)
     '''
     missing_fields = []
-    
     for field in required_fields:
         if field not in data or not data[field] or str(data[field]).strip() == '':
             missing_fields.append(field)
-    
     return len(missing_fields) == 0, missing_fields
 
 def get_user_language():
@@ -563,12 +534,9 @@ def log_user_action(action, details=None, user_id=None):
     '''
     try:
         from flask_login import current_user
-        
         if user_id is None and current_user.is_authenticated:
             user_id = current_user.id
-        
         session_id = session.get('sid', 'no-session-id') if has_request_context() else 'no-session-id'
-        
         log_entry = {
             'user_id': user_id,
             'session_id': session_id,
@@ -578,16 +546,13 @@ def log_user_action(action, details=None, user_id=None):
             'ip_address': None,
             'user_agent': None
         }
-        
         if has_request_context():
             from flask import request
             log_entry['ip_address'] = request.remote_addr
             log_entry['user_agent'] = request.headers.get('User-Agent')
-        
         db = get_mongo_db()
         if db:
             db.audit_logs.insert_one(log_entry)
-        
         logger.info(f"{trans('general_user_action_logged', default='User action logged')}: {action} by user {user_id}")
     except Exception as e:
         logger.error(f"{trans('general_user_action_log_error', default='Error logging user action')}: {str(e)}", exc_info=True)
@@ -604,34 +569,26 @@ def send_sms_reminder(recipient, message):
         tuple: (success, api_response)
     '''
     try:
-        # Sanitize phone number
         recipient = re.sub(r'\D', '', recipient)
         if recipient.startswith('0'):
             recipient = '234' + recipient[1:]
         elif not recipient.startswith('+'):
             recipient = '234' + recipient
-        
-        # Placeholder for SMS API integration
-        # Replace with actual SMS provider (e.g., Twilio, Africa's Talking)
         sms_api_url = current_app.config.get('SMS_API_URL', 'https://api.smsprovider.com/send')
         sms_api_key = current_app.config.get('SMS_API_KEY', '')
-        
         payload = {
             'to': f'+{recipient}',
             'message': message,
             'api_key': sms_api_key
         }
-        
         response = requests.post(sms_api_url, json=payload, timeout=10)
         response_data = response.json()
-        
         if response.status_code == 200 and response_data.get('success', False):
             logger.info(f"SMS sent to {recipient}")
             return True, response_data
         else:
             logger.error(f"Failed to send SMS to {recipient}: {response_data}")
             return False, response_data
-            
     except Exception as e:
         logger.error(f"Error sending SMS to {recipient}: {str(e)}", exc_info=True)
         return False, {'error': str(e)}
@@ -648,34 +605,26 @@ def send_whatsapp_reminder(recipient, message):
         tuple: (success, api_response)
     '''
     try:
-        # Sanitize phone number
         recipient = re.sub(r'\D', '', recipient)
         if recipient.startswith('0'):
             recipient = '234' + recipient[1:]
         elif not recipient.startswith('+'):
             recipient = '234' + recipient
-        
-        # Placeholder for WhatsApp API integration
-        # Replace with actual WhatsApp provider (e.g., WhatsApp Business API)
         whatsapp_api_url = current_app.config.get('WHATSAPP_API_URL', 'https://api.whatsapp.com/send')
         whatsapp_api_key = current_app.config.get('WHATSAPP_API_KEY', '')
-        
         payload = {
             'phone': f'+{recipient}',
             'text': message,
             'api_key': whatsapp_api_key
         }
-        
         response = requests.post(whatsapp_api_url, json=payload, timeout=10)
         response_data = response.json()
-        
         if response.status_code == 200 and response_data.get('success', False):
             logger.info(f"WhatsApp message sent to {recipient}")
             return True, response_data
         else:
             logger.error(f"Failed to send WhatsApp message to {recipient}: {response_data}")
             return False, response_data
-            
     except Exception as e:
         logger.error(f"Error sending WhatsApp message to {recipient}: {str(e)}", exc_info=True)
         return False, {'error': str(e)}
@@ -850,7 +799,7 @@ def to_dict_tax_reminder(record):
         'payment_location_id': record.get('payment_location_id')
     }
 
-# Export all functions for backward compatibility
+# Export all functions and variables
 __all__ = [
     'login_manager', 'flask_session', 'csrf', 'babel', 'compress', 'limiter',
     'get_limiter', 'create_anonymous_session', 'trans_function', 'is_valid_email',
@@ -865,5 +814,5 @@ __all__ = [
     'PERSONAL_TOOLS', 'PERSONAL_NAV', 'PERSONAL_EXPLORE_FEATURES',
     'BUSINESS_TOOLS', 'BUSINESS_NAV', 'BUSINESS_EXPLORE_FEATURES',
     'AGENT_TOOLS', 'AGENT_NAV', 'AGENT_EXPLORE_FEATURES',
-    'ALL_TOOLS', 'ADMIN_NAV', 'ADMIN_EXPLORE_FEATURES'
+    'ADMIN_TOOLS', 'ADMIN_NAV', 'ADMIN_EXPLORE_FEATURES', 'ALL_TOOLS'
 ]
