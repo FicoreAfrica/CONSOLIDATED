@@ -109,7 +109,6 @@ def main():
         current_app.logger.debug(f"New anonymous session created with sid: {session['sid']}", extra={'session_id': session['sid']})
     session.permanent = True
     session.modified = True
-    lang = session.get('lang', 'en')
     
     form_data = {}
     if current_user.is_authenticated:
@@ -168,23 +167,23 @@ def main():
 
                 if score >= 80:
                     status_key = "excellent"
-                    status = trans("financial_health_status_excellent", default='Excellent', lang=lang)
+                    status = trans("financial_health_status_excellent", default='Excellent')
                 elif score >= 60:
                     status_key = "good"
-                    status = trans("financial_health_status_good", default='Good', lang=lang)
+                    status = trans("financial_health_status_good", default='Good')
                 else:
                     status_key = "needs_improvement"
-                    status = trans("financial_health_status_needs_improvement", default='Needs Improvement', lang=lang)
+                    status = trans("financial_health_status_needs_improvement", default='Needs Improvement')
 
                 badges = []
                 if score >= 80:
-                    badges.append(trans("financial_health_badge_financial_star", default='Financial Star', lang=lang))
+                    badges.append(trans("financial_health_badge_financial_star", default='Financial Star'))
                 if debt_to_income < 20:
-                    badges.append(trans("financial_health_badge_debt_manager", default='Debt Manager', lang=lang))
+                    badges.append(trans("financial_health_badge_debt_manager", default='Debt Manager'))
                 if savings_rate >= 20:
-                    badges.append(trans("financial_health_badge_savings_pro", default='Savings Pro', lang=lang))
+                    badges.append(trans("financial_health_badge_savings_pro", default='Savings Pro'))
                 if interest_burden == 0 and debt > 0:
-                    badges.append(trans("financial_health_badge_interest_free", default='Interest Free', lang=lang))
+                    badges.append(trans("financial_health_badge_interest_free", default='Interest Free'))
 
                 collection = get_mongo_collection()
                 record_data = {
@@ -221,7 +220,7 @@ def main():
                 if form.send_email.data and form.email.data:
                     try:
                         config = EMAIL_CONFIG["financial_health"]
-                        subject = trans(config["subject_key"], default='Your Financial Health Score', lang=lang)
+                        subject = trans(config["subject_key"], default='Your Financial Health Score')
                         template = config["template"]
                         send_email(
                             app=current_app,
@@ -245,7 +244,7 @@ def main():
                                 "cta_url": url_for('financial_health.main', _external=True),
                                 "unsubscribe_url": url_for('financial_health.unsubscribe', email=form.email.data, _external=True)
                             },
-                            lang=lang
+                            lang=session.get('lang', 'en')
                         )
                         current_app.logger.info(f"Email sent to {form.email.data} for session {session['sid']}", extra={'session_id': session['sid']})
                     except Exception as e:
@@ -310,22 +309,22 @@ def main():
         cross_tool_insights = []
         if latest_record and latest_record['score'] > 0:
             if float(latest_record['debt_to_income'].replace('%', '')) > 40:
-                insights.append(trans("financial_health_insight_high_debt", default='Your debt-to-income ratio is high. Consider reducing debt.', lang=lang))
+                insights.append(trans("financial_health_insight_high_debt", default='Your debt-to-income ratio is high. Consider reducing debt.'))
             if float(latest_record['savings_rate'].replace('%', '')) < 0:
-                insights.append(trans("financial_health_insight_negative_savings", default='Your expenses exceed your income. Review your budget.', lang=lang))
+                insights.append(trans("financial_health_insight_negative_savings", default='Your expenses exceed your income. Review your budget.'))
             elif float(latest_record['savings_rate'].replace('%', '')) >= 20:
-                insights.append(trans("financial_health_insight_good_savings", default='Great job maintaining a strong savings rate!', lang=lang))
+                insights.append(trans("financial_health_insight_good_savings", default='Great job maintaining a strong savings rate!'))
             if float(latest_record['interest_burden'].replace('%', '')) > 10:
-                insights.append(trans("financial_health_insight_high_interest", default='High interest burden detected. Consider refinancing.', lang=lang))
+                insights.append(trans("financial_health_insight_high_interest", default='High interest burden detected. Consider refinancing.'))
             if total_users >= 5:
                 if rank <= total_users * 0.1:
-                    insights.append(trans("financial_health_insight_top_10", default='You are in the top 10% of users!', lang=lang))
+                    insights.append(trans("financial_health_insight_top_10", default='You are in the top 10% of users!'))
                 elif rank <= total_users * 0.3:
-                    insights.append(trans("financial_health_insight_top_30", default='You are in the top 30% of users.', lang=lang))
+                    insights.append(trans("financial_health_insight_top_30", default='You are in the top 30% of users.'))
                 else:
-                    insights.append(trans("financial_health_insight_below_30", default='Your score is below the top 30%. Keep improving!', lang=lang))
+                    insights.append(trans("financial_health_insight_below_30", default='Your score is below the top 30%. Keep improving!'))
             else:
-                insights.append(trans("financial_health_insight_not_enough_users", default='Not enough users for ranking comparison.', lang=lang))
+                insights.append(trans("financial_health_insight_not_enough_users", default='Not enough users for ranking comparison.'))
         
         filter_kwargs_budget = {'user_id': current_user.id} if current_user.is_authenticated else {'session_id': session['sid']}
         budget_data = get_mongo_db().budgets.find(filter_kwargs_budget).sort('created_at', -1)
@@ -335,10 +334,8 @@ def main():
             if latest_budget.get('income') and latest_budget.get('fixed_expenses'):
                 savings_possible = latest_budget['income'] - latest_budget['fixed_expenses']
                 if savings_possible > 0:
-                    cross_tool_insights.append(trans('financial_health_cross_tool_savings_possible', default='Your budget shows {amount} available for savings monthly.', lang=lang, amount=format_currency(savings_possible)))
+                    cross_tool_insights.append(trans('financial_health_cross_tool_savings_possible', default='Your budget shows {amount} available for savings monthly.', amount=format_currency(savings_possible)))
 
-        tools = utils.PERSONAL_TOOLS if current_user.role == 'personal' else utils.ALL_TOOLS
-        nav_items = utils.PERSONAL_NAV if current_user.role == 'personal' else utils.ADMIN_NAV
         return render_template(
             'personal/health_score/health_score_main.html',
             form=form,
@@ -347,26 +344,20 @@ def main():
             insights=insights,
             cross_tool_insights=cross_tool_insights,
             tips=[
-                trans("financial_health_tip_track_expenses", default='Track your expenses to identify savings opportunities.', lang=lang),
-                trans("financial_health_tip_ajo_savings", default='Contribute to ajo savings for financial discipline.', lang=lang),
-                trans("financial_health_tip_pay_debts", default='Prioritize paying off high-interest debts.', lang=lang),
-                trans("financial_health_tip_plan_expenses", default='Plan your expenses to maintain a positive savings rate.', lang=lang)
+                trans("financial_health_tip_track_expenses", default='Track your expenses to identify savings opportunities.'),
+                trans("financial_health_tip_ajo_savings", default='Contribute to ajo savings for financial discipline.'),
+                trans("financial_health_tip_pay_debts", default='Prioritize paying off high-interest debts.'),
+                trans("financial_health_tip_plan_expenses", default='Plan your expenses to maintain a positive savings rate.')
             ],
             rank=rank,
             total_users=total_users,
             average_score=average_score,
-            t=trans,
-            lang=lang,
-            tool_title=trans('financial_health_title', default='Financial Health Score', lang=lang),
-            tools=tools,
-            nav_items=nav_items
+            tool_title=trans('financial_health_title', default='Financial Health Score')
         )
 
     except Exception as e:
         current_app.logger.error(f"Error in financial_health.main for session {session.get('sid', 'unknown')}: {str(e)}", extra={'session_id': session['sid']})
         flash(trans("financial_health_dashboard_load_error", default='Error loading financial health dashboard.'), "danger")
-        tools = utils.PERSONAL_TOOLS if current_user.role == 'personal' else utils.ALL_TOOLS
-        nav_items = utils.PERSONAL_NAV if current_user.role == 'personal' else utils.ADMIN_NAV
         return render_template(
             'personal/health_score/health_score_main.html',
             form=form,
@@ -384,22 +375,18 @@ def main():
                 'badges': [],
                 'created_at': 'N/A'
             },
-            insights=[trans("financial_health_insight_no_data", default='No financial health data available.', lang=lang)],
+            insights=[trans("financial_health_insight_no_data", default='No financial health data available.')],
             cross_tool_insights=[],
             tips=[
-                trans("financial_health_tip_track_expenses", default='Track your expenses to identify savings opportunities.', lang=lang),
-                trans("financial_health_tip_ajo_savings", default='Contribute to ajo savings for financial discipline.', lang=lang),
-                trans("financial_health_tip_pay_debts", default='Prioritize paying off high-interest debts.', lang=lang),
-                trans("financial_health_tip_plan_expenses", default='Plan your expenses to maintain a positive savings rate.', lang=lang)
+                trans("financial_health_tip_track_expenses", default='Track your expenses to identify savings opportunities.'),
+                trans("financial_health_tip_ajo_savings", default='Contribute to ajo savings for financial discipline.'),
+                trans("financial_health_tip_pay_debts", default='Prioritize paying off high-interest debts.'),
+                trans("financial_health_tip_plan_expenses", default='Plan your expenses to maintain a positive savings rate.')
             ],
             rank=0,
             total_users=0,
             average_score=0,
-            t=trans,
-            lang=lang,
-            tool_title=trans('financial_health_title', default='Financial Health Score', lang=lang),
-            tools=tools,
-            nav_items=nav_items
+            tool_title=trans('financial_health_title', default='Financial Health Score')
         ), 500
 
 @financial_health_bp.route('/summary')
@@ -438,7 +425,6 @@ def unsubscribe(email):
         current_app.logger.debug(f"New anonymous session created with sid: {session['sid']}", extra={'session_id': session['sid']})
     session.permanent = True
     session.modified = True
-    lang = session.get('lang', 'en')
     
     try:
         log_tool_usage(
@@ -468,7 +454,6 @@ def unsubscribe(email):
 @financial_health_bp.errorhandler(CSRFError)
 def handle_csrf_error(e):
     """Handle CSRF errors with user-friendly message."""
-    lang = session.get('lang', 'en')
     current_app.logger.error(f"CSRF error on {request.path}: {e.description}", extra={'session_id': session.get('sid', 'unknown')})
     flash(trans('financial_health_csrf_error', default='Form submission failed due to a missing security token. Please refresh and try again.'), 'danger')
-    return redirect(url_for('financial_health.main')), 400
+    return redirect(url_for('personal.index')), 400
