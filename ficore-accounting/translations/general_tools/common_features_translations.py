@@ -8,6 +8,7 @@ COMMON_FEATURES_TRANSLATIONS = {
         'news_article_not_found': 'Article not found',
         # Common Features
         'tax_amount': 'Tax Amount',
+        'taxation_calculator_desc': 'Your Taxes',
         'tax_calculate': 'Calculate Tax',
         'news_title_content_required': 'Title and content are required',
         'news_list': 'News list',
@@ -399,6 +400,7 @@ COMMON_FEATURES_TRANSLATIONS = {
         
         # System Maintenance
         'maintenance_mode': 'Yanayin Gyara',
+        'taxation_calculator_desc': 'Harajinku',
         'maintenance_enabled': 'An kunna yanayin gyara',
         'maintenance_disabled': 'An kashe yanayin gyara',
         'maintenance_message': 'Tsarin yana ƙarƙashin gyara. Don Allah sake gwadawa daga baya.',
