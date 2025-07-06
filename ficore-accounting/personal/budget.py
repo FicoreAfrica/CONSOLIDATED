@@ -105,15 +105,11 @@ def main():
         current_app.logger.debug(f"New anonymous session created with sid: {session['sid']}", extra={'session_id': session['sid']})
     session.permanent = True
     session.modified = True
-    lang = session.get('lang', 'en')
     form_data = {}
     if current_user.is_authenticated:
         form_data['email'] = current_user.email
         form_data['first_name'] = current_user.username
     form = BudgetForm(data=form_data)
-    tools = utils.PERSONAL_TOOLS if current_user.role == 'personal' else utils.ALL_TOOLS
-    bottom_nav_items = utils.PERSONAL_NAV if current_user.role == 'personal' else utils.ADMIN_NAV
-    explore_features = utils.PERSONAL_EXPLORE_FEATURES if current_user.role == 'personal' else []
     log_tool_usage(
         get_mongo_db(),
         tool_name='budget',
@@ -165,10 +161,10 @@ def main():
                 try:
                     get_mongo_db().budgets.insert_one(budget_data)
                     current_app.logger.info(f"Budget saved successfully to MongoDB for session {session['sid']}", extra={'session_id': session['sid']})
-                    flash(trans("budget_completed_success", default='Budget created successfully!', lang=lang), "success")
+                    flash(trans("budget_completed_success", default='Budget created successfully!'), "success")
                 except Exception as e:
                     current_app.logger.error(f"Failed to save budget to MongoDB for session {session['sid']}: {str(e)}", extra={'session_id': session['sid']})
-                    flash(trans("budget_storage_error", default='Error saving budget.', lang=lang), "danger")
+                    flash(trans("budget_storage_error", default='Error saving budget.'), "danger")
                     return render_template(
                         'personal/BUDGET/budget_main.html',
                         form=form,
@@ -177,17 +173,12 @@ def main():
                         categories={},
                         tips=[],
                         insights=[],
-                        t=trans,
-                        lang=lang,
-                        tool_title=trans('budget_title', default='Budget Planner', lang=lang),
-                        tools=tools,
-                        bottom_nav_items=bottom_nav_items,
-                        explore_features=explore_features
+                        tool_title=trans('budget_title', default='Budget Planner')
                     )
                 if form.send_email.data and form.email.data:
                     try:
                         config = EMAIL_CONFIG["budget"]
-                        subject = trans(config["subject_key"], default='Your Budget Summary', lang=lang)
+                        subject = trans(config["subject_key"], default='Your Budget Summary')
                         template = config["template"]
                         send_email(
                             app=current_app,
@@ -210,25 +201,25 @@ def main():
                                 "created_at": budget_data['created_at'].strftime('%Y-%m-%d'),
                                 "cta_url": url_for('budget.main', _external=True)
                             },
-                            lang=lang
+                            lang=session.get('lang', 'en')
                         )
                         current_app.logger.info(f"Email sent to {form.email.data}", extra={'session_id': session['sid']})
                     except Exception as e:
                         current_app.logger.error(f"Failed to send email: {str(e)}", extra={'session_id': session['sid']})
-                        flash(trans("general_email_send_failed", default='Failed to send email.', lang=lang), "warning")
+                        flash(trans("general_email_send_failed", default='Failed to send email.'), "warning")
             elif action == 'delete':
                 budget_id = request.form.get('budget_id')
                 try:
                     result = get_mongo_db().budgets.delete_one({'_id': ObjectId(budget_id), **filter_criteria})
                     if result.deleted_count > 0:
                         current_app.logger.info(f"Deleted budget ID {budget_id} for session {session['sid']}", extra={'session_id': session['sid']})
-                        flash(trans("budget_deleted_success", default='Budget deleted successfully!', lang=lang), "success")
+                        flash(trans("budget_deleted_success", default='Budget deleted successfully!'), "success")
                     else:
                         current_app.logger.warning(f"Budget ID {budget_id} not found for session {session['sid']}", extra={'session_id': session['sid']})
-                        flash(trans("budget_not_found", default='Budget not found.', lang=lang), "danger")
+                        flash(trans("budget_not_found", default='Budget not found.'), "danger")
                 except Exception as e:
                     current_app.logger.error(f"Failed to delete budget ID {budget_id} for session {session['sid']}: {str(e)}", extra={'session_id': session['sid']})
-                    flash(trans("budget_delete_failed", default='Error deleting budget.', lang=lang), "danger")
+                    flash(trans("budget_delete_failed", default='Error deleting budget.'), "danger")
         budgets = list(get_mongo_db().budgets.find(filter_criteria).sort('created_at', -1))
         current_app.logger.info(f"Read {len(budgets)} records from MongoDB budgets collection [session: {session['sid']}]", extra={'session_id': session['sid']})
         budgets_dict = {}
@@ -278,19 +269,19 @@ def main():
             'Others': latest_budget.get('others', 0)
         }
         tips = [
-            trans("budget_tip_track_expenses", default='Track your expenses daily to stay within budget.', lang=lang),
-            trans("budget_tip_ajo_savings", default='Contribute to ajo savings for financial discipline.', lang=lang),
-            trans("budget_tip_data_subscriptions", default='Optimize data subscriptions to reduce costs.', lang=lang),
-            trans("budget_tip_plan_dependents", default='Plan for dependents’ expenses in advance.', lang=lang)
+            trans("budget_tip_track_expenses", default='Track your expenses daily to stay within budget.'),
+            trans("budget_tip_ajo_savings", default='Contribute to ajo savings for financial discipline.'),
+            trans("budget_tip_data_subscriptions", default='Optimize data subscriptions to reduce costs.'),
+            trans("budget_tip_plan_dependents", default='Plan for dependents’ expenses in advance.')
         ]
         insights = []
         if latest_budget.get('income', 0) > 0:
             if latest_budget.get('surplus_deficit', 0) < 0:
-                insights.append(trans("budget_insight_budget_deficit", default='Your expenses exceed your income. Consider reducing costs.', lang=lang))
+                insights.append(trans("budget_insight_budget_deficit", default='Your expenses exceed your income. Consider reducing costs.'))
             elif latest_budget.get('surplus_deficit', 0) > 0:
-                insights.append(trans("budget_insight_budget_surplus", default='You have a surplus. Consider increasing savings.', lang=lang))
+                insights.append(trans("budget_insight_budget_surplus", default='You have a surplus. Consider increasing savings.'))
             if latest_budget.get('savings_goal', 0) == 0:
-                insights.append(trans("budget_insight_set_savings_goal", default='Set a savings goal to build financial security.', lang=lang))
+                insights.append(trans("budget_insight_set_savings_goal", default='Set a savings goal to build financial security.'))
         return render_template(
             'personal/BUDGET/budget_main.html',
             form=form,
@@ -299,16 +290,11 @@ def main():
             categories=categories,
             tips=tips,
             insights=insights,
-            t=trans,
-            lang=lang,
-            tool_title=trans('budget_title', default='Budget Planner', lang=lang),
-            tools=tools,
-            bottom_nav_items=bottom_nav_items,
-            explore_features=explore_features
+            tool_title=trans('budget_title', default='Budget Planner')
         )
     except Exception as e:
         current_app.logger.error(f"Unexpected error in budget.main for session {session.get('sid', 'unknown')}: {str(e)}", extra={'session_id': session.get('sid', 'unknown')})
-        flash(trans("budget_dashboard_load_error", default='Error loading budget dashboard.', lang=lang), "danger")
+        flash(trans("budget_dashboard_load_error", default='Error loading budget dashboard.'), "danger")
         return render_template(
             'personal/BUDGET/budget_main.html',
             form=form,
@@ -327,19 +313,9 @@ def main():
                 'created_at': 'N/A'
             },
             categories={},
-            tips=[
-                trans("budget_tip_track_expenses", default='Track your expenses daily to stay within budget.', lang=lang),
-                trans("budget_tip_ajo_savings", default='Contribute to ajo savings for financial discipline.', lang=lang),
-                trans("budget_tip_data_subscriptions", default='Optimize data subscriptions to reduce costs.', lang=lang),
-                trans("budget_tip_plan_dependents", default='Plan for dependents’ expenses in advance.', lang=lang)
-            ],
+            tips=[],
             insights=[],
-            t=trans,
-            lang=lang,
-            tool_title=trans('budget_title', default='Budget Planner', lang=lang),
-            tools=tools,
-            bottom_nav_items=bottom_nav_items,
-            explore_features=explore_features
+            tool_title=trans('budget_title', default='Budget Planner')
         ), 500
 
 @budget_bp.route('/summary')
@@ -365,7 +341,6 @@ def summary():
 @budget_bp.errorhandler(CSRFError)
 def handle_csrf_error(e):
     """Handle CSRF errors with user-friendly message."""
-    lang = session.get('lang', 'en')
     current_app.logger.error(f"CSRF error on {request.path}: {e.description}", extra={'session_id': session.get('sid', 'unknown')})
-    flash(trans('budget_csrf_error', default='Form submission failed due to a missing security token. Please refresh and try again.', lang=lang), 'danger')
+    flash(trans('budget_csrf_error', default='Form submission failed due to a missing security token. Please refresh and try again.'), 'danger')
     return redirect(url_for('personal.index')), 400
