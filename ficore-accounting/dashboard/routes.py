@@ -75,28 +75,6 @@ def index():
         for item in recent_creditors + recent_debtors + recent_payments + recent_receipts + recent_inventory:
             item['_id'] = str(item['_id'])
 
-        # Role-based navigation data
-        if current_user.role == 'personal':
-            tools_for_template = utils.PERSONAL_TOOLS
-            explore_features_for_template = utils.PERSONAL_EXPLORE_FEATURES
-            bottom_nav_items = utils.PERSONAL_NAV
-        elif current_user.role == 'trader':
-            tools_for_template = utils.BUSINESS_TOOLS
-            explore_features_for_template = utils.BUSINESS_EXPLORE_FEATURES
-            bottom_nav_items = utils.BUSINESS_NAV
-        elif current_user.role == 'agent':
-            tools_for_template = utils.AGENT_TOOLS
-            explore_features_for_template = utils.AGENT_EXPLORE_FEATURES
-            bottom_nav_items = utils.AGENT_NAV
-        elif current_user.role == 'admin':
-            tools_for_template = utils.ALL_TOOLS
-            explore_features_for_template = utils.ADMIN_EXPLORE_FEATURES
-            bottom_nav_items = utils.ADMIN_NAV
-        else:
-            tools_for_template = []
-            explore_features_for_template = []
-            bottom_nav_items = []
-
         return render_template(
             'dashboard/index.html',
             recent_creditors=recent_creditors,
@@ -104,14 +82,7 @@ def index():
             recent_payments=recent_payments,
             recent_receipts=recent_receipts,
             recent_inventory=recent_inventory,
-            personal_finance_summary=personal_finance_summary,
-            tools=tools_for_template,
-            nav_items=explore_features_for_template,
-            bottom_nav_items=bottom_nav_items,
-            format_currency=utils.format_currency,
-            format_date=utils.format_date,
-            t=trans,
-            lang=session.get('lang', 'en')
+            personal_finance_summary=personal_finance_summary
         )
     except Exception as e:
         logger.error(f"Error fetching dashboard data for user {current_user.id}: {str(e)}")
