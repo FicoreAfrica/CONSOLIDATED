@@ -1,11 +1,11 @@
+import logging
+from bson import ObjectId
 from flask import Blueprint, render_template, redirect, url_for, flash, request, session, jsonify
 from flask_login import login_required, current_user
 from translations import trans
 import utils
 import bleach
 import datetime
-import logging
-from bson import ObjectId
 
 logger = logging.getLogger(__name__)
 
@@ -49,19 +49,12 @@ def news_list():
             'content': article['content'][:100] + '...' if len(article['content']) > 100 else article['content']
         } for article in articles])
     
-    tools = utils.PERSONAL_TOOLS if current_user.role == 'personal' else utils.BUSINESS_TOOLS if current_user.role == 'trader' else utils.AGENT_TOOLS if current_user.role == 'agent' else utils.ALL_TOOLS
-    nav_items = utils.PERSONAL_EXPLORE_FEATURES if current_user.role == 'personal' else utils.BUSINESS_EXPLORE_FEATURES if current_user.role == 'trader' else utils.AGENT_EXPLORE_FEATURES if current_user.role == 'agent' else utils.ADMIN_EXPLORE_FEATURES
-    bottom_nav_items = utils.PERSONAL_NAV if current_user.role == 'personal' else utils.BUSINESS_NAV if current_user.role == 'trader' else utils.AGENT_NAV if current_user.role == 'agent' else utils.ADMIN_NAV
     return render_template(
         'news/news.html',
         section='list',
         articles=articles,
         categories=categories,
-        t=trans,
-        lang=session.get('lang', 'en'),
-        tools=tools,
-        nav_items=nav_items,
-        bottom_nav_items=bottom_nav_items
+        title=trans('news_list_title', default='News', lang=session.get('lang', 'en'))
     )
 
 @news_bp.route('/news/<article_id>', methods=['GET'])
@@ -82,18 +75,11 @@ def news_detail(article_id):
     
     article['_id'] = str(article['_id'])
     logger.info(f"News detail viewed: id={article_id}, title={article['title']}, user={current_user.id}")
-    tools = utils.PERSONAL_TOOLS if current_user.role == 'personal' else utils.BUSINESS_TOOLS if current_user.role == 'trader' else utils.AGENT_TOOLS if current_user.role == 'agent' else utils.ALL_TOOLS
-    nav_items = utils.PERSONAL_EXPLORE_FEATURES if current_user.role == 'personal' else utils.BUSINESS_EXPLORE_FEATURES if current_user.role == 'trader' else utils.AGENT_EXPLORE_FEATURES if current_user.role == 'agent' else utils.ADMIN_EXPLORE_FEATURES
-    bottom_nav_items = utils.PERSONAL_NAV if current_user.role == 'personal' else utils.BUSINESS_NAV if current_user.role == 'trader' else utils.AGENT_NAV if current_user.role == 'agent' else utils.ADMIN_NAV
     return render_template(
         'news/news.html',
         section='detail',
         article=article,
-        t=trans,
-        lang=session.get('lang', 'en'),
-        tools=tools,
-        nav_items=nav_items,
-        bottom_nav_items=bottom_nav_items
+        title=trans('news_detail_title', default='Article', lang=session.get('lang', 'en'))
     )
 
 @news_bp.route('/admin/news_management', methods=['GET', 'POST'])
@@ -134,11 +120,7 @@ def news_management():
         'news/news.html',
         section='admin',
         articles=articles,
-        t=trans,
-        lang=session.get('lang', 'en'),
-        tools=utils.ALL_TOOLS,
-        nav_items=utils.ADMIN_EXPLORE_FEATURES,
-        bottom_nav_items=utils.ADMIN_NAV
+        title=trans('news_management_title', default='News Management', lang=session.get('lang', 'en'))
     )
 
 @news_bp.route('/admin/news_management/edit/<article_id>', methods=['GET', 'POST'])
@@ -189,11 +171,7 @@ def edit_news(article_id):
         'news/news.html',
         section='edit',
         article=article,
-        t=trans,
-        lang=session.get('lang', 'en'),
-        tools=utils.ALL_TOOLS,
-        nav_items=utils.ADMIN_EXPLORE_FEATURES,
-        bottom_nav_items=utils.ADMIN_NAV
+        title=trans('news_edit_title', default='Edit News Article', lang=session.get('lang', 'en'))
     )
 
 @news_bp.route('/admin/news_management/delete/<article_id>', methods=['POST'])
