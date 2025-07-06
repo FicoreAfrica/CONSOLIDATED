@@ -235,15 +235,6 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 });
-</script>
-{% endblock extra_scripts %}
-{% endblock %}
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-    // Initialize tooltips
-    document.querySelectorAll('[data-bs-toggle="tooltip"]').forEach(tooltipTriggerEl => {
-        new bootstrap.Tooltip(tooltipTriggerEl);
-    });
 
     if (!{{ current_user.is_authenticated | tojson }}) return;
 
@@ -429,4 +420,5 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 });
 </script>
-{% endblock %}
+</script>
+{% endblock extra_scripts %}
