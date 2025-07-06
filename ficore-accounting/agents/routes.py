@@ -1,4 +1,4 @@
-from flask import Blueprint, render_template, redirect, url_for, flash, request, jsonify
+from flask import Blueprint, render_template, redirect, url_for, flash, request, jsonify, session
 from flask_login import login_required, current_user
 from flask_wtf import FlaskForm
 from wtforms import StringField, SelectField, FloatField, TextAreaField, SubmitField, validators
@@ -102,24 +102,14 @@ def agent_portal():
             tokens_today=tokens_today,
             recent_activities=recent_activities,
             assisted_traders=assisted_traders,
-            tools_for_template=utils.AGENT_TOOLS,
-            explore_features_for_template=utils.AGENT_EXPLORE_FEATURES,
-            bottom_nav_items=utils.AGENT_NAV,
-            format_currency=utils.format_currency,
-            format_date=utils.format_date,
-            t=trans,
-            lang=session.get('lang', 'en')
+            title=trans('agents_dashboard_title', default='Agent Dashboard', lang=session.get('lang', 'en'))
         )
     except Exception as e:
         logger.error(f"Error loading agent dashboard for {current_user.id}: {str(e)}")
         flash(trans('agents_dashboard_error', default='An error occurred while loading the dashboard'), 'danger')
         return render_template(
             'agents/error.html',
-            tools_for_template=utils.AGENT_TOOLS,
-            explore_features_for_template=utils.AGENT_EXPLORE_FEATURES,
-            bottom_nav_items=utils.AGENT_NAV,
-            t=trans,
-            lang=session.get('lang', 'en')
+            title=trans('general_error', default='Error', lang=session.get('lang', 'en'))
         )
 
 @agents_bp.route('/register_trader', methods=['GET', 'POST'])
@@ -140,11 +130,7 @@ def register_trader():
                 return render_template(
                     'agents/register_trader.html',
                     form=form,
-                    tools_for_template=utils.AGENT_TOOLS,
-                    explore_features_for_template=utils.AGENT_EXPLORE_FEATURES,
-                    bottom_nav_items=utils.AGENT_NAV,
-                    t=trans,
-                    lang=session.get('lang', 'en')
+                    title=trans('agents_register_trader_title', default='Register Trader', lang=session.get('lang', 'en'))
                 )
             
             if db.users.find_one({'email': email}):
@@ -152,11 +138,7 @@ def register_trader():
                 return render_template(
                     'agents/register_trader.html',
                     form=form,
-                    tools_for_template=utils.AGENT_TOOLS,
-                    explore_features_for_template=utils.AGENT_EXPLORE_FEATURES,
-                    bottom_nav_items=utils.AGENT_NAV,
-                    t=trans,
-                    lang=session.get('lang', 'en')
+                    title=trans('agents_register_trader_title', default='Register Trader', lang=session.get('lang', 'en'))
                 )
             
             # Generate temporary password
@@ -214,21 +196,13 @@ def register_trader():
             return render_template(
                 'agents/register_trader.html',
                 form=form,
-                tools_for_template=utils.AGENT_TOOLS,
-                explore_features_for_template=utils.AGENT_EXPLORE_FEATURES,
-                bottom_nav_items=utils.AGENT_NAV,
-                t=trans,
-                lang=session.get('lang', 'en')
+                title=trans('agents_register_trader_title', default='Register Trader', lang=session.get('lang', 'en'))
             )
     
     return render_template(
         'agents/register_trader.html',
         form=form,
-        tools_for_template=utils.AGENT_TOOLS,
-        explore_features_for_template=utils.AGENT_EXPLORE_FEATURES,
-        bottom_nav_items=utils.AGENT_NAV,
-        t=trans,
-        lang=session.get('lang', 'en')
+        title=trans('agents_register_trader_title', default='Register Trader', lang=session.get('lang', 'en'))
     )
 
 @agents_bp.route('/manage_tokens', methods=['GET', 'POST'])
@@ -250,11 +224,7 @@ def manage_tokens():
                 return render_template(
                     'agents/manage_tokens.html',
                     form=form,
-                    tools_for_template=utils.AGENT_TOOLS,
-                    explore_features_for_template=utils.AGENT_EXPLORE_FEATURES,
-                    bottom_nav_items=utils.AGENT_NAV,
-                    t=trans,
-                    lang=session.get('lang', 'en')
+                    title=trans('agents_manage_tokens_title', default='Manage Tokens', lang=session.get('lang', 'en'))
                 )
             
             # Calculate coins (₦50 = 1 coin)
@@ -304,21 +274,13 @@ def manage_tokens():
             return render_template(
                 'agents/manage_tokens.html',
                 form=form,
-                tools_for_template=utils.AGENT_TOOLS,
-                explore_features_for_template=utils.AGENT_EXPLORE_FEATURES,
-                bottom_nav_items=utils.AGENT_NAV,
-                t=trans,
-                lang=session.get('lang', 'en')
+                title=trans('agents_manage_tokens_title', default='Manage Tokens', lang=session.get('lang', 'en'))
             )
     
     return render_template(
         'agents/manage_tokens.html',
         form=form,
-        tools_for_template=utils.AGENT_TOOLS,
-        explore_features_for_template=utils.AGENT_EXPLORE_FEATURES,
-        bottom_nav_items=utils.AGENT_NAV,
-        t=trans,
-        lang=session.get('lang', 'en')
+        title=trans('agents_manage_tokens_title', default='Manage Tokens', lang=session.get('lang', 'en'))
     )
 
 @agents_bp.route('/assist_trader_records/<trader_id>')
@@ -367,13 +329,7 @@ def assist_trader_records(trader_id):
             recent_debtors=recent_debtors,
             recent_creditors=recent_creditors,
             recent_cashflows=recent_cashflows,
-            tools_for_template=utils.AGENT_TOOLS,
-            explore_features_for_template=utils.AGENT_EXPLORE_FEATURES,
-            bottom_nav_items=utils.AGENT_NAV,
-            format_currency=utils.format_currency,
-            format_date=utils.format_date,
-            t=trans,
-            lang=session.get('lang', 'en')
+            title=trans('agents_assist_trader_title', default='Assist Trader Records', lang=session.get('lang', 'en'))
         )
         
     except Exception as e:
@@ -381,11 +337,7 @@ def assist_trader_records(trader_id):
         flash(trans('agents_records_access_error', default='An error occurred while accessing trader records'), 'danger')
         return render_template(
             'agents/error.html',
-            tools_for_template=utils.AGENT_TOOLS,
-            explore_features_for_template=utils.AGENT_EXPLORE_FEATURES,
-            bottom_nav_items=utils.AGENT_NAV,
-            t=trans,
-            lang=session.get('lang', 'en')
+            title=trans('general_error', default='Error', lang=session.get('lang', 'en'))
         )
 
 @agents_bp.route('/generate_trader_report/<trader_id>')
@@ -454,12 +406,7 @@ def generate_trader_report(trader_id):
             total_payments=total_payments_amount,
             net_position=total_debtors_amount - total_creditors_amount,
             net_cashflow=total_receipts_amount - total_payments_amount,
-            tools_for_template=utils.AGENT_TOOLS,
-            explore_features_for_template=utils.AGENT_EXPLORE_FEATURES,
-            bottom_nav_items=utils.AGENT_NAV,
-            format_currency=utils.format_currency,
-            t=trans,
-            lang=session.get('lang', 'en')
+            title=trans('agents_trader_report_title', default='Trader Report', lang=session.get('lang', 'en'))
         )
         
     except Exception as e:
@@ -467,68 +414,7 @@ def generate_trader_report(trader_id):
         flash(trans('agents_report_generation_error', default='An error occurred while generating the report'), 'danger')
         return render_template(
             'agents/error.html',
-            tools_for_template=utils.AGENT_TOOLS,
-            explore_features_for_template=utils.AGENT_EXPLORE_FEATURES,
-            bottom_nav_items=utils.AGENT_NAV,
-            t=trans,
-            lang=session.get('lang', 'en')
-        )
-
-@agents_bp.route('/my_activity')
-@login_required
-@utils.requires_role('agent')
-def my_activity():
-    """View agent's own performance metrics and activity log."""
-    try:
-        db = utils.get_mongo_db()
-        agent_id = current_user.id
-        
-        # Get comprehensive metrics
-        total_traders_registered = db.users.count_documents({
-            'role': 'trader',
-            'registered_by_agent': agent_id
-        })
-        
-        total_tokens_facilitated = db.coin_transactions.aggregate([
-            {'$match': {'facilitated_by_agent': agent_id}},
-            {'$group': {'_id': None, 'total': {'$sum': '$cash_amount'}}}
-        ])
-        total_tokens_facilitated = list(total_tokens_facilitated)
-        total_tokens_amount = total_tokens_facilitated[0]['total'] if total_tokens_facilitated else 0
-        
-        # Get activity history
-        activities = list(db.agent_activities.find({
-            'agent_id': agent_id
-        }).sort('timestamp', -1).limit(50))
-        
-        for activity in activities:
-            activity['_id'] = str(activity['_id'])
-        
-        logger.info(f"Agent {agent_id} accessed activity log")
-        return render_template(
-            'agents/my_activity.html',
-            total_traders_registered=total_traders_registered,
-            total_tokens_amount=total_tokens_amount,
-            activities=activities,
-            tools_for_template=utils.AGENT_TOOLS,
-            explore_features_for_template=utils.AGENT_EXPLORE_FEATURES,
-            bottom_nav_items=utils.AGENT_NAV,
-            format_currency=utils.format_currency,
-            format_date=utils.format_date,
-            t=trans,
-            lang=session.get('lang', 'en')
-        )
-        
-    except Exception as e:
-        logger.error(f"Error loading agent activity for {current_user.id}: {str(e)}")
-        flash(trans('agents_activity_load_error', default='An error occurred while loading activity log'), 'danger')
-        return render_template(
-            'agents/error.html',
-            tools_for_template=utils.AGENT_TOOLS,
-            explore_features_for_template=utils.AGENT_EXPLORE_FEATURES,
-            bottom_nav_items=utils.AGENT_NAV,
-            t=trans,
-            lang=session.get('lang', 'en')
+            title=trans('general_error', default='Error', lang=session.get('lang', 'en'))
         )
 
 @agents_bp.route('/api/search_traders')
