@@ -1835,3 +1835,9 @@ body.dark-mode {
   padding-top: calc(var(--navbar-height) + 1rem);
   padding-bottom: calc(var(--bottom-nav-height) + 1rem);
 }
+.bottom-navigation {
+      height: var(--bottom-nav-height, 60px);
+  }
+  html, body {
+      height: 100%;
+        }
