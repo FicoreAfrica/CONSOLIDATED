@@ -1,12 +1,12 @@
 from flask import Blueprint, render_template, redirect, url_for, flash, session, request, jsonify, make_response
 from flask_login import login_required, current_user
-import utils
 from translations import trans
 from jinja2.exceptions import TemplateNotFound
 from datetime import datetime
 from models import create_feedback
 from flask_wtf.csrf import CSRFError
 from flask import current_app
+import utils
 
 general_bp = Blueprint('general_bp', __name__, url_prefix='/general')
 
@@ -18,117 +18,24 @@ def home():
         flash(trans('general_access_denied', default='You do not have permission to access this page.'), 'danger')
         return redirect(url_for('index'))
     
-    # Role-based navigation data
-    if current_user.role == 'trader':
-        tools_for_template = utils.BUSINESS_TOOLS
-        explore_features_for_template = utils.BUSINESS_EXPLORE_FEATURES
-        bottom_nav_items = utils.BUSINESS_NAV
-    elif current_user.role == 'admin':
-        tools_for_template = utils.ALL_TOOLS
-        explore_features_for_template = utils.ADMIN_EXPLORE_FEATURES
-        bottom_nav_items = utils.ADMIN_NAV
-    else:
-        tools_for_template = []
-        explore_features_for_template = []
-        bottom_nav_items = []
-
-    # --- DEBUGGING ICONS: Add these logging statements ---
-    current_app.logger.debug(f"DEBUGGING ICONS (home): tools_for_template (first 2 items): {tools_for_template[:2]}")
-    current_app.logger.debug(f"DEBUGGING ICONS (home): explore_features_for_template (first 2 items): {explore_features_for_template[:2]}")
-    current_app.logger.debug(f"DEBUGGING ICONS (home): bottom_nav_items (first 2 items): {bottom_nav_items[:2]}")
-    # --- END DEBUGGING ICONS ---
-
     return render_template(
         'general/home.html',
-        tools=tools_for_template,
-        nav_items=explore_features_for_template,
-        bottom_nav_items=bottom_nav_items,
-        t=trans,
-        lang=session.get('lang', 'en'),
         title=trans('general_business_home', lang=session.get('lang', 'en'))
     )
 
 @general_bp.route('/about')
 def about():
     """Public about page."""
-    # Role-based navigation data (optional, for consistency if navigation is displayed)
-    tools_for_template = []
-    explore_features_for_template = []
-    bottom_nav_items = []
-
-    if current_user.is_authenticated:
-        if current_user.role == 'personal':
-            tools_for_template = utils.PERSONAL_TOOLS
-            explore_features_for_template = utils.PERSONAL_EXPLORE_FEATURES
-            bottom_nav_items = utils.PERSONAL_NAV
-        elif current_user.role == 'trader':
-            tools_for_template = utils.BUSINESS_TOOLS
-            explore_features_for_template = utils.BUSINESS_EXPLORE_FEATURES
-            bottom_nav_items = utils.BUSINESS_NAV
-        elif current_user.role == 'agent':
-            tools_for_template = utils.AGENT_TOOLS
-            explore_features_for_template = utils.AGENT_EXPLORE_FEATURES
-            bottom_nav_items = utils.AGENT_NAV
-        elif current_user.role == 'admin':
-            tools_for_template = utils.ALL_TOOLS
-            explore_features_for_template = utils.ADMIN_EXPLORE_FEATURES
-            bottom_nav_items = utils.ADMIN_NAV
-    
-    # --- DEBUGGING ICONS: Add these logging statements ---
-    current_app.logger.debug(f"DEBUGGING ICONS (about): tools_for_template (first 2 items): {tools_for_template[:2]}")
-    current_app.logger.debug(f"DEBUGGING ICONS (about): explore_features_for_template (first 2 items): {explore_features_for_template[:2]}")
-    current_app.logger.debug(f"DEBUGGING ICONS (about): bottom_nav_items (first 2 items): {bottom_nav_items[:2]}")
-    # --- END DEBUGGING ICONS ---
-
     return render_template(
         'general/about.html',
-        tools=tools_for_template,
-        nav_items=explore_features_for_template,
-        bottom_nav_items=bottom_nav_items,
-        t=trans,
-        lang=session.get('lang', 'en'),
         title=trans('general_about', lang=session.get('lang', 'en'))
     )
 
 @general_bp.route('/contact')
 def contact():
     """Public contact page."""
-    # Role-based navigation data (optional, for consistency if navigation is displayed)
-    tools_for_template = []
-    explore_features_for_template = []
-    bottom_nav_items = []
-
-    if current_user.is_authenticated:
-        if current_user.role == 'personal':
-            tools_for_template = utils.PERSONAL_TOOLS
-            explore_features_for_template = utils.PERSONAL_EXPLORE_FEATURES
-            bottom_nav_items = utils.PERSONAL_NAV
-        elif current_user.role == 'trader':
-            tools_for_template = utils.BUSINESS_TOOLS
-            explore_features_for_template = utils.BUSINESS_EXPLORE_FEATURES
-            bottom_nav_items = utils.BUSINESS_NAV
-        elif current_user.role == 'agent':
-            tools_for_template = utils.AGENT_TOOLS
-            explore_features_for_template = utils.AGENT_EXPLORE_FEATURES
-            bottom_nav_items = utils.AGENT_NAV
-        elif current_user.role == 'admin':
-            tools_for_template = utils.ALL_TOOLS
-            explore_features_for_template = utils.ADMIN_EXPLORE_FEATURES
-            bottom_nav_items = utils.ADMIN_NAV
-    
-    # --- DEBUGGING ICONS: Add these logging statements ---
-    current_app.logger.debug(f"DEBUGGING ICONS (contact): tools_for_template (first 2 items): {tools_for_template[:2]}")
-    current_app.logger.debug(f"DEBUGGING ICONS (contact): explore_features_for_template (first 2 items): {explore_features_for_template[:2]}")
-    current_app.logger.debug(f"DEBUGGING ICONS (contact): bottom_nav_items (first 2 items): {bottom_nav_items[:2]}")
-    # --- END DEBUGGING ICONS ---
-
     return render_template(
         'general/contact.html',
-        tools=tools_for_template,
-        nav_items=explore_features_for_template,
-        bottom_nav_items=bottom_nav_items,
-        t=trans,
-        lang=session.get('lang', 'en'),
         title=trans('general_contact', lang=session.get('lang', 'en'))
     )
 
@@ -139,16 +46,12 @@ def privacy():
     try:
         return render_template(
             'general/privacy.html',
-            t=trans,
-            lang=lang,
             title=trans('general_privacy', lang=lang)
         )
     except TemplateNotFound as e:
         current_app.logger.error(f'Template not found: {str(e)}', exc_info=True)
         return render_template(
-            'personal/GENERAL/error.html', # Assuming this is a fallback error template path
-            t=trans,
-            lang=lang,
+            'personal/GENERAL/error.html',
             error=str(e),
             title=trans('general_privacy', lang=lang)
         ), 404
@@ -160,16 +63,12 @@ def terms():
     try:
         return render_template(
             'general/terms.html',
-            t=trans,
-            lang=lang,
             title=trans('general_terms', lang=lang)
         )
     except TemplateNotFound as e:
         current_app.logger.error(f'Template not found: {str(e)}', exc_info=True)
         return render_template(
-            'personal/GENERAL/error.html', # Assuming this is a fallback error template path
-            t=trans,
-            lang=lang,
+            'personal/GENERAL/error.html',
             error=str(e),
             title=trans('general_terms', lang=lang)
         ), 404
@@ -208,11 +107,11 @@ def feedback():
             if not tool_name or tool_name not in valid_tools:
                 current_app.logger.error(f'Invalid feedback tool: {tool_name}', extra={'ip_address': request.remote_addr})
                 flash(trans('general_invalid_input', default='Please select a valid tool'), 'danger')
-                return render_template('general/feedback.html', t=trans, lang=lang, tool_options=tool_options, title=trans('general_feedback', lang=lang))
+                return render_template('general/feedback.html', tool_options=tool_options, title=trans('general_feedback', lang=lang))
             if not rating or not rating.isdigit() or int(rating) < 1 or int(rating) > 5:
                 current_app.logger.error(f'Invalid rating: {rating}', extra={'ip_address': request.remote_addr})
                 flash(trans('general_invalid_input', default='Please provide a rating between 1 and 5'), 'danger')
-                return render_template('general/feedback.html', t=trans, lang=lang, tool_options=tool_options, title=trans('general_feedback', lang=lang))
+                return render_template('general/feedback.html', tool_options=tool_options, title=trans('general_feedback', lang=lang))
             with current_app.app_context():
                 from models import get_mongo_db
                 if current_user.is_authenticated:
@@ -244,18 +143,18 @@ def feedback():
                     'timestamp': datetime.utcnow()
                 })
             current_app.logger.info(f'Feedback submitted: tool={tool_name}, rating={rating}', 
-                                    extra={'session_id': session.get('sid', 'no-session-id'), 'ip_address': request.remote_addr})
+                                   extra={'session_id': session.get('sid', 'no-session-id'), 'ip_address': request.remote_addr})
             flash(trans('general_thank_you', default='Thank you for your feedback!'), 'success')
             return redirect(url_for('index'))
         except ValueError as e:
             current_app.logger.error(f'User not found: {str(e)}', extra={'ip_address': request.remote_addr})
             flash(trans('general_error', default='User not found'), 'danger')
-            return render_template('general/feedback.html', t=trans, lang=lang, tool_options=tool_options, title=trans('general_feedback', lang=lang)), 400
+            return render_template('general/feedback.html', tool_options=tool_options, title=trans('general_feedback', lang=lang)), 400
         except Exception as e:
             current_app.logger.error(f'Error processing feedback: {str(e)}', exc_info=True, extra={'ip_address': request.remote_addr})
             flash(trans('general_error', default='Error occurred during feedback submission'), 'danger')
             try:
-                return render_template('general/feedback.html', t=trans, lang=lang, tool_options=tool_options, title=trans('general_feedback', lang=lang)), 500
+                return render_template('general/feedback.html', tool_options=tool_options, title=trans('general_feedback', lang=lang)), 500
             except TemplateNotFound as e:
                 current_app.logger.error(f'Template not found: {str(e)}', exc_info=True)
-                return render_template('personal/GENERAL/error.html', t=trans, lang=lang, error=str(e), title=trans('general_feedback', lang=lang)), 500
+                return render_template('personal/GENERAL/error.html', error=str(e), title=trans('general_feedback', lang=lang)), 500
