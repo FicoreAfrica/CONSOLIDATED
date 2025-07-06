@@ -137,7 +137,7 @@
     </main>
 
     {% if current_user.is_authenticated %}
-    <nav class="bottom-nav navbar fixed-bottom bg-white border-top d-md-none shadow-sm" role="navigation" aria-label="{{ t('general_mobile_navigation', default='Mobile navigation') | e }}" style="z-index: 1050;">
+    <nav class="bottom-nav navbar bg-white border-top d-md-none shadow-sm" role="navigation" aria-label="{{ t('general_mobile_navigation', default='Mobile navigation') | e }}" style="z-index: 1050;">
         <div class="container-fluid d-flex justify-content-around align-items-center px-0">
             {% for item in bottom_nav_items[:4] %}
                 <a href="{{ url_for(item.endpoint) if item.endpoint else item.url | default('#') | e }}" class="nav-item text-center text-dark text-decoration-none {% if request.endpoint == item.endpoint %}active{% endif %} d-flex flex-column align-items-center" aria-label="{{ t(item.label_key, default=item.label) | e }}" data-bs-toggle="tooltip" data-bs-title="{{ t(item.tooltip_key, default=item.label) | e }}">
