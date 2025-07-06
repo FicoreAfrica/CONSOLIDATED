@@ -125,14 +125,11 @@ def main():
         current_app.logger.debug(f"New anonymous session created with sid: {session['sid']}", extra={'session_id': session['sid']})
     session.permanent = True
     session.modified = True
-    lang = session.get('lang', 'en')
     form_data = {}
     if current_user.is_authenticated:
         form_data['email'] = current_user.email
         form_data['first_name'] = current_user.username
     form = EmergencyFundForm(data=form_data)
-    tools = utils.PERSONAL_TOOLS if current_user.role == 'personal' else utils.ALL_TOOLS
-    bottom_nav_items = utils.PERSONAL_NAV if current_user.role == 'personal' else utils.ADMIN_NAV
     log_tool_usage(
         tool_name='emergency_fund',
         user_id=current_user.id if current_user.is_authenticated else None,
@@ -183,7 +180,7 @@ def main():
                     'first_name': form.first_name.data,
                     'email': form.email.data,
                     'email_opt_in': form.email_opt_in.data,
-                    'lang': lang,
+                    'lang': session.get('lang', 'en'),
                     'monthly_expenses': form.monthly_expenses.data,
                     'monthly_income': form.monthly_income.data,
                     'current_savings': form.current_savings.data or 0,
@@ -213,16 +210,12 @@ def main():
                         insights=[],
                         cross_tool_insights=[],
                         tips=[],
-                        t=trans,
-                        lang=lang,
-                        tool_title=trans('emergency_fund_title', default='Emergency Fund Calculator', lang=lang),
-                        tools=tools,
-                        bottom_nav_items=bottom_nav_items
+                        tool_title=trans('emergency_fund_title', default='Emergency Fund Calculator')
                     )
                 if form.email_opt_in.data and form.email.data:
                     try:
                         config = EMAIL_CONFIG["emergency_fund"]
-                        subject = trans(config["subject_key"], default='Your Emergency Fund Plan', lang=lang)
+                        subject = trans(config["subject_key"], default='Your Emergency Fund Plan')
                         template = config["template"]
                         send_email(
                             app=current_app,
@@ -232,7 +225,7 @@ def main():
                             template_name=template,
                             data={
                                 'first_name': form.first_name.data,
-                                'lang': lang,
+                                'lang': session.get('lang', 'en'),
                                 'monthly_expenses': format_currency(form.monthly_expenses.data),
                                 'monthly_income': format_currency(form.monthly_income.data) if form.monthly_income.data else 'N/A',
                                 'current_savings': format_currency(form.current_savings.data or 0),
@@ -249,7 +242,7 @@ def main():
                                 'cta_url': url_for('emergency_fund.main', _external=True),
                                 'unsubscribe_url': url_for('emergency_fund.unsubscribe', email=form.email.data, _external=True)
                             },
-                            lang=lang
+                            lang=session.get('lang', 'en')
                         )
                         current_app.logger.info(f"Email sent to {form.email.data}", extra={'session_id': session['sid']})
                     except Exception as e:
@@ -305,13 +298,13 @@ def main():
         insights = []
         if latest_record and float(latest_record['target_amount'].replace(',', '')) > 0:
             if float(latest_record['savings_gap'].replace(',', '')) <= 0:
-                insights.append(trans('emergency_fund_insight_fully_funded', default='Your emergency fund is fully funded! Great job!', lang=lang))
+                insights.append(trans('emergency_fund_insight_fully_funded', default='Your emergency fund is fully funded! Great job!'))
             else:
-                insights.append(trans('emergency_fund_insight_savings_gap', default='You need to save {savings_gap} over {months} months.', lang=lang, savings_gap=latest_record.get('savings_gap'), months=latest_record.get('timeline')))
+                insights.append(trans('emergency_fund_insight_savings_gap', default='You need to save {savings_gap} over {months} months.', savings_gap=latest_record.get('savings_gap'), months=latest_record.get('timeline')))
                 if latest_record.get('percent_of_income') != 'N/A' and float(latest_record['percent_of_income'].replace('%', '')) > 30:
-                    insights.append(trans('emergency_fund_insight_high_income_percentage', default='Your monthly savings goal is over 30% of your income. Consider extending your timeline.', lang=lang))
+                    insights.append(trans('emergency_fund_insight_high_income_percentage', default='Your monthly savings goal is over 30% of your income. Consider extending your timeline.'))
                 if latest_record.get('dependents', 0) > 2:
-                    insights.append(trans('emergency_fund_insight_large_family', default='With {dependents} dependents, consider a {recommended_months}-month fund.', lang=lang, dependents=latest_record.get('dependents', 0), recommended_months=latest_record.get('recommended_months', 0)))
+                    insights.append(trans('emergency_fund_insight_large_family', default='With {dependents} dependents, consider a {recommended_months}-month fund.', dependents=latest_record.get('dependents', 0), recommended_months=latest_record.get('recommended_months', 0)))
         cross_tool_insights = []
         filter_kwargs_budget = {} if is_admin() else {'user_id': current_user.id} if current_user.is_authenticated else {'session_id': session['sid']}
         budget_data = get_mongo_db().budgets.find(filter_kwargs_budget).sort('created_at', -1)
@@ -321,7 +314,7 @@ def main():
             if latest_budget.get('income') and latest_budget.get('fixed_expenses'):
                 savings_possible = latest_budget['income'] - latest_budget['fixed_expenses']
                 if savings_possible > 0:
-                    cross_tool_insights.append(trans('emergency_fund_cross_tool_savings_possible', default='Your budget shows {amount} available for savings monthly.', lang=lang, amount=format_currency(savings_possible)))
+                    cross_tool_insights.append(trans('emergency_fund_cross_tool_savings_possible', default='Your budget shows {amount} available for savings monthly.', amount=format_currency(savings_possible)))
         return render_template(
             'personal/emergency_fund/emergency_fund_main.html',
             form=form,
@@ -330,16 +323,12 @@ def main():
             insights=insights,
             cross_tool_insights=cross_tool_insights,
             tips=[
-                trans('emergency_fund_tip_automate_savings', default='Automate your savings to build your fund consistently.', lang=lang),
-                trans('budget_tip_ajo_savings', default='Contribute to ajo savings for financial discipline.', lang=lang),
-                trans('emergency_fund_tip_track_expenses', default='Track expenses to find extra savings opportunities.', lang=lang),
-                trans('budget_tip_monthly_savings', default='Set a monthly savings goal to stay on track.', lang=lang)
+                trans('emergency_fund_tip_automate_savings', default='Automate your savings to build your fund consistently.'),
+                trans('budget_tip_ajo_savings', default='Contribute to ajo savings for financial discipline.'),
+                trans('emergency_fund_tip_track_expenses', default='Track expenses to find extra savings opportunities.'),
+                trans('budget_tip_monthly_savings', default='Set a monthly savings goal to stay on track.')
             ],
-            t=trans,
-            lang=lang,
-            tool_title=trans('emergency_fund_title', default='Emergency Fund Calculator', lang=lang),
-            tools=tools,
-            bottom_nav_items=bottom_nav_items
+            tool_title=trans('emergency_fund_title', default='Emergency Fund Calculator')
         )
     except Exception as e:
         current_app.logger.error(f"Error in emergency_fund.main for session {session.get('sid', 'unknown')}: {str(e)}", extra={'session_id': session['sid']})
@@ -365,17 +354,8 @@ def main():
             },
             insights=[],
             cross_tool_insights=[],
-            tips=[
-                trans('emergency_fund_tip_automate_savings', default='Automate your savings to build your fund consistently.', lang=lang),
-                trans('budget_tip_ajo_savings', default='Contribute to ajo savings for financial discipline.', lang=lang),
-                trans('emergency_fund_tip_track_expenses', default='Track expenses to find extra savings opportunities.', lang=lang),
-                trans('budget_tip_monthly_savings', default='Set a monthly savings goal to stay on track.', lang=lang)
-            ],
-            t=trans,
-            lang=lang,
-            tool_title=trans('emergency_fund_title', default='Emergency Fund Calculator', lang=lang),
-            tools=tools,
-            bottom_nav_items=bottom_nav_items
+            tips=[],
+            tool_title=trans('emergency_fund_title', default='Emergency Fund Calculator')
         ), 500
 
 @emergency_fund_bp.route('/summary')
@@ -409,9 +389,6 @@ def unsubscribe(email):
         current_app.logger.debug(f"New anonymous session created with sid: {session['sid']}", extra={'session_id': session['sid']})
     session.permanent = True
     session.modified = True
-    lang = session.get('lang', 'en')
-    tools = utils.PERSONAL_TOOLS if current_user.role == 'personal' else utils.ALL_TOOLS
-    bottom_nav_items = utils.PERSONAL_NAV if current_user.role == 'personal' else utils.ADMIN_NAV
     try:
         log_tool_usage(
             tool_name='emergency_fund',
@@ -442,41 +419,6 @@ def unsubscribe(email):
 @emergency_fund_bp.errorhandler(CSRFError)
 def handle_csrf_error(e):
     """Handle CSRF errors with user-friendly message."""
-    lang = session.get('lang', 'en')
-    tools = utils.PERSONAL_TOOLS if current_user.role == 'personal' else utils.ALL_TOOLS
-    bottom_nav_items = utils.PERSONAL_NAV if current_user.role == 'personal' else utils.ADMIN_NAV
     current_app.logger.error(f"CSRF error on {request.path}: {e.description}", extra={'session_id': session.get('sid', 'unknown')})
     flash(trans('emergency_fund_csrf_error', default='Form submission failed due to a missing security token. Please refresh and try again.'), 'danger')
-    return render_template(
-        'personal/emergency_fund/emergency_fund_main.html',
-        form=EmergencyFundForm(),
-        records=[],
-        latest_record={
-            'monthly_expenses': format_currency(0),
-            'monthly_income': 'N/A',
-            'current_savings': format_currency(0),
-            'risk_tolerance_level': '',
-            'dependents': 0,
-            'timeline': 0,
-            'recommended_months': 0,
-            'target_amount': format_currency(0),
-            'savings_gap': format_currency(0),
-            'monthly_savings': format_currency(0),
-            'percent_of_income': 'N/A',
-            'badges': [],
-            'created_at': 'N/A'
-        },
-        insights=[],
-        cross_tool_insights=[],
-        tips=[
-            trans('emergency_fund_tip_automate_savings', default='Automate your savings to build your fund consistently.', lang=lang),
-            trans('budget_tip_ajo_savings', default='Contribute to ajo savings for financial discipline.', lang=lang),
-            trans('emergency_fund_tip_track_expenses', default='Track expenses to find extra savings opportunities.', lang=lang),
-            trans('budget_tip_monthly_savings', default='Set a monthly savings goal to stay on track.', lang=lang)
-        ],
-        t=trans,
-        lang=lang,
-        tool_title=trans('emergency_fund_title', default='Emergency Fund Calculator', lang=lang),
-        tools=tools,
-        bottom_nav_items=bottom_nav_items
-    ), 400
+    return redirect(url_for('personal.index')), 400
