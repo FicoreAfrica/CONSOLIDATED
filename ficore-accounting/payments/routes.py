@@ -37,19 +37,12 @@ def index():
         # TODO: Restore original user_id filter for production
         query = {'type': 'payment'} if utils.is_admin() else {'user_id': str(current_user.id), 'type': 'payment'}
         payments = list(db.cashflows.find(query).sort('created_at', -1))
-        tools = utils.BUSINESS_TOOLS if current_user.role == 'trader' else utils.ALL_TOOLS
-        nav_items = utils.BUSINESS_EXPLORE_FEATURES if current_user.role == 'trader' else utils.ADMIN_EXPLORE_FEATURES
-        bottom_nav_items = utils.BUSINESS_NAV if current_user.role == 'trader' else utils.ADMIN_NAV
         return render_template(
             'payments/index.html',
             payments=payments,
             format_currency=utils.format_currency,
             format_date=utils.format_date,
-            tools=tools,
-            nav_items=nav_items,
-            bottom_nav_items=bottom_nav_items,
-            t=trans,
-            lang=session.get('lang', 'en')
+            title=trans('payments_title', default='Payments', lang=session.get('lang', 'en'))
         )
     except Exception as e:
         logger.error(f"Error fetching payments for user {current_user.id}: {str(e)}")
@@ -201,17 +194,10 @@ def add():
         except Exception as e:
             logger.error(f"Error adding payment for user {current_user.id}: {str(e)}")
             flash(trans('payments_add_error', default='An error occurred'), 'danger')
-    tools = utils.BUSINESS_TOOLS if current_user.role == 'trader' else utils.ALL_TOOLS
-    nav_items = utils.BUSINESS_EXPLORE_FEATURES if current_user.role == 'trader' else utils.ADMIN_EXPLORE_FEATURES
-    bottom_nav_items = utils.BUSINESS_NAV if current_user.role == 'trader' else utils.ADMIN_NAV
     return render_template(
         'payments/add.html',
         form=form,
-        tools=tools,
-        nav_items=nav_items,
-        bottom_nav_items=bottom_nav_items,
-        t=trans,
-        lang=session.get('lang', 'en')
+        title=trans('payments_add_title', default='Add Payment', lang=session.get('lang', 'en'))
     )
 
 @payments_bp.route('/edit/<id>', methods=['GET', 'POST'])
@@ -256,18 +242,11 @@ def edit(id):
             except Exception as e:
                 logger.error(f"Error updating payment {id} for user {current_user.id}: {str(e)}")
                 flash(trans('payments_edit_error', default='An error occurred'), 'danger')
-        tools = utils.BUSINESS_TOOLS if current_user.role == 'trader' else utils.ALL_TOOLS
-        nav_items = utils.BUSINESS_EXPLORE_FEATURES if current_user.role == 'trader' else utils.ADMIN_EXPLORE_FEATURES
-        bottom_nav_items = utils.BUSINESS_NAV if current_user.role == 'trader' else utils.ADMIN_NAV
         return render_template(
             'payments/edit.html',
             form=form,
             payment=payment,
-            tools=tools,
-            nav_items=nav_items,
-            bottom_nav_items=bottom_nav_items,
-            t=trans,
-            lang=session.get('lang', 'en')
+            title=trans('payments_edit_title', default='Edit Payment', lang=session.get('lang', 'en'))
         )
     except Exception as e:
         logger.error(f"Error fetching payment {id} for user {current_user.id}: {str(e)}")
