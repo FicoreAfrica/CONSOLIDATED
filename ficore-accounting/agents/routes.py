@@ -102,8 +102,8 @@ def agent_portal():
             tokens_today=tokens_today,
             recent_activities=recent_activities,
             assisted_traders=assisted_traders,
-            tools=utils.AGENT_TOOLS,
-            nav_items=utils.AGENT_EXPLORE_FEATURES,
+            tools_for_template=utils.AGENT_TOOLS,
+            explore_features_for_template=utils.AGENT_EXPLORE_FEATURES,
             bottom_nav_items=utils.AGENT_NAV,
             format_currency=utils.format_currency,
             format_date=utils.format_date,
@@ -115,8 +115,8 @@ def agent_portal():
         flash(trans('agents_dashboard_error', default='An error occurred while loading the dashboard'), 'danger')
         return render_template(
             'agents/error.html',
-            tools=utils.AGENT_TOOLS,
-            nav_items=utils.AGENT_EXPLORE_FEATURES,
+            tools_for_template=utils.AGENT_TOOLS,
+            explore_features_for_template=utils.AGENT_EXPLORE_FEATURES,
             bottom_nav_items=utils.AGENT_NAV,
             t=trans,
             lang=session.get('lang', 'en')
@@ -140,8 +140,8 @@ def register_trader():
                 return render_template(
                     'agents/register_trader.html',
                     form=form,
-                    tools=utils.AGENT_TOOLS,
-                    nav_items=utils.AGENT_EXPLORE_FEATURES,
+                    tools_for_template=utils.AGENT_TOOLS,
+                    explore_features_for_template=utils.AGENT_EXPLORE_FEATURES,
                     bottom_nav_items=utils.AGENT_NAV,
                     t=trans,
                     lang=session.get('lang', 'en')
@@ -152,8 +152,8 @@ def register_trader():
                 return render_template(
                     'agents/register_trader.html',
                     form=form,
-                    tools=utils.AGENT_TOOLS,
-                    nav_items=utils.AGENT_EXPLORE_FEATURES,
+                    tools_for_template=utils.AGENT_TOOLS,
+                    explore_features_for_template=utils.AGENT_EXPLORE_FEATURES,
                     bottom_nav_items=utils.AGENT_NAV,
                     t=trans,
                     lang=session.get('lang', 'en')
@@ -214,8 +214,8 @@ def register_trader():
             return render_template(
                 'agents/register_trader.html',
                 form=form,
-                tools=utils.AGENT_TOOLS,
-                nav_items=utils.AGENT_EXPLORE_FEATURES,
+                tools_for_template=utils.AGENT_TOOLS,
+                explore_features_for_template=utils.AGENT_EXPLORE_FEATURES,
                 bottom_nav_items=utils.AGENT_NAV,
                 t=trans,
                 lang=session.get('lang', 'en')
@@ -224,8 +224,8 @@ def register_trader():
     return render_template(
         'agents/register_trader.html',
         form=form,
-        tools=utils.AGENT_TOOLS,
-        nav_items=utils.AGENT_EXPLORE_FEATURES,
+        tools_for_template=utils.AGENT_TOOLS,
+        explore_features_for_template=utils.AGENT_EXPLORE_FEATURES,
         bottom_nav_items=utils.AGENT_NAV,
         t=trans,
         lang=session.get('lang', 'en')
@@ -250,8 +250,8 @@ def manage_tokens():
                 return render_template(
                     'agents/manage_tokens.html',
                     form=form,
-                    tools=utils.AGENT_TOOLS,
-                    nav_items=utils.AGENT_EXPLORE_FEATURES,
+                    tools_for_template=utils.AGENT_TOOLS,
+                    explore_features_for_template=utils.AGENT_EXPLORE_FEATURES,
                     bottom_nav_items=utils.AGENT_NAV,
                     t=trans,
                     lang=session.get('lang', 'en')
@@ -304,8 +304,8 @@ def manage_tokens():
             return render_template(
                 'agents/manage_tokens.html',
                 form=form,
-                tools=utils.AGENT_TOOLS,
-                nav_items=utils.AGENT_EXPLORE_FEATURES,
+                tools_for_template=utils.AGENT_TOOLS,
+                explore_features_for_template=utils.AGENT_EXPLORE_FEATURES,
                 bottom_nav_items=utils.AGENT_NAV,
                 t=trans,
                 lang=session.get('lang', 'en')
@@ -314,8 +314,8 @@ def manage_tokens():
     return render_template(
         'agents/manage_tokens.html',
         form=form,
-        tools=utils.AGENT_TOOLS,
-        nav_items=utils.AGENT_EXPLORE_FEATURES,
+        tools_for_template=utils.AGENT_TOOLS,
+        explore_features_for_template=utils.AGENT_EXPLORE_FEATURES,
         bottom_nav_items=utils.AGENT_NAV,
         t=trans,
         lang=session.get('lang', 'en')
@@ -367,8 +367,8 @@ def assist_trader_records(trader_id):
             recent_debtors=recent_debtors,
             recent_creditors=recent_creditors,
             recent_cashflows=recent_cashflows,
-            tools=utils.AGENT_TOOLS,
-            nav_items=utils.AGENT_EXPLORE_FEATURES,
+            tools_for_template=utils.AGENT_TOOLS,
+            explore_features_for_template=utils.AGENT_EXPLORE_FEATURES,
             bottom_nav_items=utils.AGENT_NAV,
             format_currency=utils.format_currency,
             format_date=utils.format_date,
@@ -381,8 +381,8 @@ def assist_trader_records(trader_id):
         flash(trans('agents_records_access_error', default='An error occurred while accessing trader records'), 'danger')
         return render_template(
             'agents/error.html',
-            tools=utils.AGENT_TOOLS,
-            nav_items=utils.AGENT_EXPLORE_FEATURES,
+            tools_for_template=utils.AGENT_TOOLS,
+            explore_features_for_template=utils.AGENT_EXPLORE_FEATURES,
             bottom_nav_items=utils.AGENT_NAV,
             t=trans,
             lang=session.get('lang', 'en')
@@ -454,8 +454,8 @@ def generate_trader_report(trader_id):
             total_payments=total_payments_amount,
             net_position=total_debtors_amount - total_creditors_amount,
             net_cashflow=total_receipts_amount - total_payments_amount,
-            tools=utils.AGENT_TOOLS,
-            nav_items=utils.AGENT_EXPLORE_FEATURES,
+            tools_for_template=utils.AGENT_TOOLS,
+            explore_features_for_template=utils.AGENT_EXPLORE_FEATURES,
             bottom_nav_items=utils.AGENT_NAV,
             format_currency=utils.format_currency,
             t=trans,
@@ -467,8 +467,8 @@ def generate_trader_report(trader_id):
         flash(trans('agents_report_generation_error', default='An error occurred while generating the report'), 'danger')
         return render_template(
             'agents/error.html',
-            tools=utils.AGENT_TOOLS,
-            nav_items=utils.AGENT_EXPLORE_FEATURES,
+            tools_for_template=utils.AGENT_TOOLS,
+            explore_features_for_template=utils.AGENT_EXPLORE_FEATURES,
             bottom_nav_items=utils.AGENT_NAV,
             t=trans,
             lang=session.get('lang', 'en')
@@ -510,8 +510,8 @@ def my_activity():
             total_traders_registered=total_traders_registered,
             total_tokens_amount=total_tokens_amount,
             activities=activities,
-            tools=utils.AGENT_TOOLS,
-            nav_items=utils.AGENT_EXPLORE_FEATURES,
+            tools_for_template=utils.AGENT_TOOLS,
+            explore_features_for_template=utils.AGENT_EXPLORE_FEATURES,
             bottom_nav_items=utils.AGENT_NAV,
             format_currency=utils.format_currency,
             format_date=utils.format_date,
@@ -524,8 +524,8 @@ def my_activity():
         flash(trans('agents_activity_load_error', default='An error occurred while loading activity log'), 'danger')
         return render_template(
             'agents/error.html',
-            tools=utils.AGENT_TOOLS,
-            nav_items=utils.AGENT_EXPLORE_FEATURES,
+            tools_for_template=utils.AGENT_TOOLS,
+            explore_features_for_template=utils.AGENT_EXPLORE_FEATURES,
             bottom_nav_items=utils.AGENT_NAV,
             t=trans,
             lang=session.get('lang', 'en')
