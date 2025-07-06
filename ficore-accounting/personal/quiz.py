@@ -10,7 +10,7 @@ from translations import trans
 from mailersend_email import send_email, EMAIL_CONFIG
 from models import log_tool_usage
 from session_utils import create_anonymous_session
-from utils import requires_role, is_admin, get_mongo_db, PERSONAL_TOOLS, PERSONAL_NAV, ALL_TOOLS, ADMIN_NAV, limiter
+from utils import requires_role, is_admin, get_mongo_db, limiter
 
 quiz_bp = Blueprint(
     'quiz',
@@ -477,11 +477,7 @@ def main():
             },
         ]
 
-        tools = PERSONAL_TOOLS if current_user.role == 'personal' else ALL_TOOLS
-        bottom_nav_items = PERSONAL_NAV if current_user.role == 'personal' else ADMIN_NAV
-        current_app.logger.info(f"Rendering quiz main page with {len(records)} results for session {session['sid']}", extra={'session_id': session['sid']})
-        return render_template(
-            'personal/quiz/quiz_main.html',
+        return render_template('personal/quiz/quiz_main.html',
             form=form,
             questions=questions,
             records=records,
@@ -496,18 +492,13 @@ def main():
             total_users=total_users,
             average_score=average_score,
             t=trans,
-            tool_title=trans('quiz_title', default='Financial Quiz', lang=lang),
-            tools=tools,
-            bottom_nav_items=bottom_nav_items
+            tool_title=trans('quiz_title', default='Financial Quiz', lang=lang)
         )
 
     except Exception as e:
         current_app.logger.error(f"Error in quiz.main for session {session.get('sid', 'unknown')}: {str(e)}", extra={'session_id': session.get('sid', 'unknown')})
         flash(trans('quiz_error_results', default='An error occurred while loading quiz. Please try again.'), 'danger')
-        tools = PERSONAL_TOOLS if current_user.role == 'personal' else ALL_TOOLS
-        bottom_nav_items = PERSONAL_NAV if current_user.role == 'personal' else ADMIN_NAV
-        return render_template(
-            'personal/quiz/quiz_main.html',
+        return render_template('personal/quiz/quiz_main.html',
             form=form,
             questions=questions,
             records=[],
@@ -531,9 +522,7 @@ def main():
             total_users=0,
             average_score=0,
             t=trans,
-            tool_title=trans('quiz_title', default='Financial Quiz', lang=lang),
-            tools=tools,
-            bottom_nav_items=bottom_nav_items
+            tool_title=trans('quiz_title', default='Financial Quiz', lang=lang)
         ), 500
 
 @quiz_bp.route('/unsubscribe/<email>')
@@ -584,12 +573,9 @@ def unsubscribe(email):
 def handle_csrf_error(e):
     """Handle CSRF errors with user-friendly message."""
     lang = session.get('lang', 'en')
-    tools = PERSONAL_TOOLS if current_user.role == 'personal' else ALL_TOOLS
-    bottom_nav_items = PERSONAL_NAV if current_user.role == 'personal' else ADMIN_NAV
     current_app.logger.error(f"CSRF error on {request.path}: {e.description}", extra={'session_id': session.get('sid', 'unknown')})
     flash(trans('quiz_csrf_error', default='Form submission failed due to a missing security token. Please refresh and try again.'), 'danger')
-    return render_template(
-        'personal/quiz/quiz_main.html',
+    return render_template('personal/quiz/quiz_main.html',
         form=QuizForm(lang=lang),
         questions=[],
         records=[],
@@ -613,7 +599,5 @@ def handle_csrf_error(e):
         total_users=0,
         average_score=0,
         t=trans,
-        tool_title=trans('quiz_title', default='Financial Quiz', lang=lang),
-        tools=tools,
-        bottom_nav_items=bottom_nav_items
+        tool_title=trans('quiz_title', default='Financial Quiz', lang=lang)
     ), 400
