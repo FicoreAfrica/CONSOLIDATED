@@ -2,7 +2,7 @@ GENERAL_TRANSLATIONS = {
     'en': {
         # Authentication & User Management
         'general_business_home': 'Home',
-        'general_hello_user': 'Hello, User',
+        'general_hello_user': 'Hello,',
         'general_i_owe': 'I Owe',
         'general_en': 'English',
         'general_ha': 'Hausa',
@@ -10,6 +10,7 @@ GENERAL_TRANSLATIONS = {
         'general_login_required': 'Please log in to access this page.',
         'general_no_permission': 'You do not have permission to access this page.',
         'They Owe': 'They Owe',
+'general_try_again_or_contact_support':'Try again or contact support',
         '': 'none...',
             'Something went wrong. Please try again later.': 'Something went wrong. Please try again later.',
             'general_no_notifications_yet': 'No notifications yet',
