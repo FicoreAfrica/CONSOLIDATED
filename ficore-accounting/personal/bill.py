@@ -107,7 +107,6 @@ class EditBillForm(FlaskForm):
 @requires_role(['personal', 'admin'])
 def main():
     """Main bill management interface with tabbed layout."""
-    lang = session.get('lang', 'en')
     form = BillForm(data={
         'email': current_user.email if current_user.is_authenticated else '',
         'first_name': current_user.username if current_user.is_authenticated else ''
@@ -180,7 +179,7 @@ def main():
                                 'cta_url': url_for('bill.main', _external=True),
                                 'unsubscribe_url': url_for('bill.unsubscribe', email=form.email.data, _external=True)
                             },
-                            lang=lang
+                            lang=session.get('lang', 'en')
                         )
                         current_app.logger.info(f"Email sent to {form.email.data}")
                     except Exception as e:
@@ -280,9 +279,6 @@ def main():
             except (ValueError, TypeError):
                 current_app.logger.warning(f"Invalid amount for bill {bill_id}: {bill.get('amount')}")
                 continue
-        tools = utils.PERSONAL_TOOLS if current_user.role == 'personal' else utils.ALL_TOOLS
-        bottom_nav_items = utils.PERSONAL_NAV if current_user.role == 'personal' else utils.ADMIN_NAV
-        explore_features = utils.PERSONAL_EXPLORE_FEATURES if current_user.role == 'personal' else []
         return render_template(
             'personal/BILL/bill_main.html',
             form=form,
@@ -302,19 +298,11 @@ def main():
             due_month=due_month,
             upcoming_bills=upcoming_bills,
             tips=tips,
-            t=trans,
-            lang=lang,
-            tool_title=trans('bill_title', default='Bill Manager'),
-            tools=tools,
-            bottom_nav_items=bottom_nav_items,
-            explore_features=explore_features
+            tool_title=trans('bill_title', default='Bill Manager')
         )
     except Exception as e:
         current_app.logger.error(f"Error in bill.main: {str(e)}")
         flash(trans('bill_dashboard_load_error', default='Error loading bill dashboard.'), 'danger')
-        tools = utils.PERSONAL_TOOLS if current_user.role == 'personal' else utils.ALL_TOOLS
-        bottom_nav_items = utils.PERSONAL_NAV if current_user.role == 'personal' else utils.ADMIN_NAV
-        explore_features = utils.PERSONAL_EXPLORE_FEATURES if current_user.role == 'personal' else []
         return render_template(
             'personal/BILL/bill_main.html',
             form=form,
@@ -334,12 +322,7 @@ def main():
             due_month=[],
             upcoming_bills=[],
             tips=tips,
-            t=trans,
-            lang=lang,
-            tool_title=trans('bill_title', default='Bill Manager'),
-            tools=tools,
-            bottom_nav_items=bottom_nav_items,
-            explore_features=explore_features
+            tool_title=trans('bill_title', default='Bill Manager')
         ), 500
 
 @bill_bp.route('/summary')
@@ -368,7 +351,6 @@ def summary():
 @requires_role(['personal', 'admin'])
 def unsubscribe(email):
     """Unsubscribe user from bill email notifications."""
-    lang = session.get('lang', 'en')
     try:
         log_tool_usage(
             get_mongo_db(),
