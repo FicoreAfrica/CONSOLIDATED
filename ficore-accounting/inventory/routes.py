@@ -32,29 +32,11 @@ def index():
         query = {} if utils.is_admin() else {'user_id': str(current_user.id)}
         items = list(db.inventory.find(query).sort('created_at', -1))
         
-        # Role-based navigation data
-        if current_user.role == 'trader':
-            tools_for_template = utils.BUSINESS_TOOLS
-            explore_features_for_template = utils.BUSINESS_EXPLORE_FEATURES
-            bottom_nav_items = utils.BUSINESS_NAV
-        elif current_user.role == 'admin':
-            tools_for_template = utils.ALL_TOOLS
-            explore_features_for_template = utils.ADMIN_EXPLORE_FEATURES
-            bottom_nav_items = utils.ADMIN_NAV
-        else:
-            tools_for_template = []
-            explore_features_for_template = []
-            bottom_nav_items = []
-
         return render_template(
             'inventory/index.html',
             items=items,
             format_currency=utils.format_currency,
-            tools=tools_for_template,
-            nav_items=explore_features_for_template,
-            bottom_nav_items=bottom_nav_items,
-            t=trans,
-            lang=session.get('lang', 'en')
+            title=trans('inventory_title', default='Inventory', lang=session.get('lang', 'en'))
         )
     except Exception as e:
         logger.error(f"Error fetching inventory for user {current_user.id}: {str(e)}")
@@ -72,29 +54,11 @@ def low_stock():
         query = {**base_query, '$expr': {'$lte': ['$qty', '$threshold']}}
         low_stock_items = list(db.inventory.find(query).sort('qty', 1))
         
-        # Role-based navigation data
-        if current_user.role == 'trader':
-            tools_for_template = utils.BUSINESS_TOOLS
-            explore_features_for_template = utils.BUSINESS_EXPLORE_FEATURES
-            bottom_nav_items = utils.BUSINESS_NAV
-        elif current_user.role == 'admin':
-            tools_for_template = utils.ALL_TOOLS
-            explore_features_for_template = utils.ADMIN_EXPLORE_FEATURES
-            bottom_nav_items = utils.ADMIN_NAV
-        else:
-            tools_for_template = []
-            explore_features_for_template = []
-            bottom_nav_items = []
-
         return render_template(
             'inventory/low_stock.html',
             items=low_stock_items,
             format_currency=utils.format_currency,
-            tools=tools_for_template,
-            nav_items=explore_features_for_template,
-            bottom_nav_items=bottom_nav_items,
-            t=trans,
-            lang=session.get('lang', 'en')
+            title=trans('inventory_low_stock_title', default='Low Stock Inventory', lang=session.get('lang', 'en'))
         )
     except Exception as e:
         logger.error(f"Error fetching low stock items for user {current_user.id}: {str(e)}")
@@ -143,29 +107,11 @@ def add():
             logger.error(f"Error adding inventory item for user {current_user.id}: {str(e)}")
             flash(trans('inventory_add_error', default='An error occurred'), 'danger')
     
-        # Role-based navigation data
-        if current_user.role == 'trader':
-            tools_for_template = utils.BUSINESS_TOOLS
-            explore_features_for_template = utils.BUSINESS_EXPLORE_FEATURES
-            bottom_nav_items = utils.BUSINESS_NAV
-        elif current_user.role == 'admin':
-            tools_for_template = utils.ALL_TOOLS
-            explore_features_for_template = utils.ADMIN_EXPLORE_FEATURES
-            bottom_nav_items = utils.ADMIN_NAV
-        else:
-            tools_for_template = []
-            explore_features_for_template = []
-            bottom_nav_items = []
-
-        return render_template(
-            'inventory/add.html',
-            form=form,
-            tools=tools_for_template,
-            nav_items=explore_features_for_template,
-            bottom_nav_items=bottom_nav_items,
-            t=trans,
-            lang=session.get('lang', 'en')
-        )
+    return render_template(
+        'inventory/add.html',
+        form=form,
+        title=trans('inventory_add_title', default='Add Inventory Item', lang=session.get('lang', 'en'))
+    )
 
 @inventory_bp.route('/edit/<id>', methods=['GET', 'POST'])
 @login_required
@@ -208,29 +154,11 @@ def edit(id):
                 logger.error(f"Error updating inventory item {id} for user {current_user.id}: {str(e)}")
                 flash(trans('inventory_edit_error', default='An error occurred'), 'danger')
         
-        # Role-based navigation data
-        if current_user.role == 'trader':
-            tools_for_template = utils.BUSINESS_TOOLS
-            explore_features_for_template = utils.BUSINESS_EXPLORE_FEATURES
-            bottom_nav_items = utils.BUSINESS_NAV
-        elif current_user.role == 'admin':
-            tools_for_template = utils.ALL_TOOLS
-            explore_features_for_template = utils.ADMIN_EXPLORE_FEATURES
-            bottom_nav_items = utils.ADMIN_NAV
-        else:
-            tools_for_template = []
-            explore_features_for_template = []
-            bottom_nav_items = []
-
         return render_template(
             'inventory/edit.html',
             form=form,
             item=item,
-            tools=tools_for_template,
-            nav_items=explore_features_for_template,
-            bottom_nav_items=bottom_nav_items,
-            t=trans,
-            lang=session.get('lang', 'en')
+            title=trans('inventory_edit_title', default='Edit Inventory Item', lang=session.get('lang', 'en'))
         )
     except Exception as e:
         logger.error(f"Error fetching inventory item {id} for user {current_user.id}: {str(e)}")
