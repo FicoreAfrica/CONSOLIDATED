@@ -206,19 +206,9 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 
-    // Debug navigation duplication (updated to .bottom-nav)
-    const topNav = document.querySelector('.top-header');
-    const bottomNav = document.querySelector('.bottom-nav');
-    if (topNav && bottomNav) {
-        const topNavItems = topNav.querySelectorAll('.nav-item');
-        if (topNavItems.length > 0) {
-            console.warn('Unexpected navigation items in top-header:', topNavItems);
-        }
-    }
-
-    // Navigation highlighting (updated to .bottom-nav)
+    // Navigation highlighting
     const currentPath = window.location.pathname;
-    const navItems = document.querySelectorAll('.bottom-nav .nav-item');
+    const navItems = document.querySelectorAll('.navbar-nav .nav-item');
     navItems.forEach(item => {
         const itemHref = item.getAttribute('href');
         if (currentPath === itemHref || currentPath.startsWith(itemHref + '/')) {
@@ -269,16 +259,16 @@ document.addEventListener('DOMContentLoaded', function() {
         const totalIAmOwed = data.totalIAmOwed || 0;
         const netPosition = totalIAmOwed - totalIOwe;
 
-        document.querySelector('#totalIOwe .amount-value').textContent = formatCurrency(totalIOwe);
+        document.querySelector('#totalIOwe .amount-value').textContent = format_currency(totalIOwe);
         document.querySelector('#totalIOwe .amount-value').dataset.amount = totalIOwe;
 
-        document.querySelector('#totalIAmOwed .amount-value').textContent = formatCurrency(totalIAmOwed);
+        document.querySelector('#totalIAmOwed .amount-value').textContent = format_currency(totalIAmOwed);
         document.querySelector('#totalIAmOwed .amount-value').dataset.amount = totalIAmOwed;
 
         const netPositionEl = document.getElementById('netPosition');
         const netStatusEl = document.getElementById('netStatus');
 
-        netPositionEl.textContent = '₦' + formatCurrency(Math.abs(netPosition));
+        netPositionEl.textContent = '₦' + format_currency(Math.abs(netPosition));
         netPositionEl.dataset.amount = netPosition;
 
         if (netPosition > 0) {
@@ -297,12 +287,12 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     function updateSnapshots(walletData, cashflowData, inventoryData) {
-        document.getElementById('walletBalance').textContent = '₦' + formatCurrency(walletData.coin_balance || 0);
-        document.getElementById('walletBalance').dataset.originalText = '₦' + formatCurrency(walletData.coin_balance || 0);
-        document.getElementById('netCashflow').textContent = '₦' + formatCurrency(cashflowData.netCashflow || 0);
-        document.getElementById('netCashflow').dataset.originalText = '₦' + formatCurrency(cashflowData.netCashflow || 0);
-        document.getElementById('inventoryValue').textContent = '₦' + formatCurrency(inventoryData.totalValue || 0);
-        document.getElementById('inventoryValue').dataset.originalText = '₦' + formatCurrency(inventoryData.totalValue || 0);
+        document.getElementById('walletBalance').textContent = '₦' + format_currency(walletData.coin_balance || 0);
+        document.getElementById('walletBalance').dataset.originalText = '₦' + format_currency(walletData.coin_balance || 0);
+        document.getElementById('netCashflow').textContent = '₦' + format_currency(cashflowData.netCashflow || 0);
+        document.getElementById('netCashflow').dataset.originalText = '₦' + format_currency(cashflowData.netCashflow || 0);
+        document.getElementById('inventoryValue').textContent = '₦' + format_currency(inventoryData.totalValue || 0);
+        document.getElementById('inventoryValue').dataset.originalText = '₦' + format_currency(inventoryData.totalValue || 0);
     }
 
     function loadNotifications() {
@@ -376,7 +366,7 @@ document.addEventListener('DOMContentLoaded', function() {
                                 <div class="activity-description">${activity.description}</div>
                                 <div class="activity-time text-muted">${formatTimeAgo(activity.timestamp)}</div>
                             </div>
-                            ${activity.amount ? `<div class="activity-amount text-nowrap">${formatCurrency(activity.amount)}</div>` : ''}
+                            ${activity.amount ? `<div class="activity-amount text-nowrap">${format_currency(activity.amount)}</div>` : ''}
                         </div>
                     `).join('');
                 } else {
@@ -424,13 +414,6 @@ document.addEventListener('DOMContentLoaded', function() {
         return colors[type] || 'text-muted';
     }
 
-    function formatCurrency(amount) {
-        return new Intl.NumberFormat('en-NG', {
-            minimumFractionDigits: 0,
-            maximumFractionDigits: 2
-        }).format(amount);
-    }
-
     function formatTimeAgo(timestamp) {
         const now = new Date();
         const time = new Date(timestamp);
@@ -450,9 +433,9 @@ document.addEventListener('DOMContentLoaded', function() {
         amounts.forEach(el => {
             if (amountsVisible) {
                 if (el.classList.contains('amount-value')) {
-                    el.textContent = formatCurrency(el.dataset.amount);
+                    el.textContent = format_currency(el.dataset.amount);
                 } else if (el.classList.contains('net-amount')) {
-                    el.textContent = '₦' + formatCurrency(Math.abs(el.dataset.amount));
+                    el.textContent = '₦' + format_currency(Math.abs(el.dataset.amount));
                 } else if (el.classList.contains('stat-card-value')) {
                     el.textContent = el.dataset.originalText || el.textContent;
                 }
