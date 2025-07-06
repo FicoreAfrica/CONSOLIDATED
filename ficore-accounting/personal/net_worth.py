@@ -10,7 +10,7 @@ from datetime import datetime
 from bson import ObjectId
 from models import log_tool_usage
 from session_utils import create_anonymous_session
-from utils import requires_role, is_admin, get_mongo_db, PERSONAL_TOOLS, PERSONAL_NAV, ALL_TOOLS, ADMIN_NAV, format_currency, limiter
+from utils import requires_role, is_admin, get_mongo_db, format_currency, limiter
 
 net_worth_bp = Blueprint(
     'net_worth',
@@ -98,7 +98,6 @@ def main():
         current_app.logger.debug(f"New anonymous session created with sid: {session['sid']}", extra={'session_id': session['sid']})
     session.permanent = True
     session.modified = True
-    lang = session.get('lang', 'en')
     
     form_data = {}
     if current_user.is_authenticated:
@@ -114,9 +113,6 @@ def main():
         action='main_view',
         mongo=get_mongo_db()
     )
-
-    tools = PERSONAL_TOOLS if current_user.role == 'personal' else ALL_TOOLS
-    bottom_nav_items = PERSONAL_NAV if current_user.role == 'personal' else ADMIN_NAV
 
     try:
         filter_criteria = {} if is_admin() else {'user_id': current_user.id} if current_user.is_authenticated else {'session_id': session['sid']}
@@ -144,13 +140,13 @@ def main():
 
                 badges = []
                 if net_worth > 0:
-                    badges.append(trans("net_worth_badge_wealth_builder", default='Wealth Builder', lang=lang))
+                    badges.append(trans("net_worth_badge_wealth_builder", default='Wealth Builder'))
                 if total_liabilities == 0:
-                    badges.append(trans("net_worth_badge_debt_free", default='Debt Free', lang=lang))
+                    badges.append(trans("net_worth_badge_debt_free", default='Debt Free'))
                 if cash_savings >= total_assets * 0.3:
-                    badges.append(trans("net_worth_badge_savings_champion", default='Savings Champion', lang=lang))
+                    badges.append(trans("net_worth_badge_savings_champion", default='Savings Champion'))
                 if property >= total_assets * 0.5:
-                    badges.append(trans("net_worth_badge_property_mogul", default='Property Mogul', lang=lang))
+                    badges.append(trans("net_worth_badge_property_mogul", default='Property Mogul'))
 
                 net_worth_record = {
                     '_id': ObjectId(),
@@ -183,7 +179,7 @@ def main():
                 if form.send_email.data and form.email.data:
                     try:
                         config = EMAIL_CONFIG["net_worth"]
-                        subject = trans(config["subject_key"], default='Your Net Worth Summary', lang=lang)
+                        subject = trans(config["subject_key"], default='Your Net Worth Summary')
                         template = config["template"]
                         send_email(
                             app=current_app,
@@ -206,7 +202,7 @@ def main():
                                 "unsubscribe_url": url_for('net_worth.unsubscribe', email=form.email.data, _external=True),
                                 "currency": net_worth_record['currency']
                             },
-                            lang=lang
+                            lang=session.get('lang', 'en')
                         )
                         current_app.logger.info(f"Email sent to {form.email.data} for session {session['sid']}", extra={'session_id': session['sid']})
                     except Exception as e:
@@ -268,22 +264,22 @@ def main():
         cross_tool_insights = []
         if latest_record and float(latest_record['net_worth'].replace(',', '')) != 0:
             if float(latest_record['total_liabilities'].replace(',', '')) > float(latest_record['total_assets'].replace(',', '')) * 0.5:
-                insights.append(trans("net_worth_insight_high_loans", default="Your liabilities are high relative to assets.", lang=lang))
+                insights.append(trans("net_worth_insight_high_loans", default="Your liabilities are high relative to assets."))
             if float(latest_record['cash_savings'].replace(',', '')) < float(latest_record['total_assets'].replace(',', '')) * 0.1:
-                insights.append(trans("net_worth_insight_low_cash", default="Consider increasing cash savings.", lang=lang))
+                insights.append(trans("net_worth_insight_low_cash", default="Consider increasing cash savings."))
             if float(latest_record['investments'].replace(',', '')) >= float(latest_record['total_assets'].replace(',', '')) * 0.3:
-                insights.append(trans("net_worth_insight_strong_investments", default="Strong investment portfolio detected.", lang=lang))
+                insights.append(trans("net_worth_insight_strong_investments", default="Strong investment portfolio detected."))
             if float(latest_record['net_worth'].replace(',', '')) <= 0:
-                insights.append(trans("net_worth_insight_negative_net_worth", default="Your net worth is negative; focus on reducing liabilities.", lang=lang))
+                insights.append(trans("net_worth_insight_negative_net_worth", default="Your net worth is negative; focus on reducing liabilities."))
             if total_users >= 5:
                 if rank <= total_users * 0.1:
-                    insights.append(trans("net_worth_insight_top_10", default="You are in the top 10% of users!", lang=lang))
+                    insights.append(trans("net_worth_insight_top_10", default="You are in the top 10% of users!"))
                 elif rank <= total_users * 0.3:
-                    insights.append(trans("net_worth_insight_top_30", default="You are in the top 30% of users.", lang=lang))
+                    insights.append(trans("net_worth_insight_top_30", default="You are in the top 30% of users."))
                 else:
-                    insights.append(trans("net_worth_insight_below_30", default="Your net worth is below the top 30%. Keep improving!", lang=lang))
+                    insights.append(trans("net_worth_insight_below_30", default="Your net worth is below the top 30%. Keep improving!"))
             else:
-                insights.append(trans("net_worth_insight_not_enough_users", default="Not enough users for ranking comparison.", lang=lang))
+                insights.append(trans("net_worth_insight_not_enough_users", default="Not enough users for ranking comparison."))
 
         filter_kwargs_health = {'user_id': current_user.id} if current_user.is_authenticated else {'session_id': session['sid']}
         health_data = get_mongo_db().financial_health_scores.find(filter_kwargs_health).sort('created_at', -1)
@@ -294,7 +290,6 @@ def main():
                 cross_tool_insights.append(trans(
                     'net_worth_cross_tool_savings_rate',
                     default='Your financial health score indicates a positive savings rate of {rate}%, which can help improve your net worth.',
-                    lang=lang,
                     rate=f"{latest_health['savings_rate']:.2f}"
                 ))
 
@@ -307,19 +302,15 @@ def main():
             insights=insights,
             cross_tool_insights=cross_tool_insights,
             tips=[
-                trans("net_worth_tip_track_ajo", default="Track your contributions to ajo or other savings groups.", lang=lang),
-                trans("net_worth_tip_review_property", default="Review property valuations annually.", lang=lang),
-                trans("net_worth_tip_pay_loans_early", default="Pay off high-interest loans early.", lang=lang),
-                trans("net_worth_tip_diversify_investments", default="Diversify investments to reduce risk.", lang=lang)
+                trans("net_worth_tip_track_ajo", default="Track your contributions to ajo or other savings groups."),
+                trans("net_worth_tip_review_property", default="Review property valuations annually."),
+                trans("net_worth_tip_pay_loans_early", default="Pay off high-interest loans early."),
+                trans("net_worth_tip_diversify_investments", default="Diversify investments to reduce risk.")
             ],
             rank=rank,
             total_users=total_users,
             average_net_worth=format_currency(average_net_worth),
-            t=trans,
-            lang=lang,
-            tool_title=trans('net_worth_title', default='Net Worth Calculator', lang=lang),
-            tools=tools,
-            bottom_nav_items=bottom_nav_items
+            tool_title=trans('net_worth_title', default='Net Worth Calculator')
         )
 
     except Exception as e:
@@ -344,19 +335,15 @@ def main():
             insights=[],
             cross_tool_insights=[],
             tips=[
-                trans("net_worth_tip_track_ajo", default="Track your contributions to ajo or other savings groups.", lang=lang),
-                trans("net_worth_tip_review_property", default="Review property valuations annually.", lang=lang),
-                trans("net_worth_tip_pay_loans_early", default="Pay off high-interest loans early.", lang=lang),
-                trans("net_worth_tip_diversify_investments", default="Diversify investments to reduce risk.", lang=lang)
+                trans("net_worth_tip_track_ajo", default="Track your contributions to ajo or other savings groups."),
+                trans("net_worth_tip_review_property", default="Review property valuations annually."),
+                trans("net_worth_tip_pay_loans_early", default="Pay off high-interest loans early."),
+                trans("net_worth_tip_diversify_investments", default="Diversify investments to reduce risk.")
             ],
             rank=0,
             total_users=0,
             average_net_worth=format_currency(0),
-            t=trans,
-            lang=lang,
-            tool_title=trans('net_worth_title', default='Net Worth Calculator', lang=lang),
-            tools=tools,
-            bottom_nav_items=bottom_nav_items
+            tool_title=trans('net_worth_title', default='Net Worth Calculator')
         ), 500
 
 @net_worth_bp.route('/summary')
@@ -393,10 +380,6 @@ def unsubscribe(email):
         current_app.logger.debug(f"New anonymous session created with sid: {session['sid']}", extra={'session_id': session['sid']})
     session.permanent = True
     session.modified = True
-    lang = session.get('lang', 'en')
-    
-    tools = PERSONAL_TOOLS if current_user.role == 'personal' else ALL_TOOLS
-    bottom_nav_items = PERSONAL_NAV if current_user.role == 'personal' else ADMIN_NAV
     
     try:
         log_tool_usage(
@@ -433,41 +416,6 @@ def unsubscribe(email):
 @net_worth_bp.errorhandler(CSRFError)
 def handle_csrf_error(e):
     """Handle CSRF errors with user-friendly message."""
-    lang = session.get('lang', 'en')
-    tools = PERSONAL_TOOLS if current_user.role == 'personal' else ALL_TOOLS
-    bottom_nav_items = PERSONAL_NAV if current_user.role == 'personal' else ADMIN_NAV
     current_app.logger.error(f"CSRF error on {request.path}: {e.description}", extra={'session_id': session.get('sid', 'unknown')})
     flash(trans("net_worth_csrf_error", default="Form submission failed due to a missing security token. Please refresh and try again."), "danger")
-    return render_template(
-        'personal/net_worth/net_worth_main.html',
-        form=NetWorthForm(),
-        records=[],
-        latest_record={
-            'cash_savings': format_currency(0),
-            'investments': format_currency(0),
-            'property': format_currency(0),
-            'loans': format_currency(0),
-            'total_assets': format_currency(0),
-            'total_liabilities': format_currency(0),
-            'net_worth': format_currency(0),
-            'badges': [],
-            'created_at': 'N/A',
-            'currency': 'NGN'
-        },
-        insights=[],
-        cross_tool_insights=[],
-        tips=[
-            trans("net_worth_tip_track_ajo", default="Track your contributions to ajo or other savings groups.", lang=lang),
-            trans("net_worth_tip_review_property", default="Review property valuations annually.", lang=lang),
-            trans("net_worth_tip_pay_loans_early", default="Pay off high-interest loans early.", lang=lang),
-            trans("net_worth_tip_diversify_investments", default="Diversify investments to reduce risk.", lang=lang)
-        ],
-        rank=0,
-        total_users=0,
-        average_net_worth=format_currency(0),
-        t=trans,
-        lang=lang,
-        tool_title=trans('net_worth_title', default='Net Worth Calculator', lang=lang),
-        tools=tools,
-        bottom_nav_items=bottom_nav_items
-    ), 400
+    return redirect(url_for('personal.index')), 400
