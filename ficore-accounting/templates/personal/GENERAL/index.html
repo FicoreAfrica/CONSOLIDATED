@@ -1,4 +1,4 @@
-{% extends 'personal/base.html' %}
+{% extends 'personal_base.html' %}
 {% block title %}{{ t('general_welcome', default='Welcome to FiCore Africa') | e }}{% endblock title %}
 
 {% block content %}
@@ -84,7 +84,7 @@
         <div class="quick-actions mb-4 mx-3 rounded shadow-sm bg-white p-4">
             <h3 class="section-title mb-4 fs-4 fw-bold mx-3">{{ t('general_quick_actions', default='Quick Actions') | e }}</h3>
             <div class="row g-3">
-                {% for tool in tools %}
+                {% for tool in tools_for_template %}
                 <div class="col-4 col-sm-4 col-md-3">
                     <a href="{{ url_for(tool.get('endpoint', '')) | e }}" class="action-card d-flex flex-column align-items-center justify-content-center position-relative p-4 rounded shadow-sm text-decoration-none h-100 bg-light" aria-label="{{ t(tool.get('label_key', ''), default=tool.get('label', '')) | e }}">
                         {% if tool.badge %}
@@ -212,7 +212,7 @@
                     <div id="personalToolsCollapse" class="accordion-collapse collapse show" aria-labelledby="personalToolsHeading" data-bs-parent="#toolsAccordion">
                         <div class="accordion-body">
                             <div class="row g-3">
-                                {% for tool in tools %}
+                                {% for tool in explore_features_for_template %}
                                 <div class="col-6 col-md-4">
                                     <div class="card tool-card tool-personal p-4 rounded shadow-sm h-100 bg-light">
                                         <div class="card-body p-0">
@@ -417,7 +417,7 @@
                 </div>
                 <div class="accordion-item">
                     <h3 class="accordion-header" id="faqRoles">
-                        <button class="accordion-button collapsed fs-5 fw-bold" type="button" data-bs-toggle="collapse" data-bs-target="#copy#collapseRoles" aria-expanded="false" aria-controls="collapseRoles">
+                        <button class="accordion-button collapsed fs-5 fw-bold" type="button" data-bs-toggle="collapse" data-bs-target="#collapseRoles" aria-expanded="false" aria-controls="collapseRoles">
                             {{ t('general_faq_roles', default='What types of users can use FiCore?') | e }}
                         </button>
                     </h3>
@@ -453,7 +453,7 @@
                 </div>
                 <div class="accordion-item">
                     <h3 class="accordion-header" id="faqEaseOfUse">
-                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseEaseOfUse" aria-expanded="false" aria-controls="collapseEaseOfUse">
+                        <button class="accordion-button collapsed fs-5 fw-bold" type="button" data-bs-toggle="collapse" data-bs-target="#collapseEaseOfUse" aria-expanded="false" aria-controls="collapseEaseOfUse">
                             {{ t('general_faq_ease_of_use', default='Is FiCore easy to use for beginners?') | e }}
                         </button>
                     </h3>
@@ -465,7 +465,7 @@
                 </div>
                 <div class="accordion-item">
                     <h3 class="accordion-header" id="faqMobileAccess">
-                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseMobileAccess" aria-expanded="false" aria-controls="collapseMobileAccess">
+                        <button class="accordion-button collapsed fs-5 fw-bold" type="button" data-bs-toggle="collapse" data-bs-target="#collapseMobileAccess" aria-expanded="false" aria-controls="collapseMobileAccess">
                             {{ t('general_faq_mobile_access', default='Can I use FiCore on my mobile device?') | e }}
                         </button>
                     </h3>
@@ -504,6 +504,21 @@
 {% block extra_scripts %}
 <script>
 document.addEventListener('DOMContentLoaded', function() {
+    // Initialize tooltips
+    document.querySelectorAll('[data-bs-toggle="tooltip"]').forEach(tooltipTriggerEl => {
+        new bootstrap.Tooltip(tooltipTriggerEl);
+    });
+
+    // Enhanced icon debugging
+    document.querySelectorAll('.bi').forEach(icon => {
+        const iconClass = icon.className;
+        if (!iconClass.includes('bi-')) {
+            console.warn('Invalid or missing Bootstrap Icon class:', { class: iconClass, parent: icon.parentElement.outerHTML });
+        } else {
+            console.debug('Icon rendered:', { class: iconClass, parent: icon.parentElement.outerHTML });
+        }
+    });
+
     // Initialize Bootstrap carousel for testimonials
     const carousel = document.getElementById('testimonialCarousel');
     if (carousel) {
@@ -532,6 +547,16 @@ document.addEventListener('DOMContentLoaded', function() {
         const counterInterval = setInterval(updateCounter, 50);
     }
 
+    // Navigation highlighting
+    const currentPath = window.location.pathname;
+    const navItems = document.querySelectorAll('.navbar-nav .nav-item');
+    navItems.forEach(item => {
+        const itemHref = item.getAttribute('href');
+        if (currentPath === itemHref || currentPath.startsWith(itemHref + '/')) {
+            item.classList.add('active');
+        }
+    });
+
     if (!{{ current_user.is_authenticated | tojson }}) return;
 
     let amountsVisible = true;
@@ -550,15 +575,16 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Load financial data, notifications, and recent activity
     loadFinancialSummary();
+    loadNotifications();
     loadRecentActivity();
 
     function loadFinancialSummary() {
         Promise.all([
-            fetch('{{ url_for("personal.budget.summary") | e }}').then(r => r.json()).catch(() => FLAG_TO_REPLACE),
-            fetch('{{ url_for("personal.bill.summary") | e }}').then(r => r.json()).catch(() => FLAG_TO_REPLACE),
-            fetch('{{ url_for("personal.net_worth.summary") | e }}').then(r => r.json()).catch(() => FLAG_TO_REPLACE),
-            fetch('{{ url_for("personal.financial_health.summary") | e }}').then(r => r.json()).catch(() => FLAG_TO_REPLACE),
-            fetch('{{ url_for("personal.emergency_fund.summary") | e }}').then(r => r.json()).catch(() => FLAG_TO_REPLACE)
+            fetch('{{ url_for("personal.budget.summary") | e }}').then(r => r.json()).catch(() => ({totalBudget: 0})),
+            fetch('{{ url_for("personal.bill.summary") | e }}').then(r => r.json()).catch(() => ({totalUpcomingBills: 0})),
+            fetch('{{ url_for("personal.net_worth.summary") | e }}').then(r => r.json()).catch(() => ({netWorth: 0})),
+            fetch('{{ url_for("personal.financial_health.summary") | e }}').then(r => r.json()).catch(() => ({score: 0})),
+            fetch('{{ url_for("personal.emergency_fund.summary") | e }}').then(r => r.json()).catch(() => ({totalSavings: 0}))
         ]).then(([budgetData, billsData, netWorthData, healthData, emergencyFundData]) => {
             updateFinancialSummary(budgetData, billsData, netWorthData, healthData, emergencyFundData);
         }).catch(error => {
@@ -568,15 +594,15 @@ document.addEventListener('DOMContentLoaded', function() {
 
     function updateFinancialSummary(budgetData, billsData, netWorthData, healthData, emergencyFundData) {
         const budgetStatusEl = document.querySelector('#budgetStatus .amount-value');
-        budgetStatusEl.textContent = formatCurrency(budgetData.totalBudget || 0);
+        budgetStatusEl.textContent = format_currency(budgetData.totalBudget || 0);
         budgetStatusEl.dataset.amount = budgetData.totalBudget || 0;
 
         const upcomingBillsEl = document.querySelector('#upcomingBills .amount-value');
-        upcomingBillsEl.textContent = formatCurrency(billsData.totalUpcomingBills || 0);
+        upcomingBillsEl.textContent = format_currency(billsData.totalUpcomingBills || 0);
         upcomingBillsEl.dataset.amount = billsData.totalUpcomingBills || 0;
 
         const netWorthEl = document.getElementById('netWorth');
-        netWorthEl.textContent = '₦' + formatCurrency(Math.abs(netWorthData.netWorth || 0));
+        netWorthEl.textContent = '₦' + format_currency(Math.abs(netWorthData.netWorth || 0));
         netWorthEl.dataset.amount = netWorthData.netWorth || 0;
         netWorthEl.className = 'net-amount ' + (netWorthData.netWorth >= 0 ? 'text-success' : 'text-danger');
 
@@ -585,8 +611,64 @@ document.addEventListener('DOMContentLoaded', function() {
         financialHealthEl.dataset.originalText = (healthData.score || 0) + '%';
 
         const emergencyFundEl = document.getElementById('emergencyFund');
-        emergencyFundEl.textContent = '₦' + formatCurrency(emergencyFundData.totalSavings || 0);
-        emergencyFundEl.dataset.originalText = '₦' + formatCurrency(emergencyFundData.totalSavings || 0);
+        emergencyFundEl.textContent = '₦' + format_currency(emergencyFundData.totalSavings || 0);
+        emergencyFundEl.dataset.originalText = '₦' + format_currency(emergencyFundData.totalSavings || 0);
+    }
+
+    function loadNotifications() {
+        fetch('{{ url_for("personal.notification_count") | e }}')
+            .then(response => response.json())
+            .then(data => {
+                const count = data.count || 0;
+                const badge = document.getElementById('notificationBadge');
+                if (badge) {
+                    if (count > 0) {
+                        badge.textContent = count;
+                        badge.classList.remove('d-none');
+                    } else {
+                        badge.classList.add('d-none');
+                    }
+                }
+            })
+            .catch(error => {
+                console.error('Error loading notification count:', error);
+            });
+
+        fetch('{{ url_for("personal.notifications") | e }}')
+            .then(response => response.json())
+            .then(notifications => {
+                const notificationList = document.getElementById('notificationList');
+                if (notificationList) {
+                    if (notifications && notifications.length > 0) {
+                        notificationList.innerHTML = notifications.map(notification => `
+                            <div class="notification-item d-flex align-items-center gap-3 p-3">
+                                <div class="notification-icon">
+                                    <i class="bi bi-bell ${notification.read ? 'text-muted' : 'text-primary'} fs-4"></i>
+                                </div>
+                                <div class="notification-content flex-grow-1">
+                                    <div class="notification-description text-truncate fs-6">${notification.message}</div>
+                                    <div class="notification-time text-muted fs-7">${formatTimeAgo(notification.timestamp)}</div>
+                                </div>
+                            </div>
+                        `).join('');
+                    } else {
+                        notificationList.innerHTML = `
+                            <div class="notification-item d-flex align-items-center gap-3 p-3">
+                                <div class="notification-icon">
+                                    <i class="bi bi-bell text-muted fs-4"></i>
+                                </div>
+                                <div class="notification-content flex-grow-1">
+                                    <div class="notification-description text-truncate fs-6">${translations.no_notifications}</div>
+                                    <div class="notification-time text-muted fs-7">${translations.check_back_later}</div>
+                                </div>
+                            </div>
+                        `;
+                    }
+                }
+            })
+            .catch(error => {
+                console.error('Error loading notifications:', error);
+            });
     }
 
     function loadRecentActivity() {
@@ -594,31 +676,33 @@ document.addEventListener('DOMContentLoaded', function() {
             .then(response => response.json())
             .then(activities => {
                 const activityList = document.getElementById('recentActivityList');
-                if (activities && activities.length > 0) {
-                    activityList.innerHTML = activities.map(activity => `
-                        <div class="activity-item d-flex align-items-center gap-2 p-2">
-                            <div class="activity-icon">
-                                <i class="bi ${getActivityIcon(activity.type)} ${getActivityColor(activity.type)}"></i>
+                if (activityList) {
+                    if (activities && activities.length > 0) {
+                        activityList.innerHTML = activities.map(activity => `
+                            <div class="activity-item d-flex align-items-center gap-3 p-3">
+                                <div class="activity-icon">
+                                    <i class="bi ${getActivityIcon(activity.type)} ${getActivityColor(activity.type)} fs-4"></i>
+                                </div>
+                                <div class="activity-content flex-grow-1">
+                                    <div class="activity-description text-truncate fs-6">${activity.description}</div>
+                                    <div class="activity-time text-muted fs-7">${formatTimeAgo(activity.timestamp)}</div>
+                                </div>
+                                ${activity.amount ? `<div class="activity-amount text-nowrap fs-6">${format_currency(activity.amount)}</div>` : ''}
                             </div>
-                            <div class="activity-content flex-grow-1">
-                                <div class="activity-description text-truncate">${activity.description}</div>
-                                <div class="activity-time text-muted">${formatTimeAgo(activity.timestamp)}</div>
+                        `).join('');
+                    } else {
+                        activityList.innerHTML = `
+                            <div class="activity-item d-flex align-items-center gap-3 p-3">
+                                <div class="activity-icon">
+                                    <i class="bi bi-info-circle text-muted fs-4"></i>
+                                </div>
+                                <div class="activity-content flex-grow-1">
+                                    <div class="activity-description text-truncate fs-6">${translations.no_recent_activity}</div>
+                                    <div class="activity-time text-muted fs-7">${translations.start_by_adding}</div>
+                                </div>
                             </div>
-                            ${activity.amount ? `<div class="activity-amount text-nowrap">${formatCurrency(activity.amount)}</div>` : ''}
-                        </div>
-                    `).join('');
-                } else {
-                    activityList.innerHTML = `
-                        <div class="activity-item d-flex align-items-center gap-2 p-2">
-                            <div class="activity-icon">
-                                <i class="bi bi-info-circle text-muted"></i>
-                            </div>
-                            <div class="activity-content flex-grow-1">
-                                <div class="activity-description text-truncate">${translations.no_recent_activity}</div>
-                                <div class="activity-time text-muted">${translations.start_by_adding}</div>
-                            </div>
-                        </div>
-                    `;
+                        `;
+                    }
                 }
             })
             .catch(error => {
@@ -629,12 +713,11 @@ document.addEventListener('DOMContentLoaded', function() {
     function getActivityIcon(type) {
         const icons = {
             'budget_added': 'bi-plus-circle',
-            'budget_updated': 'bi-pencil',
             'bill_added': 'bi-receipt',
             'bill_paid': 'bi-check-circle',
             'savings_added': 'bi-piggy-bank',
-            'goal_added': 'bi-star',
-            'transaction_added': 'bi-arrow-left-right'
+            'goal_updated': 'bi-flag',
+            'financial_health_improved': 'bi-heartbeat'
         };
         return icons[type] || 'bi-circle';
     }
@@ -642,21 +725,13 @@ document.addEventListener('DOMContentLoaded', function() {
     function getActivityColor(type) {
         const colors = {
             'budget_added': 'text-primary',
-            'budget_updated': 'text-primary',
             'bill_added': 'text-warning',
             'bill_paid': 'text-success',
-            'savings_added': 'text-success',
-            'goal_added': 'text-info',
-            'transaction_added': 'text-primary'
+            'savings_added': 'text-info',
+            'goal_updated': 'text-primary',
+            'financial_health_improved': 'text-success'
         };
         return colors[type] || 'text-muted';
-    }
-
-    function formatCurrency(amount) {
-        return new Intl.NumberFormat('en-NG', {
-            minimumFractionDigits: 0,
-            maximumFractionDigits: 2
-        }).format(amount);
     }
 
     function formatTimeAgo(timestamp) {
@@ -678,9 +753,9 @@ document.addEventListener('DOMContentLoaded', function() {
         amounts.forEach(el => {
             if (amountsVisible) {
                 if (el.classList.contains('amount-value')) {
-                    el.textContent = formatCurrency(el.dataset.amount);
+                    el.textContent = format_currency(el.dataset.amount);
                 } else if (el.classList.contains('net-amount')) {
-                    el.textContent = '₦' + formatCurrency(Math.abs(el.dataset.amount));
+                    el.textContent = '₦' + format_currency(Math.abs(el.dataset.amount));
                 } else if (el.classList.contains('stat-card-value')) {
                     el.textContent = el.dataset.originalText || el.textContent;
                 }
@@ -692,8 +767,9 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
 
-        icon.className = amountsVisible ? 'bi bi-eye fs-3' : 'bi bi-eye-slash fs-3';
+        icon.className = 'bi ' + (amountsVisible ? 'bi-eye' : 'bi-eye-slash') + ' fs-3';
     };
+});
 </script>
 {% endblock extra_scripts %}
-{% endblock content %}
+{% endblock %}
