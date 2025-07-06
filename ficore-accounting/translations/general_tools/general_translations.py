@@ -2,7 +2,7 @@ GENERAL_TRANSLATIONS = {
     'en': {
         # Authentication & User Management
         'general_business_home': 'Home',
-        'general_hello_user': 'Hello,',
+        'general_hello_user': 'Hello',
         'general_i_owe': 'I Owe',
         'general_en': 'English',
         'general_ha': 'Hausa',
