@@ -1,7 +1,7 @@
 /* --- Root Variables (Light Mode) --- */
 :root {
-    --navbar-height: 60px;
-    --bottom-nav-height: 70px;
+    --navbar-height: 60px
+    --bottom-nav-height: 60px;
     --background-main: #F2EFEA;
     --card-bg: #f8fafc;
     --button-primary-bg: #b88a44;
