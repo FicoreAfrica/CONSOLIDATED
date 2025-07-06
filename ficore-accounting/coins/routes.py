@@ -107,17 +107,10 @@ def purchase():
         except Exception as e:
             logger.error(f"Unexpected error purchasing coins for user {current_user.id}: {str(e)}")
             flash(trans('general_something_went_wrong', default='An error occurred'), 'danger')
-    tools = utils.PERSONAL_TOOLS if current_user.role == 'personal' else utils.BUSINESS_TOOLS if current_user.role == 'trader' else utils.AGENT_TOOLS if current_user.role == 'agent' else utils.ALL_TOOLS
-    nav_items = utils.PERSONAL_EXPLORE_FEATURES if current_user.role == 'personal' else utils.BUSINESS_EXPLORE_FEATURES if current_user.role == 'trader' else utils.AGENT_EXPLORE_FEATURES if current_user.role == 'agent' else utils.ADMIN_EXPLORE_FEATURES
-    bottom_nav_items = utils.PERSONAL_NAV if current_user.role == 'personal' else utils.BUSINESS_NAV if current_user.role == 'trader' else utils.AGENT_NAV if current_user.role == 'agent' else utils.ADMIN_NAV
     return render_template(
         'coins/purchase.html',
         form=form,
-        t=trans,
-        lang=session.get('lang', 'en'),
-        tools=tools,
-        nav_items=nav_items,
-        bottom_nav_items=bottom_nav_items
+        title=trans('coins_purchase_title', default='Purchase Coins', lang=session.get('lang', 'en'))
     )
 
 @coins_bp.route('/history', methods=['GET'])
@@ -133,34 +126,20 @@ def history():
         transactions = list(db.coin_transactions.find(query).sort('date', -1).limit(50))
         for tx in transactions:
             tx['_id'] = str(tx['_id'])
-        tools = utils.PERSONAL_TOOLS if current_user.role == 'personal' else utils.BUSINESS_TOOLS if current_user.role == 'trader' else utils.AGENT_TOOLS if current_user.role == 'agent' else utils.ALL_TOOLS
-        nav_items = utils.PERSONAL_EXPLORE_FEATURES if current_user.role == 'personal' else utils.BUSINESS_EXPLORE_FEATURES if current_user.role == 'trader' else utils.AGENT_EXPLORE_FEATURES if current_user.role == 'agent' else utils.ADMIN_EXPLORE_FEATURES
-        bottom_nav_items = utils.PERSONAL_NAV if current_user.role == 'personal' else utils.BUSINESS_NAV if current_user.role == 'trader' else utils.AGENT_NAV if current_user.role == 'agent' else utils.ADMIN_NAV
         return render_template(
             'coins/history.html',
             transactions=transactions,
             coin_balance=user.get('coin_balance', 0) if user else 0,
-            t=trans,
-            lang=session.get('lang', 'en'),
-            tools=tools,
-            nav_items=nav_items,
-            bottom_nav_items=bottom_nav_items
+            title=trans('coins_history_title', default='Coin Transaction History', lang=session.get('lang', 'en'))
         )
     except Exception as e:
         logger.error(f"Error fetching coin history for user {current_user.id}: {str(e)}")
         flash(trans('general_something_went_wrong', default='An error occurred'), 'danger')
-        tools = utils.PERSONAL_TOOLS if current_user.role == 'personal' else utils.BUSINESS_TOOLS if current_user.role == 'trader' else utils.AGENT_TOOLS if current_user.role == 'agent' else utils.ALL_TOOLS
-        nav_items = utils.PERSONAL_EXPLORE_FEATURES if current_user.role == 'personal' else utils.BUSINESS_EXPLORE_FEATURES if current_user.role == 'trader' else utils.AGENT_EXPLORE_FEATURES if current_user.role == 'agent' else utils.ADMIN_EXPLORE_FEATURES
-        bottom_nav_items = utils.PERSONAL_NAV if current_user.role == 'personal' else utils.BUSINESS_NAV if current_user.role == 'trader' else utils.AGENT_NAV if current_user.role == 'agent' else utils.ADMIN_NAV
         return render_template(
             'coins/history.html',
             transactions=[],
             coin_balance=0,
-            t=trans,
-            lang=session.get('lang', 'en'),
-            tools=tools,
-            nav_items=nav_items,
-            bottom_nav_items=bottom_nav_items
+            title=trans('general_error', default='Error', lang=session.get('lang', 'en'))
         )
 
 @coins_bp.route('/receipt_upload', methods=['GET', 'POST'])
@@ -224,17 +203,10 @@ def receipt_upload():
         except Exception as e:
             logger.error(f"Unexpected error uploading receipt for user {current_user.id}: {str(e)}")
             flash(trans('general_something_went_wrong', default='An error occurred'), 'danger')
-    tools = utils.PERSONAL_TOOLS if current_user.role == 'personal' else utils.BUSINESS_TOOLS if current_user.role == 'trader' else utils.AGENT_TOOLS if current_user.role == 'agent' else utils.ALL_TOOLS
-    nav_items = utils.PERSONAL_EXPLORE_FEATURES if current_user.role == 'personal' else utils.BUSINESS_EXPLORE_FEATURES if current_user.role == 'trader' else utils.AGENT_EXPLORE_FEATURES if current_user.role == 'agent' else utils.ADMIN_EXPLORE_FEATURES
-    bottom_nav_items = utils.PERSONAL_NAV if current_user.role == 'personal' else utils.BUSINESS_NAV if current_user.role == 'trader' else utils.AGENT_NAV if current_user.role == 'agent' else utils.ADMIN_NAV
     return render_template(
         'coins/receipt_upload.html',
         form=form,
-        t=trans,
-        lang=session.get('lang', 'en'),
-        tools=tools,
-        nav_items=nav_items,
-        bottom_nav_items=bottom_nav_items
+        title=trans('coins_receipt_upload_title', default='Upload Receipt', lang=session.get('lang', 'en'))
     )
 
 @coins_bp.route('/receipts', methods=['GET'])
@@ -253,11 +225,7 @@ def view_receipts():
         return render_template(
             'coins/receipts.html',
             receipts=receipts,
-            t=trans,
-            lang=session.get('lang', 'en'),
-            tools=utils.ALL_TOOLS,
-            nav_items=utils.ADMIN_EXPLORE_FEATURES,
-            bottom_nav_items=utils.ADMIN_NAV
+            title=trans('coins_receipts_title', default='View Receipts', lang=session.get('lang', 'en'))
         )
     except Exception as e:
         logger.error(f"Error fetching receipts for admin {current_user.id}: {str(e)}")
@@ -265,11 +233,7 @@ def view_receipts():
         return render_template(
             'coins/receipts.html',
             receipts=[],
-            t=trans,
-            lang=session.get('lang', 'en'),
-            tools=utils.ALL_TOOLS,
-            nav_items=utils.ADMIN_EXPLORE_FEATURES,
-            bottom_nav_items=utils.ADMIN_NAV
+            title=trans('general_error', default='Error', lang=session.get('lang', 'en'))
         )
 
 @coins_bp.route('/receipt/<file_id>', methods=['GET'])
