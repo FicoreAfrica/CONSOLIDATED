@@ -7,7 +7,7 @@ from datetime import datetime
 from flask_wtf import FlaskForm
 from wtforms import StringField, TextAreaField, SelectField, BooleanField, SubmitField, validators
 import logging
-import utils  # Changed to import the module instead of individual variables
+import utils
 
 logger = logging.getLogger(__name__)
 
@@ -87,13 +87,13 @@ class LanguageForm(FlaskForm):
 def get_role_based_nav():
     """Helper function to determine role-based navigation data."""
     if current_user.role == 'personal':
-        return utils.PERSONAL_TOOLS, utils.PERSONAL_EXPLORE_FEATURES, utils.PERSONAL_NAV  # Updated to use utils. prefix
+        return utils.PERSONAL_TOOLS, utils.PERSONAL_EXPLORE_FEATURES, utils.PERSONAL_NAV
     elif current_user.role == 'trader':
-        return utils.BUSINESS_TOOLS, utils.BUSINESS_EXPLORE_FEATURES, utils.BUSINESS_NAV  # Updated to use utils. prefix
+        return utils.BUSINESS_TOOLS, utils.BUSINESS_EXPLORE_FEATURES, utils.BUSINESS_NAV
     elif current_user.role == 'agent':
-        return utils.AGENT_TOOLS, utils.AGENT_EXPLORE_FEATURES, utils.AGENT_NAV  # Updated to use utils. prefix
+        return utils.AGENT_TOOLS, utils.AGENT_EXPLORE_FEATURES, utils.AGENT_NAV
     elif current_user.role == 'admin':
-        return utils.ALL_TOOLS, utils.ADMIN_EXPLORE_FEATURES, utils.ADMIN_NAV  # Updated to use utils. prefix
+        return utils.ALL_TOOLS, utils.ADMIN_EXPLORE_FEATURES, utils.ADMIN_NAV
     else:
         return [], [], []  # Fallback for unexpected roles
 
@@ -102,15 +102,10 @@ def get_role_based_nav():
 def index():
     """Display settings overview."""
     try:
-        tools, explore_features, bottom_nav_items = get_role_based_nav()
         return render_template(
             'settings/index.html',
             user=current_user,
-            t=trans,
-            lang=session.get('lang', 'en'),
-            tools=tools,
-            nav_items=explore_features,
-            bottom_nav_items=bottom_nav_items
+            title=trans('settings_index_title', default='Settings', lang=session.get('lang', 'en'))
         )
     except Exception as e:
         logger.error(f"Error loading settings for user {current_user.id}: {str(e)}")
@@ -152,16 +147,11 @@ def profile():
             try:
                 if form.email.data != user['email'] and db.users.find_one({'email': form.email.data}):
                     flash(trans('general_email_exists', default='Email already in use'), 'danger')
-                    tools, explore_features, bottom_nav_items = get_role_based_nav()
                     return render_template(
                         'settings/profile.html',
                         form=form,
                         user=user,
-                        t=trans,
-                        lang=session.get('lang', 'en'),
-                        tools=tools,
-                        nav_items=explore_features,
-                        bottom_nav_items=bottom_nav_items
+                        title=trans('settings_profile_title', default='Profile Settings', lang=session.get('lang', 'en'))
                     )
                 update_data = {
                     'display_name': form.full_name.data,
@@ -216,16 +206,11 @@ def profile():
             'settings': user.get('settings', {}),
             'security_settings': user.get('security_settings', {})
         }
-        tools, explore_features, bottom_nav_items = get_role_based_nav()
         return render_template(
             'settings/profile.html',
             form=form,
             user=user_display,
-            t=trans,
-            lang=session.get('lang', 'en'),
-            tools=tools,
-            nav_items=explore_features,
-            bottom_nav_items=bottom_nav_items
+            title=trans('settings_profile_title', default='Profile Settings', lang=session.get('lang', 'en'))
         )
     except Exception as e:
         logger.error(f"Error in profile settings for user {current_user.id}: {str(e)}")
@@ -258,15 +243,10 @@ def notifications():
             except Exception as e:
                 logger.error(f"Error updating notifications for user {current_user.id}: {str(e)}")
                 flash(trans('general_something_went_wrong', default='An error occurred'), 'danger')
-        tools, explore_features, bottom_nav_items = get_role_based_nav()
         return render_template(
             'settings/notifications.html',
             form=form,
-            t=trans,
-            lang=session.get('lang', 'en'),
-            tools=tools,
-            nav_items=explore_features,
-            bottom_nav_items=bottom_nav_items
+            title=trans('settings_notifications_title', default='Notification Settings', lang=session.get('lang', 'en'))
         )
     except Exception as e:
         logger.error(f"Error in notification settings for user {current_user.id}: {str(e)}")
@@ -295,15 +275,10 @@ def language():
             except Exception as e:
                 logger.error(f"Error updating language for user {current_user.id}: {str(e)}")
                 flash(trans('general_something_went_wrong', default='An error occurred'), 'danger')
-        tools, explore_features, bottom_nav_items = get_role_based_nav()
         return render_template(
             'settings/language.html',
             form=form,
-            t=trans,
-            lang=session.get('lang', 'en'),
-            tools=tools,
-            nav_items=explore_features,
-            bottom_nav_items=bottom_nav_items
+            title=trans('settings_language_title', default='Language Settings', lang=session.get('lang', 'en'))
         )
     except Exception as e:
         logger.error(f"Error in language settings for user {current_user.id}: {str(e)}")
