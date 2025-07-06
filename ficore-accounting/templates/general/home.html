@@ -2,329 +2,196 @@
 {% block title %}{{ t('general_business_home', default='Business & Agent Home') | e }}{% endblock %}
 
 {% block content %}
-<div class="container-fluid px-0 main-content" style="background: #F5F3EF;">
+<div class="container-fluid px-0">
     {% if current_user.is_authenticated %}
         <!-- Header Section -->
-        <div class="d-flex justify-content-between align-items-center px-3 py-3" style="background: #fff; border-radius: 0 0 18px 18px; box-shadow: 0 2px 8px rgba(0,0,0,0.03);">
-            <div>
-                <div class="d-flex align-items-center gap-2">
-                    <img src="{{ url_for('static', filename='logo.svg') }}" alt="FiCore Logo" width="36" height="36" style="border-radius: 10px;">
-                    <span class="fw-bold fs-5" style="color: #1e293b;">FiCore Accounting</span>
+        <div class="header-section mb-4 mx-3 rounded shadow-sm bg-white p-4">
+            <h1 class="fw-bold fs-2 text-center">FiCore Accounting</h1>
+            <p class="text-center fs-5">Hello, {{ current_user.firstname|default('User') }}!</p>
+            <p class="text-center text-muted fs-6">Welcome back to Ficore Records</p>
+            <div class="d-flex justify-content-center align-items-center gap-3">
+                <div class="lang-selector">
+                    <span class="fw-bold">{{ g.get('lang', 'EN')|upper }}</span>
+                    <select class="form-select form-select-sm d-inline-block w-auto ms-2" onchange="window.location.href='{{ url_for('users.set_language') }}?lang='+this.value">
+                        <option value="en" {% if g.lang == 'en' %}selected{% endif %}>EN</option>
+                        <option value="ha" {% if g.lang == 'ha' %}selected{% endif %}>HA</option>
+                    </select>
                 </div>
-                <div class="fw-bold fs-4 mt-2" style="color: #1e293b;">Hello, {{ current_user.firstname|default('User') }}!</div>
-                <div class="text-muted" style="font-size: 1rem;">Welcome back to Ficore Records</div>
-            </div>
-            <div class="d-flex gap-2 align-items-center mt-3 mt-md-0">
-                <a href="{{ url_for('settings.profile') }}" class="btn btn-outline-secondary rounded-circle p-2"><i class="bi bi-person" style="font-size: 1.5rem;"></i></a>
-                <div class="dropdown">
-                    <button class="btn btn-outline-secondary dropdown-toggle px-3" type="button" data-bs-toggle="dropdown" aria-expanded="false">
-                        {{ g.get('lang', 'EN')|upper }}
-                    </button>
-                    <ul class="dropdown-menu">
-                        <li><a class="dropdown-item" href="?lang=en">EN</a></li>
-                        <li><a class="dropdown-item" href="?lang=ha">HA</a></li>
-                    </ul>
+                <div class="profile-icon">
+                    <i class="bi bi-person-circle fs-3 text-primary"></i>
                 </div>
-                <button class="btn btn-outline-secondary rounded-circle p-2" id="toggleDarkMode" aria-label="Toggle dark mode">
-                    <i class="bi bi-moon" style="font-size: 1.5rem;"></i>
-                </button>
             </div>
         </div>
 
-        <!-- Financial Summary Cards -->
-        <div class="px-0 mt-3" style="background: transparent;">
-            <div class="row g-3 justify-content-center mx-1">
+        <!-- Financial Overview -->
+        <div class="financial-overview mb-4 mx-3 rounded shadow-sm bg-white p-4">
+            <div class="row g-3 mb-3">
                 <div class="col-6">
-                    <div class="p-3 bg-white rounded-4 shadow-sm h-100 d-flex flex-column align-items-center"
-                         style="border: 2px solid #F3D6D6;">
-                        <div class="d-flex align-items-center gap-2 mb-2">
-                            <span style="color:#ef4444; background: #fbeaea; border-radius: 50%; padding: 0.5rem;">
-                                <i class="bi bi-arrow-up-circle" style="font-size: 1.5rem;"></i>
-                            </span>
-                            <span class="fw-semibold" style="color:#1e293b;">I Owe</span>
+                    <div class="summary-card debt-card p-4 rounded shadow-sm bg-light">
+                        <div class="card-header d-flex align-items-center gap-3">
+                            <i class="bi bi-arrow-up-circle text-danger fs-3"></i>
+                            <span class="fw-bold fs-5">{{ t('general_i_owe', default='I Owe') | e }}</span>
                         </div>
-                        <div class="fw-bold fs-3" id="totalIOwe" style="color: #ef4444;">
+                        <div class="card-amount text-danger mt-3 fs-4" id="totalIOwe">
                             <span class="currency-symbol">₦</span>
                             <span class="amount-value" data-amount="0">0</span>
                         </div>
                     </div>
                 </div>
                 <div class="col-6">
-                    <div class="p-3 bg-white rounded-4 shadow-sm h-100 d-flex flex-column align-items-center"
-                         style="border: 2px solid #D0F5DE;">
-                        <div class="d-flex align-items-center gap-2 mb-2">
-                            <span style="color:#10b981; background: #e8faf3; border-radius: 50%; padding: 0.5rem;">
-                                <i class="bi bi-arrow-down-circle" style="font-size: 1.5rem;"></i>
-                            </span>
-                            <span class="fw-semibold" style="color:#1e293b;">I Am Owed</span>
+                    <div class="summary-card credit-card p-4 rounded shadow-sm bg-light">
+                        <div class="card-header d-flex align-items-center gap-3">
+                            <i class="bi bi-arrow-down-circle text-success fs-3"></i>
+                            <span class="fw-bold fs-5">{{ t('general_i_am_owed', default='I Am Owed') | e }}</span>
                         </div>
-                        <div class="fw-bold fs-3" id="totalIAmOwed" style="color: #10b981;">
+                        <div class="card-amount text-success mt-3 fs-4" id="totalIAmOwed">
                             <span class="currency-symbol">₦</span>
                             <span class="amount-value" data-amount="0">0</span>
                         </div>
                     </div>
                 </div>
             </div>
-            <div class="mt-3 mx-1">
-                <div class="bg-white rounded-4 shadow-sm p-3 d-flex align-items-center justify-content-between" style="border: 2px solid #E3E7EF;">
-                    <div>
-                        <div class="fw-semibold" style="color: #1e293b; font-size: 1rem;">Net Position:</div>
-                        <div class="fw-bold fs-5 net-amount" id="netPosition" style="color: #64748b;">₦0</div>
-                        <div class="net-status" id="netStatus" style="color: #94a3b8;">(Balanced)</div>
+            <div class="net-position-card p-4 rounded shadow-sm bg-light">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div class="net-position-info">
+                        <span class="net-label fw-bold fs-5">{{ t('general_net_position', default='Net Position') | e }}:</span>
+                        <span class="net-amount fs-4" id="netPosition">₦0</span>
+                        <span class="net-status fs-6" id="netStatus">(Balanced)</span>
                     </div>
-                    <button class="btn btn-link p-2 visibility-toggle" onclick="toggleAmountVisibility()" aria-label="Toggle amount visibility">
-                        <i class="bi bi-eye" id="visibilityIcon" style="font-size: 1.5rem;"></i>
-                    </button>
+                    <a href="{{ url_for('dashboard.index') | e }}" class="btn btn-link p-2" aria-label="{{ t('general_details', default='Details') | e }}">
+                        {{ t('general_details', default='Details') | e }}
+                    </a>
                 </div>
             </div>
         </div>
 
         <!-- Financial Snapshots -->
-        <div class="mt-3 mx-1">
-            <div class="bg-white rounded-4 shadow-sm p-3">
-                <div class="fw-bold fs-5 mb-3" style="color:#1e293b;">Financial Snapshots</div>
-                <div class="row g-3">
-                    <div class="col-12 col-md-4">
-                        <div class="d-flex align-items-center bg-white rounded-4 shadow-sm p-3 h-100" style="border: 1.5px solid #E3E7EF;">
-                            <div style="background: #eaf1fe; border-radius:50%; padding: 0.75rem;">
-                                <i class="bi bi-wallet2" style="color: #2563eb; font-size: 2rem;"></i>
-                            </div>
-                            <div class="ms-3">
-                                <div class="fw-semibold" style="color:#1e293b;">Wallet</div>
-                                <div class="fs-5 stat-card-value" id="walletBalance" style="color: #2563eb;">₦0</div>
-                            </div>
+        <div class="financial-snapshots mb-4 mx-3 rounded shadow-sm bg-white p-4">
+            <h3 class="section-title mb-4 fs-4 fw-bold mx-3">{{ t('general_snapshots', default='Financial Snapshots') | e }}</h3>
+            <div class="row g-3">
+                <div class="col-4">
+                    <div class="stat-card p-3 rounded shadow-sm text-center bg-light">
+                        <div class="snapshot-icon mb-3">
+                            <i class="bi bi-wallet2 fs-3 text-primary"></i>
+                        </div>
+                        <div class="snapshot-info">
+                            <div class="snapshot-label fw-bold text-truncate fs-6">{{ t('general_wallet_balance', default='Wallet') | e }}</div>
+                            <div class="stat-card-value fs-5" id="walletBalance">₦0</div>
                         </div>
                     </div>
-                    <div class="col-12 col-md-4">
-                        <div class="d-flex align-items-center bg-white rounded-4 shadow-sm p-3 h-100" style="border: 1.5px solid #E3E7EF;">
-                            <div style="background: #eaf1fe; border-radius:50%; padding: 0.75rem;">
-                                <i class="bi bi-graph-up" style="color: #2563eb; font-size: 2rem;"></i>
-                            </div>
-                            <div class="ms-3">
-                                <div class="fw-semibold" style="color:#1e293b;">Net Flow</div>
-                                <div class="fs-5 stat-card-value" id="netCashflow" style="color: #2563eb;">₦0</div>
-                            </div>
+                </div>
+                <div class="col-4">
+                    <div class="stat-card p-3 rounded shadow-sm text-center bg-light">
+                        <div class="snapshot-icon mb-3">
+                            <i class="bi bi-graph-up fs-3 text-success"></i>
+                        </div>
+                        <div class="snapshot-info">
+                            <div class="snapshot-label fw-bold text-truncate fs-6">{{ t('general_net_cashflow_mtd', default='Net Flow') | e }}</div>
+                            <div class="stat-card-value fs-5" id="netCashflow">₦0</div>
                         </div>
                     </div>
-                    <div class="col-12 col-md-4">
-                        <div class="d-flex align-items-center bg-white rounded-4 shadow-sm p-3 h-100" style="border: 1.5px solid #E3E7EF;">
-                            <div style="background: #eaf1fe; border-radius:50%; padding: 0.75rem;">
-                                <i class="bi bi-box-seam" style="color: #2563eb; font-size: 2rem;"></i>
-                            </div>
-                            <div class="ms-3">
-                                <div class="fw-semibold" style="color:#1e293b;">Inventory</div>
-                                <div class="fs-5 stat-card-value" id="inventoryValue" style="color: #2563eb;">₦0</div>
-                            </div>
+                </div>
+                <div class="col-4">
+                    <div class="stat-card p-3 rounded shadow-sm text-center bg-light">
+                        <div class="snapshot-icon mb-3">
+                            <i class="bi bi-box-seam fs-3 text-info"></i>
+                        </div>
+                        <div class="snapshot-info">
+                            <div class="snapshot-label fw-bold text-truncate fs-6">{{ t('general_inventory_value', default='Inventory') | e }}</div>
+                            <div class="stat-card-value fs-5" id="inventoryValue">₦0</div>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- Recent Activity (Moved up, directly below Snapshots) -->
-        <div class="mt-3 mx-1">
-            <div class="bg-white rounded-4 shadow-sm p-3">
-                <div class="d-flex justify-content-between align-items-center mb-3">
-                    <span class="fw-bold fs-5" style="color:#1e293b;">Recent Activity</span>
-                    <a href="{{ url_for('dashboard.index') | e }}" class="btn btn-link btn-sm text-decoration-none" style="color: #2563eb;">
-                        View All <i class="bi bi-chevron-right"></i>
+        <!-- Recent Activity -->
+        <div class="recent-activity mb-4 mx-3 rounded shadow-sm bg-white p-4">
+            <div class="d-flex justify-content-between align-items-center mb-4 mx-3">
+                <h3 class="section-title mb-0 fs-4 fw-bold">{{ t('general_recent_activity', default='Recent Activity') | e }}</h3>
+                <a href="{{ url_for('dashboard.index') | e }}" class="btn btn-link btn-sm p-0 text-decoration-none">
+                    {{ t('general_view_all', default='View All') | e }}
+                </a>
+            </div>
+            <div class="activity-list rounded shadow-sm bg-light p-3" id="recentActivityList">
+                <div class="activity-item d-flex align-items-center gap-3 p-3">
+                    <div class="activity-icon">
+                        <i class="bi bi-info-circle text-muted fs-4"></i>
+                    </div>
+                    <div class="activity-content flex-grow-1">
+                        <div class="activity-description text-truncate fs-6">{{ t('general_no_recent_activity', default='No recent activity') | e }}</div>
+                        <div class="activity-time text-muted fs-7">{{ t('general_start_adding', default='Start by adding a debt or transaction') | e }}</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Quick Actions -->
+        <div class="quick-actions mb-4 mx-3 rounded shadow-sm bg-white p-4">
+            <h3 class="section-title mb-4 fs-4 fw-bold mx-3">{{ t('general_quick_actions', default='Quick Actions') | e }}</h3>
+            <div class="row g-3">
+                {% for tool in tools_for_template %}
+                <div class="col-4 col-sm-4 col-md-3">
+                    <a href="{{ tool.url | default('#') | e }}" class="card action-card text-center shadow-sm py-4 h-100 text-decoration-none position-relative d-flex flex-column align-items-center justify-content-center" aria-label="{{ t(tool.label_key, default=tool.label) | e }}">
+                        {% if tool.badge %}
+                        <span class="badge bg-danger position-absolute top-0 end-0 translate-middle rounded-pill">{{ tool.badge }}</span>
+                        {% endif %}
+                        <i class="bi {{ tool.icon | default('bi-circle') | e }} fs-3 mb-3 text-primary"></i>
+                        <small class="action-label text-center text-truncate fw-bold fs-6">{{ t(tool.label_key, default=tool.label) | e }}</small>
                     </a>
                 </div>
-                <div class="activity-list" id="recentActivityList">
-                    <div class="activity-item d-flex align-items-center gap-3 mb-2">
-                        <div class="activity-icon" style="background: #f1f5f9; border-radius: 50%; padding: 0.5rem;">
-                            <i class="bi bi-info-circle text-muted" style="font-size: 1.5rem;"></i>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- Explore Features -->
+        <div class="explore-features mb-4 mx-3 rounded shadow-sm bg-white p-4">
+            <h3 class="section-title mb-4 fs-4 fw-bold mx-3">{{ t('general_explore_features', default='Explore Features') | e }}</h3>
+            <div class="row g-3">
+                {% for feature in explore_features_for_template %}
+                <div class="col-6 col-md-4">
+                    <a href="{{ feature.url | default('#') | e }}" class="card nav-card p-4 rounded shadow-sm h-100 bg-light text-decoration-none d-flex flex-column align-items-center justify-content-center" aria-label="{{ t(feature.label_key, default=feature.label) | e }}">
+                        <div class="nav-card-icon mb-3">
+                            <i class="bi {{ feature.icon | default('bi-circle') | e }} fs-3 text-primary"></i>
                         </div>
-                        <div class="flex-grow-1">
-                            <div class="activity-description fw-semibold" style="color:#1e293b;">No recent activity</div>
-                            <div class="activity-time text-muted">Start by adding a debt or transaction</div>
-                        </div>
-                    </div>
+                        <h4 class="text-truncate fs-5 fw-bold">{{ t(feature.label_key, default=feature.label) | e }}</h4>
+                        <p class="text-muted fs-6 mb-0">{{ t(feature.description_key, default=feature.description) | e }}</p>
+                    </a>
                 </div>
+                {% endfor %}
             </div>
         </div>
 
-        <!-- Quick Actions Section -->
-        <div class="mt-3 mx-1">
-            <div class="bg-white rounded-4 shadow-sm p-3">
-                <div class="fw-bold fs-5 mb-3" style="color:#1e293b;">Quick Actions</div>
-                <div class="row g-3">
-                    <div class="col-6">
-                        <a href="{{ url_for('creditors.index') }}" class="d-block text-decoration-none h-100">
-                            <div class="p-3 rounded-4 h-100 d-flex flex-column align-items-center justify-content-center"
-                                 style="background: #f7ecdf;">
-                                <div style="background: rgba(0,0,0,0.04); border-radius:50%; padding: 0.75rem;">
-                                    <i class="bi bi-person-dash" style="font-size: 2rem; color: #b88a44;"></i>
-                                </div>
-                                <div class="mt-2 fw-semibold" style="color:#1e293b;">Add New I Owe</div>
-                            </div>
-                        </a>
-                    </div>
-                    <div class="col-6">
-                        <a href="{{ url_for('debtors.index') }}" class="d-block text-decoration-none h-100">
-                            <div class="p-3 rounded-4 h-100 d-flex flex-column align-items-center justify-content-center"
-                                 style="background: #d5f4f1;">
-                                <div style="background: rgba(0,0,0,0.04); border-radius:50%; padding: 0.75rem;">
-                                    <i class="bi bi-person-plus" style="font-size: 2rem; color: #269c8a;"></i>
-                                </div>
-                                <div class="mt-2 fw-semibold" style="color:#1e293b;">Add New They Owe</div>
-                            </div>
-                        </a>
-                    </div>
-                    <div class="col-6 mt-3">
-                        <a href="{{ url_for('receipts.index') }}" class="d-block text-decoration-none h-100">
-                            <div class="p-3 rounded-4 h-100 d-flex flex-column align-items-center justify-content-center"
-                                 style="background: #fff;">
-                                <div style="background: #f1f5f9; border-radius:50%; padding: 0.75rem;">
-                                    <i class="bi bi-arrow-down-circle" style="font-size: 2rem; color: #2563eb;"></i>
-                                </div>
-                                <div class="mt-2 fw-semibold" style="color:#1e293b;">Money In</div>
-                            </div>
-                        </a>
-                    </div>
-                    <div class="col-6 mt-3">
-                        <a href="{{ url_for('payments.index') }}" class="d-block text-decoration-none h-100">
-                            <div class="p-3 rounded-4 h-100 d-flex flex-column align-items-center justify-content-center"
-                                 style="background: #fff;">
-                                <div style="background: #f1f5f9; border-radius:50%; padding: 0.75rem;">
-                                    <i class="bi bi-arrow-up-circle" style="font-size: 2rem; color: #2563eb;"></i>
-                                </div>
-                                <div class="mt-2 fw-semibold" style="color:#1e293b;">Money Out</div>
-                            </div>
-                        </a>
-                    </div>
-                    <div class="col-12 mt-3">
-                        <a href="{{ url_for('inventory.index') }}" class="d-block text-decoration-none h-100">
-                            <div class="p-3 rounded-4 h-100 d-flex flex-column align-items-center justify-content-center"
-                                 style="background: #fff;">
-                                <div style="background: #f1f5f9; border-radius:50%; padding: 0.75rem;">
-                                    <i class="bi bi-box-seam" style="font-size: 2rem; color: #2563eb;"></i>
-                                </div>
-                                <div class="mt-2 fw-semibold" style="color:#1e293b;">Add Item</div>
-                            </div>
-                        </a>
-                    </div>
-                </div>
+        <!-- Navigation Bar -->
+        <div class="bottom-nav fixed-bottom bg-white shadow-sm p-3 d-md-none">
+            <div class="d-flex justify-content-around align-items-center">
+                {% for item in bottom_nav_items %}
+                <a href="{{ item.url | default('#') | e }}" class="nav-item text-center text-decoration-none" aria-label="{{ t(item.label_key, default=item.label) | e }}">
+                    <i class="bi {{ item.icon | default('bi-circle') | e }} fs-4 text-primary"></i>
+                    <div class="nav-label fs-7">{{ t(item.label_key, default=item.label) | e }}</div>
+                </a>
+                {% endfor %}
             </div>
         </div>
-
-        <!-- Explore Features Section -->
-        <div class="mt-3 mx-1 mb-5">
-            <div class="bg-white rounded-4 shadow-sm p-3">
-                <div class="fw-bold fs-5 mb-3" style="color:#1e293b;">Explore Features</div>
-                <div class="row g-3">
-                    <div class="col-6">
-                        <a href="{{ url_for('reports.index') }}" class="d-block text-decoration-none h-100">
-                            <div class="p-3 rounded-4 h-100 d-flex flex-column align-items-start justify-content-center"
-                                 style="border: 1.5px solid #E3E7EF;">
-                                <i class="bi bi-file-earmark-text" style="font-size: 2rem; color: #2563eb;"></i>
-                                <div class="mt-2 fw-bold" style="color:#1e293b;">Reports</div>
-                                <div class="text-muted" style="font-size: 0.95rem;">Business insights</div>
-                            </div>
-                        </a>
-                    </div>
-                    <div class="col-6">
-                        <a href="{{ url_for('reports.index') }}" class="d-block text-decoration-none h-100">
-                            <div class="p-3 rounded-4 h-100 d-flex flex-column align-items-start justify-content-center"
-                                 style="border: 1.5px solid #E3E7EF;">
-                                <i class="bi bi-cash-coin" style="font-size: 2rem; color: #2563eb;"></i>
-                                <div class="mt-2 fw-bold" style="color:#1e293b;">Your Wallet</div>
-                                <div class="text-muted" style="font-size: 0.95rem;">Manage coins</div>
-                            </div>
-                        </a>
-                    </div>
-                    <div class="col-6">
-                        <a href="{{ url_for('receipts.index') }}" class="d-block text-decoration-none h-100">
-                            <div class="p-3 rounded-4 h-100 d-flex flex-column align-items-start justify-content-center"
-                                 style="border: 1.5px solid #E3E7EF;">
-                                <i class="bi bi-graph-up" style="font-size: 2rem; color: #2563eb;"></i>
-                                <div class="mt-2 fw-bold" style="color:#1e293b;">Cashflow</div>
-                                <div class="text-muted" style="font-size: 0.95rem;">Track money flow</div>
-                            </div>
-                        </a>
-                    </div>
-                    <div class="col-6">
-                        <a href="{{ url_for('inventory.index') }}" class="d-block text-decoration-none h-100">
-                            <div class="p-3 rounded-4 h-100 d-flex flex-column align-items-start justify-content-center"
-                                 style="border: 1.5px solid #E3E7EF;">
-                                <i class="bi bi-box-seam" style="font-size: 2rem; color: #2563eb;"></i>
-                                <div class="mt-2 fw-bold" style="color:#1e293b;">Inventory</div>
-                                <div class="text-muted" style="font-size: 0.95rem;">Stock management</div>
-                            </div>
-                        </a>
-                    </div>
-                    <div class="col-6">
-                        <a href="{{ url_for('general_bp.feedback') }}" class="d-block text-decoration-none h-100">
-                            <div class="p-3 rounded-4 h-100 d-flex flex-column align-items-start justify-content-center"
-                                 style="border: 1.5px solid #E3E7EF;">
-                                <i class="bi bi-chat-dots" style="font-size: 2rem; color: #2563eb;"></i>
-                                <div class="mt-2 fw-bold" style="color:#1e293b;">Feedback</div>
-                                <div class="text-muted" style="font-size: 0.95rem;">Share your thoughts</div>
-                            </div>
-                        </a>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Bottom Navigation Bar -->
-        <nav class="navbar fixed-bottom d-block d-md-none" style="background: #fff; border-top: 1px solid #e2e8f0; box-shadow: 0 -2px 12px rgba(0,0,0,0.05);">
-            <div class="d-flex justify-content-around align-items-center py-1">
-                <a href="{{ url_for('general_bp.home') }}" class="text-decoration-none d-flex flex-column align-items-center {{ 'active' if request.endpoint == 'general.home' else '' }}">
-                    <span class="d-block rounded-3 {{ 'bg-primary bg-opacity-10' if request.endpoint == 'general.home' else '' }}" style="padding: 0.5rem;">
-                        <i class="bi bi-house-door{{ '-fill' if request.endpoint == 'general.home' else '' }}" style="font-size: 1.4rem; color: #2563eb;"></i>
-                    </span>
-                    <span class="fw-bold" style="font-size: 0.85rem; color: #2563eb;">Home</span>
-                </a>
-                <a href="{{ url_for('debtors.index') }}" class="text-decoration-none d-flex flex-column align-items-center {{ 'active' if request.endpoint == 'debt.index' else '' }}">
-                    <span class="d-block rounded-3 {{ 'bg-primary bg-opacity-10' if request.endpoint == 'debt.index' else '' }}" style="padding: 0.5rem;">
-                        <i class="bi bi-list-ul" style="font-size: 1.4rem; color: #2563eb;"></i>
-                    </span>
-                    <span class="fw-bold" style="font-size: 0.85rem; color: #2563eb;">Debts</span>
-                </a>
-                <a href="{{ url_for('receipts.index') }}" class="text-decoration-none d-flex flex-column align-items-center {{ 'active' if request.endpoint == 'cashflow.index' else '' }}">
-                    <span class="d-block rounded-3 {{ 'bg-primary bg-opacity-10' if request.endpoint == 'cashflow.index' else '' }}" style="padding: 0.5rem;">
-                        <i class="bi bi-arrow-left-right" style="font-size: 1.4rem; color: #2563eb;"></i>
-                    </span>
-                    <span class="fw-bold" style="font-size: 0.85rem; color: #2563eb;">Cashflow</span>
-                </a>
-                <a href="{{ url_for('inventory.index') }}" class="text-decoration-none d-flex flex-column align-items-center {{ 'active' if request.endpoint == 'inventory.index' else '' }}">
-                    <span class="d-block rounded-3 {{ 'bg-primary bg-opacity-10' if request.endpoint == 'inventory.index' else '' }}" style="padding: 0.5rem;">
-                        <i class="bi bi-box-seam" style="font-size: 1.4rem; color: #2563eb;"></i>
-                    </span>
-                    <span class="fw-bold" style="font-size: 0.85rem; color: #2563eb;">Inventory</span>
-                </a>
-                <a href="{{ url_for('settings.profile') }}" class="text-decoration-none d-flex flex-column align-items-center {{ 'active' if request.endpoint == 'profile.index' else '' }}">
-                    <span class="d-block rounded-3 {{ 'bg-primary bg-opacity-10' if request.endpoint == 'profile.index' else '' }}" style="padding: 0.5rem;">
-                        <i class="bi bi-person" style="font-size: 1.4rem; color: #2563eb;"></i>
-                    </span>
-                    <span class="fw-bold" style="font-size: 0.85rem; color: #2563eb;">Profile</span>
-                </a>
-            </div>
-        </nav>
     {% else %}
-        <!-- Unauthenticated User Section: unchanged -->
-        <div class="text-center px-2 py-5">
-            <div class="page-title mb-3">
-                <h1>{{ t('general_business_home', default='Welcome to Ficore Business & Agent Tools') | e }}</h1>
-                <p class="subtext text-muted">{{ t('general_business_welcome_desc', default='Explore tools designed for business owners and agents to streamline financial management, track debtors, manage inventory, and more.') | e }}</p>
+        <!-- Welcome Section -->
+        <div class="text-center px-3 py-5">
+            <div class="page-title mb-4">
+                <h1 class="fw-bold fs-2">{{ t('general_business_home', default='Welcome to Ficore Business & Agent Tools') | e }}</h1>
+                <p class="subtext text-muted fs-5">{{ t('general_business_welcome_desc', default='Explore tools designed for business owners and agents to streamline financial management, track debtors, manage inventory, and more.') | e }}</p>
             </div>
         </div>
 
         <!-- Tools Section -->
-        <section class="tools-section mb-3 mx-2 rounded shadow-sm">
-            <h2 class="text-center mb-3"><i class="bi bi-tools me-2"></i>{{ t('general_our_tools', default='Our Business & Agent Tools') | e }}</h2>
-            <p class="text-center mb-3 text-muted">{{ t('general_business_tools_desc', default='Discover powerful tools to manage your business or support traders as an agent.') | e }}</p>
+        <section class="tools-section mb-4 mx-3 rounded shadow-sm bg-white p-4">
+            <h2 class="text-center mb-4 fs-3 fw-bold"><i class="bi bi-tools fs-3 me-2"></i>{{ t('general_our_tools', default='Our Business & Agent Tools') | e }}</h2>
+            <p class="text-center mb-4 text-muted fs-5">{{ t('general_business_tools_desc', default='Discover powerful tools to manage your business or support traders as an agent.') | e }}</p>
             <div class="row g-3">
                 {% for tool in explore_features_for_template %}
                 <div class="col-6 col-md-4">
-                    <a href="{{ url_for(tool.endpoint) if tool.endpoint else tool.url | default('#') | e }}" 
-                       class="toolcard d-flex flex-column align-items-center justify-content-center m-1" 
-                       aria-label="{{ t(tool.label_key, default=tool.label) | e }}"
-                       data-bs-toggle="tooltip" 
-                       data-bs-title="{{ t(tool.tooltip_key, default=tool.label) | e }}">
-                        <i class="bi {{ tool.icon | default('bi-circle') | e }} action-icon"></i>
-                        <span class="action-label">{{ t(tool.label_key, default=tool.label) | e }}</span>
+                    <a href="{{ tool.url | default('#') | e }}" class="card tool-card text-center shadow-sm py-4 h-100 text-decoration-none d-flex flex-column align-items-center justify-content-center" aria-label="{{ t(tool.label_key, default=tool.label) | e }}">
+                        <i class="bi {{ tool.icon | default('bi-circle') | e }} fs-3 mb-3 text-primary"></i>
+                        <small class="tool-label text-center text-truncate fw-bold fs-6">{{ t(tool.label_key, default=tool.label) | e }}</small>
                     </a>
                 </div>
                 {% endfor %}
@@ -332,18 +199,45 @@
         </section>
 
         <!-- CTA Section -->
-        <section class="cta-section mb-3 mx-2 rounded shadow-sm text-center">
-            <h3>{{ t('general_ready_to_start', default='Ready to Take Control of Your Finances?') | e }}</h3>
-            <p class="text-muted">{{ t('general_business_signup_prompt', default='Sign up as a business owner or agent to access powerful financial management tools.') | e }}</p>
-            <div class="responsive-btn-group">
-                <a href="{{ url_for('users.signup', role='trader') | e }}" class="btn btn-primary btn-sm">{{ t('general_signup_business', default='Business Sign Up') | e }}</a>
-                <a href="{{ url_for('users.signup', role='agent') | e }}" class="btn btn-primary btn-sm">{{ t('general_signup_agent', default='Agent Sign Up') | e }}</a>
+        <section class="cta-section mb-4 mx-3 rounded shadow-sm bg-white p-4 text-center">
+            <h3 class="fw-bold fs-3">{{ t('general_ready_to_start', default='Ready to Take Control of Your Finances?') | e }}</h3>
+            <p class="text-muted fs-5">{{ t('general_business_signup_prompt', default='Sign up as a business owner or agent to access powerful financial management tools.') | e }}</p>
+            <div class="d-flex justify-content-center gap-3 flex-wrap">
+                <a href="{{ url_for('users.signup', role='trader') | e }}" class="btn btn-primary btn-sm px-4">{{ t('general_signup_business', default='Business Sign Up') | e }}</a>
+                <a href="{{ url_for('users.signup', role='agent') | e }}" class="btn btn-primary btn-sm px-4">{{ t('general_signup_agent', default='Agent Sign Up') | e }}</a>
             </div>
         </section>
     {% endif %}
 </div>
 
 {% block extra_scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Initialize tooltips
+    document.querySelectorAll('[data-bs-toggle="tooltip"]').forEach(tooltipTriggerEl => {
+        new bootstrap.Tooltip(tooltipTriggerEl);
+    });
+
+    // Debug icons
+    document.querySelectorAll('.bi').forEach(icon => {
+        if (!icon.className.includes('bi-')) {
+            console.warn('Invalid or missing Bootstrap Icon class:', icon.className);
+        }
+    });
+
+    // Debug navigation duplication
+    const topNav = document.querySelector('.top-header');
+    const bottomNav = document.querySelector('.bottom-nav');
+    if (topNav && bottomNav) {
+        const topNavItems = topNav.querySelectorAll('.nav-item');
+        if (topNavItems.length > 0) {
+            console.warn('Unexpected navigation items in top-header:', topNavItems);
+        }
+    }
+});
+</script>
+{% endblock extra_scripts %}
+{% endblock %}
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     // Initialize tooltips
