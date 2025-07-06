@@ -1,7 +1,7 @@
 from flask import Blueprint, jsonify, current_app, redirect, url_for, flash, render_template, request, session
 from flask_login import current_user, login_required
 from utils import requires_role, is_admin, get_mongo_db, limiter
-import utils  # Changed to import the module instead of individual variables
+import utils
 from translations import trans
 from datetime import datetime
 from bson import ObjectId
@@ -32,7 +32,6 @@ personal_bp.register_blueprint(quiz_bp)
 def init_app(app):
     """Initialize all personal finance sub-blueprints."""
     try:
-        # Initialize each sub-blueprint
         for blueprint in [bill_bp, budget_bp, emergency_fund_bp, financial_health_bp, learning_hub_bp, net_worth_bp, quiz_bp]:
             if hasattr(blueprint, 'init_app'):
                 blueprint.init_app(app)
@@ -48,47 +47,18 @@ def init_app(app):
 def index():
     """Render the personal finance dashboard."""
     try:
-        tools = utils.PERSONAL_TOOLS if current_user.role == 'personal' else utils.ALL_TOOLS
-        bottom_nav_items = utils.PERSONAL_NAV if current_user.role == 'personal' else utils.ADMIN_NAV
-        
-        # Log the tools data to debug the structure
-        for tool in tools:
-            logging.debug(f"Tool: {tool}, description_key: {tool.get('description_key', 'N/A')}, description: {tool.get('description', 'N/A')}")
-
-        # Validate and clean tools data to ensure description_key and description are strings
-        cleaned_tools = []
-        for tool in tools:
-            if not isinstance(tool, dict):
-                logging.warning(f"Invalid tool format, expected dict, got {type(tool)}: {tool}")
-                continue
-            cleaned_tool = {
-                'description_key': str(tool.get('description_key', '')),
-                'description': str(tool.get('description', '')),
-                # Include other expected keys (add based on your utils.PERSONAL_TOOLS structure)
-                'name': tool.get('name', ''),
-                'url': tool.get('url', ''),
-                # Add other keys as needed
-            }
-            cleaned_tools.append(cleaned_tool)
-
         return render_template(
             'personal/GENERAL/index.html',
-            tools=cleaned_tools,  # Use cleaned data
-            bottom_nav_items=bottom_nav_items,
-            t=trans,
-            lang=session.get('lang', 'en'),
-            title=trans('general_welcome', default='Welcome'),
+            title=trans('general_welcome', lang=session.get('lang', 'en'), default='Welcome'),
             is_admin=utils.is_admin
         )
     except Exception as e:
         current_app.logger.error(f"Error rendering personal index: {str(e)}", extra={'session_id': session.get('sid', 'unknown')})
         flash(trans('general_error', default='An error occurred'), 'danger')
-        # Render a fallback template without relying on tools
         return render_template(
             'error.html',
             error_message="Unable to load the personal finance dashboard due to an internal error.",
-            lang=session.get('lang', 'en'),
-            title=trans('general_welcome', default='Welcome'),
+            title=trans('general_welcome', lang=session.get('lang', 'en'), default='Welcome'),
             is_admin=utils.is_admin
         ), 500
 
