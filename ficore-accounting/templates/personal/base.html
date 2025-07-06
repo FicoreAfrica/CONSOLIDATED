@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="{{ session.get('lang', 'en') | e }}">
+<html lang="{{ lang | e }}">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -37,7 +37,7 @@
                 <div class="dropdown">
                     <button class="btn btn-link language-btn dropdown-toggle p-2" id="languageDropdown" data-bs-toggle="dropdown" aria-expanded="false" aria-label="{{ t('general_language', default='Language') | e }}" data-bs-toggle="tooltip" data-bs-title="{{ t('general_language_tooltip', default='Change language') | e }}">
                         <i class="bi bi-globe fs-4 me-1"></i>
-                        <span>{{ session.get('lang', 'en').upper() | e }}</span>
+                        <span>{{ lang.upper() | e }}</span>
                     </button>
                     <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="languageDropdown">
                         <li><a class="dropdown-item" href="{{ url_for('set_language', lang='en') | e }}">{{ t('general_english', default='English') | e }}</a></li>
@@ -51,7 +51,7 @@
         </div>
     {% else %}
         <div class="top-header container-fluid d-flex align-items-center justify-content-between mb-3 py-2 px-0">
-            <a class="navbar-brand d-flex align-items-center" href="{{ url_for('personal.index') | e }}" aria-label="{{ t('general_ficore_africa', default='Ficore Africa') | e }}">
+            <a class="navbar-brand d-fle align-items-center" href="{{ url_for('personal.index') | e }}" aria-label="{{ t('general_ficore_africa', default='Ficore Africa') | e }}">
                 <img src="{{ url_for('static', filename='img/ficore_logo.png') | e }}" alt="{{ t('general_ficore_africa_logo', default='Ficore Africa Logo') | e }}" class="logo rounded-circle me-2" style="width: 40px; height: 40px; object-fit: contain;">
                 <span>{{ t('general_ficore_africa', default='Ficore Africa') | e }}</span>
             </a>
@@ -59,7 +59,7 @@
                 <div class="dropdown">
                     <button class="btn btn-link language-btn dropdown-toggle p-2" id="languageDropdown" data-bs-toggle="dropdown" aria-expanded="false" aria-label="{{ t('general_language', default='Language') | e }}" data-bs-toggle="tooltip" data-bs-title="{{ t('general_language_tooltip', default='Change language') | e }}">
                         <i class="bi bi-globe fs-4 me-1"></i>
-                        <span>{{ session.get('lang', 'en').upper() | e }}</span>
+                        <span>{{ lang.upper() | e }}</span>
                     </button>
                     <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="languageDropdown">
                         <li><a class="dropdown-item" href="{{ url_for('set_language', lang='en') | e }}">{{ t('general_english', default='English') | e }}</a></li>
@@ -95,15 +95,15 @@
 
     <main class="main-content py-0" role="main">
         <div class="container-fluid px-0">
-            {% if nav_items and not suppress_top_nav %}
+            {% if explore_features_for_template and not suppress_top_nav %}
                 <div class="explore-features row row-cols-1 row-cols-md-3 g-4 mb-4">
-                    {% for item in nav_items %}
+                    {% for item in explore_features_for_template %}
                         <div class="col">
                             <div class="card h-100 shadow-sm">
                                 <div class="card-body text-center">
-                                    <i class="{{ item.icon or 'bi bi-circle-fill' }} fs-1 mb-3"></i>
+                                    <i class="{{ item.icon | default('bi bi-circle-fill') }} fs-1 mb-3"></i>
                                     <h5 class="card-title">{{ t(item.label_key, default=item.label) | e }}</h5>
-                                    <p class="card-text">{{ t(item.get('description_key', ''), default=item.get('description', '')) | e }}</p>
+                                    <p class="card-text">{{ t(item.description_key, default=item.get('description', '')) | e }}</p>
                                     <a href="{{ url_for(item.endpoint) | e }}" class="btn btn-primary">{{ t('general_explore', default='Explore') | e }}</a>
                                 </div>
                             </div>
@@ -120,7 +120,7 @@
         <div class="container-fluid d-flex justify-content-around align-items-center px-0">
             {% for item in bottom_nav_items %}
                 <a href="{{ url_for(item.endpoint) | e }}" class="nav-item text-center text-truncate {% if request.endpoint == item.endpoint %}active{% endif %}" aria-label="{{ t(item.label_key, default=item.label) | e }}">
-                    <i class="{{ item.icon or 'bi bi-circle-fill' }} fs-3 mb-1"></i>
+                    <i class="{{ item.icon | default('bi bi-circle-fill') }} fs-3 mb-1"></i>
                     <div class="nav-label text-truncate">{{ t(item.label_key, default=item.label) | e }}</div>
                 </a>
             {% endfor %}
@@ -215,7 +215,7 @@
 
         async function loadNotificationCount() {
             try {
-                const response = await fetch('{{ url_for('personal.notification_count') | e }}');
+                const response = await fetch('{{ url_for("personal.notification_count") | e }}');
                 if (!response.ok) throw new Error('Network response was not ok');
                 const data = await response.json();
                 const badge = document.getElementById('notificationBadge');
@@ -239,7 +239,7 @@
                 return;
             }
             try {
-                const response = await fetch('{{ url_for('personal.notifications') | e }}');
+                const response = await fetch('{{ url_for("personal.notifications") | e }}');
                 if (!response.ok) throw new Error('Network response was not ok');
                 const data = await response.json();
                 if (data.error) {
