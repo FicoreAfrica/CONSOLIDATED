@@ -294,7 +294,7 @@
                     </span>
                     <span class="fw-bold" style="font-size: 0.85rem; color: #2563eb;">Inventory</span>
                 </a>
-                <a href="{{ url_for('profile.index') }}" class="text-decoration-none d-flex flex-column align-items-center {{ 'active' if request.endpoint == 'profile.index' else '' }}">
+                <a href="{{ url_for('settings.profile') }}" class="text-decoration-none d-flex flex-column align-items-center {{ 'active' if request.endpoint == 'profile.index' else '' }}">
                     <span class="d-block rounded-3 {{ 'bg-primary bg-opacity-10' if request.endpoint == 'profile.index' else '' }}" style="padding: 0.5rem;">
                         <i class="bi bi-person" style="font-size: 1.4rem; color: #2563eb;"></i>
                     </span>
