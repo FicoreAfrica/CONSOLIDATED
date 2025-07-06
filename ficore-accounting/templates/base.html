@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="{{ session.get('lang', 'en') | e }}">
+<html lang="{{ lang | e }}">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -26,7 +26,7 @@
             <div class="d-flex align-items-center gap-3" style="min-width:0;">
                 <a class="navbar-brand d-flex align-items-center" href="{{ url_for('general_bp.home') | e }}" aria-label="{{ t('general_ficore_africa', default='Ficore Africa') | e }}">
                     <img src="{{ current_user.profile_picture if current_user.profile_picture else url_for('static', filename='img/default_profile.png') | e }}" alt="{{ t('general_user_profile_picture', default='User Profile Picture') | e }}" class="rounded-circle me-2" style="width: 48px; height: 48px; object-fit: cover;">
-                    <span class="welcome-text text-truncate fw-bold fs-5">{{ t('general_hello_user', default='Hello') | e }}, {{ current_user.name | default(current_user.id) | e }}</span>
+                    <span class="welcome-text text-truncate fw-bold fs-5">{{ t('general_hello_user', default='Hello') | e }}, {{ current_user.display_name | default(current_user.id) | e }}</span>
                 </a>
             </div>
             <div class="header-actions d-flex align-items-center gap-3">
@@ -37,14 +37,14 @@
                 <div class="dropdown">
                     <button class="btn btn-link p-2" type="button" id="languageDropdown" data-bs-toggle="dropdown" aria-expanded="false" data-bs-toggle="tooltip" data-bs-title="{{ t('general_language', default='Language') | e }}">
                         <i class="bi bi-translate fs-3"></i>
-                        <span>{{ session.get('lang', 'en').upper() | e }}</span>
+                        <span>{{ lang.upper() | e }}</span>
                     </button>
                     <ul class="dropdown-menu dropdown-menu-end shadow-sm" aria-labelledby="languageDropdown">
                         <li><a class="dropdown-item" href="{{ url_for('set_language', lang='en') | e }}">{{ t('general_english', default='English') | e }}</a></li>
                         <li><a class="dropdown-item" href="{{ url_for('set_language', lang='ha') | e }}">{{ t('general_hausa', default='Hausa') | e }}</a></li>
                     </ul>
                 </div>
-                <button class="btn btn-link p-2" id="darkModeToggle" onclick="toggleDarkMode()" aria-label="{{ t('general_mode_toggle_dark', default='Toggle dark mode') | e }}" data-bs-toggle="tooltip" data-bs-title="{{ t('general_mode_toggle_dark', default='Toggle dark mode') | e }}">
+                <button class="btn btn-link p-2" id="darkModeToggle" onclick="toggleDarkMode()" aria-label="{{ t('general_mode_toggle_dark', default='Toggle dark mode') | e }}" data-bs-toggle="tooltip" data-bs-title="{{ t('general_mode_toggle_tooltip_switch_to_dark', default='Switch to dark mode') | e }}">
                     <i class="bi bi-moon-stars fs-3"></i>
                 </button>
                 <a href="{{ url_for('users.logout') | e }}" class="logout-icon btn btn-link p-2 no-js-intercept" data-bs-toggle="tooltip" data-bs-title="{{ t('general_logout', default='Logout') | e }}" aria-label="{{ t('general_logout', default='Logout') | e }}" rel="external">
@@ -59,7 +59,7 @@
                     <img src="{{ url_for('static', filename='img/ficore_logo.png') | e }}" alt="{{ t('general_ficore_africa_logo', default='Ficore Africa Logo') | e }}" class="logo rounded-circle me-2" style="width: 40px; height: 40px; object-fit: contain;">
                     <span>{{ t('general_ficore_africa', default='Ficore Africa') | e }}</span>
                 </a>
-                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data -bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="{{ t('general_toggle_navigation', default='Toggle navigation') | e }}">
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="{{ t('general_toggle_navigation', default='Toggle navigation') | e }}">
                     <span class="navbar-toggler-icon"></span>
                 </button>
                 <div class="collapse navbar-collapse justify-content-end" id="navbarNav">
@@ -82,7 +82,7 @@
                         <li class="nav-item dropdown">
                             <a class="nav-link dropdown-toggle" href="#" id="languageDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false" data-bs-toggle="tooltip" data-bs-title="{{ t('general_language_tooltip', default='Change language') | e }}" aria-label="{{ t('general_language', default='Language') | e }}">
                                 <i class="bi bi-globe fs-4 me-1"></i>
-                                {{ session.get('lang', 'en').upper() | e }}
+                                {{ lang.upper() | e }}
                             </a>
                             <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="languageDropdown">
                                 <li><a class="dropdown-item" href="{{ url_for('set_language', lang='en') | e }}">{{ t('general_english', default='English') | e }}</a></li>
@@ -116,6 +116,22 @@
 
     <main class="main-content py-0" role="main">
         <div class="container-fluid px-0">
+            {% if explore_features_for_template and not suppress_top_nav %}
+                <div class="explore-features row row-cols-1 row-cols-md-3 g-4 mb-4">
+                    {% for item in explore_features_for_template %}
+                        <div class="col">
+                            <div class="card h-100 shadow-sm">
+                                <div class="card-body text-center">
+                                    <i class="{{ item.icon | default('bi bi-circle-fill') }} fs-1 mb-3"></i>
+                                    <h5 class="card-title">{{ t(item.label_key, default=item.label) | e }}</h5>
+                                    <p class="card-text">{{ t(item.description_key, default=item.get('description', '')) | e }}</p>
+                                    <a href="{{ url_for(item.endpoint) | e }}" class="btn btn-primary">{{ t('general_explore', default='Explore') | e }}</a>
+                                </div>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% endif %}
             {% block content %}{% endblock %}
         </div>
     </main>
@@ -125,7 +141,7 @@
         <div class="container-fluid d-flex justify-content-around align-items-center px-0">
             {% for item in bottom_nav_items[:4] %}
                 <a href="{{ url_for(item.endpoint) if item.endpoint else item.url | default('#') | e }}" class="nav-item text-center text-dark text-decoration-none {% if request.endpoint == item.endpoint %}active{% endif %} d-flex flex-column align-items-center" aria-label="{{ t(item.label_key, default=item.label) | e }}" data-bs-toggle="tooltip" data-bs-title="{{ t(item.tooltip_key, default=item.label) | e }}">
-                    <i class="bi {{ item.icon | default('bi-circle') | e }} fs-3 mb-2"></i>
+                    <i class="bi {{ item.icon | default('bi-circle') }} fs-3 mb-2"></i>
                     <div class="nav-label text-truncate fw-bold fs-7" style="max-width: 80px;">{{ t(item.label_key, default=item.label) | e }}</div>
                 </a>
             {% endfor %}
