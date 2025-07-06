@@ -128,7 +128,7 @@ _AGENT_TOOLS = [
 
 _AGENT_NAV = [
     {"endpoint": "agents_bp.agent_portal", "label": "Agent Portal", "label_key": "agents_dashboard", "tooltip_key": "agents_tooltip", "icon": "bi-person-workspace"},
-    {"endpoint": "agents_bp.my_activity", "label": "My Activity", "label_key": "agents_my_activity", "tooltip_key": "agents_my_activity_tooltip", "icon": "bi-person-workspace"},
+    {"endpoint": "agents_bp.agent_portal", "label": "My Activity", "label_key": "agents_my_activity", "tooltip_key": "agents_my_activity_tooltip", "icon": "bi-person-workspace"},
     {"endpoint": "settings.profile", "label": "Profile", "label_key": "profile_settings", "tooltip_key": "profile_tooltip", "icon": "bi-person"},
 ]
 
