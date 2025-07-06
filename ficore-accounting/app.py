@@ -565,33 +565,43 @@ def create_app():
         
     @app.context_processor
     def inject_role_nav():
-        if not current_user.is_authenticated:
-            return {'tools_for_template': [], 'explore_features_for_template': [], 'bottom_nav_items': []}
-        if current_user.role == 'personal':
-            return dict(
-                tools_for_template=utils.PERSONAL_TOOLS,
-                explore_features_for_template=utils.PERSONAL_EXPLORE_FEATURES,
-                bottom_nav_items=utils.PERSONAL_NAV
-            )
-        elif current_user.role == 'trader':
-            return dict(
-                tools_for_template=utils.BUSINESS_TOOLS,
-                explore_features_for_template=utils.BUSINESS_EXPLORE_FEATURES,
-                bottom_nav_items=utils.BUSINESS_NAV
-            )
-        elif current_user.role == 'agent':
-            return dict(
-                tools_for_template=utils.AGENT_TOOLS,
-                explore_features_for_template=utils.AGENT_EXPLORE_FEATURES,
-                bottom_nav_items=utils.AGENT_NAV
-            )
-        elif current_user.role == 'admin':
-            return dict(
-                tools_for_template=utils.ALL_TOOLS,
-                explore_features_for_template=utils.ADMIN_EXPLORE_FEATURES,
-                bottom_nav_items=utils.ADMIN_NAV
-            )
-        return {'tools_for_template': [], 'explore_features_for_template': [], 'bottom_nav_items': []}
+        """Inject role-based navigation data into all templates."""
+        tools_for_template = []
+        explore_features_for_template = []
+        bottom_nav_items = []
+
+        if current_user.is_authenticated:
+            if current_user.role == 'personal':
+                tools_for_template = utils.PERSONAL_TOOLS
+                explore_features_for_template = utils.PERSONAL_EXPLORE_FEATURES
+                bottom_nav_items = utils.PERSONAL_NAV
+            elif current_user.role == 'trader':
+                tools_for_template = utils.BUSINESS_TOOLS
+                explore_features_for_template = utils.BUSINESS_EXPLORE_FEATURES
+                bottom_nav_items = utils.BUSINESS_NAV
+            elif current_user.role == 'agent':
+                tools_for_template = utils.AGENT_TOOLS
+                explore_features_for_template = utils.AGENT_EXPLORE_FEATURES
+                bottom_nav_items = utils.AGENT_NAV
+            elif current_user.role == 'admin':
+                tools_for_template = utils.ALL_TOOLS
+                explore_features_for_template = utils.ADMIN_EXPLORE_FEATURES
+                bottom_nav_items = utils.ADMIN_NAV
+
+        # Debugging logs for navigation data
+        current_app.logger.debug(f"DEBUGGING ICONS (context_processor): tools_for_template (first 2 items): {tools_for_template[:2]}")
+        current_app.logger.debug(f"DEBUGGING ICONS (context_processor): explore_features_for_template (first 2 items): {explore_features_for_template[:2]}")
+        current_app.logger.debug(f"DEBUGGING ICONS (context_processor): bottom_nav_items (first 2 items): {bottom_nav_items[:2]}")
+
+        return dict(
+            tools_for_template=tools_for_template,
+            explore_features_for_template=explore_features_for_template,
+            bottom_nav_items=bottom_nav_items,
+            t=trans,
+            lang=session.get('lang', 'en'),
+            format_currency=utils.format_currency,
+            format_date=utils.format_date
+        )
     
     @app.context_processor
     def inject_globals():
@@ -709,49 +719,32 @@ def create_app():
                 try:
                     return render_template(
                         'general/home.html',
-                        t=trans,
-                        lang=lang,
-                        bottom_nav_items=[],
-                        tools_for_template=[],
-                        explore_features_for_template=[]
+                        title=utils.trans('general_welcome', lang=lang)
                     )
                 except TemplateNotFound as e:
                     logger.error(f'Template not found: {str(e)}', exc_info=True)
                     return render_template(
                         'personal/GENERAL/error.html',
-                        t=trans,
-                        lang=lang,
                         error=str(e),
-                        bottom_nav_items=[],
-                        tools_for_template=[],
-                        explore_features_for_template=[]
+                        title=utils.trans('general_welcome', lang=lang)
                     ), 404
         try:
             courses = app.config.get('COURSES', [])
             logger.info(f'Retrieved {len(courses)} courses')
             return render_template(
                 'personal/GENERAL/index.html',
-                t=trans,
                 courses=courses,
-                lang=lang,
                 sample_courses=courses,
                 title=utils.trans('general_welcome', lang=lang),
-                is_anonymous=session.get('is_anonymous', False),
-                bottom_nav_items=[],
-                tools_for_template=[],
-                explore_features_for_template=[]
+                is_anonymous=session.get('is_anonymous', False)
             )
         except TemplateNotFound as e:
             logger.error(f'Template not found: {str(e)}', exc_info=True)
             flash(utils.trans('general_error', default='Template not found'), 'danger')
             return render_template(
                 'personal/GENERAL/error.html',
-                t=trans,
-                lang=lang,
                 error=str(e),
-                bottom_nav_items=[],
-                tools_for_template=[],
-                explore_features_for_template=[]
+                title=utils.trans('general_welcome', lang=lang)
             ), 404
         except Exception as e:
             logger.error(f'Error in index route: {str(e)}', exc_info=True)
@@ -759,23 +752,15 @@ def create_app():
             try:
                 return render_template(
                     'errors/500.html',
-                    t=trans,
-                    lang=lang,
                     error=str(e),
-                    bottom_nav_items=[],
-                    tools_for_template=[],
-                    explore_features_for_template=[]
+                    title=utils.trans('general_error', lang=lang)
                 ), 500
             except TemplateNotFound as e:
                 logger.error(f'Template not found: {str(e)}', exc_info=True)
                 return render_template(
                     'personal/GENERAL/error.html',
-                    t=trans,
-                    lang=lang,
                     error=str(e),
-                    bottom_nav_items=[],
-                    tools_for_template=[],
-                    explore_features_for_template=[]
+                    title=utils.trans('general_error', lang=lang)
                 ), 500
     
     @app.route('/general_dashboard')
@@ -796,30 +781,16 @@ def create_app():
                 return redirect(url_for('agents_bp.agent_portal'))
             elif current_user.role == 'trader':
                 try:
-                    tools_for_template = utils.BUSINESS_TOOLS
-                    explore_features_for_template = utils.BUSINESS_EXPLORE_FEATURES
-                    bottom_nav_items = utils.BUSINESS_NAV
-                    logger.debug(f'Context variables for trader role: tools_for_template={tools_for_template}, explore_features_for_template={explore_features_for_template}', 
-                                 extra={'ip_address': request.remote_addr})
                     return render_template(
                         'general/home.html',
-                        t=trans,
-                        lang=lang,
-                        title=utils.trans('general_business_home', lang=lang),
-                        tools_for_template=tools_for_template,
-                        explore_features_for_template=explore_features_for_template,
-                        bottom_nav_items=bottom_nav_items
+                        title=utils.trans('general_business_home', lang=lang)
                     )
                 except TemplateNotFound as e:
                     logger.error(f'Template not found: {str(e)}', exc_info=True)
                     return render_template(
                         'personal/GENERAL/error.html',
-                        t=trans,
-                        lang=lang,
                         error=str(e),
-                        bottom_nav_items=utils.BUSINESS_NAV,
-                        tools_for_template=[],
-                        explore_features_for_template=[]
+                        title=utils.trans('general_business_home', lang=lang)
                     ), 404
             else:
                 flash(utils.trans('general_no_permission', default='You do not have permission to access this page.'), 'danger')
@@ -829,24 +800,15 @@ def create_app():
                          extra={'ip_address': request.remote_addr})
             return render_template(
                 'general/home.html',
-                t=trans,
-                lang=lang,
                 is_public=True,
-                title=utils.trans('general_business_home', lang=lang),
-                bottom_nav_items=[],
-                tools_for_template=[],
-                explore_features_for_template=[]
+                title=utils.trans('general_business_home', lang=lang)
             )
         except TemplateNotFound as e:
             logger.error(f'Template not found: {str(e)}', exc_info=True)
             return render_template(
                 'personal/GENERAL/error.html',
-                t=trans,
-                lang=lang,
                 error=str(e),
-                bottom_nav_items=[],
-                tools_for_template=[],
-                explore_features_for_template=[]
+                title=utils.trans('general_business_home', lang=lang)
             ), 404
     
     @app.route('/health')
@@ -1109,9 +1071,7 @@ def create_app():
                 return render_template(
                     'errors/403.html',
                     content=utils.trans('general_access_denied', default='Access denied'),
-                    bottom_nav_items=[],
-                    tools_for_template=[],
-                    explore_features_for_template=[]
+                    title=utils.trans('general_access_denied', lang=session.get('lang', 'en'))
                 ), 403
             except TemplateNotFound as e:
                 logger.error(f'Template not found: {str(e)}', exc_info=True)
@@ -1119,9 +1079,7 @@ def create_app():
                     'personal/GENERAL/error.html',
                     content=utils.trans('general_access_denied', default='Access denied'),
                     error=str(e),
-                    bottom_nav_items=[],
-                    tools_for_template=[],
-                    explore_features_for_template=[]
+                    title=utils.trans('general_access_denied', lang=session.get('lang', 'en'))
                 ), 403
         try:
             with app.app_context():
@@ -1137,9 +1095,7 @@ def create_app():
                     'errors/500.html',
                     content=utils.trans('general_error', default='Internal server error'),
                     error=str(e),
-                    bottom_nav_items=[],
-                    tools_for_template=[],
-                    explore_features_for_template=[]
+                    title=utils.trans('general_error', lang=session.get('lang', 'en'))
                 ), 500
             except TemplateNotFound as e:
                 logger.error(f'Template not found: {str(e)}', exc_info=True)
@@ -1147,9 +1103,7 @@ def create_app():
                     'personal/GENERAL/error.html',
                     content=utils.trans('general_error', default='Internal server error'),
                     error=str(e),
-                    bottom_nav_items=[],
-                    tools_for_template=[],
-                    explore_features_for_template=[]
+                    title=utils.trans('general_error', lang=session.get('lang', 'en'))
                 ), 500
     
     @app.route('/static/<path:filename>')
@@ -1234,22 +1188,14 @@ def create_app():
         try:
             return render_template(
                 'errors/403.html', 
-                t=trans, 
                 error=utils.trans('general_csrf_error', default='Invalid CSRF token'), 
-                lang=session.get('lang', 'en'), 
-                bottom_nav_items=[],
-                tools_for_template=[],
-                explore_features_for_template=[]
+                title=utils.trans('general_csrf_error', lang=session.get('lang', 'en'))
             ), 403
         except TemplateNotFound:
             return render_template(
                 'personal/GENERAL/error.html', 
-                t=trans, 
                 error=utils.trans('general_csrf_error', default='Invalid CSRF token'), 
-                lang=session.get('lang', 'en'),
-                bottom_nav_items=[],
-                tools_for_template=[],
-                explore_features_for_template=[]
+                title=utils.trans('general_csrf_error', lang=session.get('lang', 'en'))
             ), 403
 
     @app.errorhandler(404)
@@ -1258,22 +1204,14 @@ def create_app():
         try:
             return render_template(
                 'errors/404.html', 
-                t=trans, 
-                lang=session.get('lang', 'en'), 
                 error=str(e), 
-                bottom_nav_items=[],
-                tools_for_template=[],
-                explore_features_for_template=[]
+                title=utils.trans('general_not_found', lang=session.get('lang', 'en'))
             ), 404
         except TemplateNotFound:
             return render_template(
                 'personal/GENERAL/error.html', 
-                t=trans, 
-                lang=session.get('lang', 'en'), 
                 error=str(e), 
-                bottom_nav_items=[],
-                tools_for_template=[],
-                explore_features_for_template=[]
+                title=utils.trans('general_not_found', lang=session.get('lang', 'en'))
             ), 404
 
     @app.errorhandler(500)
@@ -1282,22 +1220,14 @@ def create_app():
         try:
             return render_template(
                 'errors/500.html', 
-                t=trans, 
-                lang=session.get('lang', 'en'), 
                 error=str(e), 
-                bottom_nav_items=[],
-                tools_for_template=[],
-                explore_features_for_template=[]
+                title=utils.trans('general_error', lang=session.get('lang', 'en'))
             ), 500
         except TemplateNotFound:
             return render_template(
                 'personal/GENERAL/error.html', 
-                t=trans, 
-                lang=session.get('lang', 'en'), 
                 error=str(e), 
-                bottom_nav_items=[],
-                tools_for_template=[],
-                explore_features_for_template=[]
+                title=utils.trans('general_error', lang=session.get('lang', 'en'))
             ), 500
 
     return app
