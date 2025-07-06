@@ -46,21 +46,9 @@ def index():
         query = {'type': 'creditor'} if utils.is_admin() else {'user_id': str(current_user.id), 'type': 'creditor'}
         creditors = list(db.records.find(query).sort('created_at', -1))
         
-        # Role-based navigation data
-        tools = utils.BUSINESS_TOOLS if current_user.role == 'trader' else utils.ALL_TOOLS
-        nav_items = utils.BUSINESS_EXPLORE_FEATURES if current_user.role == 'trader' else utils.ADMIN_EXPLORE_FEATURES
-        bottom_nav_items = utils.BUSINESS_NAV if current_user.role == 'trader' else utils.ADMIN_NAV
-
         return render_template(
             'creditors/index.html',
-            creditors=creditors,
-            tools=tools,
-            nav_items=nav_items,
-            bottom_nav_items=bottom_nav_items,
-            format_currency=utils.format_currency,
-            format_date=utils.format_date,
-            t=trans,
-            lang=session.get('lang', 'en')
+            creditors=creditors
         )
     except Exception as e:
         logger.error(f"Error fetching creditors for user {current_user.id}: {str(e)}")
@@ -105,21 +93,9 @@ def view_page(id):
             flash(trans('creditors_record_not_found', default='Record not found'), 'danger')
             return redirect(url_for('creditors.index'))
         
-        # Role-based navigation data
-        tools = utils.BUSINESS_TOOLS if current_user.role == 'trader' else utils.ALL_TOOLS
-        nav_items = utils.BUSINESS_EXPLORE_FEATURES if current_user.role == 'trader' else utils.ADMIN_EXPLORE_FEATURES
-        bottom_nav_items = utils.BUSINESS_NAV if current_user.role == 'trader' else utils.ADMIN_NAV
-
         return render_template(
             'creditors/view.html',
-            creditor=creditor,
-            tools=tools,
-            nav_items=nav_items,
-            bottom_nav_items=bottom_nav_items,
-            format_currency=utils.format_currency,
-            format_date=utils.format_date,
-            t=trans,
-            lang=session.get('lang', 'en')
+            creditor=creditor
         )
     except Exception as e:
         logger.error(f"Error rendering creditor view page {id} for user {current_user.id}: {str(e)}")
@@ -361,19 +337,9 @@ def add():
             logger.error(f"Error creating creditor for user {current_user.id}: {str(e)}")
             flash(trans('creditors_create_error', default='An error occurred'), 'danger')
     
-    # Role-based navigation data
-    tools = utils.BUSINESS_TOOLS if current_user.role == 'trader' else utils.ALL_TOOLS
-    nav_items = utils.BUSINESS_EXPLORE_FEATURES if current_user.role == 'trader' else utils.ADMIN_EXPLORE_FEATURES
-    bottom_nav_items = utils.BUSINESS_NAV if current_user.role == 'trader' else utils.ADMIN_NAV
-
     return render_template(
         'creditors/add.html',
-        form=form,
-        tools=tools,
-        nav_items=nav_items,
-        bottom_nav_items=bottom_nav_items,
-        t=trans,
-        lang=session.get('lang', 'en')
+        form=form
     )
 
 @creditors_bp.route('/edit/<id>', methods=['GET', 'POST'])
@@ -415,20 +381,10 @@ def edit(id):
                 logger.error(f"Error updating creditor {id} for user {current_user.id}: {str(e)}")
                 flash(trans('creditors_edit_error', default='An error occurred'), 'danger')
         
-        # Role-based navigation data
-        tools = utils.BUSINESS_TOOLS if current_user.role == 'trader' else utils.ALL_TOOLS
-        nav_items = utils.BUSINESS_EXPLORE_FEATURES if current_user.role == 'trader' else utils.ADMIN_EXPLORE_FEATURES
-        bottom_nav_items = utils.BUSINESS_NAV if current_user.role == 'trader' else utils.ADMIN_NAV
-
         return render_template(
             'creditors/edit.html',
             form=form,
-            creditor=creditor,
-            tools=tools,
-            nav_items=nav_items,
-            bottom_nav_items=bottom_nav_items,
-            t=trans,
-            lang=session.get('lang', 'en')
+            creditor=creditor
         )
     except Exception as e:
         logger.error(f"Error fetching creditor {id} for user {current_user.id}: {str(e)}")
