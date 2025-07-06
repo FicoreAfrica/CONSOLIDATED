@@ -91,25 +91,12 @@ def dashboard():
                 'quiz_results': quiz_results_count,
                 'learning_progress': learning_progress_count
             },
-            recent_users=recent_users,
-            tools_for_template=utils.ALL_TOOLS,
-            explore_features_for_template=utils.ADMIN_EXPLORE_FEATURES,
-            bottom_nav_items=utils.ADMIN_NAV,
-            t=trans,
-            lang=session.get('lang', 'en')
+            recent_users=recent_users
         )
     except Exception as e:
         logger.error(f"Error loading admin dashboard: {str(e)}")
         flash(trans('admin_database_error', default='An error occurred while accessing the database'), 'danger')
-        return render_template(
-            '500.html',
-            error=str(e),
-            tools_for_template=utils.ALL_TOOLS,
-            explore_features_for_template=utils.ADMIN_EXPLORE_FEATURES,
-            bottom_nav_items=utils.ADMIN_NAV,
-            t=trans,
-            lang=session.get('lang', 'en')
-        ), 500
+        return render_template('500.html', error=str(e)), 500
 
 @admin_bp.route('/users', methods=['GET'])
 @login_required
@@ -122,27 +109,11 @@ def manage_users():
         users = list(db.users.find({} if utils.is_admin() else {'role': {'$ne': 'admin'}}).sort('created_at', -1))
         for user in users:
             user['_id'] = str(user['_id'])
-        return render_template(
-            'admin/users.html',
-            users=users,
-            tools_for_template=utils.ALL_TOOLS,
-            explore_features_for_template=utils.ADMIN_EXPLORE_FEATURES,
-            bottom_nav_items=utils.ADMIN_NAV,
-            t=trans,
-            lang=session.get('lang', 'en')
-        )
+        return render_template('admin/users.html', users=users)
     except Exception as e:
         logger.error(f"Error fetching users for admin: {str(e)}")
         flash(trans('admin_database_error', default='An error occurred while accessing the database'), 'danger')
-        return render_template(
-            'admin/users.html',
-            users=[],
-            tools_for_template=utils.ALL_TOOLS,
-            explore_features_for_template=utils.ADMIN_EXPLORE_FEATURES,
-            bottom_nav_items=utils.ADMIN_NAV,
-            t=trans,
-            lang=session.get('lang', 'en')
-        ), 500
+        return render_template('admin/users.html', users=[]), 500
 
 @admin_bp.route('/users/suspend/<user_id>', methods=['POST'])
 @login_required
@@ -250,15 +221,7 @@ def credit_coins():
             user = db.users.find_one(user_query)
             if not user:
                 flash(trans('admin_user_not_found', default='User not found'), 'danger')
-                return render_template(
-                    'admin/reset.html',
-                    form=form,
-                    tools_for_template=utils.ALL_TOOLS,
-                    explore_features_for_template=utils.ADMIN_EXPLORE_FEATURES,
-                    bottom_nav_items=utils.ADMIN_NAV,
-                    t=trans,
-                    lang=session.get('lang', 'en')
-                )
+                return render_template('admin/reset.html', form=form)
             amount = int(form.amount.data)
             db.users.update_one(
                 user_query,
@@ -279,24 +242,8 @@ def credit_coins():
         except Exception as e:
             logger.error(f"Error crediting coins by admin {current_user.id}: {str(e)}")
             flash(trans('admin_database_error', default='An error occurred while accessing the database'), 'danger')
-            return render_template(
-                'admin/reset.html',
-                form=form,
-                tools_for_template=utils.ALL_TOOLS,
-                explore_features_for_template=utils.ADMIN_EXPLORE_FEATURES,
-                bottom_nav_items=utils.ADMIN_NAV,
-                t=trans,
-                lang=session.get('lang', 'en')
-            )
-    return render_template(
-        'admin/reset.html',
-        form=form,
-        tools_for_template=utils.ALL_TOOLS,
-        explore_features_for_template=utils.ADMIN_EXPLORE_FEATURES,
-        bottom_nav_items=utils.ADMIN_NAV,
-        t=trans,
-        lang=session.get('lang', 'en')
-    )
+            return render_template('admin/reset.html', form=form)
+    return render_template('admin/reset.html', form=form)
 
 @admin_bp.route('/audit', methods=['GET'])
 @login_required
@@ -309,27 +256,11 @@ def audit():
         logs = list(db.audit_logs.find().sort('timestamp', -1).limit(100))
         for log in logs:
             log['_id'] = str(log['_id'])
-        return render_template(
-            'admin/audit.html',
-            logs=logs,
-            tools_for_template=utils.ALL_TOOLS,
-            explore_features_for_template=utils.ADMIN_EXPLORE_FEATURES,
-            bottom_nav_items=utils.ADMIN_NAV,
-            t=trans,
-            lang=session.get('lang', 'en')
-        )
+        return render_template('admin/audit.html', logs=logs)
     except Exception as e:
         logger.error(f"Error fetching audit logs for admin {current_user.id}: {str(e)}")
         flash(trans('admin_database_error', default='An error occurred while accessing the database'), 'danger')
-        return render_template(
-            'admin/audit.html',
-            logs=[],
-            tools_for_template=utils.ALL_TOOLS,
-            explore_features_for_template=utils.ADMIN_EXPLORE_FEATURES,
-            bottom_nav_items=utils.ADMIN_NAV,
-            t=trans,
-            lang=session.get('lang', 'en')
-        )
+        return render_template('admin/audit.html', logs=[])
 
 @admin_bp.route('/manage_agents', methods=['GET', 'POST'])
 @login_required
@@ -373,30 +304,12 @@ def manage_agents():
             
             return redirect(url_for('admin.manage_agents'))
         
-        return render_template(
-            'admin/manage_agents.html',
-            form=form,
-            agents=agents,
-            tools_for_template=utils.ALL_TOOLS,
-            explore_features_for_template=utils.ADMIN_EXPLORE_FEATURES,
-            bottom_nav_items=utils.ADMIN_NAV,
-            t=trans,
-            lang=session.get('lang', 'en')
-        )
+        return render_template('admin/manage_agents.html', form=form, agents=agents)
     
     except Exception as e:
         logger.error(f"Error managing agents for admin {current_user.id}: {str(e)}")
         flash(trans('admin_database_error', default='An error occurred while accessing the database'), 'danger')
-        return render_template(
-            'admin/manage_agents.html',
-            form=form,
-            agents=[],
-            tools_for_template=utils.ALL_TOOLS,
-            explore_features_for_template=utils.ADMIN_EXPLORE_FEATURES,
-            bottom_nav_items=utils.ADMIN_NAV,
-            t=trans,
-            lang=session.get('lang', 'en')
-        )
+        return render_template('admin/manage_agents.html', form=form, agents=[])
 
 @admin_bp.route('/budgets', methods=['GET'])
 @login_required
@@ -409,27 +322,11 @@ def admin_budgets():
         budgets = list(get_budgets(db, {}))
         for budget in budgets:
             budget['_id'] = str(budget['_id'])
-        return render_template(
-            'admin/budgets.html',
-            budgets=budgets,
-            tools_for_template=utils.ALL_TOOLS,
-            explore_features_for_template=utils.ADMIN_EXPLORE_FEATURES,
-            bottom_nav_items=utils.ADMIN_NAV,
-            t=trans,
-            lang=session.get('lang', 'en')
-        )
+        return render_template('admin/budgets.html', budgets=budgets)
     except Exception as e:
         logger.error(f"Error fetching budgets for admin: {str(e)}")
         flash(trans('admin_database_error', default='An error occurred while accessing the database'), 'danger')
-        return render_template(
-            'admin/budgets.html',
-            budgets=[],
-            tools_for_template=utils.ALL_TOOLS,
-            explore_features_for_template=utils.ADMIN_EXPLORE_FEATURES,
-            bottom_nav_items=utils.ADMIN_NAV,
-            t=trans,
-            lang=session.get('lang', 'en')
-        ), 500
+        return render_template('admin/budgets.html', budgets=[]), 500
 
 @admin_bp.route('/budgets/delete/<budget_id>', methods=['POST'])
 @login_required
@@ -463,27 +360,11 @@ def admin_bills():
         bills = list(get_bills(db, {}))
         for bill in bills:
             bill['_id'] = str(bill['_id'])
-        return render_template(
-            'admin/bills.html',
-            bills=bills,
-            tools_for_template=utils.ALL_TOOLS,
-            explore_features_for_template=utils.ADMIN_EXPLORE_FEATURES,
-            bottom_nav_items=utils.ADMIN_NAV,
-            t=trans,
-            lang=session.get('lang', 'en')
-        )
+        return render_template('admin/bills.html', bills=bills)
     except Exception as e:
         logger.error(f"Error fetching bills for admin: {str(e)}")
         flash(trans('admin_database_error', default='An error occurred while accessing the database'), 'danger')
-        return render_template(
-            'admin/bills.html',
-            bills=[],
-            tools_for_template=utils.ALL_TOOLS,
-            explore_features_for_template=utils.ADMIN_EXPLORE_FEATURES,
-            bottom_nav_items=utils.ADMIN_NAV,
-            t=trans,
-            lang=session.get('lang', 'en')
-        ), 500
+        return render_template('admin/bills.html', bills=[]), 500
 
 @admin_bp.route('/bills/delete/<bill_id>', methods=['POST'])
 @login_required
@@ -541,27 +422,11 @@ def admin_emergency_funds():
         funds = list(get_emergency_funds(db, {}))
         for fund in funds:
             fund['_id'] = str(fund['_id'])
-        return render_template(
-            'admin/emergency_funds.html',
-            funds=funds,
-            tools_for_template=utils.ALL_TOOLS,
-            explore_features_for_template=utils.ADMIN_EXPLORE_FEATURES,
-            bottom_nav_items=utils.ADMIN_NAV,
-            t=trans,
-            lang=session.get('lang', 'en')
-        )
+        return render_template('admin/emergency_funds.html', funds=funds)
     except Exception as e:
         logger.error(f"Error fetching emergency funds for admin: {str(e)}")
         flash(trans('admin_database_error', default='An error occurred while accessing the database'), 'danger')
-        return render_template(
-            'admin/emergency_funds.html',
-            funds=[],
-            tools_for_template=utils.ALL_TOOLS,
-            explore_features_for_template=utils.ADMIN_EXPLORE_FEATURES,
-            bottom_nav_items=utils.ADMIN_NAV,
-            t=trans,
-            lang=session.get('lang', 'en')
-        ), 500
+        return render_template('admin/emergency_funds.html', funds=[]), 500
 
 @admin_bp.route('/emergency_funds/delete/<fund_id>', methods=['POST'])
 @login_required
@@ -595,27 +460,11 @@ def admin_net_worth():
         net_worths = list(get_net_worth(db, {}))
         for nw in net_worths:
             nw['_id'] = str(nw['_id'])
-        return render_template(
-            'admin/net_worth.html',
-            net_worths=net_worths,
-            tools_for_template=utils.ALL_TOOLS,
-            explore_features_for_template=utils.ADMIN_EXPLORE_FEATURES,
-            bottom_nav_items=utils.ADMIN_NAV,
-            t=trans,
-            lang=session.get('lang', 'en')
-        )
+        return render_template('admin/net_worth.html', net_worths=net_worths)
     except Exception as e:
         logger.error(f"Error fetching net worth for admin: {str(e)}")
         flash(trans('admin_database_error', default='An error occurred while accessing the database'), 'danger')
-        return render_template(
-            'admin/net_worth.html',
-            net_worths=[],
-            tools_for_template=utils.ALL_TOOLS,
-            explore_features_for_template=utils.ADMIN_EXPLORE_FEATURES,
-            bottom_nav_items=utils.ADMIN_NAV,
-            t=trans,
-            lang=session.get('lang', 'en')
-        ), 500
+        return render_template('admin/net_worth.html', net_worths=[]), 500
 
 @admin_bp.route('/net_worth/delete/<nw_id>', methods=['POST'])
 @login_required
@@ -649,27 +498,11 @@ def admin_quiz_results():
         quiz_results = list(get_quiz_results(db, {}))
         for result in quiz_results:
             result['_id'] = str(result['_id'])
-        return render_template(
-            'admin/quiz_results.html',
-            quiz_results=quiz_results,
-            tools_for_template=utils.ALL_TOOLS,
-            explore_features_for_template=utils.ADMIN_EXPLORE_FEATURES,
-            bottom_nav_items=utils.ADMIN_NAV,
-            t=trans,
-            lang=session.get('lang', 'en')
-        )
+        return render_template('admin/quiz_results.html', quiz_results=quiz_results)
     except Exception as e:
         logger.error(f"Error fetching quiz results for admin: {str(e)}")
         flash(trans('admin_database_error', default='An error occurred while accessing the database'), 'danger')
-        return render_template(
-            'admin/quiz_results.html',
-            quiz_results=[],
-            tools_for_template=utils.ALL_TOOLS,
-            explore_features_for_template=utils.ADMIN_EXPLORE_FEATURES,
-            bottom_nav_items=utils.ADMIN_NAV,
-            t=trans,
-            lang=session.get('lang', 'en')
-        ), 500
+        return render_template('admin/quiz_results.html', quiz_results=[]), 500
 
 @admin_bp.route('/quiz_results/delete/<result_id>', methods=['POST'])
 @login_required
@@ -703,27 +536,11 @@ def admin_learning_hub():
         progress = list(get_learning_progress(db, {}))
         for p in progress:
             p['_id'] = str(p['_id'])
-        return render_template(
-            'admin/learning_hub.html',
-            progress=progress,
-            tools_for_template=utils.ALL_TOOLS,
-            explore_features_for_template=utils.ADMIN_EXPLORE_FEATURES,
-            bottom_nav_items=utils.ADMIN_NAV,
-            t=trans,
-            lang=session.get('lang', 'en')
-        )
+        return render_template('admin/learning_hub.html', progress=progress)
     except Exception as e:
         logger.error(f"Error fetching learning progress for admin: {str(e)}")
         flash(trans('admin_database_error', default='An error occurred while accessing the database'), 'danger')
-        return render_template(
-            'admin/learning_hub.html',
-            progress=[],
-            tools_for_template=utils.ALL_TOOLS,
-            explore_features_for_template=utils.ADMIN_EXPLORE_FEATURES,
-            bottom_nav_items=utils.ADMIN_NAV,
-            t=trans,
-            lang=session.get('lang', 'en')
-        ), 500
+        return render_template('admin/learning_hub.html', progress=[]), 500
 
 @admin_bp.route('/learning_hub/delete/<progress_id>', methods=['POST'])
 @login_required
