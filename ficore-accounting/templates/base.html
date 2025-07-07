@@ -116,12 +116,22 @@
 
     <main class="main-content py-0" role="main">
         <div class="container-fluid px-0">
-            
             {% block content %}{% endblock %}
         </div>
     </main>
 
-    
+    {% if current_user.is_authenticated %}
+    <nav class="bottom-nav navbar fixed-bottom d-md-none shadow-sm" role="navigation" aria-label="{{ t('general_mobile_navigation', default='Mobile navigation') | e }}">
+        <div class="container-fluid d-flex justify-content-around align-items-center px-0">
+            {% for item in bottom_nav_items %}
+            <a href="{{ item.url | default('#') | e }}" class="nav-item text-center text-decoration-none {% if request.endpoint == item.endpoint %}active{% endif %}" aria-label="{{ t(item.label_key, default=item.label) | e }}">
+                <i class="bi {{ item.icon | default('bi-circle') | e }} fs-4 text-primary"></i>
+                <div class="nav-label fs-7">{{ t(item.label_key, default=item.label) | e }}</div>
+            </a>
+            {% endfor %}
+        </div>
+    </nav>
+    {% endif %}
 
     {% if not current_user.is_authenticated %}
     <footer class="footer mt-4 py-4" role="contentinfo">
