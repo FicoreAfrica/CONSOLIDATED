@@ -841,13 +841,14 @@ h4 { font-size: 1rem; /* 16px */ }
 .bottom-nav {
     position: fixed !important;
     bottom: 0 !important;
+    top: auto !important;
     left: 0 !important;
     right: 0 !important;
     z-index: 1050 !important;
-    background: var(--card-bg);
-    border-top: 1px solid var(--card-border);
+    background: var(--card-bg, #fff);
+    border-top: 1px solid var(--card-border, #e2e8f0);
     box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.1);
-    opacity: 1 !important;
+    height: var(--bottom-nav-height, 70px);
 }
 
 .dark-mode .bottom-nav {
