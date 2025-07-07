@@ -1040,6 +1040,7 @@ h4 { font-size: clamp(1rem, 2.5vw, 1.25rem); }
     box-shadow: var(--card-shadow);
     text-align: center;
     transition: var(--transition-base);
+    animation: fadeIn 0.5s ease-in-out 0.4s both;
 }
 
 .why-items {
