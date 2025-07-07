@@ -137,7 +137,7 @@
                         <span class="badge bg-danger position-absolute top-0 end-0 translate-middle rounded-pill">{{ tool.badge }}</span>
                         {% endif %}
                         <i class="bi {{ tool.icon | default('bi-circle') | e }} fs-3 mb-3 text-primary"></i>
-                        <small class="action-label text-center text-truncate fw-bold fs-6">{{ t(tool.label_kay, default=tool.label) | e }}</small>
+                        <small class="action-label text-center text-truncate fw-bold fs-6">{{ t(tool.label_key, default=tool.label) | e }}</small>
                     </a>
                 </div>
                 {% endfor %}
