@@ -73,18 +73,22 @@
         <!-- Quick Actions -->
         <div class="section-card quick-actions">
             <h3 class="section-title">{{ t('general_quick_actions', default='Quick Actions') | e }}</h3>
-            <div class="quick-actions">
-                {% for tool in tools_for_template %}
-                    <a href="{{ url_for(tool.get('endpoint', '')) | e }}" class="quick-action-card {{ tool.get('class', '') | e }} text-decoration-none" aria-label="{{ t(tool.get('label_key', ''), default=tool.get('label', '')) | e }}">
-                        {% if tool.badge %}
-                            <span class="badge bg-danger position-absolute top-0 end-0 translate-middle rounded-pill">{{ tool.badge }}</span>
-                        {% endif %}
-                        <i class="bi {{ tool.get('icon', 'bi-circle') | e }} action-icon"></i>
-                        <div class="action-label text-truncate">{{ t(tool.get('label_key', ''), default=tool.get('label', '')) | e }}</div>
-                        <p class="text-muted text-truncate fs-7">{{ t(tool.get('desc_key', ''), default=tool.get('label', '') + '_desc') | e }}</p>
-                    </a>
-                {% endfor %}
-            </div>
+            {% if tools_for_template %}
+                <div class="quick-actions">
+                    {% for tool in tools_for_template %}
+                        <a href="{{ url_for(tool.get('endpoint', '')) | e }}" class="quick-action-card {{ tool.get('class', '') | e }} text-decoration-none" aria-label="{{ t(tool.get('label_key', ''), default=tool.get('label', '')) | e }}">
+                            {% if tool.badge %}
+                                <span class="badge bg-danger position-absolute top-0 end-0 translate-middle rounded-pill">{{ tool.badge }}</span>
+                            {% endif %}
+                            <i class="bi {{ tool.get('icon', 'bi-circle') | e }} action-icon"></i>
+                            <div class="action-label text-truncate">{{ t(tool.get('label_key', ''), default=tool.get('label', '')) | e }}</div>
+                            <p class="text-muted text-truncate fs-7">{{ t(tool.get('desc_key', ''), default=tool.get('label', '') + '_desc') | e }}</p>
+                        </a>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <p class="text-muted text-center">{{ t('general_no_actions_available', default='No quick actions available.') | e }}</p>
+            {% endif %}
         </div>
 
         <!-- Notifications -->
@@ -178,97 +182,101 @@
         <section class="section-card tools-section">
             <h2 class="section-title"><i class="bi bi-tools me-2"></i>{{ t('general_our_tools', default='Explore Our Tools') | e }}</h2>
             <p class="text-muted">{{ t('general_tools_desc', default='Discover powerful tools tailored for personal finance, business management, and agent services.') | e }}</p>
-            <div class="accordion" id="toolsAccordion">
-                <div class="accordion-item">
-                    <h3 class="accordion-header" id="personalToolsHeading">
-                        <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#personalToolsCollapse" aria-expanded="true" aria-controls="personalToolsCollapse">
-                            <i class="bi bi-person me-2"></i>{{ t('general_personal_tools', default='Personal Finance Tools') | e }}
-                        </button>
-                    </h3>
-                    <div id="personalToolsCollapse" class="accordion-collapse collapse show" aria-labelledby="personalToolsHeading" data-bs-parent="#toolsAccordion">
-                        <div class="accordion-body">
-                            <div class="tool-cards">
-                                {% for tool in explore_features_for_template %}
-                                    <div class="tool-card tool-personal">
-                                        <h4><i class="bi {{ tool.get('icon', 'bi-circle') | e }} me-2 text-primary"></i>{{ t(tool.get('label_key', ''), default=tool.get('label', '')) | e }}</h4>
-                                        <p class="text-muted">{{ t(tool.get('desc_key', ''), default=tool.get('description', tool.get('label', '') + '_desc')) | e }}</p>
+            {% if explore_features_for_template %}
+                <div class="accordion" id="toolsAccordion">
+                    <div class="accordion-item">
+                        <h3 class="accordion-header" id="personalToolsHeading">
+                            <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#personalToolsCollapse" aria-expanded="true" aria-controls="personalToolsCollapse">
+                                <i class="bi bi-person me-2"></i>{{ t('general_personal_tools', default='Personal Finance Tools') | e }}
+                            </button>
+                        </h3>
+                        <div id="personalToolsCollapse" class="accordion-collapse collapse show" aria-labelledby="personalToolsHeading" data-bs-parent="#toolsAccordion">
+                            <div class="accordion-body">
+                                <div class="tool-cards">
+                                    {% for tool in explore_features_for_template %}
+                                        <div class="tool-card tool-personal">
+                                            <h4><i class="bi {{ tool.get('icon', 'bi-circle') | e }} me-2 text-primary"></i>{{ t(tool.get('label_key', ''), default=tool.get('label', '')) | e }}</h4>
+                                            <p class="text-muted">{{ t(tool.get('desc_key', ''), default=tool.get('description', tool.get('label', '') + '_desc')) | e }}</p>
+                                            <a href="{{ url_for('users.signup', role='personal') | e }}" class="btn btn-primary btn-sm">{{ t('general_get_started', default='Get Started') | e }}</a>
+                                        </div>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="accordion-item">
+                        <h3 class="accordion-header" id="businessToolsHeading">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#businessToolsCollapse" aria-expanded="false" aria-controls="businessToolsCollapse">
+                                <i class="bi bi-briefcase me-2"></i>{{ t('general_business_tools', default='Business Management Tools') | e }}
+                            </button>
+                        </h3>
+                        <div id="businessToolsCollapse" class="accordion-collapse collapse" aria-labelledby="businessToolsHeading" data-bs-parent="#toolsAccordion">
+                            <div class="accordion-body">
+                                <div class="tool-cards">
+                                    <div class="tool-card tool-business">
+                                        <h4><i class="bi bi-person-dash me-2 text-primary"></i>{{ t('general_debtors_creditors', default='Debtors & Creditors') | e }}</h4>
+                                        <p class="text-muted">{{ t('general_debtors_creditors_desc', default='Track who owes you and what you owe with ease.') | e }}</p>
+                                        <a href="{{ url_for('users.signup', role='trader') | e }}" class="btn btn-primary btn-sm">{{ t('general_get_started', default='Get Started') | e }}</a>
+                                    </div>
+                                    <div class="tool-card tool-business">
+                                        <h4><i class="bi bi-box-seam me-2 text-primary"></i>{{ t('inventory_management', default='Inventory Management') | e }}</h4>
+                                        <p class="text-muted">{{ t('inventory_desc', default='Monitor stock levels and inventory value for your business.') | e }}</p>
+                                        <a href="{{ url_for('users.signup', role='trader') | e }}" class="btn btn-primary btn-sm">{{ t('general_get_started', default='Get Started') | e }}</a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="accordion-item">
+                        <h3 class="accordion-header" id="agentToolsHeading">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#agentToolsCollapse" aria-expanded="false" aria-controls="agentToolsCollapse">
+                                <i class="bi bi-handshake me-2"></i>{{ t('general_agent_tools', default='Agent Services Tools') | e }}
+                            </button>
+                        </h3>
+                        <div id="agentToolsCollapse" class="accordion-collapse collapse" aria-labelledby="agentToolsHeading" data-bs-parent="#toolsAccordion">
+                            <div class="accordion-body">
+                                <div class="tool-cards">
+                                    <div class="tool-card tool-agent">
+                                        <h4><i class="bi bi-person-plus me-2 text-primary"></i>{{ t('agents_register_trader', default='Register Traders') | e }}</h4>
+                                        <p class="text-muted">{{ t('agents_register_trader_desc', default='Onboard new traders and manage their accounts.') | e }}</p>
+                                        <a href="{{ url_for('users.signup', role='agent') | e }}" class="btn btn-primary btn-sm">{{ t('general_get_started', default='Get Started') | e }}</a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="accordion-item">
+                        <h3 class="accordion-header" id="sharedToolsHeading">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#sharedToolsCollapse" aria-expanded="false" aria-controls="sharedToolsCollapse">
+                                <i class="bi bi-share me-2"></i>{{ t('general_shared_tools', default='Shared Tools') | e }}
+                            </button>
+                        </h3>
+                        <div id="sharedToolsCollapse" class="accordion-collapse collapse" aria-labelledby="sharedToolsHeading" data-bs-parent="#toolsAccordion">
+                            <div class="accordion-body">
+                                <div class="tool-cards">
+                                    <div class="tool-card tool-shared">
+                                        <h4><i class="bi bi-book me-2 text-primary"></i>{{ t('learning_hub_courses', default='Learning Hub') | e }}</h4>
+                                        <p class="text-muted">{{ t('learning_hub_dashboard', default='Access courses to improve your financial literacy.') | e }}</p>
                                         <a href="{{ url_for('users.signup', role='personal') | e }}" class="btn btn-primary btn-sm">{{ t('general_get_started', default='Get Started') | e }}</a>
                                     </div>
-                                {% endfor %}
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div class="accordion-item">
-                    <h3 class="accordion-header" id="businessToolsHeading">
-                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#businessToolsCollapse" aria-expanded="false" aria-controls="businessToolsCollapse">
-                            <i class="bi bi-briefcase me-2"></i>{{ t('general_business_tools', default='Business Management Tools') | e }}
-                        </button>
-                    </h3>
-                    <div id="businessToolsCollapse" class="accordion-collapse collapse" aria-labelledby="businessToolsHeading" data-bs-parent="#toolsAccordion">
-                        <div class="accordion-body">
-                            <div class="tool-cards">
-                                <div class="tool-card tool-business">
-                                    <h4><i class="bi bi-person-dash me-2 text-primary"></i>{{ t('general_debtors_creditors', default='Debtors & Creditors') | e }}</h4>
-                                    <p class="text-muted">{{ t('general_debtors_creditors_desc', default='Track who owes you and what you owe with ease.') | e }}</p>
-                                    <a href="{{ url_for('users.signup', role='trader') | e }}" class="btn btn-primary btn-sm">{{ t('general_get_started', default='Get Started') | e }}</a>
-                                </div>
-                                <div class="tool-card tool-business">
-                                    <h4><i class="bi bi-box-seam me-2 text-primary"></i>{{ t('inventory_management', default='Inventory Management') | e }}</h4>
-                                    <p class="text-muted">{{ t('inventory_desc', default='Monitor stock levels and inventory value for your business.') | e }}</p>
-                                    <a href="{{ url_for('users.signup', role='trader') | e }}" class="btn btn-primary btn-sm">{{ t('general_get_started', default='Get Started') | e }}</a>
+                                    <div class="tool-card tool-shared">
+                                        <h4><i class="bi bi-calculator me-2 text-primary"></i>{{ t('general_your_taxation_tool', default='Your Taxation Tool') | e }}</h4>
+                                        <p class="text-muted">{{ t('general_taxation_desc', default='Calculate and manage your taxes with ease.') | e }}</p>
+                                        <a href="{{ url_for('users.signup', role='personal') | e }}" class="btn btn-primary btn-sm">{{ t('general_get_started', default='Get Started') | e }}</a>
+                                    </div>
+                                    <div class="tool-card tool-shared">
+                                        <h4><i class="bi bi-newspaper me-2 text-primary"></i>{{ t('general_finance_news', default='Finance News Highlights') | e }}</h4>
+                                        <p class="text-muted">{{ t('general_news_desc', default='Stay updated with the latest financial news and insights.') | e }}</p>
+                                        <a href="{{ url_for('news_bp.news_list') | e }}" class="btn btn-primary btn-sm">{{ t('general_get_started', default='Get Started') | e }}</a>
+                                    </div>
                                 </div>
                             </div>
                         </div>
                     </div>
                 </div>
-                <div class="accordion-item">
-                    <h3 class="accordion-header" id="agentToolsHeading">
-                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#agentToolsCollapse" aria-expanded="false" aria-controls="agentToolsCollapse">
-                            <i class="bi bi-handshake me-2"></i>{{ t('general_agent_tools', default='Agent Services Tools') | e }}
-                        </button>
-                    </h3>
-                    <div id="agentToolsCollapse" class="accordion-collapse collapse" aria-labelledby="agentToolsHeading" data-bs-parent="#toolsAccordion">
-                        <div class="accordion-body">
-                            <div class="tool-cards">
-                                <div class="tool-card tool-agent">
-                                    <h4><i class="bi bi-person-plus me-2 text-primary"></i>{{ t('agents_register_trader', default='Register Traders') | e }}</h4>
-                                    <p class="text-muted">{{ t('agents_register_trader_desc', default='Onboard new traders and manage their accounts.') | e }}</p>
-                                    <a href="{{ url_for('users.signup', role='agent') | e }}" class="btn btn-primary btn-sm">{{ t('general_get_started', default='Get Started') | e }}</a>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div class="accordion-item">
-                    <h3 class="accordion-header" id="sharedToolsHeading">
-                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#sharedToolsCollapse" aria-expanded="false" aria-controls="sharedToolsCollapse">
-                            <i class="bi bi-share me-2"></i>{{ t('general_shared_tools', default='Shared Tools') | e }}
-                        </button>
-                    </h3>
-                    <div id="sharedToolsCollapse" class="accordion-collapse collapse" aria-labelledby="sharedToolsHeading" data-bs-parent="#toolsAccordion">
-                        <div class="accordion-body">
-                            <div class="tool-cards">
-                                <div class="tool-card tool-shared">
-                                    <h4><i class="bi bi-book me-2 text-primary"></i>{{ t('learning_hub_courses', default='Learning Hub') | e }}</h4>
-                                    <p class="text-muted">{{ t('learning_hub_dashboard', default='Access courses to improve your financial literacy.') | e }}</p>
-                                    <a href="{{ url_for('users.signup', role='personal') | e }}" class="btn btn-primary btn-sm">{{ t('general_get_started', default='Get Started') | e }}</a>
-                                </div>
-                                <div class="tool-card tool-shared">
-                                    <h4><i class="bi bi-calculator me-2 text-primary"></i>{{ t('general_your_taxation_tool', default='Your Taxation Tool') | e }}</h4>
-                                    <p class="text-muted">{{ t('general_taxation_desc', default='Calculate and manage your taxes with ease.') | e }}</p>
-                                    <a href="{{ url_for('users.signup', role='personal') | e }}" class="btn btn-primary btn-sm">{{ t('general_get_started', default='Get Started') | e }}</a>
-                                </div>
-                                <div class="tool-card tool-shared">
-                                    <h4><i class="bi bi-newspaper me-2 text-primary"></i>{{ t('general_finance_news', default='Finance News Highlights') | e }}</h4>
-                                    <p class="text-muted">{{ t('general_news_desc', default='Stay updated with the latest financial news and insights.') | e }}</p>
-                                    <a href="{{ url_for('news_bp.news_list') | e }}" class="btn btn-primary btn-sm">{{ t('general_get_started', default='Get Started') | e }}</a>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
+            {% else %}
+                <p class="text-muted text-center">{{ t('general_no_tools_available', default='No tools available at the moment.') | e }}</p>
+            {% endif %}
         </section>
 
         <!-- Why FiCore -->
@@ -440,6 +448,7 @@
         </section>
     {% endif %}
 </div>
+{% endblock %}
 
 {% block extra_scripts %}
 <script>
