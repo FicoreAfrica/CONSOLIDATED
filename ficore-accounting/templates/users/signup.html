@@ -44,7 +44,7 @@
                 <div class="form-group mb-3 position-relative">
                     <label class="form-label" for="password">{{ t('general_password', default='Password') | escape }}</label>
                     {{ form.password(class="form-control" + (" is-invalid" if form.password.errors else ""), required=True, id="password", **{"aria-describedby": "passwordFeedback" if form.password.errors else "", "aria-required": "true"}) | safe }}
-                    <span class="password-toggle" onclick="togglePassword('password', 'toggle-password-icon')" role="button" aria-label="{{ t('general_toggle_password_visibility', default='Toggle password visibility') | escape }}" tabindex="0">
+                    <span class="password-toggle" onclick="togglePassword('password', 'toggle-password-icon')" role="button" aria-label="{{ t('general_show_password', default='Show password') | escape }}" tabindex="0">
                         <i class="bi bi-eye" id="toggle-password-icon" aria-hidden="true"></i>
                     </span>
                     {% if form.password.errors %}
@@ -104,17 +104,11 @@
 function togglePassword(inputId, iconId) {
     const input = document.getElementById(inputId);
     const icon = document.getElementById(iconId);
-    if (input.type === 'password') {
-        input.type = 'text';
-        icon.classList.remove('bi-eye');
-        icon.classList.add('bi-eye-slash');
-        icon.setAttribute('aria-label', '{{ t("general_hide_password", default="Hide password") | escape }}');
-    } else {
-        input.type = 'password';
-        icon.classList.remove('bi-eye-slash');
-        icon.classList.add('bi-eye');
-        icon.setAttribute('aria-label', '{{ t("general_show_password", default="Show password") | escape }}');
-    }
+    const isPassword = input.type === 'password';
+    input.type = isPassword ? 'text' : 'password';
+    icon.classList.toggle('bi-eye', isPassword);
+    icon.classList.toggle('bi-eye-slash', !isPassword);
+    icon.parentElement.setAttribute('aria-label', isPassword ? '{{ t("general_hide_password", default="Hide password") | escape }}' : '{{ t("general_show_password", default="Show password") | escape }}');
 }
 
 function toggleAgentIdField() {
@@ -130,12 +124,10 @@ function toggleAgentIdField() {
     }
 }
 
-// Bootstrap form validation and agent ID field handling
 (function () {
     'use strict';
     const forms = document.querySelectorAll('.needs-validation');
     Array.from(forms).forEach(form => {
-        // Initialize agent ID field visibility based on role
         toggleAgentIdField();
         document.getElementById('role').addEventListener('change', toggleAgentIdField);
 
@@ -147,8 +139,8 @@ function toggleAgentIdField() {
             form.classList.add('was-validated');
         }, false);
 
-        // Ensure keyboard accessibility for password toggle
-        form.querySelector('.password-toggle').addEventListener('keydown', event => {
+        const passwordToggle = form.querySelector('.password-toggle');
+        passwordToggle.addEventListener('keydown', event => {
             if (event.key === 'Enter' || event.key === ' ') {
                 event.preventDefault();
                 togglePassword('password', 'toggle-password-icon');
