@@ -563,7 +563,7 @@ document.addEventListener('DOMContentLoaded', function() {
                                         <i class="bi bi-bell ${notification.read ? 'text-muted' : 'text-primary'}"></i>
                                     </div>
                                     <div class="notification-content">
-                                        <div class="notification-description text-truncate">{{ t(notification.message, default=notification.message) | e }}</div>
+                                        <div class="notification-description text-truncate">${notification.message}</div>
                                         <div class="notification-time text-muted">${formatTimeAgo(notification.timestamp)}</div>
                                     </div>
                                 </div>
@@ -585,6 +585,20 @@ document.addEventListener('DOMContentLoaded', function() {
                 })
                 .catch(error => {
                     console.error('Error loading notifications:', error);
+                    const notificationList = document.getElementById('notificationList');
+                    if (notificationList) {
+                        notificationList.innerHTML = `
+                            <div class="notification-item">
+                                <div class="notification-icon">
+                                    <i class="bi bi-bell text-muted"></i>
+                                </div>
+                                <div class="notification-content">
+                                    <div class="notification-description text-truncate">${translations.no_notifications}</div>
+                                    <div class="notification-time text-muted">${translations.check_back_later}</div>
+                                </div>
+                            </div>
+                        `;
+                    }
                 });
         }
 
