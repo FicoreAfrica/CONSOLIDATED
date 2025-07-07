@@ -106,29 +106,37 @@ def main():
     
     form = NetWorthForm(data=form_data)
     
-    log_tool_usage(
-        tool_name='net_worth',
-        user_id=current_user.id if current_user.is_authenticated else None,
-        session_id=session['sid'],
-        action='main_view',
-        mongo=get_mongo_db()
-    )
-
     try:
+        try:
+            log_tool_usage(
+                tool_name='net_worth',
+                user_id=current_user.id if current_user.is_authenticated else None,
+                session_id=session['sid'],
+                action='main_view',
+                mongo=get_mongo_db()
+            )
+        except Exception as e:
+            current_app.logger.error(f"Failed to log tool usage: {str(e)}", extra={'session_id': session.get('sid', 'unknown')})
+            flash(trans('net_worth_log_error', default='Error logging net worth activity. Please try again.'), 'warning')
+        
         filter_criteria = {} if is_admin() else {'user_id': current_user.id} if current_user.is_authenticated else {'session_id': session['sid']}
         
         if request.method == 'POST':
             action = request.form.get('action')
             
             if action == 'calculate_net_worth' and form.validate_on_submit():
-                log_tool_usage(
-                    tool_name='net_worth',
-                    user_id=current_user.id if current_user.is_authenticated else None,
-                    session_id=session['sid'],
-                    action='calculate_net_worth',
-                    mongo=get_mongo_db()
-                )
-
+                try:
+                    log_tool_usage(
+                        tool_name='net_worth',
+                        user_id=current_user.id if current_user.is_authenticated else None,
+                        session_id=session['sid'],
+                        action='calculate_net_worth',
+                        mongo=get_mongo_db()
+                    )
+                except Exception as e:
+                    current_app.logger.error(f"Failed to log calculate_net_worth action: {str(e)}", extra={'session_id': session.get('sid', 'unknown')})
+                    flash(trans('net_worth_log_error', default='Error logging net worth calculation. Continuing with calculation.'), 'warning')
+                
                 cash_savings = form.cash_savings.data
                 investments = form.investments.data
                 property = form.property.data
@@ -352,6 +360,18 @@ def main():
 def summary():
     """Return the latest net worth for the current user."""
     try:
+        try:
+            log_tool_usage(
+                tool_name='net_worth',
+                user_id=current_user.id if current_user.is_authenticated else None,
+                session_id=session.get('sid', 'unknown'),
+                action='summary_view',
+                mongo=get_mongo_db()
+            )
+        except Exception as e:
+            current_app.logger.error(f"Failed to log summary action: {str(e)}", extra={'session_id': session.get('sid', 'unknown')})
+            flash(trans('net_worth_log_error', default='Error logging summary view. Continuing with summary retrieval.'), 'warning')
+        
         filter_criteria = {} if is_admin() else {'user_id': current_user.id}
         net_worth_collection = get_mongo_db().net_worth_data
         
@@ -382,13 +402,18 @@ def unsubscribe(email):
     session.modified = True
     
     try:
-        log_tool_usage(
-            tool_name='net_worth',
-            user_id=current_user.id if current_user.is_authenticated else None,
-            session_id=session['sid'],
-            action='unsubscribe',
-            mongo=get_mongo_db()
-        )
+        try:
+            log_tool_usage(
+                tool_name='net_worth',
+                user_id=current_user.id if current_user.is_authenticated else None,
+                session_id=session['sid'],
+                action='unsubscribe',
+                mongo=get_mongo_db()
+            )
+        except Exception as e:
+            current_app.logger.error(f"Failed to log unsubscribe action: {str(e)}", extra={'session_id': session.get('sid', 'unknown')})
+            flash(trans('net_worth_log_error', default='Error logging unsubscribe action. Continuing with unsubscription.'), 'warning')
+        
         filter_criteria = {'email': email} if is_admin() else {'email': email, 'user_id': current_user.id} if current_user.is_authenticated else {'email': email, 'session_id': session['sid']}
         
         existing_record = get_mongo_db().net_worth_data.find_one(filter_criteria)
