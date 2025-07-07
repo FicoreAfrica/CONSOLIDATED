@@ -142,18 +142,6 @@
             {% endfor %}
         </div>
 
-        <!-- Bottom Navigation -->
-        <div class="bottom-nav d-md-none">
-            <div class="nav-container">
-                {% for item in bottom_nav_items %}
-                <a href="{{ item.url | default('#') | e }}" class="nav-item" aria-label="{{ t(item.label_key, default=item.label) | e }}">
-                    <i class="bi {{ item.icon | default('bi-circle') | e }} fs-4 text-primary"></i>
-                    <div class="nav-label">{{ t(item.label_key, default=item.label) | e }}</div>
-                </a>
-                {% endfor %}
-            </div>
-        </div>
-    {% else %}
         <!-- Welcome Section -->
         <div class="section-card text-center px-3 py-5">
             <div class="page-title mb-4">
