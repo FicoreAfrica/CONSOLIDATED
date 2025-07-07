@@ -20,7 +20,7 @@ import utils
 learning_hub_bp = Blueprint(
     'learning_hub',
     __name__,
-    template_folder='templates/personal/learning_hub',
+    template_folder='templates/personal/LEARNINGHUB',
     url_prefix='/learning_hub'
 )
 
@@ -775,7 +775,7 @@ def main():
         current_app.logger.info(f"Rendering main learning hub page", extra={'session_id': session.get('sid', 'no-session-id')})
         
         return render_template(
-            'personal/learning_hub/learning_hub_main.html',
+            'personal/LEARNINGHUB/learning_hub_main.html',
             courses=courses,
             progress=progress,
             progress_summary=progress_summary,
@@ -802,7 +802,7 @@ def main():
         tools = utils.PERSONAL_TOOLS if current_user.role == 'personal' else utils.ALL_TOOLS
         bottom_nav_items = utils.PERSONAL_NAV if current_user.role == 'personal' else utils.ADMIN_NAV
         return render_template(
-            'personal/learning_hub/learning_hub_main.html',
+            'personal/LEARNINGHUB/learning_hub_main.html',
             courses={},
             progress={},
             progress_summary=[],
@@ -1335,7 +1335,7 @@ def handle_not_found(e):
     current_app.logger.error(f"404 error on {request.path}: {str(e)}", extra={'session_id': session.get('sid', 'no-session-id')})
     flash(trans("learning_hub_not_found", default="The requested page was not found. Please check the URL or return to the main page.", lang=lang), "danger")
     return render_template(
-        'personal/learning_hub/learning_hub_main.html',
+        'personal/LEARNINGHUB/learning_hub_main.html',
         courses={},
         progress={},
         progress_summary=[],
@@ -1370,7 +1370,7 @@ def handle_csrf_error(e):
     current_app.logger.error(f"CSRF error on {request.path}: {e.description}", extra={'session_id': session.get('sid', 'no-session-id')})
     flash(trans("learning_hub_csrf_error", default="Form submission failed due to a missing security token. Please refresh and try again.", lang=lang), "danger")
     return render_template(
-        'personal/learning_hub/learning_hub_main.html',
+        'personal/LEARNINGHUB/learning_hub_main.html',
         courses={},
         progress={},
         progress_summary=[],
