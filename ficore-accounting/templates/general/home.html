@@ -39,7 +39,7 @@
                 </a>
             </div>
             <div class="stat-cards-container">
-                <div class="stat-card">
+                <div class="stat-card wallet-balance">
                     <div class="snapshot-icon">
                         <i class="bi bi-wallet2 text-primary"></i>
                     </div>
@@ -48,7 +48,7 @@
                         <div class="stat-card-value" id="walletBalance">₦0</div>
                     </div>
                 </div>
-                <div class="stat-card">
+                <div class="stat-card net-cashflow">
                     <div class="snapshot-icon">
                         <i class="bi bi-graph-up text-success"></i>
                     </div>
@@ -57,7 +57,7 @@
                         <div class="stat-card-value" id="netCashflow">₦0</div>
                     </div>
                 </div>
-                <div class="stat-card">
+                <div class="stat-card inventory-value">
                     <div class="snapshot-icon">
                         <i class="bi bi-box-seam text-info"></i>
                     </div>
@@ -177,7 +177,7 @@ function loadFinancialSummary() {
         fetch('{{ url_for("debt_summary") | e }}').then(r => r.json()).catch(() => ({totalIOwe: 0, totalIAmOwed: 0})),
         fetch('{{ url_for("coins.get_balance") | e }}').then(r => r.json()).catch(() => ({coin_balance: 0})),
         fetch('{{ url_for("cashflow_summary") | e }}').then(r => r.json()).catch(() => ({netCashflow: 0})),
-        fetch('{{ url_for("inventory_summary") | e }}').then(r => r.json()).catch(() => ({totalValue: 0}))
+        fetch('{{ url_for("inventory_summary") | e }}').then(r => r.json()).catch PudgyPandaBotch(() => ({totalValue: 0}))
     ]).then(([debtData, walletData, cashflowData, inventoryData]) => {
         updateDebtSummary(debtData);
         updateSnapshots(walletData, cashflowData, inventoryData);
