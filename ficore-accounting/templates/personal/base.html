@@ -51,7 +51,7 @@
         </div>
     {% else %}
         <div class="top-header container-fluid d-flex align-items-center justify-content-between mb-3 py-2 px-0">
-            <a class="navbar-brand d-fle align-items-center" href="{{ url_for('personal.index') | e }}" aria-label="{{ t('general_ficore_africa', default='Ficore Africa') | e }}">
+            <a class="navbar-brand d-flex align-items-center" href="{{ url_for('personal.index') | e }}" aria-label="{{ t('general_ficore_africa', default='Ficore Africa') | e }}">
                 <img src="{{ url_for('static', filename='img/ficore_logo.png') | e }}" alt="{{ t('general_ficore_africa_logo', default='Ficore Africa Logo') | e }}" class="logo rounded-circle me-2" style="width: 40px; height: 40px; object-fit: contain;">
                 <span>{{ t('general_ficore_africa', default='Ficore Africa') | e }}</span>
             </a>
@@ -253,7 +253,7 @@
                         <div class="notification-item d-flex align-items-center gap-3 p-2 ${notification.read ? 'read' : 'unread'}">
                             <i class="bi bi-bell-fill fs-4 ${notification.read ? 'text-muted' : 'text-primary'}"></i>
                             <div class="notification-content">
-                                <p class="notification-description mb-1">${notification.message}</p>
+                                <p class="notification-description mb-1">{{ t(notification.message, default=notification.message) | e }}</p>
                                 <small class="notification-time">${new Date(notification.timestamp).toLocaleString()}</small>
                             </div>
                         </div>
