@@ -604,7 +604,7 @@ document.addEventListener('DOMContentLoaded', function() {
                                         <div class="activity-description text-truncate">${activity.description}</div>
                                         <div class="activity-time text-muted">${formatTimeAgo(activity.timestamp)}</div>
                                     </div>
-                                    ${activity.amount ? `<div class="activity-amount text-nowrap">${format_currency(activity.amount)}</div>` : ''}
+                                    ${activity.details && activity.details.amount ? `<div class="activity-amount text-nowrap">${format_currency(activity.details.amount)}</div>` : ''}
                                 </div>
                             `).join('');
                         } else {
@@ -629,24 +629,28 @@ document.addEventListener('DOMContentLoaded', function() {
 
         function getActivityIcon(type) {
             const icons = {
-                'budget_added': 'bi-plus-circle',
-                'bill_added': 'bi-receipt',
+                'budget': 'bi-plus-circle',
+                'bill': 'bi-receipt',
                 'bill_paid': 'bi-check-circle',
-                'savings_added': 'bi-piggy-bank',
-                'goal_updated': 'bi-flag',
-                'financial_health_improved': 'bi-heartbeat'
+                'emergency_fund': 'bi-piggy-bank',
+                'net_worth': 'bi-wallet',
+                'financial_health': 'bi-heartbeat',
+                'quiz': 'bi-question-circle',
+                'learning_hub': 'bi-book'
             };
             return icons[type] || 'bi-circle';
         }
 
         function getActivityColor(type) {
             const colors = {
-                'budget_added': 'text-primary',
-                'bill_added': 'text-warning',
+                'budget': 'text-primary',
+                'bill': 'text-warning',
                 'bill_paid': 'text-success',
-                'savings_added': 'text-info',
-                'goal_updated': 'text-primary',
-                'financial_health_improved': 'text-success'
+                'emergency_fund': 'text-info',
+                'net_worth': 'text-primary',
+                'financial_health': 'text-success',
+                'quiz': 'text-info',
+                'learning_hub': 'text-primary'
             };
             return colors[type] || 'text-muted';
         }
