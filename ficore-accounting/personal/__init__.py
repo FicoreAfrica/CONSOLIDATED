@@ -75,6 +75,7 @@ def notification_count():
         return jsonify({'count': count})
     except Exception as e:
         current_app.logger.error(f"Error fetching notification count: {str(e)}", extra={'session_id': session.get('sid', 'unknown')})
+        flash(trans('general_something_went_wrong', default='Failed to fetch notification count'), 'warning')
         return jsonify({'error': trans('general_something_went_wrong', default='Failed to fetch notification count')}), 500
 
 @personal_bp.route('/notifications')
@@ -103,6 +104,7 @@ def notifications():
         return jsonify(result)
     except Exception as e:
         current_app.logger.error(f"Error fetching notifications: {str(e)}", extra={'session_id': session.get('sid', 'unknown')})
+        flash(trans('general_something_went_wrong', default='Failed to fetch notifications'), 'warning')
         return jsonify({'error': trans('general_something_went_wrong', default='Failed to fetch notifications')}), 500
 
 @personal_bp.route('/recent_activity')
@@ -217,4 +219,5 @@ def recent_activity():
         return jsonify(activities)
     except Exception as e:
         current_app.logger.error(f"Error in personal.recent_activity: {str(e)}", extra={'session_id': session.get('sid', 'unknown')})
+        flash(trans('general_something_went_wrong', default='Failed to fetch recent activity'), 'warning')
         return jsonify({'error': trans('general_something_went_wrong', default='Failed to fetch recent activity')}), 500
