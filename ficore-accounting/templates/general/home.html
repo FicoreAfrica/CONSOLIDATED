@@ -163,7 +163,7 @@
         </div>
 
         <!-- Navigation Bar -->
-        <div class="bottom-nav fixed-bottom bg-white shadow-sm p-3 d-md-none">
+        <div class="bottom-nav bg-white shadow-sm p-3 d-md-none">
             <div class="d-flex justify-content-around align-items-center">
                 {% for item in bottom_nav_items %}
                 <a href="{{ item.url | default('#') | e }}" class="nav-item text-center text-decoration-none" aria-label="{{ t(item.label_key, default=item.label) | e }}">
