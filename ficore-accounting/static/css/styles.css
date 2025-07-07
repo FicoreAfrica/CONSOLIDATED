@@ -127,8 +127,8 @@ html, body {
     color: var(--text-color);
     background-color: var(--background-main);
     position: static !important;
-    overflow-x: hidden !important; /* Prevent horizontal scroll */
-    box-sizing: border-box; /* Ensure global box-sizing */
+    overflow-x: hidden !important;
+    box-sizing: border-box;
 }
 
 body {
@@ -139,11 +139,11 @@ body {
     font-weight: 500;
     line-height: 1.65;
     letter-spacing: -0.01em;
-    padding-bottom: 70px; /* Prevent nav overlap */
+    padding-bottom: var(--bottom-nav-height);
 }
 
 .page-container {
-    padding: 16px 0; /* Remove horizontal padding for edge-to-edge content */
+    padding: 16px 0;
     box-sizing: border-box;
     max-width: 100vw;
     overflow-x: hidden;
@@ -273,7 +273,7 @@ h4 { font-size: 1rem; }
     display: flex;
     flex-direction: column;
     gap: 16px;
-    padding: 0 16px; /* Keep vertical padding, adjust if needed */
+    padding: 0 16px;
     box-sizing: border-box;
     overflow-x: hidden;
 }
@@ -290,7 +290,7 @@ h4 { font-size: 1rem; }
 
 /* Financial Summary */
 .financial-snapshots {
-    margin: 1.5rem 0; /* Remove side margins for edge-to-edge */
+    margin: 1.5rem 0;
     padding: 1.5rem;
     border-radius: 10px;
     box-shadow: var(--card-shadow);
@@ -305,9 +305,9 @@ h4 { font-size: 1rem; }
 }
 
 .summary-cards {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 12px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 16px;
     margin-bottom: 16px;
     padding: 1rem;
     overflow-x: hidden;
@@ -319,10 +319,11 @@ h4 { font-size: 1rem; }
     padding: 16px;
     text-align: center;
     border: 1px solid var(--card-border);
-    box-shadow: var(--card-shadow);
+    box-shadow: 0 2px 6px rgba(0,0,0,0.08);
     transition: var(--transition-base);
     overflow: hidden;
-    width: 100%; /* Ensure full width */
+    flex: 1;
+    min-width: 0;
     box-sizing: border-box;
 }
 
@@ -457,7 +458,7 @@ h4 { font-size: 1rem; }
     display: grid;
     grid-template-columns: repeat(2, 1fr);
     gap: 16px;
-    margin: 1.5rem 0; /* Remove side margins for edge-to-edge */
+    margin: 1.5rem 0;
     padding: 1.5rem;
     background: var(--gradient-primary);
     border-radius: 10px;
@@ -465,7 +466,7 @@ h4 { font-size: 1rem; }
     overflow-x: hidden;
     transition: var(--transition-base);
     box-sizing: border-box;
-    width: 100%; /* Ensure full width */
+    width: 100%;
 }
 
 .dark-mode .quick-actions {
@@ -480,8 +481,8 @@ h4 { font-size: 1rem; }
     border: 1px solid var(--card-border);
     box-shadow: var(--card-shadow);
     min-height: 180px;
-    width: 100%; /* Full width for cards */
-    margin: 0; /* Remove any internal margins */
+    width: 100%;
+    margin: 0;
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -569,7 +570,7 @@ h4 { font-size: 1rem; }
 
 /* Recent Activity */
 .recent-activity {
-    margin: 1.5rem 0; /* Remove side margins for edge-to-edge */
+    margin: 1.5rem 0;
     padding: 1.5rem;
     background: var(--gradient-primary);
     border-radius: 10px;
@@ -577,7 +578,7 @@ h4 { font-size: 1rem; }
     overflow-x: hidden;
     transition: var(--transition-base);
     box-sizing: border-box;
-    width: 100%; /* Ensure full width */
+    width: 100%;
 }
 
 .dark-mode .recent-activity {
@@ -595,7 +596,7 @@ h4 { font-size: 1rem; }
     transition: var(--transition-base);
     overflow: hidden;
     box-sizing: border-box;
-    margin-left: 0; /* Remove any internal margins */
+    margin-left: 0;
     margin-right: 0;
 }
 
@@ -682,7 +683,7 @@ h4 { font-size: 1rem; }
     display: flex;
     flex-direction: column;
     gap: 16px;
-    padding: 0 16px; /* Keep vertical padding, adjust if needed */
+    padding: 0 16px;
     box-sizing: border-box;
     overflow-x: hidden;
 }
@@ -722,7 +723,7 @@ h4 { font-size: 1rem; }
 
 /* Navigation Cards */
 .navigation-cards {
-    margin: 1.5rem 0; /* Remove side margins for edge-to-edge */
+    margin: 1.5rem 0;
     padding: 1.5rem;
     background: var(--gradient-primary);
     border-radius: 10px;
@@ -819,18 +820,63 @@ h4 { font-size: 1rem; }
     text-decoration: none;
 }
 
+/* Tools Section (Explore Features) */
+.tool-cards {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 16px;
+    padding: 1rem;
+}
+
+.tool-card {
+    background: var(--card-bg);
+    border-radius: 12px;
+    padding: 16px;
+    border: 1px solid var(--card-border);
+    box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+    min-height: 180px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: space-between;
+    text-align: center;
+    transition: var(--transition-base);
+    overflow: hidden;
+    box-sizing: border-box;
+}
+
+.tool-card:hover {
+    transform: translateY(-6px);
+    box-shadow: var(--card-shadow-hover);
+    filter: brightness(1.08);
+}
+
+.tool-card h4 {
+    font-size: clamp(0.875rem, 2vw, 1rem);
+    font-weight: 600;
+    color: var(--text-color);
+    margin-bottom: 0.5rem;
+}
+
+.tool-card p {
+    font-size: clamp(0.75rem, 1.5vw, 0.875rem);
+    color: var(--text-muted);
+    margin: 0.5rem 0;
+}
+
 /* Bottom Navigation */
 .bottom-nav {
     position: fixed;
     bottom: 0;
-    height: 60px;
+    height: var(--bottom-nav-height);
     width: 100%;
-    box-shadow: 0 -1px 5px rgba(0,0,0,0.1);
+    box-shadow: 0 -2px 6px rgba(0,0,0,0.1);
     z-index: 1000;
     background: var(--card-bg);
     border-top: 1px solid var(--card-border);
     display: flex;
     align-items: center;
+    justify-content: center;
 }
 
 .dark-mode .bottom-nav {
@@ -844,7 +890,7 @@ h4 { font-size: 1rem; }
     justify-content: space-around;
     align-items: center;
     max-width: 600px;
-    margin: 0 auto;
+    width: 100%;
     padding: 0.5rem 0;
 }
 
@@ -853,12 +899,13 @@ h4 { font-size: 1rem; }
     flex-direction: column;
     align-items: center;
     text-align: center;
-    font-size: 0.75rem;
+    font-size: clamp(0.75rem, 1.5vw, 0.8125rem);
     font-weight: 600;
-    color: #1e293b;
+    color: var(--text-color);
     text-decoration: none;
-    padding: 0.5rem 0;
-    min-width: 3rem;
+    padding: 0.5rem 1rem;
+    border-radius: 8px;
+    min-width: 70px;
     transition: var(--transition-base);
 }
 
@@ -877,7 +924,8 @@ h4 { font-size: 1rem; }
 }
 
 .bottom-nav .nav-item .bi {
-    font-size: 1.25rem;
+    font-size: 1.5rem;
+    margin-bottom: 0.25rem;
 }
 
 .bottom-nav .nav-label {
@@ -885,6 +933,23 @@ h4 { font-size: 1rem; }
     text-overflow: ellipsis;
     overflow: hidden;
     white-space: nowrap;
+}
+
+/* Bottom Navigation Icons for Trader Role */
+.bottom-nav .nav-item[data-label="Home"] .bi::before {
+    content: "\f2f2"; /* Bootstrap Icons: bi-house */
+}
+
+.bottom-nav .nav-item[data-label="Debtors"] .bi::before {
+    content: "\f4e5"; /* Bootstrap Icons: bi-person-dash */
+}
+
+.bottom-nav .nav-item[data-label="Inventory"] .bi::before {
+    content: "\f2b2"; /* Bootstrap Icons: bi-box-seam */
+}
+
+.bottom-nav .nav-item[data-label="Profile"] .bi::before {
+    content: "\f4f8"; /* Bootstrap Icons: bi-person-circle */
 }
 
 /* Navbar */
@@ -978,7 +1043,7 @@ h4 { font-size: 1rem; }
 
 .btn-link:hover, .btn-link:focus {
     color: var(--accent-blue);
-    background: rgba(255, dire255, 255, 0.1);
+    background: rgba(255, 255, 255, 0.1);
 }
 
 .dark-mode .btn-link:hover, .dark-mode .btn-link:focus {
@@ -1497,7 +1562,7 @@ h2.card-title {
         padding-bottom: 0;
     }
 
-    .card, .summary-card, .stat-card, .quick-action-card, .nav-card, .recent-activity-card, .snapshot-card {
+    .card, .summary-card, .stat-card, .quick-action-card, .nav-card, .recent-activity-card, .snapshot-card, .tool-card {
         border: 1px solid #000000;
         box-shadow: none;
     }
@@ -1614,7 +1679,7 @@ h2.card-title {
         padding: 1.25rem;
     }
 
-    .stat-card, .quick-action-card, .nav-card, .snapshot-card {
+    .stat-card, .quick-action-card, .nav-card, .snapshot-card, .tool-card {
         padding: 1.5rem;
         min-height: 200px;
     }
@@ -1648,23 +1713,32 @@ h2.card-title {
         padding: 0.25rem 0.5rem;
     }
 
-    .summary-cards, .stat-cards-container, .quick-actions, .navigation-cards .row {
+    .summary-cards, .stat-cards-container, .quick-actions, .navigation-cards .row, .tool-cards {
         grid-template-columns: repeat(2, 1fr);
         gap: 1.25rem;
     }
 }
 
 @media (max-width: 576px) {
-    .summary-cards, .stat-cards-container, .quick-actions, .navigation-cards .row {
-        grid-template-columns: 1fr; /* Single column for full-width cards */
-        gap: 0; /* Remove gaps to eliminate side spacing */
+    .summary-cards {
+        flex-direction: column;
+        gap: 12px;
     }
 
-    .stat-card, .quick-action-card, .nav-card, .snapshot-card {
+    .summary-card {
+        width: 100%;
+    }
+
+    .stat-cards-container, .quick-actions, .navigation-cards .row, .tool-cards {
+        grid-template-columns: 1fr;
+        gap: 0;
+    }
+
+    .stat-card, .quick-action-card, .nav-card, .snapshot-card, .tool-card {
         max-width: 100%;
         padding: 1.5rem;
         min-height: 200px;
-        margin-left: 0; /* Ensure no side margins */
+        margin-left: 0;
         margin-right: 0;
     }
 
