@@ -4,23 +4,6 @@
 {% block content %}
 <div class="page-container">
     {% if current_user.is_authenticated %}
-        <!-- Header Section -->
-        <div class="top-header">
-            <h2 class="welcome-text">Hello, {{ current_user.firstname | default('User') }}!</h2>
-            <div class="header-actions">
-                <div class="lang-selector">
-                    <span class="fw-bold">{{ g.get('lang', 'EN')|upper }}</span>
-                    <select class="form-select form-select-sm d-inline-block w-auto ms-2" onchange="window.location.href='/set-language?lang='+this.value">
-                        <option value="en" {% if g.lang == 'en' %}selected{% endif %}>EN</option>
-                        <option value="ha" {% if g.lang == 'ha' %}selected{% endif %}>HA</option>
-                    </select>
-                </div>
-                <a href="#" class="profile-icon" aria-label="Profile">
-                    <i class="bi bi-person-circle fs-3 text-primary"></i>
-                </a>
-            </div>
-        </div>
-
         <!-- Financial Summary -->
         <div class="section-card financial-snapshots">
             <h3 class="section-title">{{ t('general_snapshots', default='Financial Snapshots') | e }}</h3>
