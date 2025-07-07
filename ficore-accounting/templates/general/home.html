@@ -1,6 +1,5 @@
 {% extends 'base.html' %}
 {% block title %}{{ t('general_business_home', default='Business & Agent Home') | e }}{% endblock %}
-
 {% block content %}
 <div class="page-container">
     {% if current_user.is_authenticated %}
@@ -71,7 +70,6 @@
                 </div>
             </div>
         </div>
-
         <!-- Recent Activity -->
         <div class="section-card recent-activity">
             <div class="d-flex justify-content-between align-items-center mb-4">
@@ -94,7 +92,6 @@
                 </div>
             </div>
         </div>
-
         <!-- Quick Actions -->
         <div class="section-card quick-actions">
             <h3 class="section-title">{{ t('general_quick_actions', default='Quick Actions') | e }}</h3>
@@ -108,7 +105,6 @@
             </a>
             {% endfor %}
         </div>
-
         <!-- Explore Features -->
         <div class="section-card explore-section">
             <h3 class="section-title">{{ t('general_explore_features', default='Explore Features') | e }}</h3>
@@ -124,42 +120,6 @@
             </a>
             {% endfor %}
         </div>
-
-        <!-- Welcome Section -->
-        <div class="section-card text-center px-3 py-5">
-            <div class="page-title mb-4">
-                <h1 class="fw-bold fs-2">{{ t('general_business_home', default='Welcome to Ficore Business & Agent Tools') | e }}</h1>
-                <p class="subtext text-muted fs-5">{{ t('general_business_welcome_desc', default='Explore tools designed for business owners and agents to streamline financial management, track debtors, manage inventory, and more.') | e }}</p>
-            </div>
-        </div>
-
-        <!-- Tools Section -->
-        <div class="section-card explore-section">
-            <h2 class="section-title">{{ t('general_our_tools', default='Our Business & Agent Tools') | e }}</h2>
-            <p class="text-center mb-4 text-muted fs-5">{{ t('general_business_tools_desc', default='Discover powerful tools to manage your business or support traders as an agent.') | e }}</p>
-            {% for tool in explore_features_for_template %}
-            <a href="{{ tool.url | default('#') | e }}" class="explore-card text-decoration-none" aria-label="{{ t(tool.label_key, default=tool.label) | e }}">
-                <div class="explore-card-icon">
-                    <i class="bi {{ tool.icon | default('bi-circle') | e }} fs-3 text-primary"></i>
-                </div>
-                <div class="explore-card-text">
-                    <h4 class="text-truncate">{{ t(tool.label_key, default=tool.label) | e }}</h4>
-                    <p class="text-muted">{{ t(tool.description_key, default=tool.description) | e }}</p>
-                </div>
-            </a>
-            {% endfor %}
-        </div>
-
-        <!-- CTA Section -->
-        <div class="section-card cta-section text-center">
-            <h3 class="section-title">{{ t('general_ready_to_start', default='Ready to Take Control of Your Finances?') | e }}</h3>
-            <p class="text-muted fs-5">{{ t('general_business_signup_prompt', default='Sign up as a business owner or agent to access powerful financial management tools.') | e }}</p>
-            <div class="d-flex justify-content-center gap-3 flex-wrap">
-                <a href="{{ url_for('users.signup', role='trader') | e }}" class="btn btn-primary btn-sm px-4">{{ t('general_signup_business', default='Business Sign Up') | e }}</a>
-                <a href="{{ url_for('users.signup', role='agent') | e }}" class="btn btn-primary btn-sm px-4">{{ t('general_signup_agent', default='Agent Sign Up') | e }}</a>
-            </div>
-        </div>
-    {% endif %}
 </div>
 {% endblock %}
 
