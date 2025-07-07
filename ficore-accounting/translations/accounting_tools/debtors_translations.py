@@ -10,6 +10,7 @@ DEBTORS_TRANSLATIONS = {
         'debtors_edit_debtor': 'Edit Debtor',
         'debtors_title': 'Debtors',
         'debtors_subtitle': 'Manage your debtors',
+        'debtors_dashboard_desc': 'Manage accounts receivable from debtors.',
         'debtors_create_title': 'Create New Debtor',
         'debtors_no_records': 'No debtor records found',
         'debtors_create_first': 'Create your first debtor',
@@ -162,7 +163,7 @@ DEBTORS_TRANSLATIONS = {
         'debtors_what_they_owe_you': 'Abin da Suke Binka',
         'debtors_what_they_owe_you_subtext': 'Bi diddigin basusukan da ake bin ka',
         'debtors_no_what_they_owe_you': 'Babu basusuka da ake bin ka',
-
+        'debtors_dashboard_desc': 'Duba bayanan wadanda kuke bi bashi.',
         # Debtors
         'debtors_amount_owed': 'Adadin Bashi',
     }
