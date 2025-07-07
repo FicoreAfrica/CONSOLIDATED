@@ -1,4 +1,26 @@
 document.addEventListener('DOMContentLoaded', function() {
+    // Language Update for PWA Manifest
+    const langSelect = document.querySelector('select[onchange*="set-language"]');
+    if (langSelect) {
+        langSelect.addEventListener('change', function() {
+            const lang = this.value;
+            const dir = lang === 'ha' ? 'rtl' : 'ltr';
+            // Update manifest dynamically
+            const manifestLink = document.querySelector('link[rel="manifest"]');
+            if (manifestLink) {
+                fetch('/static/manifest.json')
+                    .then(response => response.json())
+                    .then(manifest => {
+                        manifest.lang = lang;
+                        manifest.dir = dir;
+                        const blob = new Blob([JSON.stringify(manifest)], { type: 'application/json' });
+                        manifestLink.href = URL.createObjectURL(blob);
+                    })
+                    .catch(error => console.warn('Failed to update manifest:', error));
+            }
+        });
+    }
+
     // Accordion Button Scroll Handler
     const accordionButtons = document.querySelectorAll('.accordion-button');
     accordionButtons.forEach(button => {
