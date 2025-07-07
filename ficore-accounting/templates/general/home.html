@@ -38,6 +38,7 @@
                     {{ t('general_details', default='Details') | e }}
                 </a>
             </div>
+            <p class="spacer">Overview </p>
             <div class="stat-cards-container">
                 <div class="stat-card wallet-balance">
                     <div class="snapshot-icon">
@@ -113,6 +114,12 @@
         </div>
     {% endif %}
 </div>
+
+<style>
+.spacer {
+    margin: 1.5rem 0;
+}
+</style>
 {% endblock %}
 
 {% block extra_scripts %}
