@@ -118,14 +118,18 @@ def main():
     form = FinancialHealthForm(data=form_data)
     
     current_app.logger.info(f"Starting main for session {session['sid']} {'(anonymous)' if session.get('is_anonymous') else ''}", extra={'session_id': session['sid']})
-    log_tool_usage(
-        tool_name='financial_health',
-        user_id=current_user.id if current_user.is_authenticated else None,
-        session_id=session['sid'],
-        action='main_view',
-        mongo=get_mongo_db()
-    )
-
+    try:
+        log_tool_usage(
+            tool_name='financial_health',
+            user_id=current_user.id if current_user.is_authenticated else None,
+            session_id=session['sid'],
+            action='main_view',
+            mongo=get_mongo_db()
+        )
+    except Exception as e:
+        current_app.logger.error(f"Failed to log tool usage: {str(e)}", extra={'session_id': session.get('sid', 'unknown')})
+        flash(trans('financial_health_log_error', default='Error logging financial health activity. Please try again.'), 'warning')
+    
     try:
         filter_criteria = {} if is_admin() else {'user_id': current_user.id} if current_user.is_authenticated else {'session_id': session['sid']}
         
@@ -133,14 +137,18 @@ def main():
             action = request.form.get('action')
             
             if action == 'calculate_score' and form.validate_on_submit():
-                log_tool_usage(
-                    tool_name='financial_health',
-                    user_id=current_user.id if current_user.is_authenticated else None,
-                    session_id=session['sid'],
-                    action='calculate_score',
-                    mongo=get_mongo_db()
-                )
-
+                try:
+                    log_tool_usage(
+                        tool_name='financial_health',
+                        user_id=current_user.id if current_user.is_authenticated else None,
+                        session_id=session['sid'],
+                        action='calculate_score',
+                        mongo=get_mongo_db()
+                    )
+                except Exception as e:
+                    current_app.logger.error(f"Failed to log financial health score calculation: {str(e)}", extra={'session_id': session.get('sid', 'unknown')})
+                    flash(trans('financial_health_log_error', default='Error logging financial health score calculation. Continuing with submission.'), 'warning')
+                
                 debt = float(form.debt.data) if form.debt.data else 0
                 interest_rate = float(form.interest_rate.data) if form.interest_rate.data else 0
                 income = form.income.data
@@ -427,13 +435,18 @@ def unsubscribe(email):
     session.modified = True
     
     try:
-        log_tool_usage(
-            tool_name='financial_health',
-            user_id=current_user.id if current_user.is_authenticated else None,
-            session_id=session['sid'],
-            action='unsubscribe',
-            mongo=get_mongo_db()
-        )
+        try:
+            log_tool_usage(
+                tool_name='financial_health',
+                user_id=current_user.id if current_user.is_authenticated else None,
+                session_id=session['sid'],
+                action='unsubscribe',
+                mongo=get_mongo_db()
+            )
+        except Exception as e:
+            current_app.logger.error(f"Failed to log unsubscribe action: {str(e)}", extra={'session_id': session.get('sid', 'unknown')})
+            flash(trans('financial_health_log_error', default='Error logging unsubscribe action. Continuing with unsubscription.'), 'warning')
+        
         filter_kwargs = {'email': email} if is_admin() else {'email': email, 'user_id': current_user.id} if current_user.is_authenticated else {'email': email, 'session_id': session['sid']}
         result = get_mongo_collection().update_many(
             filter_kwargs,
