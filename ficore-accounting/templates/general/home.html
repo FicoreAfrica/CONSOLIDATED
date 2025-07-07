@@ -57,15 +57,6 @@
                         <div class="stat-card-value" id="netCashflow">₦0</div>
                     </div>
                 </div>
-                <div class="stat-card inventory-value">
-                    <div class="snapshot-icon">
-                        <i class="bi bi-box-seam text-info"></i>
-                    </div>
-                    <div class="snapshot-info">
-                        <div class="snapshot-label fw-bold text-truncate">{{ t('general_inventory_value', default='Inventory') | e }}</div>
-                        <div class="stat-card-value" id="inventoryValue">₦0</div>
-                    </div>
-                </div>
             </div>
         </div>
         <!-- Recent Activity -->
@@ -176,11 +167,10 @@ function loadFinancialSummary() {
     Promise.all([
         fetch('{{ url_for("debt_summary") | e }}').then(r => r.json()).catch(() => ({totalIOwe: 0, totalIAmOwed: 0})),
         fetch('{{ url_for("coins.get_balance") | e }}').then(r => r.json()).catch(() => ({coin_balance: 0})),
-        fetch('{{ url_for("cashflow_summary") | e }}').then(r => r.json()).catch(() => ({netCashflow: 0})),
-        fetch('{{ url_for("inventory_summary") | e }}').then(r => r.json()).catch PudgyPandaBotch(() => ({totalValue: 0}))
-    ]).then(([debtData, walletData, cashflowData, inventoryData]) => {
+        fetch('{{ url_for("cashflow_summary") | e }}').then(r => r.json()).catch(() => ({netCashflow: 0}))
+    ]).then(([debtData, walletData, cashflowData]) => {
         updateDebtSummary(debtData);
-        updateSnapshots(walletData, cashflowData, inventoryData);
+        updateSnapshots(walletData, cashflowData);
     }).catch(error => {
         console.error('Error loading financial data:', error);
     });
@@ -218,13 +208,11 @@ function updateDebtSummary(data) {
     }
 }
 
-function updateSnapshots(walletData, cashflowData, inventoryData) {
+function updateSnapshots(walletData, cashflowData) {
     document.getElementById('walletBalance').textContent = '₦' + format_currency(walletData.coin_balance || 0);
     document.getElementById('walletBalance').dataset.originalText = '₦' + format_currency(walletData.coin_balance || 0);
     document.getElementById('netCashflow').textContent = '₦' + format_currency(cashflowData.netCashflow || 0);
     document.getElementById('netCashflow').dataset.originalText = '₦' + format_currency(cashflowData.netCashflow || 0);
-    document.getElementById('inventoryValue').textContent = '₦' + format_currency(inventoryData.totalValue || 0);
-    document.getElementById('inventoryValue').dataset.originalText = '₦' + format_currency(inventoryData.totalValue || 0);
 }
 
 function loadRecentActivity() {
@@ -333,6 +321,7 @@ window.toggleAmountVisibility = function() {
 function format_currency(value) {
     if (!value && value !== 0) return '';
     value = typeof value === "string" ? parseFloat(value) : value;
+    if (isNaN(value)) return '0';
     return value.toLocaleString('en-NG', {maximumFractionDigits: 0});
 }
 {% endif %}
