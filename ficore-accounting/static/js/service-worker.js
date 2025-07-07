@@ -10,7 +10,7 @@ const urlsToCache = [
     '/static/img/favicon-16x16.png',
     '/static/img/default_profile.png',
     '/general/home',
-    '/set-language' // Added for language switching
+    '/set-language'
 ];
 
 const networkFirstRoutes = [
@@ -20,7 +20,7 @@ const networkFirstRoutes = [
     '/users/forgot_password',
     '/users/reset_password',
     '/users/verify_2fa',
-    '/api/notifications/count' // Added for dynamic notifications
+    '/api/notifications/count'
 ];
 
 self.addEventListener('install', event => {
