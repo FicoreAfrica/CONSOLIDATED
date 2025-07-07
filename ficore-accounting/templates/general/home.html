@@ -9,70 +9,68 @@
             <div class="summary-cards">
                 <div class="summary-card debt-card">
                     <div class="card-header d-flex align-items-center gap-3">
-                        <i class="bi bi-arrow-up-circle text-danger fs-3"></i>
-                        <span class="fw-bold fs-5">{{ t('general_i_owe', default='I Owe') | e }}</span>
+                        <i class="bi bi-arrow-up-circle card-icon text-danger"></i>
+                        <span class="fw-bold">{{ t('general_i_owe', default='I Owe') | e }}</span>
                     </div>
-                    <div class="card-amount text-danger mt-3 fs-4" id="totalIOwe">
+                    <div class="card-amount text-danger mt-3" id="totalIOwe">
                         <span class="currency-symbol">₦</span>
                         <span class="amount-value" data-amount="0">0</span>
                     </div>
                 </div>
                 <div class="summary-card credit-card">
                     <div class="card-header d-flex align-items-center gap-3">
-                        <i class="bi bi-arrow-down-circle text-success fs-3"></i>
-                        <span class="fw-bold fs-5">{{ t('general_i_am_owed', default='I Am Owed') | e }}</span>
+                        <i class="bi bi-arrow-down-circle card-icon text-success"></i>
+                        <span class="fw-bold">{{ t('general_i_am_owed', default='I Am Owed') | e }}</span>
                     </div>
-                    <div class="card-amount text-success mt-3 fs-4" id="totalIAmOwed">
+                    <div class="card-amount text-success mt-3" id="totalIAmOwed">
                         <span class="currency-symbol">₦</span>
                         <span class="amount-value" data-amount="0">0</span>
                     </div>
                 </div>
             </div>
             <div class="net-position-card">
-                <div class="d-flex justify-content-between align-items-center">
-                    <div class="net-position-info">
-                        <span class="net-label fw-bold fs-5">{{ t('general_net_position', default='Net Position') | e }}:</span>
-                        <span class="net-amount fs-4" id="netPosition">₦0</span>
-                        <span class="net-status fs-6" id="netStatus">(Balanced)</span>
-                    </div>
-                    <a href="{{ url_for('dashboard.index') | e }}" class="btn btn-primary btn-sm" aria-label="{{ t('general_details', default='Details') | e }}">
-                        {{ t('general_details', default='Details') | e }}
-                    </a>
+                <div class="net-position-info">
+                    <span class="net-label fw-bold">{{ t('general_net_position', default='Net Position') | e }}:</span>
+                    <span class="net-amount" id="netPosition">₦0</span>
+                    <span class="net-status" id="netStatus">(Balanced)</span>
                 </div>
+                <a href="{{ url_for('dashboard.index') | e }}" class="btn btn-primary btn-sm" aria-label="{{ t('general_details', default='Details') | e }}">
+                    {{ t('general_details', default='Details') | e }}
+                </a>
             </div>
-            <div class="snapshots">
-                <div class="snapshot-card">
-                    <div class="snapshot-icon mb-3">
-                        <i class="bi bi-wallet2 fs-3 text-primary"></i>
+            <div class="stat-cards-container">
+                <div class="stat-card">
+                    <div class="snapshot-icon">
+                        <i class="bi bi-wallet2 text-primary"></i>
                     </div>
                     <div class="snapshot-info">
-                        <div class="snapshot-label fw-bold text-truncate fs-6">{{ t('general_wallet_balance', default='Wallet') | e }}</div>
-                        <div class="stat-card-value fs-5" id="walletBalance">₦0</div>
+                        <div class="snapshot-label fw-bold text-truncate">{{ t('general_wallet_balance', default='Wallet') | e }}</div>
+                        <div class="stat-card-value" id="walletBalance">₦0</div>
                     </div>
                 </div>
-                <div class="snapshot-card">
-                    <div class="snapshot-icon mb-3">
-                        <i class="bi bi-graph-up fs-3 text-success"></i>
+                <div class="stat-card">
+                    <div class="snapshot-icon">
+                        <i class="bi bi-graph-up text-success"></i>
                     </div>
                     <div class="snapshot-info">
-                        <div class="snapshot-label fw-bold text-truncate fs-6">{{ t('general_net_cashflow_mtd', default='Net Flow') | e }}</div>
-                        <div class="stat-card-value fs-5" id="netCashflow">₦0</div>
+                        <div class="snapshot-label fw-bold text-truncate">{{ t('general_net_cashflow_mtd', default='Net Flow') | e }}</div>
+                        <div class="stat-card-value" id="netCashflow">₦0</div>
                     </div>
                 </div>
-                <div class="snapshot-card">
-                    <div class="snapshot-icon mb-3">
-                        <i class="bi bi-box-seam fs-3 text-info"></i>
+                <div class="stat-card">
+                    <div class="snapshot-icon">
+                        <i class="bi bi-box-seam text-info"></i>
                     </div>
                     <div class="snapshot-info">
-                        <div class="snapshot-label fw-bold text-truncate fs-6">{{ t('general_inventory_value', default='Inventory') | e }}</div>
-                        <div class="stat-card-value fs-5" id="inventoryValue">₦0</div>
+                        <div class="snapshot-label fw-bold text-truncate">{{ t('general_inventory_value', default='Inventory') | e }}</div>
+                        <div class="stat-card-value" id="inventoryValue">₦0</div>
                     </div>
                 </div>
             </div>
         </div>
         <!-- Recent Activity -->
         <div class="section-card recent-activity">
-            <div class="d-flex justify-content-between align-items-center mb-4">
+            <div class="d-flex justify-content-between align-items-center mb-3">
                 <h3 class="section-title mb-0">{{ t('general_recent_activity', default='Recent Activity') | e }}</h3>
                 <a href="{{ url_for('dashboard.index') | e }}" class="btn btn-link btn-sm p-0 text-decoration-none">
                     {{ t('general_view_all', default='View All') | e }}
@@ -80,13 +78,13 @@
             </div>
             <div id="recentActivityList">
                 <div class="recent-activity-card">
-                    <div class="activity-item d-flex align-items-center gap-3">
+                    <div class="activity-item">
                         <div class="activity-icon">
-                            <i class="bi bi-info-circle text-muted fs-4"></i>
+                            <i class="bi bi-info-circle text-muted"></i>
                         </div>
-                        <div class="activity-content flex-grow-1">
-                            <div class="activity-description text-truncate fs-6">{{ t('general_no_recent_activity', default='No recent activity') | e }}</div>
-                            <div class="activity-time text-muted fs-7">{{ t('general_start_adding', default='Start by adding a debt or transaction') | e }}</div>
+                        <div class="activity-content">
+                            <div class="activity-description">{{ t('general_no_recent_activity', default='No recent activity') | e }}</div>
+                            <div class="activity-time text-muted">{{ t('general_start_adding', default='Start by adding a debt or transaction') | e }}</div>
                         </div>
                     </div>
                 </div>
@@ -95,15 +93,17 @@
         <!-- Quick Actions -->
         <div class="section-card quick-actions">
             <h3 class="section-title">{{ t('general_quick_actions', default='Quick Actions') | e }}</h3>
-            {% for tool in tools_for_template %}
-            <a href="{{ tool.url | default('#') | e }}" class="quick-action-card {{ tool.class | default('') }} text-decoration-none" aria-label="{{ t(tool.label_key, default=tool.label) | e }}">
-                {% if tool.badge %}
-                <span class="badge bg-danger position-absolute top-0 end-0 translate-middle rounded-pill">{{ tool.badge }}</span>
-                {% endif %}
-                <i class="bi {{ tool.icon | default('bi-circle') | e }} action-icon text-primary"></i>
-                <div class="action-label">{{ t(tool.label_key, default=tool.label) | e }}</div>
-            </a>
-            {% endfor %}
+            <div class="quick-actions">
+                {% for tool in tools_for_template %}
+                <a href="{{ tool.url | default('#') | e }}" class="quick-action-card {{ tool.class | default('') }} text-decoration-none" aria-label="{{ t(tool.label_key, default=tool.label) | e }}">
+                    {% if tool.badge %}
+                    <span class="badge bg-danger position-absolute top-0 end-0 translate-middle rounded-pill">{{ tool.badge }}</span>
+                    {% endif %}
+                    <i class="bi {{ tool.icon | default('bi-circle') | e }} action-icon"></i>
+                    <div class="action-label">{{ t(tool.label_key, default=tool.label) | e }}</div>
+                </a>
+                {% endfor %}
+            </div>
         </div>
         <!-- Explore Features -->
         <div class="section-card explore-section">
@@ -111,15 +111,16 @@
             {% for feature in explore_features_for_template %}
             <a href="{{ feature.url | default('#') | e }}" class="explore-card text-decoration-none" aria-label="{{ t(feature.label_key, default=feature.label) | e }}">
                 <div class="explore-card-icon">
-                    <i class="bi {{ feature.icon | default('bi-circle') | e }} fs-3 text-primary"></i>
+                    <i class="bi {{ feature.icon | default('bi-circle') | e }} text-primary"></i>
                 </div>
                 <div class="explore-card-text">
-                    <h4 class="text-truncate">{{ t(feature.label_key, default=feature.label) | e }}</h4>
+                    <h4>{{ t(feature.label_key, default=feature.label) | e }}</h4>
                     <p class="text-muted">{{ t(feature.description_key, default=feature.description) | e }}</p>
                 </div>
             </a>
             {% endfor %}
         </div>
+    {% endif %}
 </div>
 {% endblock %}
 
@@ -149,8 +150,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 });
 
-if (!{{ current_user.is_authenticated | tojson }}) return;
-
+{% if current_user.is_authenticated %}
 let amountsVisible = true;
 
 // Translation strings
@@ -204,15 +204,15 @@ function updateDebtSummary(data) {
     netPositionEl.dataset.amount = netPosition;
 
     if (netPosition > 0) {
-        netPositionEl.className = 'net-amount fw-bold fs-5 text-success';
+        netPositionEl.className = 'net-amount text-success';
         netStatusEl.textContent = `(${translations.owed_to_you})`;
         netStatusEl.className = 'net-status text-success';
     } else if (netPosition < 0) {
-        netPositionEl.className = 'net-amount fw-bold fs-5 text-danger';
+        netPositionEl.className = 'net-amount text-danger';
         netStatusEl.textContent = `(${translations.you_owe})`;
         netStatusEl.className = 'net-status text-danger';
     } else {
-        netPositionEl.className = 'net-amount fw-bold fs-5 text-muted';
+        netPositionEl.className = 'net-amount text-muted';
         netStatusEl.textContent = `(${translations.balanced})`;
         netStatusEl.className = 'net-status text-muted';
     }
@@ -235,11 +235,11 @@ function loadRecentActivity() {
             if (activities && activities.length > 0) {
                 activityList.innerHTML = activities.map(activity => `
                     <div class="recent-activity-card">
-                        <div class="activity-item d-flex align-items-center gap-3">
+                        <div class="activity-item">
                             <div class="activity-icon">
                                 <i class="bi ${getActivityIcon(activity.type)} ${getActivityColor(activity.type)}"></i>
                             </div>
-                            <div class="activity-content flex-grow-1">
+                            <div class="activity-content">
                                 <div class="activity-description fw-semibold">${activity.description}</div>
                                 <div class="activity-time text-muted">${formatTimeAgo(activity.timestamp)}</div>
                             </div>
@@ -250,11 +250,11 @@ function loadRecentActivity() {
             } else {
                 activityList.innerHTML = `
                     <div class="recent-activity-card">
-                        <div class="activity-item d-flex align-items-center gap-3">
+                        <div class="activity-item">
                             <div class="activity-icon">
                                 <i class="bi bi-info-circle text-muted"></i>
                             </div>
-                            <div class="activity-content flex-grow-1">
+                            <div class="activity-content">
                                 <div class="activity-description fw-semibold">${translations.no_recent_activity}</div>
                                 <div class="activity-time text-muted">${translations.start_by_adding_debt}</div>
                             </div>
@@ -335,5 +335,6 @@ function format_currency(value) {
     value = typeof value === "string" ? parseFloat(value) : value;
     return value.toLocaleString('en-NG', {maximumFractionDigits: 0});
 }
+{% endif %}
 </script>
 {% endblock %}
