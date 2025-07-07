@@ -15,7 +15,7 @@ from utils import requires_role, is_admin, get_mongo_db, format_currency, limite
 financial_health_bp = Blueprint(
     'financial_health',
     __name__,
-    template_folder='templates/personal/health_score',
+    template_folder='templates/personal/HEALTHSCORE',
     url_prefix='/health_score'
 )
 
@@ -345,7 +345,7 @@ def main():
                     cross_tool_insights.append(trans('financial_health_cross_tool_savings_possible', default='Your budget shows {amount} available for savings monthly.', amount=format_currency(savings_possible)))
 
         return render_template(
-            'personal/health_score/health_score_main.html',
+            'personal/HEALTHSCORE/health_score_main.html',
             form=form,
             records=records,
             latest_record=latest_record,
@@ -367,7 +367,7 @@ def main():
         current_app.logger.error(f"Error in financial_health.main for session {session.get('sid', 'unknown')}: {str(e)}", extra={'session_id': session['sid']})
         flash(trans("financial_health_dashboard_load_error", default='Error loading financial health dashboard.'), "danger")
         return render_template(
-            'personal/health_score/health_score_main.html',
+            'personal/HEALTHSCORE/health_score_main.html',
             form=form,
             records=[],
             latest_record={
