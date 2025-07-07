@@ -3,12 +3,14 @@ const urlsToCache = [
     '/static/css/styles.css',
     '/static/js/scripts.js',
     '/static/js/interactivity.js',
-    '/manifest.json',
+    '/static/manifest.json',
     '/static/img/favicon.ico',
     '/static/img/apple-touch-icon.png',
     '/static/img/favicon-32x32.png',
     '/static/img/favicon-16x16.png',
     '/static/img/default_profile.png',
+    '/static/img/icons/icon-192x192.png',
+    '/static/img/icons/icon-512x512.png',
     '/general/home',
     '/set-language'
 ];
