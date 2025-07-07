@@ -111,13 +111,18 @@ def main():
         'email': current_user.email if current_user.is_authenticated else '',
         'first_name': current_user.username if current_user.is_authenticated else ''
     })
-    log_tool_usage(
-        get_mongo_db(),
-        tool_name='bill',
-        user_id=current_user.id,
-        session_id=session.get('sid', 'unknown'),
-        action='main_view'
-    )
+    try:
+        log_tool_usage(
+            get_mongo_db(),
+            tool_name='bill',
+            user_id=current_user.id,
+            session_id=session.get('sid', 'unknown'),
+            action='main_view'
+        )
+    except Exception as e:
+        current_app.logger.error(f"Failed to log tool usage: {str(e)}", extra={'session_id': session.get('sid', 'unknown')})
+        flash(trans('bill_log_error', default='Error logging bill activity. Please try again.'), 'warning')
+    
     tips = [
         trans('bill_tip_pay_early', default='Pay bills early to avoid penalties.'),
         trans('bill_tip_energy_efficient', default='Use energy-efficient appliances to reduce utility bills.'),
@@ -131,13 +136,18 @@ def main():
         if request.method == 'POST':
             action = request.form.get('action')
             if action == 'add_bill' and form.validate_on_submit():
-                log_tool_usage(
-                    get_mongo_db(),
-                    tool_name='bill',
-                    user_id=current_user.id,
-                    session_id=session.get('sid', 'unknown'),
-                    action='add_bill'
-                )
+                try:
+                    log_tool_usage(
+                        get_mongo_db(),
+                        tool_name='bill',
+                        user_id=current_user.id,
+                        session_id=session.get('sid', 'unknown'),
+                        action='add_bill'
+                    )
+                except Exception as e:
+                    current_app.logger.error(f"Failed to log bill addition: {str(e)}", extra={'session_id': session.get('sid', 'unknown')})
+                    flash(trans('bill_log_error', default='Error logging bill addition. Continuing with submission.'), 'warning')
+                
                 due_date = form.due_date.data
                 if due_date < date.today():
                     flash(trans('bill_due_date_future_validation', default='Due date must be today or in the future.'), 'danger')
@@ -352,13 +362,18 @@ def summary():
 def unsubscribe(email):
     """Unsubscribe user from bill email notifications."""
     try:
-        log_tool_usage(
-            get_mongo_db(),
-            tool_name='bill',
-            user_id=current_user.id,
-            session_id=session.get('sid', 'unknown'),
-            action='unsubscribe'
-        )
+        try:
+            log_tool_usage(
+                get_mongo_db(),
+                tool_name='bill',
+                user_id=current_user.id,
+                session_id=session.get('sid', 'unknown'),
+                action='unsubscribe'
+            )
+        except Exception as e:
+            current_app.logger.error(f"Failed to log unsubscribe action: {str(e)}", extra={'session_id': session.get('sid', 'unknown')})
+            flash(trans('bill_log_error', default='Error logging unsubscribe action. Continuing with unsubscription.'), 'warning')
+        
         filter_criteria = {'user_email': email, 'user_id': current_user.id} if not is_admin() else {'user_email': email}
         bills_collection = get_mongo_db().bills
         result = bills_collection.update_many(filter_criteria, {'$set': {'send_email': False}})
