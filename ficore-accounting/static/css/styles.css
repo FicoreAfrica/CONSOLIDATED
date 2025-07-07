@@ -1999,8 +1999,15 @@ h2.card-title {
         margin: 1.5rem 0;
     }
 
-    .summary-cards, .stat-cards-container, .quick-actions, .role-cards, .tool-cards, .why-items, .navigation-cards .row {
-        grid-template-columns: 1fr;
+    .summary-cards,
+    .stat-cards-container,
+    .quick-actions,
+    .role-cards,
+    .tool-cards,
+    .why-items,
+    .navigation-cards .row {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
         gap: 1rem;
     }
 
