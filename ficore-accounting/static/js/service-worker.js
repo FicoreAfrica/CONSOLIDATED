@@ -7,7 +7,10 @@ const urlsToCache = [
     '/static/img/favicon.ico',
     '/static/img/apple-touch-icon.png',
     '/static/img/favicon-32x32.png',
-    '/static/img/favicon-16x16.png'
+    '/static/img/favicon-16x16.png',
+    '/static/img/default_profile.png',
+    '/general/home',
+    '/set-language' // Added for language switching
 ];
 
 const networkFirstRoutes = [
@@ -16,7 +19,8 @@ const networkFirstRoutes = [
     '/users/signup',
     '/users/forgot_password',
     '/users/reset_password',
-    '/users/verify_2fa'
+    '/users/verify_2fa',
+    '/api/notifications/count' // Added for dynamic notifications
 ];
 
 self.addEventListener('install', event => {
@@ -40,7 +44,7 @@ self.addEventListener('fetch', event => {
         event.respondWith(
             caches.match(event.request)
                 .then(response => response || fetch(event.request))
-                .catch(() => new Response('Offline: Resource not cached', { status: 503 }))
+                .catch(() => caches.match('/general/home') || new Response('Offline: Resource not cached', { status: 503 }))
         );
     }
 });
