@@ -15,7 +15,7 @@ from utils import requires_role, is_admin, get_mongo_db, format_currency, limite
 net_worth_bp = Blueprint(
     'net_worth',
     __name__,
-    template_folder='templates/personal/net_worth',
+    template_folder='templates/personal/NETWORTH',
     url_prefix='/NETWORTH'
 )
 
@@ -303,7 +303,7 @@ def main():
 
         current_app.logger.info(f"Rendering net worth main page with {len(records)} records for session {session['sid']}", extra={'session_id': session['sid']})
         return render_template(
-            'personal/net_worth/net_worth_main.html',
+            'personal/NETWORTH/net_worth_main.html',
             form=form,
             records=records,
             latest_record=latest_record,
@@ -325,7 +325,7 @@ def main():
         current_app.logger.error(f"Error in net_worth.main for session {session.get('sid', 'unknown')}: {str(e)}", extra={'session_id': session['sid']})
         flash(trans("net_worth_dashboard_load_error", default="Error loading net worth dashboard"), "danger")
         return render_template(
-            'personal/net_worth/net_worth_main.html',
+            'personal/NETWORTH/net_worth_main.html',
             form=form,
             records=[],
             latest_record={
