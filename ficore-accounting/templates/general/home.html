@@ -109,7 +109,7 @@
         <div class="recent-activity mb-4 mx-3 rounded shadow-sm bg-white p-4">
             <div class="d-flex justify-content-between align-items-center mb-4 mx-3">
                 <h3 class="section-title mb-0 fs-4 fw-bold">{{ t('general_recent_activity', default='Recent Activity') | e }}</h3>
-                <a href="{{ url gearfor('dashboard.index') | e }}" class="btn btn-link btn-sm p-0 text-decoration-none">
+                <a href="{{ url for('dashboard.index') | e }}" class="btn btn-link btn-sm p-0 text-decoration-none">
                     {{ t('general_view_all', default='View All') | e }}
                 </a>
             </div>
