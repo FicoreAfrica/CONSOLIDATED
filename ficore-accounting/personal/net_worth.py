@@ -102,7 +102,7 @@ def main():
     form_data = {}
     if current_user.is_authenticated:
         form_data['email'] = current_user.email
-        form_data['first_name'] = current_user.username
+        form_data['first_name'] = current_user.get_first_name()
     
     form = NetWorthForm(data=form_data)
     
