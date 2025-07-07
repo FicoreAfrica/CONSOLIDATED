@@ -110,25 +110,35 @@ def main():
         form_data['email'] = current_user.email
         form_data['first_name'] = current_user.get_first_name()
     form = BudgetForm(data=form_data)
-    log_tool_usage(
-        get_mongo_db(),
-        tool_name='budget',
-        user_id=current_user.id if current_user.is_authenticated else None,
-        session_id=session['sid'],
-        action='main_view'
-    )
+    try:
+        log_tool_usage(
+            get_mongo_db(),
+            tool_name='budget',
+            user_id=current_user.id if current_user.is_authenticated else None,
+            session_id=session['sid'],
+            action='main_view'
+        )
+    except Exception as e:
+        current_app.logger.error(f"Failed to log tool usage: {str(e)}", extra={'session_id': session.get('sid', 'unknown')})
+        flash(trans('budget_log_error', default='Error logging budget activity. Please try again.'), 'warning')
+    
     try:
         filter_criteria = {} if is_admin() else {'user_id': current_user.id} if current_user.is_authenticated else {'session_id': session['sid']}
         if request.method == 'POST':
             action = request.form.get('action')
             if action == 'create_budget' and form.validate_on_submit():
-                log_tool_usage(
-                    get_mongo_db(),
-                    tool_name='budget',
-                    user_id=current_user.id if current_user.is_authenticated else None,
-                    session_id=session['sid'],
-                    action='create_budget'
-                )
+                try:
+                    log_tool_usage(
+                        get_mongo_db(),
+                        tool_name='budget',
+                        user_id=current_user.id if current_user.is_authenticated else None,
+                        session_id=session['sid'],
+                        action='create_budget'
+                    )
+                except Exception as e:
+                    current_app.logger.error(f"Failed to log budget creation: {str(e)}", extra={'session_id': session.get('sid', 'unknown')})
+                    flash(trans('budget_log_error', default='Error logging budget creation. Continuing with submission.'), 'warning')
+                
                 income = form.income.data
                 expenses = sum([
                     form.housing.data,
