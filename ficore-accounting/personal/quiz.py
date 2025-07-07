@@ -15,7 +15,7 @@ from utils import requires_role, is_admin, get_mongo_db, limiter
 quiz_bp = Blueprint(
     'quiz',
     __name__,
-    template_folder='templates/personal/quiz',
+    template_folder='templates/personal/QUIZ',
     url_prefix='/QUIZ'
 )
 
@@ -485,7 +485,7 @@ def main():
             },
         ]
 
-        return render_template('personal/quiz/quiz_main.html',
+        return render_template('personal/QUIZ/quiz_main.html',
             form=form,
             questions=questions,
             records=records,
@@ -506,7 +506,7 @@ def main():
     except Exception as e:
         current_app.logger.error(f"Error in quiz.main for session {session.get('sid', 'unknown')}: {str(e)}", extra={'session_id': session.get('sid', 'unknown')})
         flash(trans('quiz_error_results', default='An error occurred while loading quiz. Please try again.'), 'danger')
-        return render_template('personal/quiz/quiz_main.html',
+        return render_template('personal/QUIZ/quiz_main.html',
             form=form,
             questions=questions,
             records=[],
@@ -588,7 +588,7 @@ def handle_csrf_error(e):
     lang = session.get('lang', 'en')
     current_app.logger.error(f"CSRF error on {request.path}: {e.description}", extra={'session_id': session.get('sid', 'unknown')})
     flash(trans('quiz_csrf_error', default='Form submission failed due to a missing security token. Please refresh and try again.'), 'danger')
-    return render_template('personal/quiz/quiz_main.html',
+    return render_template('personal/QUIZ/quiz_main.html',
         form=QuizForm(lang=lang),
         questions=[],
         records=[],
