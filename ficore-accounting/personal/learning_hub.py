@@ -688,13 +688,17 @@ def main():
     lang = session.get('lang', 'en')
     
     try:
-        log_tool_usage(
-            tool_name='learning_hub',
-            user_id=current_user.id if current_user.is_authenticated else None,
-            session_id=session['sid'],
-            action='main_view',
-            mongo=get_mongo_db()
-        )
+        try:
+            log_tool_usage(
+                tool_name='learning_hub',
+                user_id=current_user.id if current_user.is_authenticated else None,
+                session_id=session['sid'],
+                action='main_view',
+                mongo=get_mongo_db()
+            )
+        except Exception as e:
+            current_app.logger.error(f"Failed to log tool usage: {str(e)}", extra={'session_id': session.get('sid', 'unknown')})
+            flash(trans('learning_hub_log_error', default='Error logging learning hub activity. Please try again.'), 'warning')
         
         # Get courses filtered by role
         role_filter = session.get('role_filter', 'all')
@@ -1184,13 +1188,17 @@ def profile():
     lang = session.get('lang', 'en')
     
     try:
-        log_tool_usage(
-            tool_name='learning_hub',
-            user_id=current_user.id if current_user.is_authenticated else None,
-            session_id=session['sid'],
-            action='profile_submit' if request.method == 'POST' else 'profile_view',
-            mongo=get_mongo_db()
-        )
+        try:
+            log_tool_usage(
+                tool_name='learning_hub',
+                user_id=current_user.id if current_user.is_authenticated else None,
+                session_id=session['sid'],
+                action='profile_submit' if request.method == 'POST' else 'profile_view',
+                mongo=get_mongo_db()
+            )
+        except Exception as e:
+            current_app.logger.error(f"Failed to log profile action: {str(e)}", extra={'session_id': session.get('sid', 'unknown')})
+            flash(trans('learning_hub_log_error', default='Error logging profile activity. Please try again.'), 'warning')
         
         profile_form = LearningHubProfileForm()
         if request.method == 'POST' and profile_form.validate_on_submit():
@@ -1247,13 +1255,17 @@ def unsubscribe(email):
         session.modified = True
     
     try:
-        log_tool_usage(
-            tool_name='learning_hub',
-            user_id=current_user.id if current_user.is_authenticated else None,
-            session_id=session['sid'],
-            action='unsubscribe',
-            mongo=get_mongo_db()
-        )
+        try:
+            log_tool_usage(
+                tool_name='learning_hub',
+                user_id=current_user.id if current_user.is_authenticated else None,
+                session_id=session['sid'],
+                action='unsubscribe',
+                mongo=get_mongo_db()
+            )
+        except Exception as e:
+            current_app.logger.error(f"Failed to log unsubscribe action: {str(e)}", extra={'session_id': session.get('sid', 'unknown')})
+            flash(trans('learning_hub_log_error', default='Error logging unsubscribe action. Continuing with unsubscription.'), 'warning')
         
         lang = session.get('lang', 'en')
         profile = session.get('learning_hub_profile', {})
@@ -1287,13 +1299,17 @@ def serve_uploaded_file(filename):
         session.modified = True
     
     try:
-        log_tool_usage(
-            tool_name='learning_hub',
-            user_id=current_user.id if current_user.is_authenticated else None,
-            session_id=session['sid'],
-            action='serve_file',
-            mongo=get_mongo_db()
-        )
+        try:
+            log_tool_usage(
+                tool_name='learning_hub',
+                user_id=current_user.id if current_user.is_authenticated else None,
+                session_id=session['sid'],
+                action='serve_file',
+                mongo=get_mongo_db()
+            )
+        except Exception as e:
+            current_app.logger.error(f"Failed to log file serve action: {str(e)}", extra={'session_id': session.get('sid', 'unknown')})
+            flash(trans('learning_hub_log_error', default='Error logging file access. Continuing with file serving.'), 'warning')
         
         response = send_from_directory(current_app.config.get('UPLOAD_FOLDER', UPLOAD_FOLDER), filename)
         response.headers['Cache-Control'] = 'public, max-age=31536000'
