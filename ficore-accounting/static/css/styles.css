@@ -2016,3 +2016,11 @@ body {
         display: none !important;
     }
     }
+body {
+    position: static !important;
+    overflow: visible !important;
+}
+.main-content {
+    position: static !important;
+    overflow: visible !important;
+}
