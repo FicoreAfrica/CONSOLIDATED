@@ -6,13 +6,13 @@
     {% if current_user.is_authenticated %}
         <!-- Header Section -->
         <div class="header-section mb-4 mx-3 rounded shadow-sm bg-white p-4">
-            <h1 class="fw-bold fs-2 text-center">FiCore Accounting</h1>
+            <h1 class="fw-bold fs-2 text-center">FiCore Africa</h1>
             <p class="text-center fs-5">Hello, {{ current_user.firstname|default('User') }}!</p>
-            <p class="text-center text-muted fs-6">Welcome back to Ficore Records</p>
+            <p class="text-center text-muted fs-6">Welcome back to Ficore Africa</p>
             <div class="d-flex justify-content-center align-items-center gap-3">
                 <div class="lang-selector">
                     <span class="fw-bold">{{ g.get('lang', 'EN')|upper }}</span>
-                    <select class="form-select form-select-sm d-inline-block w-auto ms-2" onchange="window.location.href='{{ url_for('users.set_language') }}?lang='+this.value">
+                    <select class="form-select form-select-sm d-inline-block w-auto ms-2" onchange="window.location.href='{{ url_for('set_language') }}?lang='+this.value">
                         <option value="en" {% if g.lang == 'en' %}selected{% endif %}>EN</option>
                         <option value="ha" {% if g.lang == 'ha' %}selected{% endif %}>HA</option>
                     </select>
@@ -102,14 +102,14 @@
                         </div>
                     </div>
                 </div>
-            </div>
+            division>
         </div>
 
         <!-- Recent Activity -->
         <div class="recent-activity mb-4 mx-3 rounded shadow-sm bg-white p-4">
             <div class="d-flex justify-content-between align-items-center mb-4 mx-3">
                 <h3 class="section-title mb-0 fs-4 fw-bold">{{ t('general_recent_activity', default='Recent Activity') | e }}</h3>
-                <a href="{{ url_for('dashboard.index') | e }}" class="btn btn-link btn-sm p-0 text-decoration-none">
+                <a href="{{ url gearfor('dashboard.index') | e }}" class="btn btn-link btn-sm p-0 text-decoration-none">
                     {{ t('general_view_all', default='View All') | e }}
                 </a>
             </div>
@@ -137,7 +137,7 @@
                         <span class="badge bg-danger position-absolute top-0 end-0 translate-middle rounded-pill">{{ tool.badge }}</span>
                         {% endif %}
                         <i class="bi {{ tool.icon | default('bi-circle') | e }} fs-3 mb-3 text-primary"></i>
-                        <small class="action-label text-center text-truncate fw-bold fs-6">{{ t(tool.label_key, default=tool.label) | e }}</small>
+                        <small class="action-label text-center text-truncate fw-bold fs-6">{{ t(tool.label_kay, default=tool.label) | e }}</small>
                     </a>
                 </div>
                 {% endfor %}
@@ -209,6 +209,7 @@
         </section>
     {% endif %}
 </div>
+{% endblock %}
 
 {% block extra_scripts %}
 <script>
@@ -236,189 +237,187 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 });
 
-    if (!{{ current_user.is_authenticated | tojson }}) return;
+if (!{{ current_user.is_authenticated | tojson }}) return;
 
-    let amountsVisible = true;
+let amountsVisible = true;
 
-    // Translation strings
-    const translations = {
-        just_now: '{{ t("general_just_now", default="Just now") | e }}',
-        minutes_ago: '{{ t("general_minutes_ago", default="m ago") | e }}',
-        hours_ago: '{{ t("general_hours_ago", default="h ago") | e }}',
-        days_ago: '{{ t("general_days_ago", default="d ago") | e }}',
-        owed_to_you: '{{ t("general_owed_to_you", default="Owed to you") | e }}',
-        you_owe: '{{ t("general_you_owe", default="You owe") | e }}',
-        balanced: '{{ t("general_balanced", default="Balanced") | e }}',
-        no_recent_activity: '{{ t("general_no_recent_activity", default="No recent activity") | e }}',
-        start_by_adding_debt: '{{ t("general_start_by_adding_debt", default="Start by adding a debt or transaction") | e }}',
-        no_notifications: '{{ t("general_no_notifications", default="No notifications") | e }}',
-        check_back_later: '{{ t("general_check_back_later", default="Check back later") | e }}'
-    };
+// Translation strings
+const translations = {
+    just_now: '{{ t("general_just_now", default="Just now") | e }}',
+    minutes_ago: '{{ t("general_minutes_ago", default="m ago") | e }}',
+    hours_ago: '{{ t("general_hours_ago", default="h ago") | e }}',
+    days_ago: '{{ t("general_days_ago", default="d ago") | e }}',
+    owed_to_you: '{{ t("general_owed_to_you", default="Owed to you") | e }}',
+    you_owe: '{{ t("general_you_owe", default="You owe") | e }}',
+    balanced: '{{ t("general_balanced", default="Balanced") | e }}',
+    no_recent_activity: '{{ t("general_no_recent_activity", default="No recent activity") | e }}',
+    start_by_adding_debt: '{{ t("general_start_by_adding_debt", default="Start by adding a debt or transaction") | e }}',
+    no_notifications: '{{ t("general_no_notifications", default="No notifications") | e }}',
+    check_back_later: '{{ t("general_check_back_later", default="Check back later") | e }}'
+};
 
-    // Load financial data, notifications, and recent activity
-    loadFinancialSummary();
-    loadRecentActivity();
+// Load financial data, notifications, and recent activity
+loadFinancialSummary();
+loadRecentActivity();
 
-    function loadFinancialSummary() {
-        Promise.all([
-            fetch('{{ url_for("debt_summary") | e }}').then(r => r.json()).catch(() => ({totalIOwe: 0, totalIAmOwed: 0})),
-            fetch('{{ url_for("coins.get_balance") | e }}').then(r => r.json()).catch(() => ({coin_balance: 0})),
-            fetch('{{ url_for("cashflow_summary") | e }}').then(r => r.json()).catch(() => ({netCashflow: 0})),
-            fetch('{{ url_for("inventory_summary") | e }}').then(r => r.json()).catch(() => ({totalValue: 0}))
-        ]).then(([debtData, walletData, cashflowData, inventoryData]) => {
-            updateDebtSummary(debtData);
-            updateSnapshots(walletData, cashflowData, inventoryData);
-        }).catch(error => {
-            console.error('Error loading financial data:', error);
-        });
+function loadFinancialSummary() {
+    Promise.all([
+        fetch('{{ url_for("debt_summary") | e }}').then(r => r.json()).catch(() => ({totalIOwe: 0, totalIAmOwed: 0})),
+        fetch('{{ url_for("coins.get_balance") | e }}').then(r => r.json()).catch(() => ({coin_balance: 0})),
+        fetch('{{ url_for("cashflow_summary") | e }}').then(r => r.json()).catch(() => ({netCashflow: 0})),
+        fetch('{{ url_for("inventory_summary") | e }}').then(r => r.json()).catch(() => ({totalValue: 0}))
+    ]).then(([debtData, walletData, cashflowData, inventoryData]) => {
+        updateDebtSummary(debtData);
+        updateSnapshots(walletData, cashflowData, inventoryData);
+    }).catch(error => {
+        console.error('Error loading financial data:', error);
+    });
+}
+
+function updateDebtSummary(data) {
+    const totalIOwe = data.totalIOwe || 0;
+    const totalIAmOwed = data.totalIAmOwed || 0;
+    const netPosition = totalIAmOwed - totalIOwe;
+
+    document.querySelector('#totalIOwe .amount-value').textContent = format_currency(totalIOwe);
+    document.querySelector('#totalIOwe .amount-value').dataset.amount = totalIOwe;
+
+    document.querySelector('#totalIAmOwed .amount-value').textContent = format_currency(totalIAmOwed);
+    document.querySelector('#totalIAmOwed .amount-value').dataset.amount = totalIAmOwed;
+
+    const netPositionEl = document.getElementById('netPosition');
+    const netStatusEl = document.getElementById('netStatus');
+
+    netPositionEl.textContent = '₦' + format_currency(Math.abs(netPosition));
+    netPositionEl.dataset.amount = netPosition;
+
+    if (netPosition > 0) {
+        netPositionEl.className = 'net-amount fw-bold fs-5 text-success';
+        netStatusEl.textContent = `(${translations.owed_to_you})`;
+        netStatusEl.className = 'net-status text-success';
+    } else if (netPosition < 0) {
+        netPositionEl.className = 'net-amount fw-bold fs-5 text-danger';
+        netStatusEl.textContent = `(${translations.you_owe})`;
+        netStatusEl.className = 'net-status text-danger';
+    } else {
+        netPositionEl.className = 'net-amount fw-bold fs-5 text-muted';
+        netStatusEl.textContent = `(${translations.balanced})`;
+        netStatusEl.className = 'net-status text-muted';
     }
+}
 
-    function updateDebtSummary(data) {
-        const totalIOwe = data.totalIOwe || 0;
-        const totalIAmOwed = data.totalIAmOwed || 0;
-        const netPosition = totalIAmOwed - totalIOwe;
+function updateSnapshots(walletData, cashflowData, inventoryData) {
+    document.getElementById('walletBalance').textContent = '₦' + format_currency(walletData.coin_balance || 0);
+    document.getElementById('walletBalance').dataset.originalText = '₦' + format_currency(walletData.coin_balance || 0);
+    document.getElementById('netCashflow').textContent = '₦' + format_currency(cashflowData.netCashflow || 0);
+    document.getElementById('netCashflow').dataset.originalText = '₦' + format_currency(cashflowData.netCashflow || 0);
+    document.getElementById('inventoryValue').textContent = '₦' + format_currency(inventoryData.totalValue || 0);
+    document.getElementById('inventoryValue').dataset.originalText = '₦' + format_currency(inventoryData.totalValue || 0);
+}
 
-        document.querySelector('#totalIOwe .amount-value').textContent = format_currency(totalIOwe);
-        document.querySelector('#totalIOwe .amount-value').dataset.amount = totalIOwe;
-
-        document.querySelector('#totalIAmOwed .amount-value').textContent = format_currency(totalIAmOwed);
-        document.querySelector('#totalIAmOwed .amount-value').dataset.amount = totalIAmOwed;
-
-        const netPositionEl = document.getElementById('netPosition');
-        const netStatusEl = document.getElementById('netStatus');
-
-        netPositionEl.textContent = '₦' + format_currency(Math.abs(netPosition));
-        netPositionEl.dataset.amount = netPosition;
-
-        if (netPosition > 0) {
-            netPositionEl.className = 'net-amount fw-bold fs-5 text-success';
-            netStatusEl.textContent = `(${translations.owed_to_you})`;
-            netStatusEl.className = 'net-status text-success';
-        } else if (netPosition < 0) {
-            netPositionEl.className = 'net-amount fw-bold fs-5 text-danger';
-            netStatusEl.textContent = `(${translations.you_owe})`;
-            netStatusEl.className = 'net-status text-danger';
-        } else {
-            netPositionEl.className = 'net-amount fw-bold fs-5 text-muted';
-            netStatusEl.textContent = `(${translations.balanced})`;
-            netStatusEl.className = 'net-status text-muted';
-        }
-    }
-
-    function updateSnapshots(walletData, cashflowData, inventoryData) {
-        document.getElementById('walletBalance').textContent = '₦' + format_currency(walletData.coin_balance || 0);
-        document.getElementById('walletBalance').dataset.originalText = '₦' + format_currency(walletData.coin_balance || 0);
-        document.getElementById('netCashflow').textContent = '₦' + format_currency(cashflowData.netCashflow || 0);
-        document.getElementById('netCashflow').dataset.originalText = '₦' + format_currency(cashflowData.netCashflow || 0);
-        document.getElementById('inventoryValue').textContent = '₦' + format_currency(inventoryData.totalValue || 0);
-        document.getElementById('inventoryValue').dataset.originalText = '₦' + format_currency(inventoryData.totalValue || 0);
-    }
-
-    function loadRecentActivity() {
-        fetch('{{ url_for("recent_activity") | e }}')
-            .then(response => response.json())
-            .then(activities => {
-                const activityList = document.getElementById('recentActivityList');
-                if (activities && activities.length > 0) {
-                    activityList.innerHTML = activities.map(activity => `
-                        <div class="activity-item d-flex align-items-center gap-3 mb-2">
-                            <div class="activity-icon" style="background: #f1f5f9; border-radius: 50%; padding: 0.5rem;">
-                                <i class="bi ${getActivityIcon(activity.type)} ${getActivityColor(activity.type)}" style="font-size: 1.5rem;"></i>
-                            </div>
-                            <div class="flex-grow-1">
-                                <div class="activity-description fw-semibold" style="color:#1e293b;">${activity.description}</div>
-                                <div class="activity-time text-muted">${formatTimeAgo(activity.timestamp)}</div>
-                            </div>
-                            ${activity.amount ? `<div class="activity-amount text-nowrap ms-2 fw-bold" style="color:#2563eb;">${format_currency(activity.amount)}</div>` : ''}
+function loadRecentActivity() {
+    fetch('{{ url_for("recent_activity") | e }}')
+        .then(response => response.json())
+        .then(activities => {
+            const activityList = document.getElementById('recentActivityList');
+            if (activities && activities.length > 0) {
+                activityList.innerHTML = activities.map(activity => `
+                    <div class="activity-item d-flex align-items-center gap-3 mb-2">
+                        <div class="activity-icon" style="background: #f1f5f9; border-radius: 50%; padding: 0.5rem;">
+                            <i class="bi ${getActivityIcon(activity.type)} ${getActivityColor(activity.type)}" style="font-size: 1.5rem;"></i>
                         </div>
-                    `).join('');
-                } else {
-                    activityList.innerHTML = `
-                        <div class="activity-item d-flex align-items-center gap-3 mb-2">
-                            <div class="activity-icon" style="background: #f1f5f9; border-radius: 50%; padding: 0.5rem;">
-                                <i class="bi bi-info-circle text-muted" style="font-size: 1.5rem;"></i>
-                            </div>
-                            <div class="flex-grow-1">
-                                <div class="activity-description fw-semibold" style="color:#1e293b;">${translations.no_recent_activity}</div>
-                                <div class="activity-time text-muted">${translations.start_by_adding_debt}</div>
-                            </div>
+                        <div class="flex-grow-1">
+                            <div class="activity-description fw-semibold" style="color:#1e293b;">${activity.description}</div>
+                            <div class="activity-time text-muted">${formatTimeAgo(activity.timestamp)}</div>
                         </div>
-                    `;
-                }
-            })
-            .catch(error => {
-                console.error('Error loading recent activity:', error);
-            });
-    }
-
-    function getActivityIcon(type) {
-        const icons = {
-            'debt_added': 'bi-plus-circle',
-            'debt_settled': 'bi-check-circle',
-            'money_in': 'bi-arrow-down-circle',
-            'money_out': 'bi-arrow-up-circle',
-            'inventory_added': 'bi-box',
-            'reminder_sent': 'bi-bell',
-            'trader_registered': 'bi-person-plus'
-        };
-        return icons[type] || 'bi-circle';
-    }
-
-    function getActivityColor(type) {
-        const colors = {
-            'debt_added': 'text-primary',
-            'debt_settled': 'text-success',
-            'money_in': 'text-success',
-            'money_out': 'text-danger',
-            'inventory_added': 'text-info',
-            'reminder_sent': 'text-warning',
-            'trader_registered': 'text-primary'
-        };
-        return colors[type] || 'text-muted';
-    }
-
-    function formatTimeAgo(timestamp) {
-        const now = new Date();
-        const time = new Date(timestamp);
-        const diffInSeconds = Math.floor((now - time) / 1000);
-
-        if (diffInSeconds < 60) return translations.just_now;
-        if (diffInSeconds < 3600) return Math.floor(diffInSeconds / 60) + ' ' + translations.minutes_ago;
-        if (diffInSeconds < 86400) return Math.floor(diffInSeconds / 3600) + ' ' + translations.hours_ago;
-        return Math.floor(diffInSeconds / 86400) + ' ' + translations.days_ago;
-    }
-
-    window.toggleAmountVisibility = function() {
-        amountsVisible = !amountsVisible;
-        const icon = document.getElementById('visibilityIcon');
-        const amounts = document.querySelectorAll('.amount-value, .net-amount, .stat-card-value');
-
-        amounts.forEach(el => {
-            if (amountsVisible) {
-                if (el.classList.contains('amount-value')) {
-                    el.textContent = format_currency(el.dataset.amount);
-                } else if (el.classList.contains('net-amount')) {
-                    el.textContent = '₦' + format_currency(Math.abs(el.dataset.amount));
-                } else if (el.classList.contains('stat-card-value')) {
-                    el.textContent = el.dataset.originalText || el.textContent;
-                }
+                        ${activity.amount ? `<div class="activity-amount text-nowrap ms-2 fw-bold" style="color:#2563eb;">${format_currency(activity.amount)}</div>` : ''}
+                    </div>
+                `).join('');
             } else {
-                if (!el.dataset.originalText) {
-                    el.dataset.originalText = el.textContent;
-                }
-                el.textContent = '****';
+                activityList.innerHTML = `
+                    <div class="activity-item d-flex align-items-center gap-3 mb-2">
+                        <div class="activity-icon" style="background: #f1f5f9; border-radius: 50%; padding: 0.5rem;">
+                            <i class="bi bi-info-circle text-muted" style="font-size: 1.5rem;"></i>
+                        </div>
+                        <div class="flex-grow-1">
+                            <div class="activity-description fw-semibold" style="color:#1e293b;">${translations.no_recent_activity}</div>
+                            <div class="activity-time text-muted">${translations.start_by_adding_debt}</div>
+                        </div>
+                    </div>
+                `;
             }
+        })
+        .catch(error => {
+            console.error('Error loading recent activity:', error);
         });
+}
 
-        icon.className = amountsVisible ? 'bi bi-eye' : 'bi bi-eye-slash';
+function getActivityIcon(type) {
+    const icons = {
+        'debt_added': 'bi-plus-circle',
+        'debt_settled': 'bi-check-circle',
+        'money_in': 'bi-arrow-down-circle',
+        'money_out': 'bi-arrow-up-circle',
+        'inventory_added': 'bi-box',
+        'reminder_sent': 'bi-bell',
+        'trader_registered': 'bi-person-plus'
     };
+    return icons[type] || 'bi-circle';
+}
 
-    function format_currency(value) {
-        if (!value && value !== 0) return '';
-        value = typeof value === "string" ? parseFloat(value) : value;
-        return value.toLocaleString('en-NG', {maximumFractionDigits: 0});
-    }
-});
+function getActivityColor(type) {
+    const colors = {
+        'debt_added': 'text-primary',
+        'debt_settled': 'text-success',
+        'money_in': 'text-success',
+        'money_out': 'text-danger',
+        'inventory_added': 'text-info',
+        'reminder_sent': 'text-warning',
+        'trader_registered': 'text-primary'
+    };
+    return colors[type] || 'text-muted';
+}
+
+function formatTimeAgo(timestamp) {
+    const now = new Date();
+    const time = new Date(timestamp);
+    const diffInSeconds = Math.floor((now - time) / 1000);
+
+    if (diffInSeconds < 60) return translations.just_now;
+    if (diffInSeconds < 3600) return Math.floor(diffInSeconds / 60) + ' ' + translations.minutes_ago;
+    if (diffInSeconds < 86400) return Math.floor(diffInSeconds / 3600) + ' ' + translations.hours_ago;
+    return Math.floor(diffInSeconds / 86400) + ' ' + translations.days_ago;
+}
+
+window.toggleAmountVisibility = function() {
+    amountsVisible = !amountsVisible;
+    const icon = document.getElementById('visibilityIcon');
+    const amounts = document.querySelectorAll('.amount-value, .net-amount, .stat-card-value');
+
+    amounts.forEach(el => {
+        if (amountsVisible) {
+            if (el.classList.contains('amount-value')) {
+                el.textContent = format_currency(el.dataset.amount);
+            } else if (el.classList.contains('net-amount')) {
+                el.textContent = '₦' + format_currency(Math.abs(el.dataset.amount));
+            } else if (el.classList.contains('stat-card-value')) {
+                el.textContent = el.dataset.originalText || el.textContent;
+            }
+        } else {
+            if (!el.dataset.originalText) {
+                el.dataset.originalText = el.textContent;
+            }
+            el.textContent = '****';
+        }
+    });
+
+    icon.className = amountsVisible ? 'bi bi-eye' : 'bi bi-eye-slash';
+};
+
+function format_currency(value) {
+    if (!value && value !== 0) return '';
+    value = typeof value === "string" ? parseFloat(value) : value;
+    return value.toLocaleString('en-NG', {maximumFractionDigits: 0});
+}
 </script>
-</script>
-{% endblock extra_scripts %}
+{% endblock %}
