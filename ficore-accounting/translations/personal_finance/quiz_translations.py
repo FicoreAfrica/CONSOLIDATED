@@ -7,6 +7,7 @@ QUIZ_TRANSLATIONS = {
         # Quiz-specific
         'quiz_financial_personality_quiz': 'Personality Quiz',
         'quiz_your_financial_personality_results': 'Your Financial Personality Results',
+        'quiz_personality_desc': 'Discover your financial personality.',
         'quiz_your_financial_personality_results_subtitle': 'Discover your financial personality and insights',
         'quiz_enter_personal_information': 'Enter Your Personal Information',
         'quiz_take_quiz': 'Take the quiz',
@@ -196,6 +197,7 @@ QUIZ_TRANSLATIONS = {
         'quiz_tip_balanced_1': 'Gwada amfani da manhajar kasafin kuɗi don inganta halayenka.',
         'quiz_tip_spender_1': 'Kiyaye kashe kuɗinka don guje wa kashewa fiye da kima.',
         'quiz_tip_avoider_1': 'Fara da sauƙin kasafin kuɗi na wata-wata.',
+        'quiz_personality_desc': 'Duba dabiyar ku akan kudi.',
         'admin_manage_quiz_results': 'Sarrafa Sakamakon Tambayoyi',
         'admin_no_quiz_results': 'Ba a sami sakamakon tambayoyi ba',
         'quiz_results_title': 'Sakamakon Tambayoyi',
