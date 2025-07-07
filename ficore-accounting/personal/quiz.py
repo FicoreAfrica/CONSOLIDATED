@@ -258,14 +258,18 @@ def main():
     
     form = QuizForm(lang=lang, data=form_data)
     
-    log_tool_usage(
-        tool_name='quiz',
-        user_id=current_user.id if current_user.is_authenticated else None,
-        session_id=session['sid'],
-        action='main_view',
-        mongo=get_mongo_db()
-    )
-
+    try:
+        log_tool_usage(
+            tool_name='quiz',
+            user_id=current_user.id if current_user.is_authenticated else None,
+            session_id=session['sid'],
+            action='main_view',
+            mongo=get_mongo_db()
+        )
+    except Exception as e:
+        current_app.logger.error(f"Failed to log tool usage: {str(e)}", extra={'session_id': session.get('sid', 'unknown')})
+        flash(trans('quiz_log_error', default='Error logging quiz activity. Please try again.'), 'warning')
+    
     try:
         filter_criteria = {} if is_admin() else {'user_id': current_user.id} if current_user.is_authenticated else {'session_id': session['sid']}
         
@@ -273,13 +277,17 @@ def main():
             action = request.form.get('action')
             
             if action == 'submit_quiz' and form.validate_on_submit():
-                log_tool_usage(
-                    tool_name='quiz',
-                    user_id=current_user.id if current_user.is_authenticated else None,
-                    session_id=session['sid'],
-                    action='submit_quiz',
-                    mongo=get_mongo_db()
-                )
+                try:
+                    log_tool_usage(
+                        tool_name='quiz',
+                        user_id=current_user.id if current_user.is_authenticated else None,
+                        session_id=session['sid'],
+                        action='submit_quiz',
+                        mongo=get_mongo_db()
+                    )
+                except Exception as e:
+                    current_app.logger.error(f"Failed to log quiz submission: {str(e)}", extra={'session_id': session.get('sid', 'unknown')})
+                    flash(trans('quiz_log_error', default='Error logging quiz submission. Continuing with submission.'), 'warning')
 
                 if form.lang.data != lang:
                     session['lang'] = form.lang.data
@@ -538,13 +546,18 @@ def unsubscribe(email):
     lang = session.get('lang', 'en')
     
     try:
-        log_tool_usage(
-            tool_name='quiz',
-            user_id=current_user.id if current_user.is_authenticated else None,
-            session_id=session['sid'],
-            action='unsubscribe',
-            mongo=get_mongo_db()
-        )
+        try:
+            log_tool_usage(
+                tool_name='quiz',
+                user_id=current_user.id if current_user.is_authenticated else None,
+                session_id=session['sid'],
+                action='unsubscribe',
+                mongo=get_mongo_db()
+            )
+        except Exception as e:
+            current_app.logger.error(f"Failed to log unsubscribe action: {str(e)}", extra={'session_id': session.get('sid', 'unknown')})
+            flash(trans('quiz_log_error', default='Error logging unsubscribe action. Continuing with unsubscription.'), 'warning')
+
         filter_criteria = {'email': email} if is_admin() else {'email': email, 'user_id': current_user.id} if current_user.is_authenticated else {'email': email, 'session_id': session['sid']}
         
         existing_record = get_mongo_db().quiz_responses.find_one(filter_criteria)
