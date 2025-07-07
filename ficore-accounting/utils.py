@@ -166,6 +166,15 @@ _PERSONAL_EXPLORE_FEATURES = [
         "tooltip_key": "emergency_fund_tooltip",
         "icon": "bi-shield"
     },
+    
+    {
+        "endpoint": "coins.history",
+        "label": "Coins",
+        "label_key": "coins_dashboard",
+        "description_key": "coins_dashboard_desc",
+        "tooltip_key": "coins_tooltip",
+        "icon": "bi-coin"
+    },
     {
         "endpoint": "personal.financial_health.main",
         "label": "Financial Health",
@@ -206,6 +215,15 @@ _PERSONAL_EXPLORE_FEATURES = [
         "tooltip_key": "news_tooltip",
         "icon": "bi-newspaper"
     },
+    
+    {
+        "endpoint": "personal.bill.main",
+        "label": "Bills",
+        "label_key": "bill_bill_planner",
+        "description_key": "bill_bill_desc",
+        "tooltip_key": "bill_tooltip",
+        "icon": "bi-receipt"
+    },
 ]
 
 _BUSINESS_TOOLS = [
@@ -225,6 +243,15 @@ _BUSINESS_TOOLS = [
         "tooltip_key": "creditors_tooltip",
         "icon": "bi-person-lines"
     },
+    
+    {
+        "endpoint": "taxation_bp.calculate_tax",
+        "label": "Taxation",
+        "label_key": "taxation_calculator",
+        "description_key": "taxation_calculator_desc",
+        "tooltip_key": "taxation_tooltip",
+        "icon": "bi-calculator"
+    },
 ]
 
 _BUSINESS_EXPLORE_FEATURES = [
@@ -236,6 +263,15 @@ _BUSINESS_EXPLORE_FEATURES = [
         "tooltip_key": "inventory_tooltip",
         "icon": "bi-box"
     },
+    
+    {
+        "endpoint": "coins.history",
+        "label": "Coins",
+        "label_key": "coins_dashboard",
+        "description_key": "coins_dashboard_desc",
+        "tooltip_key": "coins_tooltip",
+        "icon": "bi-coin"
+    },
     {
         "endpoint": "taxation_bp.calculate_tax",
         "label": "Taxation",
@@ -243,6 +279,50 @@ _BUSINESS_EXPLORE_FEATURES = [
         "description_key": "taxation_calculator_desc",
         "tooltip_key": "taxation_tooltip",
         "icon": "bi-calculator"
+    },
+    
+    {
+        "endpoint": "debtors.index",
+        "label": "They Owe",
+        "label_key": "debtors_dashboard",
+        "description_key": "debtors_dashboard_desc",
+        "tooltip_key": "debtors_tooltip",
+        "icon": "bi-person-plus"
+    },
+    
+    {
+        "endpoint": "taxation_bp.calculate_tax",
+        "label": "Taxation",
+        "label_key": "taxation_calculator",
+        "description_key": "taxation_calculator_desc",
+        "tooltip_key": "taxation_tooltip",
+        "icon": "bi-calculator"
+    },
+    
+    {
+        "endpoint": "news_bp.news_list",
+        "label": "News",
+        "label_key": "news_list",
+        "description_key": "news_list_desc",
+        "tooltip_key": "news_tooltip",
+        "icon": "bi-newspaper"
+    },
+    {
+        "endpoint": "receipts.index",
+        "label": "MoneyIn",
+        "label_key": "receipts_dashboard",
+        "description_key": "receipts_dashboard",
+        "tooltip_key": "receipts_tooltip",
+        "icon": "bi-cash-coin"
+    },
+
+    {"endpoint": "payments.index",
+     "label": "MoneyOut",
+     "label_key": "payments_dashboard",
+     "description_key": "payments_dashboard",
+     "tooltip_key": "payments_tooltip",
+     "icon": "bi-person-minus"
+    
     },
 ]
 
@@ -264,20 +344,21 @@ _BUSINESS_NAV = [
         "icon": "bi-person-plus"
     },
     {
-        "endpoint": "creditors.index",
-        "label": "I Owe",
-        "label_key": "creditors_dashboard",
-        "description_key": "creditors_dashboard_desc",
-        "tooltip_key": "creditors_tooltip",
-        "icon": "bi-person-lines"
-    },
-    {
         "endpoint": "inventory.index",
         "label": "Inventory",
         "label_key": "inventory_dashboard",
         "description_key": "inventory_dashboard_desc",
         "tooltip_key": "inventory_tooltip",
         "icon": "bi-box"
+    },
+    
+    {
+        "endpoint": "settings.profile",
+        "label": "Profile",
+        "label_key": "profile_settings",
+        "description_key": "profile_settings_desc",
+        "tooltip_key": "profile_tooltip",
+        "icon": "bi-person"
     },
 ]
 
