@@ -286,8 +286,8 @@
                                 <i class="bi bi-bell ${notification.read ? 'text-muted' : 'text-primary'}"></i>
                             </div>
                             <div class="notification-content">
-                                <div class="notification-description">{{ t(notification.message, default=notification.message) | e }}</div>
-                                <div class="notification-time text-muted">{{ formatTimeAgo(notification.timestamp) }}</div>
+                                <div class="notification-description">${notification.message}</div>
+                                <div class="notification-time text-muted">${formatTimeAgo(notification.timestamp)}</div>
                             </div>
                         </div>
                     `).join('');
