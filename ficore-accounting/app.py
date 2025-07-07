@@ -1040,6 +1040,7 @@ def create_app():
             with app.app_context():
                 db = utils.get_mongo_db()
                 user_id = current_user.id
+                lang = session.get('lang', 'en')  # Get user's language
                 notifications = list(db.reminder_logs.find({
                     'user_id': user_id
                 }).sort('sent_at', -1).limit(10))
@@ -1049,14 +1050,14 @@ def create_app():
                         {'notification_id': {'$in': notification_ids}},
                         {'$set': {'read_status': True}}
                     )
-                result = [{
-                    'id': str(n['notification_id']),
-                    'message': n['message'],
-                    'type': n['type'],
-                    'timestamp': n['sent_at'].isoformat(),
-                    'read': n.get('read_status', False)
-                } for n in notifications]
-                return jsonify(result)
+                    result = [{
+                        'id': str(n['notification_id']),
+                        'message': utils.trans(n['message'], lang=lang, default=n['message']),  # Apply translation server-side
+                        'type': n['type'],
+                        'timestamp': n['sent_at'].isoformat(),
+                        'read': n.get('read_status', False)
+                    } for n in notifications]
+                    return jsonify(result)
         except Exception as e:
             logger.error(f'Error fetching notifications: {str(e)}', exc_info=True, extra={'ip_address': request.remote_addr})
             return jsonify({'error': utils.trans('general_error', default='Failed to fetch notifications')}), 500
