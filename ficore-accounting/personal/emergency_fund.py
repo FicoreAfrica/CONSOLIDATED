@@ -130,25 +130,35 @@ def main():
         form_data['email'] = current_user.email
         form_data['first_name'] = current_user.get_first_name()
     form = EmergencyFundForm(data=form_data)
-    log_tool_usage(
-        tool_name='emergency_fund',
-        user_id=current_user.id if current_user.is_authenticated else None,
-        session_id=session['sid'],
-        action='main_view',
-        mongo=get_mongo_db()
-    )
+    try:
+        log_tool_usage(
+            tool_name='emergency_fund',
+            user_id=current_user.id if current_user.is_authenticated else None,
+            session_id=session['sid'],
+            action='main_view',
+            mongo=get_mongo_db()
+        )
+    except Exception as e:
+        current_app.logger.error(f"Failed to log tool usage: {str(e)}", extra={'session_id': session.get('sid', 'unknown')})
+        flash(trans('emergency_fund_log_error', default='Error logging emergency fund activity. Please try again.'), 'warning')
+    
     try:
         filter_kwargs = {} if is_admin() else {'user_id': current_user.id} if current_user.is_authenticated else {'session_id': session['sid']}
         if request.method == 'POST':
             action = request.form.get('action')
             if action == 'create_plan' and form.validate_on_submit():
-                log_tool_usage(
-                    tool_name='emergency_fund',
-                    user_id=current_user.id if current_user.is_authenticated else None,
-                    session_id=session['sid'],
-                    action='create_plan',
-                    mongo=get_mongo_db()
-                )
+                try:
+                    log_tool_usage(
+                        tool_name='emergency_fund',
+                        user_id=current_user.id if current_user.is_authenticated else None,
+                        session_id=session['sid'],
+                        action='create_plan',
+                        mongo=get_mongo_db()
+                    )
+                except Exception as e:
+                    current_app.logger.error(f"Failed to log emergency fund plan creation: {str(e)}", extra={'session_id': session.get('sid', 'unknown')})
+                    flash(trans('emergency_fund_log_error', default='Error logging emergency fund plan creation. Continuing with submission.'), 'warning')
+                
                 months = int(form.timeline.data)
                 base_target = form.monthly_expenses.data * months
                 recommended_months = months
@@ -390,13 +400,18 @@ def unsubscribe(email):
     session.permanent = True
     session.modified = True
     try:
-        log_tool_usage(
-            tool_name='emergency_fund',
-            user_id=current_user.id if current_user.is_authenticated else None,
-            session_id=session['sid'],
-            action='unsubscribe',
-            mongo=get_mongo_db()
-        )
+        try:
+            log_tool_usage(
+                tool_name='emergency_fund',
+                user_id=current_user.id if current_user.is_authenticated else None,
+                session_id=session['sid'],
+                action='unsubscribe',
+                mongo=get_mongo_db()
+            )
+        except Exception as e:
+            current_app.logger.error(f"Failed to log unsubscribe action: {str(e)}", extra={'session_id': session.get('sid', 'unknown')})
+            flash(trans('emergency_fund_log_error', default='Error logging unsubscribe action. Continuing with unsubscription.'), 'warning')
+        
         filter_kwargs = {'email': email}
         if current_user.is_authenticated and not is_admin():
             filter_kwargs['user_id'] = current_user.id
