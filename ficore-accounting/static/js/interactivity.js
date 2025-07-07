@@ -66,13 +66,15 @@ document.addEventListener('DOMContentLoaded', function() {
                 toolsSection.removeAttribute('tabindex');
             } else {
                 console.warn('Tools section not found, navigating to first tool URL');
-                // Prioritize tools_for_template URLs
                 const toolUrls = [
                     'https://financial-health-score-8jvu.onrender.com/inventory/',
                     'https://financial-health-score-8jvu.onrender.com/creditors/',
-                    'https://financial-health-score-8jvu.onrender.com/coins/history'
+                    'https://financial-health-score-8jvu.onrender.com/coins/history',
+                    'https://financial-health-score-8jvu.onrender.com/debtors/'
                 ];
-                const firstToolLink = document.querySelector(`a[href="${toolUrls[0]}"]`) || document.querySelector('a[href*="inventory/"]');
+                const firstToolLink = toolUrls
+                    .map(url => document.querySelector(`a[href="${url}"]`))
+                    .find(link => link) || document.querySelector('a[href*="inventory/"]');
                 if (firstToolLink) {
                     window.location.href = firstToolLink.getAttribute('href');
                 } else {
