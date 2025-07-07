@@ -116,7 +116,6 @@
     --bs-btn-close-bg: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='%23f1f5f9'%3e%3cpath d='M2.146 2.146a.5.5 0 0 1 .708 0L8 7.293l5.146-5.147a.5.5 0 0 1 .708.708L8.707 8l5.147 5.146a.5.5 0 0 1-.708.708L8 8.707l-5.146 5.147a.5.5 0 0 1-.708-.708L7.293 8 2.146 2.854a.5.5 0 0 1 0-.708z'/%3e%3c/svg%3e");
     --gradient-primary: linear-gradient(135deg, #2a3447, #1e293b);
     --gradient-accent: linear-gradient(135deg, #4b6cb7, #182848);
-    --transition-base: all 0.3s ease;
 }
 
 /* --- General Styles --- */
@@ -274,6 +273,8 @@ h4 { font-size: 1rem; }
     flex-direction: column;
     gap: 16px;
     padding: 0 16px;
+    box-sizing: border-box;
+    overflow-x: hidden;
 }
 
 .snapshot-card {
@@ -283,6 +284,7 @@ h4 { font-size: 1rem; }
     border-radius: 12px;
     box-shadow: 0 2px 6px rgba(0,0,0,0.05);
     text-align: center;
+    box-sizing: border-box;
 }
 
 /* Financial Summary */
@@ -294,6 +296,7 @@ h4 { font-size: 1rem; }
     background: var(--gradient-primary);
     overflow-x: hidden;
     transition: var(--transition-base);
+    box-sizing: border-box;
 }
 
 .dark-mode .financial-snapshots {
@@ -345,12 +348,20 @@ h4 { font-size: 1rem; }
     text-align: center;
     transition: var(--transition-base);
     overflow: hidden;
+    display: flex;
+    justify-content: space-between;
+    flex-wrap: wrap;
 }
 
 .net-position-card:hover {
     transform: translateY(-6px);
     box-shadow: var(--card-shadow-hover);
     filter: brightness(1.08);
+}
+
+.net-position-info {
+    min-width: 0;
+    flex: 1;
 }
 
 .stat-cards-container {
@@ -659,6 +670,8 @@ h4 { font-size: 1rem; }
     flex-direction: column;
     gap: 16px;
     padding: 16px;
+    box-sizing: border-box;
+    overflow-x: hidden;
 }
 
 .explore-card {
@@ -670,6 +683,7 @@ h4 { font-size: 1rem; }
     width: 100%;
     box-sizing: border-box;
     box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+    margin-bottom: 16px;
 }
 
 .explore-card-icon {
@@ -714,6 +728,8 @@ h4 { font-size: 1rem; }
     border-radius: 12px;
     margin-bottom: 16px;
     box-shadow: 0 2px 5px rgba(0,0,0,0.04);
+    box-sizing: border-box;
+    overflow-x: hidden;
 }
 
 .nav-card {
