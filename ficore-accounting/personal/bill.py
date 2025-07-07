@@ -109,7 +109,7 @@ def main():
     """Main bill management interface with tabbed layout."""
     form = BillForm(data={
         'email': current_user.email if current_user.is_authenticated else '',
-        'first_name': current_user.username if current_user.is_authenticated else ''
+        'first_name': current_user.get_first_name() if current_user.is_authenticated else ''
     })
     try:
         log_tool_usage(
