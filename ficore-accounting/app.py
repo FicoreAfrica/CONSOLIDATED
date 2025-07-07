@@ -215,6 +215,13 @@ class User(UserMixin):
     def get_id(self):
         return str(self.id)
 
+    def get_first_name(self):
+        with current_app.app_context():
+            user = utils.get_mongo_db().users.find_one({'_id': self.id})
+            if user and 'personal_details' in user:
+                return user['personal_details'].get('first_name', self.display_name)
+            return self.display_name
+
 def create_app():
     app = Flask(__name__, template_folder='templates', static_folder='static')
     CORS(app, resources={r"/api/*": {"origins": "*"}})
@@ -354,7 +361,7 @@ def create_app():
                 db.emergency_funds.create_index([('session_id', 1), ('created_at', -1)])
                 db.financial_health_scores.create_index([('user_id', 1), ('created_at', -1)])
                 db.financial_health_scores.create_index([('session_id', 1), ('created_at', -1)])
-                db.net_worth_data.create_index([('user_id', 1), ('created_at', -1)])
+                db.net_worth_data.create_index([('user_id', 1 perception(1), ('due_date', 1), ('status', 1)]) 
                 db.net_worth_data.create_index([('session_id', 1), ('created_at', -1)])
                 db.quiz_responses.create_index([('user_id', 1), ('created_at', -1)])
                 db.quiz_responses.create_index([('session_id', 1), ('created_at', -1)])
