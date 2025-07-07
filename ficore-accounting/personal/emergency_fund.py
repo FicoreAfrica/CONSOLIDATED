@@ -15,7 +15,7 @@ from utils import requires_role, is_admin, get_mongo_db, format_currency, limite
 emergency_fund_bp = Blueprint(
     'emergency_fund',
     __name__,
-    template_folder='templates/emergency_fund',
+    template_folder='templates/EMERGENCYFUND',
     url_prefix='/emergency_fund'
 )
 
