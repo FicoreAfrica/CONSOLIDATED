@@ -376,7 +376,7 @@ h4 { font-size: clamp(1rem, 2.5vw, 1.25rem); }
 
 .summary-cards {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    grid-template-columns: repeat(2, 1fr); /* Always 2 columns */
     gap: 1.5rem;
     margin-bottom: 1.5rem;
     padding: 0;
@@ -409,7 +409,6 @@ h4 { font-size: clamp(1rem, 2.5vw, 1.25rem); }
 .summary-card:hover::before {
     opacity: 1;
 }
-
 .summary-card:hover {
     transform: translateY(-8px);
     box-shadow: var(--card-shadow-hover);
@@ -423,7 +422,6 @@ h4 { font-size: clamp(1rem, 2.5vw, 1.25rem); }
 .summary-card.credit-card::before {
     background: var(--button-success-bg);
 }
-
 .card-header {
     display: flex;
     align-items: center;
@@ -595,42 +593,42 @@ h4 { font-size: clamp(1rem, 2.5vw, 1.25rem); }
     gap: 0.5rem;
 }
 
-/* Quick Actions */
+/* Quick Actions - Streamlined */
 .quick-actions {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-    gap: 1.5rem;
-    margin: 2rem 0;
-    padding: 2rem;
-    background: var(--gradient-card);
-    border-radius: 16px;
-    box-shadow: var(--card-shadow);
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 1rem;
+    margin: 1.5rem 0;
+    padding: 0;
+    background: transparent;
+    border-radius: 0;
+    box-shadow: none;
     transition: var(--transition-base);
 }
 
 .dark-mode .quick-actions {
-    background: var(--gradient-card);
+    background: transparent;
 }
 
 .quick-action-card {
     background: var(--card-bg);
-    border-radius: 16px;
-    padding: 1.5rem;
+    border-radius: 12px;
+    padding: 1rem;
     border: 1px solid var(--card-border);
     box-shadow: var(--card-shadow);
     display: flex;
     flex-direction: column;
     align-items: center;
     text-align: center;
-    transition: transform 0.3s ease, box-shadow 0.3s ease, background 0.3s ease;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
     position: relative;
     overflow: hidden;
+    min-height: 130px;
 }
 
 .quick-action-card:hover {
-    transform: translateY(-8px);
+    transform: translateY(-6px);
     box-shadow: var(--card-shadow-hover);
-    background: var(--gradient-accent);
 }
 
 .quick-action-card.deposit {
