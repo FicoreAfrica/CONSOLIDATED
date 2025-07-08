@@ -89,6 +89,14 @@ _PERSONAL_TOOLS = [
         "icon": "bi-wallet"
     },
     {
+        "endpoint": "personal.bill.main",
+        "label": "Bills",
+        "label_key": "bill_bill_planner",
+        "description_key": "bill_bill_desc",
+        "tooltip_key": "bill_tooltip",
+        "icon": "bi-receipt"
+    },
+    {
         "endpoint": "personal.quiz.main",
         "label": "Quiz",
         "label_key": "quiz_personality_quiz",
@@ -104,13 +112,14 @@ _PERSONAL_TOOLS = [
         "tooltip_key": "taxation_tooltip",
         "icon": "bi-calculator"
     },
+    
     {
-        "endpoint": "news_bp.news_list",
-        "label": "News",
-        "label_key": "news_list",
-        "description_key": "news_list_desc",
-        "tooltip_key": "news_tooltip",
-        "icon": "bi-newspaper"
+        "endpoint": "coins.history",
+        "label": "Coins",
+        "label_key": "coins_dashboard",
+        "description_key": "coins_dashboard_desc",
+        "tooltip_key": "coins_tooltip",
+        "icon": "bi-coin"
     },
 ]
 
@@ -252,6 +261,15 @@ _BUSINESS_TOOLS = [
         "tooltip_key": "taxation_tooltip",
         "icon": "bi-calculator"
     },
+    
+    {
+        "endpoint": "coins.history",
+        "label": "Coins",
+        "label_key": "coins_dashboard",
+        "description_key": "coins_dashboard_desc",
+        "tooltip_key": "coins_tooltip",
+        "icon": "bi-coin"
+    },
 ]
 
 _BUSINESS_EXPLORE_FEATURES = [
@@ -378,14 +396,6 @@ _AGENT_TOOLS = [
         "description_key": "coins_dashboard_desc",
         "tooltip_key": "coins_tooltip",
         "icon": "bi-coin"
-    },
-    {
-        "endpoint": "news_bp.news_list",
-        "label": "News",
-        "label_key": "news_list",
-        "description_key": "news_list_desc",
-        "tooltip_key": "news_tooltip",
-        "icon": "bi-newspaper"
     },
 ]
 
