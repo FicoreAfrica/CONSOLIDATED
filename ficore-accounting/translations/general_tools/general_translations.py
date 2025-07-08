@@ -7,6 +7,7 @@ GENERAL_TRANSLATIONS = {
         'general_en': 'English',
         'general_ha': 'Hausa',
         'general_page_not_found': 'Page not found',
+        'general_access_now': 'Access Now',
         'general_login_required': 'Please log in to access this page.',
         'general_no_permission': 'You do not have permission to access this page.',
         'They Owe': 'They Owe',
@@ -1500,6 +1501,7 @@ GENERAL_TRANSLATIONS = {
             'general_mobile_navigation': 'Kewayawa ta wayar hannu',
             'Inventory_desc': 'Bayanin kaya',
             'I Owe_desc': 'Bayanin bashi na',
+        'general_access_now': 'Fara Yanzu',
         'general_mode_toggle_tooltip_switch_to_black': 'Juyar da zuwa yanayin haske', # Literally: "Turn to light mode"
         'toggle_light_mode': 'Kunna yanayin haske', # "Turn on light mode"
         'toggle_dark_mode': 'Kunna yanayin duhu', # "Turn on dark mode"
