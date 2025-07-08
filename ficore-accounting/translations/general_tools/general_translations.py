@@ -11,6 +11,9 @@ GENERAL_TRANSLATIONS = {
         'general_no_permission': 'You do not have permission to access this page.',
         'They Owe': 'They Owe',
         'general_explore': 'Explore',
+        'general_mode_toggle_tooltip_switch_to_black': 'Toggle light mode',
+        'toggle_light_mode': 'Toggle light mode',
+        'toggle_dark_mode': 'Toggle dark mode',
         'general_try_again_or_contact_support':'Try again or contact support',
         'taxation_calculator_desc': 'Calculate your tax obligations.',
         'settings_profile_title': 'Profile Settings',
@@ -1497,6 +1500,9 @@ GENERAL_TRANSLATIONS = {
             'general_mobile_navigation': 'Kewayawa ta wayar hannu',
             'Inventory_desc': 'Bayanin kaya',
             'I Owe_desc': 'Bayanin bashi na',
+        'general_mode_toggle_tooltip_switch_to_black': 'Juyar da zuwa yanayin haske', # Literally: "Turn to light mode"
+        'toggle_light_mode': 'Kunna yanayin haske', # "Turn on light mode"
+        'toggle_dark_mode': 'Kunna yanayin duhu', # "Turn on dark mode"
         'taxation_calculator_desc': 'Duba harajinku.',
         'settings_profile_title': 'Sashenku',
             'They Owe_desc': 'Bayanin bashin su',
