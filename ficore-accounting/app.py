@@ -284,9 +284,10 @@ def create_app():
         
         def shutdown_mongo_client():
             try:
-                if hasattr(app, 'extensions') and 'mongo' in app.extensions:
-                    app.extensions['mongo'].close()
-                    logger.info('MongoDB client closed successfully')
+                with app.app_context():
+                    if hasattr(app, 'extensions') and 'mongo' in app.extensions:
+                        app.extensions['mongo'].close()
+                        logger.info('MongoDB client closed successfully')
             except Exception as e:
                 logger.error(f'Error closing MongoDB client: {str(e)}', exc_info=True)
         
@@ -383,18 +384,19 @@ def create_app():
             
             # Seed tax and news data
             try:
-                tax_version = db.tax_rates.find_one({'_id': 'version'})
-                current_tax_version = '2025-07-02'
-                if not tax_version or tax_version.get('version') != current_tax_version:
-                    seed_tax_data()
-                    db.tax_rates.update_one(
-                        {'_id': 'version'},
-                        {'$set': {'version': current_tax_version, 'updated_at': datetime.utcnow(), 'role': 'system'}},
-                        upsert=True
-                    )
-                    logger.info(f'Tax data seeded or updated to version {current_tax_version}')
-                else:
-                    logger.info('Tax data already up-to-date')
+                with app.app_context():
+                    tax_version = db.tax_rates.find_one({'_id': 'version'})
+                    current_tax_version = '2025-07-02'
+                    if not tax_version or tax_version.get('version') != current_tax_version:
+                        seed_tax_data()
+                        db.tax_rates.update_one(
+                            {'_id': 'version'},
+                            {'$set': {'version': current_tax_version, 'updated_at': datetime.utcnow(), 'role': 'system'}},
+                            upsert=True
+                        )
+                        logger.info(f'Tax data seeded or updated to version {current_tax_version}')
+                    else:
+                        logger.info('Tax data already up-to-date')
                 
                 if db.news.count_documents({}) == 0:
                     seed_news()
@@ -429,69 +431,70 @@ def create_app():
             else:
                 logger.info(f'Admin user already exists with email: {admin_email}')
 
-            # Initialize tools with URLs
+            # Register blueprints
+            from users.routes import users_bp
+            from agents.routes import agents_bp
+            from creditors.routes import creditors_bp
+            from dashboard.routes import dashboard_bp
+            from debtors.routes import debtors_bp
+            from inventory.routes import inventory_bp
+            from payments.routes import payments_bp
+            from receipts.routes import receipts_bp
+            from reports.routes import reports_bp
+            from settings.routes import settings_bp
+            from personal import personal_bp
+            from general.routes import general_bp
+            from admin.routes import admin_bp
+            from news.routes import news_bp
+            from taxation.routes import taxation_bp
+            
+            app.register_blueprint(users_bp, url_prefix='/users')
+            logger.info('Registered users blueprint')
+            app.register_blueprint(agents_bp, url_prefix='/agents')
+            logger.info('Registered agents blueprint')
+            app.register_blueprint(news_bp, url_prefix='/news')
+            logger.info('Registered news blueprint')
+            app.register_blueprint(taxation_bp, url_prefix='/taxation')
+            logger.info('Registered taxation blueprint')
+            try:
+                app.register_blueprint(coins_bp, url_prefix='/coins')
+                logger.info('Registered coins blueprint and initialized limiter')
+            except Exception as e:
+                logger.warning(f'Could not import coins blueprint: {str(e)}')
+            app.register_blueprint(creditors_bp, url_prefix='/creditors')
+            logger.info('Registered creditors blueprint')
+            app.register_blueprint(dashboard_bp, url_prefix='/dashboard')
+            logger.info('Registered dashboard blueprint')
+            app.register_blueprint(debtors_bp, url_prefix='/debtors')
+            logger.info('Registered debtors blueprint')
+            app.register_blueprint(inventory_bp, url_prefix='/inventory')
+            logger.info('Registered inventory blueprint')
+            app.register_blueprint(payments_bp, url_prefix='/payments')
+            logger.info('Registered payments blueprint')
+            app.register_blueprint(receipts_bp, url_prefix='/receipts')
+            logger.info('Registered receipts blueprint')
+            app.register_blueprint(reports_bp, url_prefix='/reports')
+            logger.info('Registered reports blueprint')
+            app.register_blueprint(settings_bp, url_prefix='/settings')
+            logger.info('Registered settings blueprint')
+            try:
+                app.register_blueprint(admin_bp, url_prefix='/admin')
+                logger.info('Registered admin blueprint')
+            except Exception as e:
+                logger.warning(f'Could not import admin blueprint: {str(e)}')
+            app.register_blueprint(personal_bp)
+            logger.info('Registered personal blueprint with url_prefix="/personal"')
+            app.register_blueprint(general_bp, url_prefix='/general')
+            logger.info('Registered general blueprint')
+
+            # Initialize tools with URLs after blueprint registration
             utils.initialize_tools_with_urls(app)
             logger.info('Initialized tools and navigation with resolved URLs')
+
     except Exception as e:
         logger.error(f'Error in create_app: {str(e)}', exc_info=True)
         raise
 
-    # Register blueprints
-    from users.routes import users_bp
-    from agents.routes import agents_bp
-    from creditors.routes import creditors_bp
-    from dashboard.routes import dashboard_bp
-    from debtors.routes import debtors_bp
-    from inventory.routes import inventory_bp
-    from payments.routes import payments_bp
-    from receipts.routes import receipts_bp
-    from reports.routes import reports_bp
-    from settings.routes import settings_bp
-    from personal import personal_bp
-    from general.routes import general_bp
-    from admin.routes import admin_bp
-    from news.routes import news_bp
-    from taxation.routes import taxation_bp
-    
-    app.register_blueprint(users_bp, url_prefix='/users')
-    logger.info('Registered users blueprint')
-    app.register_blueprint(agents_bp, url_prefix='/agents')
-    logger.info('Registered agents blueprint')
-    app.register_blueprint(news_bp, url_prefix='/news')
-    logger.info('Registered news blueprint')
-    app.register_blueprint(taxation_bp, url_prefix='/taxation')
-    logger.info('Registered taxation blueprint')
-    try:
-        app.register_blueprint(coins_bp, url_prefix='/coins')
-        logger.info('Registered coins blueprint and initialized limiter')
-    except Exception as e:
-        logger.warning(f'Could not import coins blueprint: {str(e)}')
-    app.register_blueprint(creditors_bp, url_prefix='/creditors')
-    logger.info('Registered creditors blueprint')
-    app.register_blueprint(dashboard_bp, url_prefix='/dashboard')
-    logger.info('Registered dashboard blueprint')
-    app.register_blueprint(debtors_bp, url_prefix='/debtors')
-    logger.info('Registered debtors blueprint')
-    app.register_blueprint(inventory_bp, url_prefix='/inventory')
-    logger.info('Registered inventory blueprint')
-    app.register_blueprint(payments_bp, url_prefix='/payments')
-    logger.info('Registered payments blueprint')
-    app.register_blueprint(receipts_bp, url_prefix='/receipts')
-    logger.info('Registered receipts blueprint')
-    app.register_blueprint(reports_bp, url_prefix='/reports')
-    logger.info('Registered reports blueprint')
-    app.register_blueprint(settings_bp, url_prefix='/settings')
-    logger.info('Registered settings blueprint')
-    try:
-        app.register_blueprint(admin_bp, url_prefix='/admin')
-        logger.info('Registered admin blueprint')
-    except Exception as e:
-        logger.warning(f'Could not import admin blueprint: {str(e)}')
-    app.register_blueprint(personal_bp)
-    logger.info('Registered personal blueprint with url_prefix="/personal"')
-    app.register_blueprint(general_bp, url_prefix='/general')
-    logger.info('Registered general blueprint')
-    
     # Jinja2 globals and filters
     app.jinja_env.globals.update(
         FACEBOOK_URL=app.config.get('FACEBOOK_URL', 'https://facebook.com/ficoreafrica'),
