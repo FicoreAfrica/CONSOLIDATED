@@ -4,7 +4,9 @@ Creditors management translations for accounting tools
 
 CREDITORS_TRANSLATIONS = {
     'en': {
-        'creditors_dashboard': 'Creditors Dashboard',
+        'creditors_dashboard': 'I Owe',
+        'creditors_dashboard_desc': 'Keep track of money you owe to others.',
+        'creditors_tooltip': 'Manage your debts to creditors.',
         'creditors_list': 'Creditors List',
         # Creditors
         'creditors_amount_owed': 'Amount Owed',
@@ -12,8 +14,6 @@ CREDITORS_TRANSLATIONS = {
         'creditors_edit_creditor': 'Edit Creditor',
         'creditors_delete_creditor': 'Delete Creditor',
         'creditors_create_what_you_owe': 'Create What You Owe',
-        'creditors_dashboard_desc':'Manage your creditors and track what you owe.',
-                # creditors module (English)
         'creditors_tooltip': 'I Owe',
         'creditors_create_what_you_owe_desc': 'Create a record of what you owe',
         'creditors_details': 'Creditor Details',
@@ -102,6 +102,7 @@ CREDITORS_TRANSLATIONS = {
         'creditors_what_you_owe': 'Abin da Kake Bashi',
         'creditors_insufficient_coins': 'Ba isassun kuɗaɗe don ƙara mai bashi',
         'creditors_what_you_owe_subtext': 'Bi diddigin basusukanka',
+        'creditors_tooltip': 'Sarrafa bashinka ga masu bashi.',
         'creditors_no_what_you_owe': 'Babu basusuka da aka rubuta',
         # Creditors
         'creditors_amount_owed': 'Adadin Bashi',
