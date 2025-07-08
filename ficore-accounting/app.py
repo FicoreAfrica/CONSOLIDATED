@@ -48,7 +48,7 @@ load_dotenv()
 
 # Set up logging
 root_logger = logging.getLogger('ficore_app')
-root_logger.setLevel(logging.DEBUG)  # Changed to DEBUG for better deployment diagnostics
+root_logger.setLevel(logging.DEBUG)
 
 class SessionFormatter(logging.Formatter):
     def format(self, record):
@@ -130,7 +130,7 @@ def ensure_session_id(f):
 
 def setup_logging(app):
     handler = logging.StreamHandler(sys.stderr)
-    handler.setLevel(logging.DEBUG)  # Changed to DEBUG for better diagnostics
+    handler.setLevel(logging.DEBUG)
     handler.setFormatter(SessionFormatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s [session: %(session_id)s, role: %(user_role)s, ip: %(ip_address)s]'))
     root_logger.handlers = []
     root_logger.addHandler(handler)
@@ -152,19 +152,17 @@ def setup_logging(app):
 
 def check_mongodb_connection(app):
     try:
-        with app.app_context():  # Ensure context
-            db = utils.get_mongo_db()
-            db.command('ping')
-            logger.info('MongoDB connection verified with ping')
-            return True
+        client = app.extensions['mongo']
+        client.admin.command('ping')
+        logger.info('MongoDB connection verified with ping')
+        return True
     except Exception as e:
         logger.error(f'MongoDB connection failed: {str(e)}', exc_info=True)
         return False
 
 def setup_session(app):
     try:
-        with app.app_context():  # Ensure context
-            db = utils.get_mongo_db()
+        with app.app_context():
             if not check_mongodb_connection(app):
                 logger.error('MongoDB client is not available, falling back to filesystem session')
                 app.config['SESSION_TYPE'] = 'filesystem'
@@ -172,7 +170,7 @@ def setup_session(app):
                 logger.info('Session configured with filesystem fallback')
                 return
             app.config['SESSION_TYPE'] = 'mongodb'
-            app.config['SESSION_MONGODB'] = app.mongo_client
+            app.config['SESSION_MONGODB'] = app.extensions['mongo']
             app.config['SESSION_MONGODB_DB'] = 'ficodb'
             app.config['SESSION_MONGODB_COLLECT'] = 'sessions'
             app.config['SESSION_PERMANENT'] = True
@@ -199,8 +197,8 @@ class User(UserMixin):
 
     def get(self, key, default=None):
         try:
-            with current_app.app_context():  # Ensure context
-                user = utils.get_mongo_db().users.find_one({'_id': self.id})
+            with current_app.app_context():
+                user = current_app.extensions['mongo']['ficodb'].users.find_one({'_id': self.id})
                 return user.get(key, default) if user else default
         except Exception as e:
             logger.error(f'Error fetching user data for {self.id}: {str(e)}', exc_info=True)
@@ -209,8 +207,8 @@ class User(UserMixin):
     @property
     def is_active(self):
         try:
-            with current_app.app_context():  # Ensure context
-                user = utils.get_mongo_db().users.find_one({'_id': self.id})
+            with current_app.app_context():
+                user = current_app.extensions['mongo']['ficodb'].users.find_one({'_id': self.id})
                 return user.get('is_active', True) if user else False
         except Exception as e:
             logger.error(f'Error checking active status for user {self.id}: {str(e)}', exc_info=True)
@@ -221,8 +219,8 @@ class User(UserMixin):
 
     def get_first_name(self):
         try:
-            with current_app.app_context():  # Ensure context
-                user = utils.get_mongo_db().users.find_one({'_id': self.id})
+            with current_app.app_context():
+                user = current_app.extensions['mongo']['ficodb'].users.find_one({'_id': self.id})
                 if user and 'personal_details' in user:
                     return user['personal_details'].get('first_name', self.display_name)
                 return self.display_name
@@ -280,7 +278,7 @@ def create_app():
         # Store MongoDB client in app.extensions
         app.extensions = getattr(app, 'extensions', {})
         app.extensions['mongo'] = client
-        # Verify connection outside context (no app context needed for ping)
+        # Verify connection
         client.admin.command('ping')
         logger.info('MongoDB client initialized successfully')
         
@@ -312,9 +310,8 @@ def create_app():
     @utils.login_manager.user_loader
     def load_user(user_id):
         try:
-            with app.app_context():  # Ensure context
-                db = utils.get_mongo_db()
-                user = db.users.find_one({'_id': user_id})
+            with app.app_context():
+                user = app.extensions['mongo']['ficodb'].users.find_one({'_id': user_id})
                 if not user:
                     return None
                 return User(
@@ -338,8 +335,7 @@ def create_app():
             setup_session(app)
 
             # Initialize scheduler
-            db = utils.get_mongo_db()
-            scheduler = init_scheduler(app, db)
+            scheduler = init_scheduler(app, app.extensions['mongo']['ficodb'])
             app.config['SCHEDULER'] = scheduler
             logger.info('Scheduler initialized successfully')
             
@@ -358,6 +354,7 @@ def create_app():
                 'budgets', 'bills', 'emergency_funds', 'financial_health_scores', 
                 'net_worth_data', 'quiz_responses', 'learning_materials'
             ]
+            db = app.extensions['mongo']['ficodb']
             for collection_name in personal_finance_collections:
                 if collection_name not in db.list_collection_names():
                     db.create_collection(collection_name)
@@ -597,7 +594,7 @@ def create_app():
         bottom_nav_items = []
 
         try:
-            with app.app_context():  # Ensure context
+            with app.app_context():
                 if current_user.is_authenticated:
                     if current_user.role == 'personal':
                         tools_for_template = utils.PERSONAL_TOOLS
@@ -616,9 +613,7 @@ def create_app():
                         explore_features_for_template = utils.ADMIN_EXPLORE_FEATURES
                         bottom_nav_items = utils.ADMIN_NAV
                 else:
-                    # Provide a curated snapshot of the ecosystem for unauthorized users
                     explore_features_for_template = utils.generate_tools_with_urls([
-                        # 3 Personal Tools
                         {
                             "endpoint": "personal.budget.main",
                             "label": "Budget Planner",
@@ -646,7 +641,6 @@ def create_app():
                             "icon": "bi-question-circle",
                             "category": "Personal"
                         },
-                        # 3 Business Tools
                         {
                             "endpoint": "inventory.index",
                             "label": "Inventory",
@@ -674,7 +668,6 @@ def create_app():
                             "icon": "bi-person-plus",
                             "category": "Business"
                         },
-                        # 3 Agent Functions
                         {
                             "endpoint": "agents_bp.agent_portal",
                             "label": "Agent Portal",
@@ -704,14 +697,12 @@ def create_app():
                         }
                     ])
 
-                # Validate navigation items for icons
                 for nav_list in [tools_for_template, explore_features_for_template, bottom_nav_items]:
                     for item in nav_list:
                         if not isinstance(item, dict) or 'icon' not in item or not item['icon'].startswith('bi-'):
                             logger.warning(f'Invalid or missing icon in navigation item: {item}')
                             item['icon'] = 'bi-question-circle'
 
-                # Debugging logs for navigation data
                 current_app.logger.debug(f"DEBUGGING ICONS (context_processor): tools_for_template (first 2 items): {tools_for_template[:2]}")
                 current_app.logger.debug(f"DEBUGGING ICONS (context_processor): explore_features_for_template (first 2 items): {explore_features_for_template[:2]}")
                 current_app.logger.debug(f"DEBUGGING ICONS (context_processor): bottom_nav_items (first 2 items): {bottom_nav_items[:2]}")
@@ -791,7 +782,7 @@ def create_app():
                 with app.app_context():
                     if current_user.is_authenticated:
                         try:
-                            utils.get_mongo_db().users.update_one(
+                            app.extensions['mongo']['ficodb'].users.update_one(
                                 {'_id': current_user.id}, 
                                 {'$set': {'language': new_lang}}
                             )
@@ -841,7 +832,7 @@ def create_app():
             elif current_user.role == 'personal':
                 return redirect(url_for('personal.index'))
         try:
-            with app.app_context():  # Ensure context
+            with app.app_context():
                 courses = app.config.get('COURSES', [])
             logger.info(f'Retrieved {len(courses)} courses')
             return render_template(
@@ -932,7 +923,7 @@ def create_app():
         status = {'status': 'healthy'}
         try:
             with app.app_context():
-                utils.get_mongo_db().command('ping')
+                app.extensions['mongo'].admin.command('ping')
             return jsonify(status), 200
         except Exception as e:
             logger.error(f'Health check failed: {str(e)}', exc_info=True)
@@ -988,7 +979,7 @@ def create_app():
             session['lang'] = new_lang
             with app.app_context():
                 if current_user.is_authenticated:
-                    utils.get_mongo_db().users.update_one({'_id': current_user.id}, {'$set': {'language': new_lang}})
+                    app.extensions['mongo']['ficodb'].users.update_one({'_id': current_user.id}, {'$set': {'language': new_lang}})
             logger.info(f'Language set to {new_lang}', extra={'ip_address': request.remote_addr})
             flash(utils.trans('general_language_changed', default='Language updated successfully'), 'success')
         except Exception as e:
@@ -1003,7 +994,7 @@ def create_app():
     def debt_summary():
         try:
             with app.app_context():
-                db = utils.get_mongo_db()
+                db = app.extensions['mongo']['ficodb']
                 user_id = current_user.id
                 creditors_pipeline = [
                     {'$match': {'user_id': user_id, 'type': 'creditor'}},
@@ -1031,7 +1022,7 @@ def create_app():
     def cashflow_summary():
         try:
             with app.app_context():
-                db = utils.get_mongo_db()
+                db = app.extensions['mongo']['ficodb']
                 user_id = current_user.id
                 now = datetime.utcnow()
                 month_start = datetime(now.year, now.month, 1)
@@ -1064,7 +1055,7 @@ def create_app():
     def inventory_summary():
         try:
             with app.app_context():
-                db = utils.get_mongo_db()
+                db = app.extensions['mongo']['ficodb']
                 user_id = current_user.id
                 pipeline = [
                     {'$match': {'user_id': user_id}},
@@ -1093,7 +1084,7 @@ def create_app():
     def recent_activity():
         try:
             with app.app_context():
-                db = utils.get_mongo_db()
+                db = app.extensions['mongo']['ficodb']
                 user_id = current_user.id
                 activities = []
                 recent_records = list(db.records.find(
@@ -1135,7 +1126,7 @@ def create_app():
     def notification_count():
         try:
             with app.app_context():
-                db = utils.get_mongo_db()
+                db = app.extensions['mongo']['ficodb']
                 user_id = current_user.id
                 count = db.reminder_logs.count_documents({
                     'user_id': user_id,
@@ -1152,7 +1143,7 @@ def create_app():
     def notifications():
         try:
             with app.app_context():
-                db = utils.get_mongo_db()
+                db = app.extensions['mongo']['ficodb']
                 user_id = current_user.id
                 lang = session.get('lang', 'en')
                 notifications = list(db.reminder_logs.find({
