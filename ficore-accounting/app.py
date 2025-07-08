@@ -277,17 +277,18 @@ def create_app():
             maxPoolSize=50,
             minPoolSize=5
         )
-        with app.app_context():  # Ensure context for ping
-            client.admin.command('ping')
-        app.mongo_client = client
+        # Store MongoDB client in app.extensions
+        app.extensions = getattr(app, 'extensions', {})
+        app.extensions['mongo'] = client
+        # Verify connection outside context (no app context needed for ping)
+        client.admin.command('ping')
         logger.info('MongoDB client initialized successfully')
         
         def shutdown_mongo_client():
             try:
-                with app.app_context():  # Ensure context
-                    if hasattr(app, 'mongo_client') and app.mongo_client:
-                        app.mongo_client.close()
-                        logger.info('MongoDB client closed successfully')
+                if hasattr(app, 'extensions') and 'mongo' in app.extensions:
+                    app.extensions['mongo'].close()
+                    logger.info('MongoDB client closed successfully')
             except Exception as e:
                 logger.error(f'Error closing MongoDB client: {str(e)}', exc_info=True)
         
@@ -326,31 +327,33 @@ def create_app():
             logger.error(f"Error loading user {user_id}: {str(e)}", exc_info=True)
             return None
 
-    # Initialize MongoDB and scheduler
+    # Initialize MongoDB, session, scheduler, and other components within app context
     try:
-        with app.app_context():  # Wrap entire block in context
-            db = utils.get_mongo_db()
-            try:
-                scheduler = init_scheduler(app, db)
-                app.config['SCHEDULER'] = scheduler
-                logger.info('Scheduler initialized successfully')
-                def shutdown_scheduler():
-                    try:
-                        with app.app_context():  # Ensure context
-                            if scheduler and scheduler.running:
-                                scheduler.shutdown(wait=True)
-                                logger.info('Scheduler shutdown successfully')
-                    except Exception as e:
-                        logger.error(f'Error shutting down scheduler: {str(e)}', exc_info=True)
-                atexit.register(shutdown_scheduler)
-            except Exception as e:
-                logger.error(f'Failed to initialize scheduler: {str(e)}', exc_info=True)
-    
-        setup_session(app)
-    
-        # Initialize database and collections
-        try:
+        with app.app_context():
+            # Initialize database
             initialize_database(app)
+            logger.info('Database initialized successfully')
+
+            # Setup session
+            setup_session(app)
+
+            # Initialize scheduler
+            db = utils.get_mongo_db()
+            scheduler = init_scheduler(app, db)
+            app.config['SCHEDULER'] = scheduler
+            logger.info('Scheduler initialized successfully')
+            
+            def shutdown_scheduler():
+                try:
+                    with app.app_context():
+                        if 'SCHEDULER' in app.config and app.config['SCHEDULER'].running:
+                            app.config['SCHEDULER'].shutdown(wait=True)
+                            logger.info('Scheduler shutdown successfully')
+                except Exception as e:
+                    logger.error(f'Error shutting down scheduler: {str(e)}', exc_info=True)
+            atexit.register(shutdown_scheduler)
+
+            # Initialize personal finance collections
             personal_finance_collections = [
                 'budgets', 'bills', 'emergency_funds', 'financial_health_scores', 
                 'net_worth_data', 'quiz_responses', 'learning_materials'
@@ -428,9 +431,10 @@ def create_app():
                 logger.info(f'Admin user created with email: {admin_email}')
             else:
                 logger.info(f'Admin user already exists with email: {admin_email}')
-        except Exception as e:
-            logger.error(f'Error creating collections or initializing database: {str(e)}', exc_info=True)
-            raise
+
+            # Initialize tools with URLs
+            utils.initialize_tools_with_urls(app)
+            logger.info('Initialized tools and navigation with resolved URLs')
     except Exception as e:
         logger.error(f'Error in create_app: {str(e)}', exc_info=True)
         raise
@@ -490,11 +494,6 @@ def create_app():
     logger.info('Registered personal blueprint with url_prefix="/personal"')
     app.register_blueprint(general_bp, url_prefix='/general')
     logger.info('Registered general blueprint')
-    
-    # Initialize tools with URLs
-    with app.app_context():  # Ensure context
-        utils.initialize_tools_with_urls(app)
-    logger.info('Initialized tools and navigation with resolved URLs')
     
     # Jinja2 globals and filters
     app.jinja_env.globals.update(
