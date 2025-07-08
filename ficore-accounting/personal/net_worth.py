@@ -112,8 +112,7 @@ def main():
                 tool_name='net_worth',
                 user_id=current_user.id if current_user.is_authenticated else None,
                 session_id=session['sid'],
-                action='main_view',
-                mongo=get_mongo_db()
+                action='main_view'
             )
         except Exception as e:
             current_app.logger.error(f"Failed to log tool usage: {str(e)}", extra={'session_id': session.get('sid', 'unknown')})
@@ -130,8 +129,7 @@ def main():
                         tool_name='net_worth',
                         user_id=current_user.id if current_user.is_authenticated else None,
                         session_id=session['sid'],
-                        action='calculate_net_worth',
-                        mongo=get_mongo_db()
+                        action='calculate_net_worth'
                     )
                 except Exception as e:
                     current_app.logger.error(f"Failed to log calculate_net_worth action: {str(e)}", extra={'session_id': session.get('sid', 'unknown')})
@@ -365,8 +363,7 @@ def summary():
                 tool_name='net_worth',
                 user_id=current_user.id if current_user.is_authenticated else None,
                 session_id=session.get('sid', 'unknown'),
-                action='summary_view',
-                mongo=get_mongo_db()
+                action='summary_view'
             )
         except Exception as e:
             current_app.logger.error(f"Failed to log summary action: {str(e)}", extra={'session_id': session.get('sid', 'unknown')})
@@ -393,7 +390,7 @@ def summary():
 @net_worth_bp.route('/unsubscribe/<email>')
 @custom_login_required
 @requires_role(['personal', 'admin'])
-def unsubscribe(email):
+def unsubscribe():
     """Unsubscribe user from net worth emails using MongoDB."""
     if 'sid' not in session:
         create_anonymous_session()
@@ -407,8 +404,7 @@ def unsubscribe(email):
                 tool_name='net_worth',
                 user_id=current_user.id if current_user.is_authenticated else None,
                 session_id=session['sid'],
-                action='unsubscribe',
-                mongo=get_mongo_db()
+                action='unsubscribe'
             )
         except Exception as e:
             current_app.logger.error(f"Failed to log unsubscribe action: {str(e)}", extra={'session_id': session.get('sid', 'unknown')})
