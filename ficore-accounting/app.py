@@ -379,7 +379,7 @@ def create_app():
                     seed_tax_data()
                     db.tax_rates.update_one(
                         {'_id': 'version'},
-                        {'$set': {'version': current_tax_version, 'updated_at': datetime.utcnow()}},
+                        {'$set': {'version': current_tax_version, 'updated_at': datetime.utcnow(), 'role': 'system'}},
                         upsert=True
                     )
                     logger.info(f'Tax data seeded or updated to version {current_tax_version}')
