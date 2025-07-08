@@ -48,7 +48,7 @@ load_dotenv()
 
 # Set up logging
 root_logger = logging.getLogger('ficore_app')
-root_logger.setLevel(logging.WARNING)
+root_logger.setLevel(logging.DEBUG)  # Changed to DEBUG for better deployment diagnostics
 
 class SessionFormatter(logging.Formatter):
     def format(self, record):
@@ -130,7 +130,7 @@ def ensure_session_id(f):
 
 def setup_logging(app):
     handler = logging.StreamHandler(sys.stderr)
-    handler.setLevel(logging.INFO)
+    handler.setLevel(logging.DEBUG)  # Changed to DEBUG for better diagnostics
     handler.setFormatter(SessionFormatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s [session: %(session_id)s, role: %(user_role)s, ip: %(ip_address)s]'))
     root_logger.handlers = []
     root_logger.addHandler(handler)
@@ -144,26 +144,26 @@ def setup_logging(app):
     flask_logger.addHandler(handler)
     werkzeug_logger.addHandler(handler)
     pymongo_logger.addHandler(handler)
-    flask_logger.setLevel(logging.INFO)
-    werkzeug_logger.setLevel(logging.INFO)
-    pymongo_logger.setLevel(logging.INFO)
+    flask_logger.setLevel(logging.DEBUG)
+    werkzeug_logger.setLevel(logging.DEBUG)
+    pymongo_logger.setLevel(logging.DEBUG)
     
     logger.info('Logging setup complete with StreamHandler for ficore_app, flask, werkzeug, and pymongo')
 
 def check_mongodb_connection(app):
-    with app.app_context():
-        try:
+    try:
+        with app.app_context():  # Ensure context
             db = utils.get_mongo_db()
             db.command('ping')
             logger.info('MongoDB connection verified with ping')
             return True
-        except Exception as e:
-            logger.error(f'MongoDB connection failed: {str(e)}', exc_info=True)
-            return False
+    except Exception as e:
+        logger.error(f'MongoDB connection failed: {str(e)}', exc_info=True)
+        return False
 
 def setup_session(app):
-    with app.app_context():
-        try:
+    try:
+        with app.app_context():  # Ensure context
             db = utils.get_mongo_db()
             if not check_mongodb_connection(app):
                 logger.error('MongoDB client is not available, falling back to filesystem session')
@@ -184,11 +184,11 @@ def setup_session(app):
             app.config['SESSION_COOKIE_NAME'] = 'ficore_session'
             utils.flask_session.init_app(app)
             logger.info(f'Session configured: type={app.config["SESSION_TYPE"]}, db={app.config["SESSION_MONGODB_DB"]}, collection={app.config["SESSION_MONGODB_COLLECT"]}')
-        except Exception as e:
-            logger.error(f'Failed to configure session with MongoDB: {str(e)}', exc_info=True)
-            app.config['SESSION_TYPE'] = 'filesystem'
-            utils.flask_session.init_app(app)
-            logger.info('Session configured with filesystem fallback due to MongoDB error')
+    except Exception as e:
+        logger.error(f'Failed to configure session with MongoDB: {str(e)}', exc_info=True)
+        app.config['SESSION_TYPE'] = 'filesystem'
+        utils.flask_session.init_app(app)
+        logger.info('Session configured with filesystem fallback due to MongoDB error')
 
 class User(UserMixin):
     def __init__(self, id, email, display_name=None, role='personal'):
@@ -198,28 +198,36 @@ class User(UserMixin):
         self.role = role
 
     def get(self, key, default=None):
-        with current_app.app_context():
-            user = utils.get_mongo_db().users.find_one({'_id': self.id})
-            return user.get(key, default) if user else default
+        try:
+            with current_app.app_context():  # Ensure context
+                user = utils.get_mongo_db().users.find_one({'_id': self.id})
+                return user.get(key, default) if user else default
+        except Exception as e:
+            logger.error(f'Error fetching user data for {self.id}: {str(e)}', exc_info=True)
+            return default
 
     @property
     def is_active(self):
-        with current_app.app_context():
-            try:
+        try:
+            with current_app.app_context():  # Ensure context
                 user = utils.get_mongo_db().users.find_one({'_id': self.id})
                 return user.get('is_active', True) if user else False
-            except Exception as e:
-                logger.error(f'Error checking active status for user {self.id}: {str(e)}', exc_info=True)
-                return False
+        except Exception as e:
+            logger.error(f'Error checking active status for user {self.id}: {str(e)}', exc_info=True)
+            return False
 
     def get_id(self):
         return str(self.id)
 
     def get_first_name(self):
-        with current_app.app_context():
-            user = utils.get_mongo_db().users.find_one({'_id': self.id})
-            if user and 'personal_details' in user:
-                return user['personal_details'].get('first_name', self.display_name)
+        try:
+            with current_app.app_context():  # Ensure context
+                user = utils.get_mongo_db().users.find_one({'_id': self.id})
+                if user and 'personal_details' in user:
+                    return user['personal_details'].get('first_name', self.display_name)
+                return self.display_name
+        except Exception as e:
+            logger.error(f'Error fetching first name for user {self.id}: {str(e)}', exc_info=True)
             return self.display_name
 
 def create_app():
@@ -269,22 +277,23 @@ def create_app():
             maxPoolSize=50,
             minPoolSize=5
         )
-        client.admin.command('ping')
+        with app.app_context():  # Ensure context for ping
+            client.admin.command('ping')
         app.mongo_client = client
         logger.info('MongoDB client initialized successfully')
         
         def shutdown_mongo_client():
-            with app.app_context():
-                try:
+            try:
+                with app.app_context():  # Ensure context
                     if hasattr(app, 'mongo_client') and app.mongo_client:
                         app.mongo_client.close()
                         logger.info('MongoDB client closed successfully')
-                except Exception as e:
-                    logger.error(f'Error closing MongoDB client: {str(e)}', exc_info=True)
+            except Exception as e:
+                logger.error(f'Error closing MongoDB client: {str(e)}', exc_info=True)
         
         atexit.register(shutdown_mongo_client)
     except Exception as e:
-        logger.error(f'MongoDB connection test failed: {str(e)}')
+        logger.error(f'MongoDB connection test failed: {str(e)}', exc_info=True)
         raise RuntimeError(f'Failed to connect to MongoDB: {str(e)}')
     
     # Initialize extensions
@@ -302,44 +311,45 @@ def create_app():
     @utils.login_manager.user_loader
     def load_user(user_id):
         try:
-            db = utils.get_mongo_db()
-            user = db.users.find_one({'_id': user_id})
-            if not user:
-                return None
-            return User(
-                id=user['_id'],
-                email=user['email'],
-                display_name=user.get('display_name', user['_id']),
-                role=user.get('role', 'personal')
-            )
+            with app.app_context():  # Ensure context
+                db = utils.get_mongo_db()
+                user = db.users.find_one({'_id': user_id})
+                if not user:
+                    return None
+                return User(
+                    id=user['_id'],
+                    email=user['email'],
+                    display_name=user.get('display_name', user['_id']),
+                    role=user.get('role', 'personal')
+                )
         except Exception as e:
             logger.error(f"Error loading user {user_id}: {str(e)}", exc_info=True)
             return None
 
     # Initialize MongoDB and scheduler
-    with app.app_context():
-        db = utils.get_mongo_db()
-        try:
-            scheduler = init_scheduler(app, db)
-            app.config['SCHEDULER'] = scheduler
-            logger.info('Scheduler initialized successfully')
-            def shutdown_scheduler():
-                try:
-                    if scheduler and scheduler.running:
-                        scheduler.shutdown(wait=True)
-                        logger.info('Scheduler shutdown successfully')
-                except Exception as e:
-                    logger.error(f'Error shutting down scheduler: {str(e)}', exc_info=True)
-            atexit.register(shutdown_scheduler)
-        except Exception as e:
-            logger.error(f'Failed to initialize scheduler: {str(e)}', exc_info=True)
-    
-    setup_session(app)
-    
-    # Initialize database and collections
-    with app.app_context():
-        try:
+    try:
+        with app.app_context():  # Wrap entire block in context
             db = utils.get_mongo_db()
+            try:
+                scheduler = init_scheduler(app, db)
+                app.config['SCHEDULER'] = scheduler
+                logger.info('Scheduler initialized successfully')
+                def shutdown_scheduler():
+                    try:
+                        with app.app_context():  # Ensure context
+                            if scheduler and scheduler.running:
+                                scheduler.shutdown(wait=True)
+                                logger.info('Scheduler shutdown successfully')
+                    except Exception as e:
+                        logger.error(f'Error shutting down scheduler: {str(e)}', exc_info=True)
+                atexit.register(shutdown_scheduler)
+            except Exception as e:
+                logger.error(f'Failed to initialize scheduler: {str(e)}', exc_info=True)
+    
+        setup_session(app)
+    
+        # Initialize database and collections
+        try:
             initialize_database(app)
             personal_finance_collections = [
                 'budgets', 'bills', 'emergency_funds', 'financial_health_scores', 
@@ -419,9 +429,12 @@ def create_app():
             else:
                 logger.info(f'Admin user already exists with email: {admin_email}')
         except Exception as e:
-            logger.error(f'Error creating collections or initializing database: {str(e)}')
+            logger.error(f'Error creating collections or initializing database: {str(e)}', exc_info=True)
             raise
-    
+    except Exception as e:
+        logger.error(f'Error in create_app: {str(e)}', exc_info=True)
+        raise
+
     # Register blueprints
     from users.routes import users_bp
     from agents.routes import agents_bp
@@ -479,7 +492,8 @@ def create_app():
     logger.info('Registered general blueprint')
     
     # Initialize tools with URLs
-    utils.initialize_tools_with_urls(app)
+    with app.app_context():  # Ensure context
+        utils.initialize_tools_with_urls(app)
     logger.info('Initialized tools and navigation with resolved URLs')
     
     # Jinja2 globals and filters
@@ -509,7 +523,7 @@ def create_app():
         except Exception as e:
             logger.error(f'Navigation rendering error: {str(e)}', exc_info=True)
             return {'icon': 'bi-question-circle', 'label': str(value), 'url': '#'}
-    
+
     @app.template_filter('format_number')
     def format_number(value):
         try:
@@ -583,123 +597,127 @@ def create_app():
         explore_features_for_template = []
         bottom_nav_items = []
 
-        if current_user.is_authenticated:
-            if current_user.role == 'personal':
-                tools_for_template = utils.PERSONAL_TOOLS
-                explore_features_for_template = utils.PERSONAL_EXPLORE_FEATURES
-                bottom_nav_items = utils.PERSONAL_NAV
-            elif current_user.role == 'trader':
-                tools_for_template = utils.BUSINESS_TOOLS
-                explore_features_for_template = utils.BUSINESS_EXPLORE_FEATURES
-                bottom_nav_items = utils.BUSINESS_NAV
-            elif current_user.role == 'agent':
-                tools_for_template = utils.AGENT_TOOLS
-                explore_features_for_template = utils.AGENT_EXPLORE_FEATURES
-                bottom_nav_items = utils.AGENT_NAV
-            elif current_user.role == 'admin':
-                tools_for_template = utils.ALL_TOOLS
-                explore_features_for_template = utils.ADMIN_EXPLORE_FEATURES
-                bottom_nav_items = utils.ADMIN_NAV
-        else:
-            # Provide a curated snapshot of the ecosystem for unauthorized users
-            explore_features_for_template = utils.generate_tools_with_urls([
-                # 3 Personal Tools
-                {
-                    "endpoint": "personal.budget.main",
-                    "label": "Budget Planner",
-                    "label_key": "budget_budget_planner",
-                    "description_key": "budget_budget_desc",
-                    "tooltip_key": "budget_tooltip",
-                    "icon": "bi-wallet",
-                    "category": "Personal"
-                },
-                {
-                    "endpoint": "personal.financial_health.main",
-                    "label": "Financial Health",
-                    "label_key": "financial_health_calculator",
-                    "description_key": "financial_health_desc",
-                    "tooltip_key": "financial_health_tooltip",
-                    "icon": "bi-heart",
-                    "category": "Personal"
-                },
-                {
-                    "endpoint": "personal.quiz.main",
-                    "label": "Financial Personality Quiz",
-                    "label_key": "quiz_personality_quiz",
-                    "description_key": "quiz_personality_desc",
-                    "tooltip_key": "quiz_tooltip",
-                    "icon": "bi-question-circle",
-                    "category": "Personal"
-                },
-                # 3 Business Tools
-                {
-                    "endpoint": "inventory.index",
-                    "label": "Inventory",
-                    "label_key": "inventory_dashboard",
-                    "description_key": "inventory_dashboard_desc",
-                    "tooltip_key": "inventory_tooltip",
-                    "icon": "bi-box",
-                    "category": "Business"
-                },
-                {
-                    "endpoint": "creditors.index",
-                    "label": "I Owe",
-                    "label_key": "creditors_dashboard",
-                    "description_key": "creditors_dashboard_desc",
-                    "tooltip_key": "creditors_tooltip",
-                    "icon": "bi-person-lines",
-                    "category": "Business"
-                },
-                {
-                    "endpoint": "debtors.index",
-                    "label": "They Owe",
-                    "label_key": "debtors_dashboard",
-                    "description_key": "debtors_dashboard_desc",
-                    "tooltip_key": "debtors_tooltip",
-                    "icon": "bi-person-plus",
-                    "category": "Business"
-                },
-                # 3 Agent Functions
-                {
-                    "endpoint": "agents_bp.agent_portal",
-                    "label": "Agent Portal",
-                    "label_key": "agents_dashboard",
-                    "description_key": "agents_dashboard_desc",
-                    "tooltip_key": "agents_tooltip",
-                    "icon": "bi-person-workspace",
-                    "category": "Agent"
-                },
-                {
-                    "endpoint": "coins.history",
-                    "label": "Coins",
-                    "label_key": "coins_dashboard",
-                    "description_key": "coins_dashboard_desc",
-                    "tooltip_key": "coins_tooltip",
-                    "icon": "bi-coin",
-                    "category": "Agent"
-                },
-                {
-                    "endpoint": "news_bp.news_list",
-                    "label": "News",
-                    "label_key": "news_list",
-                    "description_key": "news_list_desc",
-                    "tooltip_key": "news_tooltip",
-                    "icon": "bi-newspaper",
-                    "category": "Agent"
-                }
-            ])
+        try:
+            with app.app_context():  # Ensure context
+                if current_user.is_authenticated:
+                    if current_user.role == 'personal':
+                        tools_for_template = utils.PERSONAL_TOOLS
+                        explore_features_for_template = utils.PERSONAL_EXPLORE_FEATURES
+                        bottom_nav_items = utils.PERSONAL_NAV
+                    elif current_user.role == 'trader':
+                        tools_for_template = utils.BUSINESS_TOOLS
+                        explore_features_for_template = utils.BUSINESS_EXPLORE_FEATURES
+                        bottom_nav_items = utils.BUSINESS_NAV
+                    elif current_user.role == 'agent':
+                        tools_for_template = utils.AGENT_TOOLS
+                        explore_features_for_template = utils.AGENT_EXPLORE_FEATURES
+                        bottom_nav_items = utils.AGENT_NAV
+                    elif current_user.role == 'admin':
+                        tools_for_template = utils.ALL_TOOLS
+                        explore_features_for_template = utils.ADMIN_EXPLORE_FEATURES
+                        bottom_nav_items = utils.ADMIN_NAV
+                else:
+                    # Provide a curated snapshot of the ecosystem for unauthorized users
+                    explore_features_for_template = utils.generate_tools_with_urls([
+                        # 3 Personal Tools
+                        {
+                            "endpoint": "personal.budget.main",
+                            "label": "Budget Planner",
+                            "label_key": "budget_budget_planner",
+                            "description_key": "budget_budget_desc",
+                            "tooltip_key": "budget_tooltip",
+                            "icon": "bi-wallet",
+                            "category": "Personal"
+                        },
+                        {
+                            "endpoint": "personal.financial_health.main",
+                            "label": "Financial Health",
+                            "label_key": "financial_health_calculator",
+                            "description_key": "financial_health_desc",
+                            "tooltip_key": "financial_health_tooltip",
+                            "icon": "bi-heart",
+                            "category": "Personal"
+                        },
+                        {
+                            "endpoint": "personal.quiz.main",
+                            "label": "Financial Personality Quiz",
+                            "label_key": "quiz_personality_quiz",
+                            "description_key": "quiz_personality_desc",
+                            "tooltip_key": "quiz_tooltip",
+                            "icon": "bi-question-circle",
+                            "category": "Personal"
+                        },
+                        # 3 Business Tools
+                        {
+                            "endpoint": "inventory.index",
+                            "label": "Inventory",
+                            "label_key": "inventory_dashboard",
+                            "description_key": "inventory_dashboard_desc",
+                            "tooltip_key": "inventory_tooltip",
+                            "icon": "bi-box",
+                            "category": "Business"
+                        },
+                        {
+                            "endpoint": "creditors.index",
+                            "label": "I Owe",
+                            "label_key": "creditors_dashboard",
+                            "description_key": "creditors_dashboard_desc",
+                            "tooltip_key": "creditors_tooltip",
+                            "icon": "bi-person-lines",
+                            "category": "Business"
+                        },
+                        {
+                            "endpoint": "debtors.index",
+                            "label": "They Owe",
+                            "label_key": "debtors_dashboard",
+                            "description_key": "debtors_dashboard_desc",
+                            "tooltip_key": "debtors_tooltip",
+                            "icon": "bi-person-plus",
+                            "category": "Business"
+                        },
+                        # 3 Agent Functions
+                        {
+                            "endpoint": "agents_bp.agent_portal",
+                            "label": "Agent Portal",
+                            "label_key": "agents_dashboard",
+                            "description_key": "agents_dashboard_desc",
+                            "tooltip_key": "agents_tooltip",
+                            "icon": "bi-person-workspace",
+                            "category": "Agent"
+                        },
+                        {
+                            "endpoint": "coins.history",
+                            "label": "Coins",
+                            "label_key": "coins_dashboard",
+                            "description_key": "coins_dashboard_desc",
+                            "tooltip_key": "coins_tooltip",
+                            "icon": "bi-coin",
+                            "category": "Agent"
+                        },
+                        {
+                            "endpoint": "news_bp.news_list",
+                            "label": "News",
+                            "label_key": "news_list",
+                            "description_key": "news_list_desc",
+                            "tooltip_key": "news_tooltip",
+                            "icon": "bi-newspaper",
+                            "category": "Agent"
+                        }
+                    ])
 
-        # Validate navigation items for icons
-        for nav_list in [tools_for_template, explore_features_for_template, bottom_nav_items]:
-            for item in nav_list:
-                if not isinstance(item, dict) or 'icon' not in item or not item['icon'].startswith('bi-'):
-                    logger.warning(f'Invalid or missing icon in navigation item: {item}')
-                    item['icon'] = 'bi-question-circle'
+                # Validate navigation items for icons
+                for nav_list in [tools_for_template, explore_features_for_template, bottom_nav_items]:
+                    for item in nav_list:
+                        if not isinstance(item, dict) or 'icon' not in item or not item['icon'].startswith('bi-'):
+                            logger.warning(f'Invalid or missing icon in navigation item: {item}')
+                            item['icon'] = 'bi-question-circle'
 
-        # Debugging logs for navigation data
-        current_app.logger.debug(f"DEBUGGING ICONS (context_processor): tools_for_template (first 2 items): {tools_for_template[:2]}")
-        current_app.logger.debug(f"DEBUGGING ICONS (context_processor): explore_features_for_template (first 2 items): {explore_features_for_template[:2]}")
-        current_app.logger.debug(f"DEBUGGING ICONS (context_processor): bottom_nav_items (first 2 items): {bottom_nav_items[:2]}")
+                # Debugging logs for navigation data
+                current_app.logger.debug(f"DEBUGGING ICONS (context_processor): tools_for_template (first 2 items): {tools_for_template[:2]}")
+                current_app.logger.debug(f"DEBUGGING ICONS (context_processor): explore_features_for_template (first 2 items): {explore_features_for_template[:2]}")
+                current_app.logger.debug(f"DEBUGGING ICONS (context_processor): bottom_nav_items (first 2 items): {bottom_nav_items[:2]}")
+        except Exception as e:
+            logger.error(f'Error in inject_role_nav: {str(e)}', exc_info=True)
 
         return dict(
             tools_for_template=tools_for_template,
@@ -824,7 +842,8 @@ def create_app():
             elif current_user.role == 'personal':
                 return redirect(url_for('personal.index'))
         try:
-            courses = app.config.get('COURSES', [])
+            with app.app_context():  # Ensure context
+                courses = app.config.get('COURSES', [])
             logger.info(f'Retrieved {len(courses)} courses')
             return render_template(
                 'personal/GENERAL/index.html',
@@ -832,7 +851,7 @@ def create_app():
                 sample_courses=courses,
                 title=utils.trans('general_welcome', lang=lang),
                 is_anonymous=session.get('is_anonymous', False),
-                is_public=True  # Indicate public marketing page
+                is_public=True
             )
         except TemplateNotFound as e:
             logger.error(f'Template not found: {str(e)}', exc_info=True)
@@ -1136,8 +1155,7 @@ def create_app():
             with app.app_context():
                 db = utils.get_mongo_db()
                 user_id = current_user.id
-                lang = session.get('lang', 'en')  # Get user's language
-                # Fetch notifications
+                lang = session.get('lang', 'en')
                 notifications = list(db.reminder_logs.find({
                     'user_id': user_id
                 }).sort('sent_at', -1).limit(10))
@@ -1335,4 +1353,5 @@ def create_app():
 app = create_app()
 
 if __name__ == '__main__':
+    logger.info('Starting Flask app with gunicorn')
     app.run(host='0.0.0.0', port=int(os.environ.get('PORT', 5000)), debug=os.getenv('FLASK_ENV', 'development') == 'development')
