@@ -211,7 +211,7 @@
 
         async function loadNotificationCount() {
             try {
-                const response = await fetch('{{' url_for("personal.notification_count") | e }}');
+                const response = await fetch('{{ url_for("personal.notification_count") | e }}');
                 if (!response.ok) throw new Error('Network response was not ok');
                 const data = await response.json();
                 const badge = document.getElementById('notificationBadge');
