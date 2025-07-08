@@ -2158,3 +2158,161 @@ h2.card-title {
         display: none;
     }
 }
+/* General container styling */
+.page-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 2rem 1rem;
+}
+
+/* Section card styling */
+.section-card {
+    background: #fff;
+    border-radius: 10px;
+    padding: 2rem;
+    margin-bottom: 2rem;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+/* Hero section */
+.hero {
+    background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
+    color: #fff;
+    padding: 3rem;
+    border-radius: 12px;
+}
+.hero .section-title {
+    font-size: 2.5rem;
+    font-weight: 700;
+}
+.hero .lead {
+    font-size: 1.25rem;
+}
+.hero-actions .btn {
+    padding: 0.75rem 1.5rem;
+    font-size: 1.1rem;
+}
+.hero-actions .dropdown-menu {
+    border-radius: 8px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+/* Role cards */
+.role-card {
+    background: #fff;
+    padding: 1.5rem;
+    border-radius: 8px;
+    transition: transform 0.2s;
+}
+.role-card:hover {
+    transform: translateY(-5px);
+}
+.role-card h3 {
+    font-size: 1.5rem;
+    margin-bottom: 1rem;
+}
+.role-card p {
+    font-size: 0.95rem;
+}
+
+/* Tools section */
+.tools-section .tool-card {
+    background: #fff;
+    padding: 1.5rem;
+    border-radius: 8px;
+    transition: transform 0.2s;
+}
+.tools-section .tool-card:hover {
+    transform: translateY(-5px);
+}
+.tools-section h3 {
+    font-size: 1.75rem;
+    margin-bottom: 1.5rem;
+}
+.tools-section .tool-card h4 {
+    font-size: 1.25rem;
+    margin-bottom: 0.75rem;
+}
+.tools-section .tool-card p {
+    font-size: 0.9rem;
+}
+.tools-section .btn {
+    width: 100%;
+}
+
+/* Why FiCore section */
+.why-section .why-item {
+    padding: 1rem;
+}
+.why-section .why-item i {
+    font-size: 2rem;
+}
+.why-section p {
+    font-size: 0.95rem;
+}
+.animated-counter {
+    font-weight: 700;
+}
+
+/* Testimonials section */
+.testimonials-section .testimonial {
+    max-width: 600px;
+    margin: 0 auto;
+}
+.testimonials-section .avatar-circle {
+    width: 60px;
+    height: 60px;
+    line-height: 60px;
+    font-size: 1.5rem;
+    background: linear-gradient(135deg, #007bff, #00d4ff);
+    color: #fff;
+    border-radius: 50%;
+}
+.testimonials-section .carousel-control-prev,
+.testimonials-section .carousel-control-next {
+    width: 5%;
+}
+.testimonials-section .carousel-control-prev-icon,
+.testimonials-section .carousel-control-next-icon {
+    background-color: rgba(0, 0, 0, 0.5);
+    border-radius: 50%;
+}
+
+/* FAQ section */
+.faq-section .accordion-button {
+    font-size: 1.1rem;
+    font-weight: 500;
+}
+.faq-section .accordion-body {
+    font-size: 0.95rem;
+}
+
+/* CTA section */
+.cta-section {
+    background: #f8f9fa;
+    padding: 3rem;
+    border-radius: 12px;
+}
+.cta-section .section-title {
+    font-size: 2rem;
+}
+.cta-section .btn {
+    padding: 0.75rem 1.5rem;
+    font-size: 1.1rem;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .hero .section-title {
+        font-size: 2rem;
+    }
+    .hero .lead {
+        font-size: 1rem;
+    }
+    .tools-section .tool-card h4 {
+        font-size: 1.1rem;
+    }
+    .tools-section .tool-card p {
+        font-size: 0.85rem;
+    }
+}
