@@ -2391,3 +2391,55 @@ h2.card-title {
 .dark-mode .hero .dropdown-divider {
     border-top: 1px solid var(--card-border); /* #4b5563 */
 }
+/* Remove text truncation and ensure proper text wrapping */
+.snapshot-label,
+.notification-description,
+.activity-description,
+.action-label {
+    white-space: normal !important;
+    word-break: break-word !important;
+    overflow-wrap: anywhere !important;
+    max-width: 100%;
+    text-overflow: unset !important; /* Override Bootstrap's text-truncate */
+}
+
+/* Enhance tool-card padding and spacing for text wrapping */
+.tool-card {
+    padding: 1.75rem !important; /* Increased padding for more space */
+    min-height: 200px; /* Ensure enough height for wrapped text */
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    background: var(--card-bg);
+    border-radius: 8px;
+    border: 1px solid var(--card-border);
+    box-shadow: var(--card-shadow);
+    transition: transform 0.2s ease;
+}
+
+.tool-card h4 {
+    font-size: clamp(1rem, 2.5vw, 1.25rem);
+    font-weight: 600;
+    color: var(--text-color);
+    margin-bottom: 0.75rem;
+    white-space: normal;
+    word-break: break-word;
+    overflow-wrap: anywhere;
+    max-width: 100%;
+}
+
+.tool-card p {
+    font-size: clamp(0.875rem, 2vw, 1rem);
+    color: var(--text-muted);
+    margin-bottom: 1rem;
+    white-space: normal;
+    word-break: break-word;
+    overflow-wrap: anywhere;
+    max-width: 100%;
+}
+
+.tool-card .btn {
+    width: 100%;
+    padding: 0.75rem 1.5rem;
+    font-size: clamp(0.875rem, 2vw, 1rem);
+}
