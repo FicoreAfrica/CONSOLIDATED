@@ -480,14 +480,14 @@ def create_app():
     
     # Initialize tools with URLs
     utils.initialize_tools_with_urls(app)
-    logger.warning('Initialized tools and navigation with resolved URLs')
+    logger.info('Initialized tools and navigation with resolved URLs')
     
     # Jinja2 globals and filters
     app.jinja_env.globals.update(
-        FACEBOOK_URL=app.config.get('FACEBOOK_URL', 'https://www.facebook.com'),
-        TWITTER_URL=app.config.get('TWITTER_URL', 'https://www.twitter.com'),
-        LINKEDIN_URL=app.config.get('LINKEDIN_URL', 'https://www.linkedin.com'),
-        FEEDBACK_FORM_URL=app.config.get('FEEDBACK_FORM_URL', '#'),
+        FACEBOOK_URL=app.config.get('FACEBOOK_URL', 'https://facebook.com/ficoreafrica'),
+        TWITTER_URL=app.config.get('TWITTER_URL', 'https://x.com/ficoreafrica'),
+        LINKEDIN_URL=app.config.get('LINKEDIN_URL', 'https://linkedin.com/company/ficoreafrica'),
+        FEEDBACK_FORM_URL=app.config.get('FEEDBACK_FORM_URL', url_for('general_bp.feedback')),
         WAITLIST_FORM_URL=app.config.get('WAITLIST_FORM_URL', '#'),
         CONSULTANCY_FORM_URL=app.config.get('CONSULTANCY_FORM_URL', '#'),
         trans=trans,
@@ -499,10 +499,16 @@ def create_app():
     @app.template_filter('safe_nav')
     def safe_nav(value):
         try:
+            if not isinstance(value, dict) or 'icon' not in value:
+                logger.warning(f'Invalid navigation item: {value}')
+                return {'icon': 'bi-question-circle', 'label': value.get('label', ''), 'url': value.get('url', '#')}
+            if not value.get('icon', '').startswith('bi-'):
+                logger.warning(f'Invalid icon in navigation item: {value.get("icon")}')
+                value['icon'] = 'bi-question-circle'
             return value
         except Exception as e:
             logger.error(f'Navigation rendering error: {str(e)}', exc_info=True)
-            return ''
+            return {'icon': 'bi-question-circle', 'label': str(value), 'url': '#'}
     
     @app.template_filter('format_number')
     def format_number(value):
@@ -683,6 +689,13 @@ def create_app():
                 }
             ])
 
+        # Validate navigation items for icons
+        for nav_list in [tools_for_template, explore_features_for_template, bottom_nav_items]:
+            for item in nav_list:
+                if not isinstance(item, dict) or 'icon' not in item or not item['icon'].startswith('bi-'):
+                    logger.warning(f'Invalid or missing icon in navigation item: {item}')
+                    item['icon'] = 'bi-question-circle'
+
         # Debugging logs for navigation data
         current_app.logger.debug(f"DEBUGGING ICONS (context_processor): tools_for_template (first 2 items): {tools_for_template[:2]}")
         current_app.logger.debug(f"DEBUGGING ICONS (context_processor): explore_features_for_template (first 2 items): {explore_features_for_template[:2]}")
@@ -715,10 +728,10 @@ def create_app():
             'trans': context_trans,
             'get_translations': get_translations,
             'current_year': datetime.now().year,
-            'LINKEDIN_URL': app.config.get('LINKEDIN_URL', '#'),
-            'TWITTER_URL': app.config.get('TWITTER_URL', '#'),
-            'FACEBOOK_URL': app.config.get('FACEBOOK_URL', '#'),
-            'FEEDBACK_FORM_URL': app.config.get('FEEDBACK_FORM_URL', '#'),
+            'LINKEDIN_URL': app.config.get('LINKEDIN_URL', 'https://linkedin.com/company/ficoreafrica'),
+            'TWITTER_URL': app.config.get('TWITTER_URL', 'https://x.com/ficoreafrica'),
+            'FACEBOOK_URL': app.config.get('FACEBOOK_URL', 'https://facebook.com/ficoreafrica'),
+            'FEEDBACK_FORM_URL': app.config.get('FEEDBACK_FORM_URL', url_for('general_bp.feedback')),
             'WAITLIST_FORM_URL': app.config.get('WAITLIST_FORM_URL', '#'),
             'CONSULTANCY_FORM_URL': app.config.get('CONSULTANCY_FORM_URL', '#'),
             'current_lang': lang,
@@ -736,11 +749,11 @@ def create_app():
             response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, max-age=0'
         response.headers['Content-Security-Policy'] = (
             "default-src 'self'; "
-            "script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://code.jquery.com; "
-            "style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://fonts.googleapis.com; "
+            "script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://code.jquery.com https://cdnjs.cloudflare.com; "
+            "style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://fonts.googleapis.com https://cdnjs.cloudflare.com; "
             "img-src 'self' data:; "
             "connect-src 'self' https://api.ficore.app; "
-            "font-src 'self' https://cdn.jsdelivr.net https://fonts.gstatic.com;"
+            "font-src 'self' https://cdn.jsdelivr.net https://fonts.gstatic.com https://cdnjs.cloudflare.com;"
         )
         response.headers['X-Frame-Options'] = 'DENY'
         response.headers['X-Content-Type-Options'] = 'nosniff'
@@ -1249,12 +1262,12 @@ def create_app():
             "theme_color": "#007bff",
             "icons": [
                 {
-                    "src": "/static/icons/icon-192x192.png",
+                    "src": "/static/img/icon-192x192.png",
                     "sizes": "192x192",
                     "type": "image/png"
                 },
                 {
-                    "src": "/static/icons/icon-512x512.png",
+                    "src": "/static/img/icon-512x512.png",
                     "sizes": "512x512",
                     "type": "image/png"
                 }
