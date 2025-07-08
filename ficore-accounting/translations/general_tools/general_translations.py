@@ -1502,7 +1502,7 @@ GENERAL_TRANSLATIONS = {
             'Inventory_desc': 'Bayanin kaya',
             'I Owe_desc': 'Bayanin bashi na',
         'general_access_now': 'Fara Yanzu',
-        'general_mode_toggle_tooltip_switch_to_black': 'Juyar da zuwa yanayin haske', # Literally: "Turn to light mode"
+        'general_mode_toggle_tooltip_switch_to_black': 'Juya zuwa yanayin haske', # Literally: "Turn to light mode"
         'toggle_light_mode': 'Kunna yanayin haske', # "Turn on light mode"
         'toggle_dark_mode': 'Kunna yanayin duhu', # "Turn on dark mode"
         'taxation_calculator_desc': 'Duba harajinku.',
