@@ -97,14 +97,6 @@ _PERSONAL_TOOLS = [
         "icon": "bi-receipt"
     },
     {
-        "endpoint": "personal.quiz.main",
-        "label": "Quiz",
-        "label_key": "quiz_personality_quiz",
-        "description_key": "quiz_personality_desc",
-        "tooltip_key": "quiz_tooltip",
-        "icon": "bi-question-circle"
-    },
-    {
         "endpoint": "taxation_bp.calculate_tax",
         "label": "Taxation",
         "label_key": "taxation_calculator",
