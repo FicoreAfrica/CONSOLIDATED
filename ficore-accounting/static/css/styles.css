@@ -2316,3 +2316,20 @@ h2.card-title {
         font-size: 0.85rem;
     }
 }
+.tool-card {
+    position: relative;
+    padding: 1rem;
+    border: 1px solid #ddd;
+    border-radius: 0.5rem;
+}
+.tool-card .bi-lock-fill {
+    font-size: 1.2rem;
+}
+.tool-card .btn-outline-primary {
+    border-color: #0d6efd;
+    color: #0d6efd;
+}
+.tool-card .btn-outline-primary:hover {
+    background-color: #0d6efd;
+    color: #fff;
+}
