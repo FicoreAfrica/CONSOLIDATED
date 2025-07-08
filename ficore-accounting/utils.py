@@ -56,26 +56,31 @@ logger = SessionAdapter(root_logger, {})
 # Helper function to generate URLs for tools/navigation
 def generate_tools_with_urls(tools):
     '''
-    Generate a list of tools with resolved URLs.
+    Generate a list of tools with resolved URLs and validated icons.
     
     Args:
-        tools: List of dictionaries containing 'endpoint' keys
+        tools: List of dictionaries containing 'endpoint' and 'icon' keys
     
     Returns:
-        List of dictionaries with 'url' keys added
+        List of dictionaries with 'url' keys added and validated 'icon' fields
     '''
     result = []
     for tool in tools:
         try:
             with current_app.app_context():
                 url = url_for(tool['endpoint'], _external=True)
-                result.append({**tool, 'url': url})
+                # Validate icon field; use fallback if missing or invalid
+                icon = tool.get('icon', 'bi-question-circle')
+                if not icon or not icon.startswith('bi-'):
+                    logger.warning(f"Invalid or missing icon for tool {tool.get('label', 'unknown')}: {icon}. Using fallback 'bi-question-circle'.")
+                    icon = 'bi-question-circle'
+                result.append({**tool, 'url': url, 'icon': icon})
         except BuildError as e:
             logger.error(f"Failed to generate URL for endpoint {tool.get('endpoint', 'unknown')}: {str(e)}. Ensure endpoint is defined in blueprint.")
-            result.append({**tool, 'url': '#'})
+            result.append({**tool, 'url': '#', 'icon': tool.get('icon', 'bi-question-circle')})
         except RuntimeError as e:
             logger.warning(f"Runtime error generating URL for endpoint {tool.get('endpoint', 'unknown')}: {str(e)}")
-            result.append({**tool, 'url': '#'})
+            result.append({**tool, 'url': '#', 'icon': tool.get('icon', 'bi-question-circle')})
     return result
 
 # Tool/navigation lists with endpoints
@@ -104,7 +109,6 @@ _PERSONAL_TOOLS = [
         "tooltip_key": "taxation_tooltip",
         "icon": "bi-calculator"
     },
-    
     {
         "endpoint": "coins.history",
         "label": "Coins",
@@ -167,7 +171,6 @@ _PERSONAL_EXPLORE_FEATURES = [
         "tooltip_key": "emergency_fund_tooltip",
         "icon": "bi-shield"
     },
-    
     {
         "endpoint": "coins.history",
         "label": "Coins",
@@ -216,7 +219,6 @@ _PERSONAL_EXPLORE_FEATURES = [
         "tooltip_key": "news_tooltip",
         "icon": "bi-newspaper"
     },
-    
     {
         "endpoint": "personal.bill.main",
         "label": "Bills",
@@ -244,7 +246,6 @@ _BUSINESS_TOOLS = [
         "tooltip_key": "creditors_tooltip",
         "icon": "bi-person-lines"
     },
-    
     {
         "endpoint": "taxation_bp.calculate_tax",
         "label": "Taxation",
@@ -253,7 +254,6 @@ _BUSINESS_TOOLS = [
         "tooltip_key": "taxation_tooltip",
         "icon": "bi-calculator"
     },
-    
     {
         "endpoint": "coins.history",
         "label": "Coins",
@@ -273,7 +273,6 @@ _BUSINESS_EXPLORE_FEATURES = [
         "tooltip_key": "inventory_tooltip",
         "icon": "bi-box"
     },
-    
     {
         "endpoint": "coins.history",
         "label": "Coins",
@@ -290,7 +289,6 @@ _BUSINESS_EXPLORE_FEATURES = [
         "tooltip_key": "taxation_tooltip",
         "icon": "bi-calculator"
     },
-    
     {
         "endpoint": "debtors.index",
         "label": "They Owe",
@@ -299,7 +297,6 @@ _BUSINESS_EXPLORE_FEATURES = [
         "tooltip_key": "debtors_tooltip",
         "icon": "bi-person-plus"
     },
-    
     {
         "endpoint": "taxation_bp.calculate_tax",
         "label": "Taxation",
@@ -308,7 +305,6 @@ _BUSINESS_EXPLORE_FEATURES = [
         "tooltip_key": "taxation_tooltip",
         "icon": "bi-calculator"
     },
-    
     {
         "endpoint": "news_bp.news_list",
         "label": "News",
@@ -325,14 +321,13 @@ _BUSINESS_EXPLORE_FEATURES = [
         "tooltip_key": "receipts_tooltip",
         "icon": "bi-cash-coin"
     },
-
-    {"endpoint": "payments.index",
-     "label": "MoneyOut",
-     "label_key": "payments_dashboard",
-     "description_key": "payments_dashboard",
-     "tooltip_key": "payments_tooltip",
-     "icon": "bi-person-minus"
-    
+    {
+        "endpoint": "payments.index",
+        "label": "MoneyOut",
+        "label_key": "payments_dashboard",
+        "description_key": "payments_dashboard",
+        "tooltip_key": "payments_tooltip",
+        "icon": "bi-person-minus"
     },
 ]
 
@@ -361,7 +356,6 @@ _BUSINESS_NAV = [
         "tooltip_key": "inventory_tooltip",
         "icon": "bi-box"
     },
-    
     {
         "endpoint": "settings.profile",
         "label": "Profile",
