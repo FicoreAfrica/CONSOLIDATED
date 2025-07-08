@@ -109,7 +109,7 @@
     {% if current_user.is_authenticated %}
         <nav class="bottom-nav navbar fixed-bottom d-md-none shadow-sm bg-light" role="navigation" aria-label="{{ t('general_mobile_navigation', default='Mobile navigation') | e }}">
             <div class="container-fluid d-flex justify-content-around align-items-center px-3">
-                {% if bottom_nav_items %}
+                {% if bottom_nav_items and bottom_nav_items|length > 0 %}
                     {% for item in bottom_nav_items %}
                         <a href="{{ url_for(item.endpoint) | e }}" class="nav-item text-center text-truncate {% if request.endpoint == item.endpoint %}active{% endif %}" aria-label="{{ t(item.label_key, default=item.label) | e }}">
                             <i class="{{ item.icon | default('bi bi-circle') }} fs-4 mb-1"></i>
@@ -194,15 +194,15 @@
             {% endif %}
         });
 
-        window.toggleDarkMode = function () {
+        window.toggleDarkMode = function() {
             const isDark = !document.documentElement.classList.contains('dark-mode');
-            document.documentElement.classList.toggle('dark-mode', isDark);
-            localStorage.setItem('dark_mode', isDark);
+            document.documentElement.classList.toggle('dark-mode',', isDark);
+            localStorage.setItem('dark_mode',', isDark);
             const darkModeToggle = document.getElementById('darkModeToggle');
             if (darkModeToggle) {
                 darkModeToggle.querySelector('i').className = isDark ? 'bi bi-sun fs-5' : 'bi bi-moon-stars fs-5';
-                darkModeToggle.setAttribute('data-bs-title', isDark ? '{{ t("general_mode_toggle_tooltip_switch_to_light", default="Switch to light mode") | e }}' : '{{ t("general_mode_toggle_tooltip_switch_to_dark", default="Switch to dark mode") | e }}');
-                darkModeToggle.setAttribute('aria-label', isDark ? '{{ t("general_mode_toggle_light", default="Toggle light mode") | e }}' : '{{ t("general_mode_toggle_dark", default="Toggle dark mode") | e }}');
+                darkModeToggle.setAttribute('data-bs-title',', isDark ? `'{{ t("general_mode_toggle_tooltip_switch_to_light", default="Switch to light mode") | e }}'` : `'{{ t("general_mode_toggle_tooltip_switch_to_black", default="Switch to dark mode") | e }}'`);
+                darkModeToggle.setAttribute('aria-label',', isDark ? `'{{ t("general_mode_toggle_light", "'Toggle light mode") | e }}'` : `'{{ t("general_mode_toggle_dark", "'Toggle dark mode") | e }}'`);
                 const tooltip = bootstrap.Tooltip.getInstance(darkModeToggle);
                 if (tooltip) tooltip.dispose();
                 new bootstrap.Tooltip(darkModeToggle);
@@ -211,7 +211,7 @@
 
         async function loadNotificationCount() {
             try {
-                const response = await fetch('{{ url_for("personal.notification_count") | e }}');
+                const response = await fetch('{{' url_for("personal.notification_count") | e }}');
                 if (!response.ok) throw new Error('Network response was not ok');
                 const data = await response.json();
                 const badge = document.getElementById('notificationBadge');
@@ -236,20 +236,20 @@
             }
             try {
                 const response = await fetch('{{ url_for("personal.notifications") | e }}');
-                if (!response.ok) throw new Error('Network response was not ok');
+                if (!response.ok) throw new Error(`Network response was not ok: ${response.status}`);
                 const data = await response.json();
                 if (data.error) {
                     body.innerHTML = `<p class="text-danger">{{ t('general_notification_load_error', default='Failed to load notifications') | e }}</p>`;
                     return;
                 }
-                if (data.length === 0) {
+                if (!Array.isArray(data) || data.length === 0) {
                     body.innerHTML = `<p class="text-muted text-center">{{ t('general_no_notifications_yet', default='No new notifications.') | e }}</p>`;
                 } else {
                     body.innerHTML = data.map(notification => `
                         <div class="notification-item d-flex align-items-center gap-3 p-2 ${notification.read ? 'read' : 'unread'}">
                             <i class="bi bi-bell-fill fs-5 ${notification.read ? 'text-muted' : 'text-primary'}"></i>
                             <div class="notification-content">
-                                <p class="notification-description mb-1">{{ t(notification.message, default=notification.message) | e }}</p>
+                                <p class="notification-description mb-1">${notification.message}</p>
                                 <small class="notification-time text-muted">${new Date(notification.timestamp).toLocaleString()}</small>
                             </div>
                         </div>
@@ -261,7 +261,10 @@
             }
         }
 
-        document.getElementById('notificationModal')?.addEventListener('show.bs.modal', loadNotifications);
+        const notificationModal = document.getElementById('notificationModal');
+        if (notificationModal) {
+            notificationModal.addEventListener('show.bs.modal', loadNotifications);
+        }
     </script>
     {% block base_scripts %}{% endblock %}
     {% block extra_scripts %}{% endblock %}
