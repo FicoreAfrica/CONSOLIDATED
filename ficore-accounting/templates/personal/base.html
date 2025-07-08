@@ -194,20 +194,37 @@
             {% endif %}
         });
 
-        window.toggleDarkMode = function() {
+        async function fetchTranslation(key, lang) {
+            try {
+                const response = await fetch(`{{ url_for('api_translate') | e }}?key=${encodeURIComponent(key)}&lang=${encodeURIComponent(lang)}`);
+                if (!response.ok) throw new Error('Failed to fetch translation');
+                const data = await response.json();
+                return data.translation || key;
+            } catch (error) {
+                console.error(`Failed to fetch translation for key "${key}":`, error);
+                return key;
+            }
+        }
+
+        async function toggleDarkMode() {
             const isDark = !document.documentElement.classList.contains('dark-mode');
-            document.documentElement.classList.toggle('dark-mode',', isDark);
-            localStorage.setItem('dark_mode',', isDark);
+            const lang = '{{ lang | default('en') | e }}';
+            document.documentElement.classList.toggle('dark-mode', isDark);
+            localStorage.setItem('dark_mode', isDark);
             const darkModeToggle = document.getElementById('darkModeToggle');
             if (darkModeToggle) {
                 darkModeToggle.querySelector('i').className = isDark ? 'bi bi-sun fs-5' : 'bi bi-moon-stars fs-5';
-                darkModeToggle.setAttribute('data-bs-title',', isDark ? `'{{ t("general_mode_toggle_tooltip_switch_to_light", default="Switch to light mode") | e }}'` : `'{{ t("general_mode_toggle_tooltip_switch_to_black", default="Switch to dark mode") | e }}'`);
-                darkModeToggle.setAttribute('aria-label',', isDark ? `'{{ t("general_mode_toggle_light", "'Toggle light mode") | e }}'` : `'{{ t("general_mode_toggle_dark", "'Toggle dark mode") | e }}'`);
+                const tooltipKey = isDark ? 'general_mode_toggle_tooltip_switch_to_light' : 'general_mode_toggle_tooltip_switch_to_black';
+                const ariaLabelKey = isDark ? 'general_mode_toggle_light' : 'general_mode_toggle_dark';
+                const tooltipText = await fetchTranslation(tooltipKey, lang);
+                const ariaLabelText = await fetchTranslation(ariaLabelKey, lang);
+                darkModeToggle.setAttribute('data-bs-title', tooltipText);
+                darkModeToggle.setAttribute('aria-label', ariaLabelText);
                 const tooltip = bootstrap.Tooltip.getInstance(darkModeToggle);
                 if (tooltip) tooltip.dispose();
                 new bootstrap.Tooltip(darkModeToggle);
             }
-        };
+        }
 
         async function loadNotificationCount() {
             try {
