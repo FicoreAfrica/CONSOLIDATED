@@ -9,6 +9,10 @@ GENERAL_TRANSLATIONS = {
         'general_view_detailed_summary': 'View Detailed Summary',
         'general_en': 'English',
         'general_ha': 'Hausa',
+        'general_personal_desc': 'Manage your personal account and preferences.',
+        'general_trader_desc': 'Access tools and features for traders.',
+        'general_agent_desc': 'View and manage your agent activities.',
+        'general_login_to_access': 'Login to Access',
         'general_page_not_found': 'Page not found',
         'general_access_now': 'Access Now',
         'general_login_required': 'Please log in to access this page.',
@@ -1307,6 +1311,10 @@ GENERAL_TRANSLATIONS = {
         'toggle_light_mode': 'Kunna yanayin haske', # "Turn on light mode"
         'toggle_dark_mode': 'Kunna yanayin duhu', # "Turn on dark mode"
         'taxation_calculator_desc': 'Duba harajinku.',
+        'general_personal_desc': 'Sarrafa asusunka na sirri da zaɓuɓɓukanka.',
+        'general_trader_desc': 'Samu kayan aiki da fasalulluka ga yan kasuwa.',
+        'general_agent_desc': 'Duba da sarrafa ayyukanka na wakili.',
+        'general_login_to_access': 'Shiga don Samun damar',
         'settings_profile_title': 'Sashenku',
         'They Owe_desc': 'Bayanin bashin su',
         'MoneyIn_desc': 'Bayanin kuɗi a ciki',
