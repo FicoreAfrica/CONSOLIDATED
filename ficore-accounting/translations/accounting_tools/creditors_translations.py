@@ -12,6 +12,7 @@ CREDITORS_TRANSLATIONS = {
         'creditors_edit_creditor': 'Edit Creditor',
         'creditors_delete_creditor': 'Delete Creditor',
         'creditors_create_what_you_owe': 'Create What You Owe',
+        'creditors_dashboard_desc':'Manage your creditors and track what you owe.',
                 # creditors module (English)
         'creditors_tooltip': 'I Owe',
         'creditors_create_what_you_owe_desc': 'Create a record of what you owe',
@@ -95,6 +96,7 @@ CREDITORS_TRANSLATIONS = {
         'creditors_send_delivery_reminder': 'Aika Tunatarwa game da Isarwa',
         'creditors_total_outstanding': 'Jimillar da Ya Rage',
         'creditors_overdue_payments': 'Biyan da Ya Wuce Lokaci',
+        'creditors_dashboard_desc':'Kula da wadanda suke binku bashi.',
         'creditors_aging_report': 'Rahoton Tsufa',
         'creditors_create_what_you_owe': 'Ƙirƙiri Abin da Kake Bashi',
         'creditors_what_you_owe': 'Abin da Kake Bashi',
