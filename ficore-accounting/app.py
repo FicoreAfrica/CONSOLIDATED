@@ -1116,34 +1116,43 @@ def create_app():
             return jsonify({'error': utils.trans('general_error', default='Failed to fetch notification count')}), 500
     
     @app.route('/api/notifications')
-    @login_required
-    @utils.limiter.limit('10 per minute')
-    def notifications():
-        try:
-            with app.app_context():
-                db = utils.get_mongo_db()
-                user_id = current_user.id
-                lang = session.get('lang', 'en')  # Get user's language
-                notifications = list(db.reminder_logs.find({
-                    'user_id': user_id
-                }).sort('sent_at', -1).limit(10))
-                notification_ids = [n['notification_id'] for n in notifications if not n.get('read_status', False)]
-                if notification_ids:
-                    db.reminder_logs.update_many(
-                        {'notification_id': {'$in': notification_ids}},
-                        {'$set': {'read_status': True}}
-                    )
-                    result = [{
-                        'id': str(n['notification_id']),
-                        'message': utils.trans(n['message'], lang=lang, default=n['message']),  # Apply translation server-side
-                        'type': n['type'],
-                        'timestamp': n['sent_at'].isoformat(),
-                        'read': n.get('read_status', False)
-                    } for n in notifications]
-                    return jsonify(result)
-        except Exception as e:
-            logger.error(f'Error fetching notifications: {str(e)}', exc_info=True, extra={'ip_address': request.remote_addr})
-            return jsonify({'error': utils.trans('general_error', default='Failed to fetch notifications')}), 500
+@login_required
+@utils.limiter.limit('10 per minute')
+def notifications():
+    try:
+        with app.app_context():
+            db = utils.get_mongo_db()
+            user_id = current_user.id
+            lang = session.get('lang', 'en')  # Get user's language
+            # Fetch notifications
+            notifications = list(db.reminder_logs.find({
+                'user_id': user_id
+            }).sort('sent_at', -1).limit(10))
+            logger.debug(f"Fetched {len(notifications)} notifications for user {user_id}")
+            
+            # Prepare notification data
+            result = [{
+                'id': str(n['notification_id']),
+                'message': utils.trans(n['message'], lang=lang, default=n['message']),
+                'type': n['type'],
+                'timestamp': n['sent_at'].isoformat(),
+                'read': n.get('read_status', False)
+            } for n in notifications]
+            
+            # Update read status for unread notifications
+            notification_ids = [n['notification_id'] for n in notifications if not n.get('read_status', False)]
+            if notification_ids:
+                db.reminder_logs.update_many(
+                    {'notification_id': {'$in': notification_ids}, 'user_id': user_id},
+                    {'$set': {'read_status': True}}
+                )
+                logger.debug(f"Marked {len(notification_ids)} notifications as read for user {user_id}")
+            
+            # Always return the result, even if empty
+            return jsonify({'notifications': result}), 200
+    except Exception as e:
+        logger.error(f'Error fetching notifications: {str(e)}', exc_info=True, extra={'ip_address': request.remote_addr})
+        return jsonify({'error': utils.trans('general_error', default='Failed to fetch notifications')}), 500
     
     @app.route('/setup', methods=['GET'])
     @utils.limiter.limit('10 per minute')
