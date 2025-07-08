@@ -5,6 +5,8 @@ Budget management translations for personal finance tools
 BUDGET_TRANSLATIONS = {
     'en': {
         'budget_budget_planner': 'Budget',
+        'budget_budget_desc': 'Plan and track your spending with a budget.',
+        'budget_tooltip': 'Create and manage your budget.',
         'monthly_income': 'Monthly Income',
         'budget_monthly_income': 'Monthly Income',
         'budget_housing_rent': 'Housing/Rent',
@@ -114,6 +116,9 @@ BUDGET_TRANSLATIONS = {
         'budget_budget_planner_tab': 'Kasafi',
         'transport': 'Sufuri',
         'dependents_support': 'Tallafin Masu Dogara',
+        'budget_budget_planner': 'Kasafin Kudi', # "Budget"
+        'budget_budget_desc': 'Tsara da bibiyar kashe-kashenka da kasafin kudi.', # "Plan and track your spending with a budget."
+        'budget_tooltip': 'Ƙirƙira da sarrafa kasafin kudinka.',
         'miscellaneous': 'Sauran',
         'others': 'Wasu',
         'savings_goal': 'Manufar Tattara Kuɗi',
