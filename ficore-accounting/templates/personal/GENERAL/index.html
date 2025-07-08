@@ -4,6 +4,7 @@
 {% block content %}
 <div class="page-container">
     {% if current_user.is_authenticated %}
+        <!-- Financial Summary -->
         <div class="section-card financial-summary">
             <div class="summary-cards">
                 <div class="summary-card budget-card">
@@ -44,6 +45,7 @@
             </div>
         </div>
 
+        <!-- Financial Snapshots -->
         <div class="section-card financial-snapshots">
             <h3 class="section-title">{{ t('general_snapshots', default='Financial Snapshots') | e }}</h3>
             <div class="stat-cards-container">
@@ -68,6 +70,7 @@
             </div>
         </div>
 
+        <!-- Notifications -->
         <div class="section-card notifications">
             <div class="d-flex justify-content-between align-items-center">
                 <h3 class="section-title mb-0">{{ t('general_notifications', default='Notifications') | e }}</h3>
@@ -88,6 +91,7 @@
             </div>
         </div>
 
+        <!-- Recent Activity -->
         <div class="section-card recent-activity">
             <div class="d-flex justify-content-between align-items-center">
                 <h3 class="section-title mb-0">{{ t('general_recent_activity', default='Recent Activity') | e }}</h3>
@@ -108,14 +112,12 @@
             </div>
         </div>
 
-        {# Corrected structure for Quick Actions using custom CSS Grid #}
+        <!-- Quick Actions -->
         <section class="quick-actions-section">
             <h3 class="quick-actions-heading">{{ t('general_quick_actions', default='Quick Actions') | e }}</h3>
             {% if tools_for_template %}
-                {# Removed Bootstrap row/col classes as .quick-actions CSS handles the grid #}
                 <div class="quick-actions">
                     {% for tool in tools_for_template %}
-                        {# Removed the redundant <div class="col"> wrapper #}
                         <a href="{{ url_for(tool.get('endpoint', 'personal.index')) | e }}" class="quick-action-card {{ tool.get('class', '') | e }} text-decoration-none" aria-label="{{ t(tool.get('label_key', ''), default=tool.get('label', '')) | e }}">
                             {% if tool.badge %}
                                 <span class="badge bg-danger position-absolute top-0 end-0 translate-middle rounded-pill">{{ tool.badge }}</span>
@@ -130,91 +132,61 @@
                 <p class="text-muted text-center">{{ t('general_no_actions_available', default='No quick actions available.') | e }}</p>
             {% endif %}
         </section>
-    {% endif %} {# End of `if current_user.is_authenticated` block for top sections #}
-
-    {# This section and subsequent ones use Bootstrap grid classes, which is fine #}
-    <section class="section-card hero text-center">
-        <h1 class="section-title display-4 fw-bold"><i class="bi bi-wallet-fill me-2 text-primary"></i>{{ t('general_welcome', default='Manage Your Finances with FiCore Africa') | e }}</h1>
-        <p class="lead text-muted mb-4">{{ t('general_ficore_desc', default='Africa’s leading platform for personal finance, business management, and agent services, tailored for you.') | e }}</p>
-        <div class="hero-actions d-flex justify-content-center gap-3">
-            <div class="dropdown">
-                <button class="btn btn-primary btn-lg dropdown-toggle" type="button" id="getStartedDropdown" data-bs-toggle="dropdown" aria-expanded="false">
-                    {{ t('general_get_started', default='Get Started') | e }}
-                </button>
-                <ul class="dropdown-menu shadow" aria-labelledby="getStartedDropdown">
-                    <li><a class="dropdown-item" href="{{ url_for('users.signup', role='personal') | e }}">{{ t('general_signup_personal', default='Personal Sign Up') | e }}</a></li>
-                    <li><a class="dropdown-item" href="{{ url_for('users.signup', role='trader') | e }}">{{ t('general_signup_business', default='Business Sign Up') | e }}</a></li>
-                    <li><a class="dropdown-item" href="{{ url_for('users.signup', role='agent') | e }}">{{ t('general_signup_agent', default='Agent Sign Up') | e }}</a></li>
-                    <li><hr class="dropdown-divider"></li>
-                    <li><a class="dropdown-item" href="{{ url_for('users.login') | e }}">{{ t('general_login', default='Log In') | e }}</a></li>
-                </ul>
+    {% else %}
+        <!-- Hero Section -->
+        <section class="section-card hero text-center">
+            <h1 class="section-title display-4 fw-bold"><i class="bi bi-wallet-fill me-2 text-primary"></i>{{ t('general_welcome', default='Manage Your Finances with FiCore Africa') | e }}</h1>
+            <p class="lead text-muted mb-4">{{ t('general_ficore_desc', default='Africa’s leading platform for personal finance, business management, and agent services, tailored for you.') | e }}</p>
+            <div class="hero-actions d-flex justify-content-center gap-3">
+                <div class="dropdown">
+                    <button class="btn btn-primary btn-lg dropdown-toggle" type="button" id="getStartedDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                        {{ t('general_get_started', default='Get Started') | e }}
+                    </button>
+                    <ul class="dropdown-menu shadow" aria-labelledby="getStartedDropdown">
+                        <li><a class="dropdown-item" href="{{ url_for('users.signup', role='personal') | e }}">{{ t('general_signup_personal', default='Personal Sign Up') | e }}</a></li>
+                        <li><a class="dropdown-item" href="{{ url_for('users.signup', role='trader') | e }}">{{ t('general_signup_business', default='Business Sign Up') | e }}</a></li>
+                        <li><a class="dropdown-item" href="{{ url_for('users.signup', role='agent') | e }}">{{ t('general_signup_agent', default='Agent Sign Up') | e }}</a></li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li><a class="dropdown-item" href="{{ url_for('users.login') | e }}">{{ t('general_login', default='Log In') | e }}</a></li>
+                    </ul>
+                </div>
+                <a href="{{ url_for('personal.quiz.main') | e }}" class="btn btn-outline-primary btn-lg" aria-label="{{ t('quiz_take_quiz', default='Discover Your Financial Personality') | e }}">{{ t('quiz_take_quiz', default='Take Our Quiz') | e }}</a>
             </div>
-            <a href="{{ url_for('personal.quiz.main') | e }}" class="btn btn-outline-primary btn-lg" aria-label="{{ t('quiz_take_quiz', default='Discover Your Financial Personality') | e }}">{{ t('quiz_take_quiz', default='Take Our Quiz') | e }}</a>
-        </div>
-    </section>
+        </section>
 
-    <section class="section-card roles-section">
-        <h2 class="section-title text-center"><i class="bi bi-people-fill me-2 text-primary"></i>{{ t('general_who_we_serve', default='Who We Serve') | e }}</h2>
-        <p class="text-center text-muted mb-4">{{ t('general_who_we_serve_desc', default='FiCore empowers individuals, businesses, and agents with tailored financial tools.') | e }}</p>
-        <div class="row row-cols-1 row-cols-md-3 g-4">
-            <div class="col">
-                <div class="role-card role-personal h-100 shadow-sm">
-                    <h3 class="fw-bold"><i class="bi bi-person-fill me-2 text-primary"></i>{{ t('general_personal', default='Personal Users') | e }}</h3>
-                    <p class="text-muted">{{ t('general_personal_desc', default='Plan budgets, track bills, and boost your financial health.') | e }}</p>
-                    <a href="{{ url_for('users.signup', role='personal') | e }}" class="btn btn-primary btn-sm mt-auto">{{ t('general_get_started', default='Get Started') | e }}</a>
+        <!-- Role-Based Value Proposition -->
+        <section class="section-card roles-section">
+            <h2 class="section-title text-center"><i class="bi bi-people-fill me-2 text-primary"></i>{{ t('general_who_we_serve', default='Who We Serve') | e }}</h2>
+            <p class="text-center text-muted mb-4">{{ t('general_who_we_serve_desc', default='FiCore empowers individuals, businesses, and agents with tailored financial tools.') | e }}</p>
+            <div class="row row-cols-1 row-cols-md-3 g-4">
+                <div class="col">
+                    <div class="role-card role-personal h-100 shadow-sm">
+                        <h3 class="fw-bold"><i class="bi bi-person-fill me-2 text-primary"></i>{{ t('general_personal', default='Personal Users') | e }}</h3>
+                        <p class="text-muted">{{ t('general_personal_desc', default='Plan budgets, track bills, and boost your financial health.') | e }}</p>
+                        <a href="{{ url_for('users.signup', role='personal') | e }}" class="btn btn-primary btn-sm mt-auto">{{ t('general_get_started', default='Get Started') | e }}</a>
+                    </div>
+                </div>
+                <div class="col">
+                    <div class="role-card role-business h-100 shadow-sm">
+                        <h3 class="fw-bold"><i class="bi bi-briefcase-fill me-2 text-primary"></i>{{ t('general_trader', default='Business Owners') | e }}</h3>
+                        <p class="text-muted">{{ t('general_trader_desc', default='Streamline debtors, creditors, and inventory management.') | e }}</p>
+                        <a href="{{ url_for('users.signup', role='trader') | e }}" class="btn btn-primary btn-sm mt-auto">{{ t('general_get_started', default='Get Started') | e }}</a>
+                    </div>
+                </div>
+                <div class="col">
+                    <div class="role-card role-agent h-100 shadow-sm">
+                        <h3 class="fw-bold"><i class="bi bi-handshake me-2 text-primary"></i>{{ t('general_agent', default='Agents') | e }}</h3>
+                        <p class="text-muted">{{ t('general_agent_desc', default='Onboard traders and manage tokens effortlessly.') | e }}</p>
+                        <a href="{{ url_for('users.signup', role='agent') | e }}" class="btn btn-primary btn-sm mt-auto">{{ t('general_get_started', default='Get Started') | e }}</a>
+                    </div>
                 </div>
             </div>
-            <div class="col">
-                <div class="role-card role-business h-100 shadow-sm">
-                    <h3 class="fw-bold"><i class="bi bi-briefcase-fill me-2 text-primary"></i>{{ t('general_trader', default='Business Owners') | e }}</h3>
-                    <p class="text-muted">{{ t('general_trader_desc', default='Streamline debtors, creditors, and inventory management.') | e }}</p>
-                    <a href="{{ url_for('users.signup', role='trader') | e }}" class="btn btn-primary btn-sm mt-auto">{{ t('general_get_started', default='Get Started') | e }}</a>
-                </div>
-            </div>
-            <div class="col">
-                <div class="role-card role-agent h-100 shadow-sm">
-                    <h3 class="fw-bold"><i class="bi bi-handshake me-2 text-primary"></i>{{ t('general_agent', default='Agents') | e }}</h3>
-                    <p class="text-muted">{{ t('general_agent_desc', default='Onboard traders and manage tokens effortlessly.') | e }}</p>
-                    <a href="{{ url_for('users.signup', role='agent') | e }}" class="btn btn-primary btn-sm mt-auto">{{ t('general_get_started', default='Get Started') | e }}</a>
-                </div>
-            </div>
-        </div>
-    </section>
+        </section>
 
-    <section class="section-card tools-section">
-        <h2 class="section-title text-center"><i class="bi bi-tools me-2 text-primary"></i>{{ t('general_our_tools', default='Explore Our Tools') | e }}</h2>
-        <p class="text-center text-muted mb-4">{{ t('general_tools_desc', default='Powerful tools to manage your finances effectively.') | e }}</p>
-        {% if current_user.is_authenticated %}
-            {% if current_user.role == 'personal' %}
-                {% set tools_for_template = _PERSONAL_EXPLORE_FEATURES %}
-            {% endif %}
-            {% if tools_for_template %}
-                {% set categories = ['Personal'] %}
-                {% for category in categories %}
-                    {% set category_tools = tools_for_template | selectattr('category', 'equalto', category) | list %}
-                    {% if category_tools %}
-                        <div class="mb-4">
-                            <h3 class="fw-bold text-primary">{{ t('general_' + category | lower + '_tools', default=category + ' Tools') | e }}</h3>
-                            <div class="row row-cols-1 row-cols-md-3 g-4">
-                                {% for tool in category_tools %}
-                                    <div class="col">
-                                        <div class="tool-card h-100 shadow-sm">
-                                            <h4 class="fw-bold"><i class="bi {{ tool.get('icon', 'bi-circle') | e }} me-2 text-primary"></i>{{ t(tool.get('label_key', ''), default=tool.get('label', 'Tool')) | e }}</h4>
-                                            <p class="text-muted">{{ t(tool.get('description_key', ''), default=tool.get('description', 'Description not available')) | e }}</p>
-                                            <a href="{{ url_for(tool.get('endpoint', 'personal.index')) | e }}" class="btn btn-primary btn-sm mt-auto">{{ t('general_access_now', default='Access Now') | e }}</a>
-                                        </div>
-                                    </div>
-                                {% endfor %}
-                            </div>
-                        </div>
-                    {% else %}
-                        <p class="text-muted text-center">{{ t('general_no_tools_available', default='No tools available at the moment.') | e }}</p>
-                    {% endif %}
-                {% endfor %}
-            {% else %}
-                <p class="text-muted text-center">{{ t('general_no_tools_available', default='No tools available at the moment.') | e }}</p>
-            {% endif %}
-        {% else %}
+        <!-- Tools Overview (for unauthenticated users) -->
+        <section class="section-card tools-section">
+            <h2 class="section-title text-center"><i class="bi bi-tools me-2 text-primary"></i>{{ t('general_our_tools', default='Explore Our Tools') | e }}</h2>
+            <p class="text-center text-muted mb-4">{{ t('general_tools_desc', default='Powerful tools to manage your finances effectively.') | e }}</p>
             {% if explore_features_for_template %}
                 {% set categories = ['Personal', 'Business', 'Agent'] %}
                 {% for category in categories %}
@@ -237,17 +209,14 @@
                                 {% endfor %}
                             </div>
                         </div>
-                    {% else %}
-                        <p class="text-muted text-center">{{ t('general_no_tools_available', default='No tools available at the moment.') | e }}</p>
                     {% endif %}
                 {% endfor %}
             {% else %}
                 <p class="text-muted text-center">{{ t('general_no_tools_available', default='No tools available at the moment.') | e }}</p>
             {% endif %}
-        {% endif %}
-    </section>
+        </section>
 
-    {% if not current_user.is_authenticated %}
+        <!-- Why FiCore -->
         <section class="section-card why-section">
             <h2 class="section-title text-center"><i class="bi bi-info-circle-fill me-2 text-primary"></i>{{ t('general_why_ficore', default='Why FiCore Africa?') | e }}</h2>
             <p class="text-center text-muted mb-4">{{ t('general_ficore_highlight', default='Africa’s #1 Localized Financial Management Platform') | e }}</p>
@@ -283,6 +252,7 @@
             </div>
         </section>
 
+        <!-- Testimonials -->
         <section class="section-card testimonials-section">
             <h2 class="section-title text-center"><i class="bi bi-quote me-2 text-primary"></i>{{ t('general_testimonials', default='What Our Users Say') | e }}</h2>
             <div id="testimonialCarousel" class="carousel slide" data-bs-ride="carousel">
@@ -323,6 +293,7 @@
             </div>
         </section>
 
+        <!-- FAQ Section -->
         <section class="section-card faq-section">
             <h2 class="section-title text-center"><i class="bi bi-question-circle-fill me-2 text-primary"></i>{{ t('general_faq', default='Frequently Asked Questions') | e }}</h2>
             <div class="accordion" id="faqAccordion">
@@ -365,6 +336,7 @@
             </div>
         </section>
 
+        <!-- CTA Section -->
         <section class="section-card cta-section text-center">
             <h3 class="section-title">{{ t('general_ready_to_start', default='Ready to Take Control of Your Finances?') | e }}</h3>
             <p class="text-muted mb-4">{{ t('general_signup_prompt', default='Sign up today to access tools for personal finance, business management, or agent services.') | e }}</p>
@@ -383,6 +355,43 @@
                 </div>
                 <a href="{{ url_for('personal.quiz.main') | e }}" class="btn btn-outline-primary btn-lg" aria-label="{{ t('quiz_take_quiz', default='Discover Your Financial Personality') | e }}">{{ t('quiz_take_quiz', default='Take Our Quiz') | e }}</a>
             </div>
+        </section>
+    {% endif %}
+
+    <!-- Tools Overview (for authenticated users) -->
+    {% if current_user.is_authenticated %}
+        <section class="section-card tools-section">
+            <h2 class="section-title text-center"><i class="bi bi-tools me-2 text-primary"></i>{{ t('general_our_tools', default='Explore Our Tools') | e }}</h2>
+            <p class="text-center text-muted mb-4">{{ t('general_tools_desc', default='Powerful tools to manage your finances effectively.') | e }}</p>
+            {% if current_user.role == 'personal' %}
+                {% set tools_for_template = _PERSONAL_EXPLORE_FEATURES %}
+            {% endif %}
+            {% if tools_for_template %}
+                {% set categories = ['Personal'] %}
+                {% for category in categories %}
+                    {% set category_tools = tools_for_template | selectattr('category', 'equalto', category) | list %}
+                    {% if category_tools %}
+                        <div class="mb-4">
+                            <h3 class="fw-bold text-primary">{{ t('general_' + category | lower + '_tools', default=category + ' Tools') | e }}</h3>
+                            <div class="row row-cols-1 row-cols-md-3 g-4">
+                                {% for tool in category_tools %}
+                                    <div class="col">
+                                        <div class="tool-card h-100 shadow-sm">
+                                            <h4 class="fw-bold"><i class="bi {{ tool.get('icon', 'bi-circle') | e }} me-2 text-primary"></i>{{ t(tool.get('label_key', ''), default=tool.get('label', 'Tool')) | e }}</h4>
+                                            <p class="text-muted">{{ t(tool.get('description_key', ''), default=tool.get('description', 'Description not available')) | e }}</p>
+                                            <a href="{{ url_for(tool.get('endpoint', 'personal.index')) | e }}" class="btn btn-primary btn-sm mt-auto">{{ t('general_access_now', default='Access Now') | e }}</a>
+                                        </div>
+                                    </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    {% else %}
+                        <p class="text-muted text-center">{{ t('general_no_tools_available', default='No tools available at the moment.') | e }}</p>
+                    {% endif %}
+                {% endfor %}
+            {% else %}
+                <p class="text-muted text-center">{{ t('general_no_tools_available', default='No tools available at the moment.') | e }}</p>
+            {% endif %}
         </section>
     {% endif %}
 </div>
