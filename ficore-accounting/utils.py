@@ -1,8 +1,10 @@
 import re
 import logging
 import uuid
+import os
+import certifi
 from datetime import datetime
-from flask import session, has_request_context, current_app, url_for
+from flask import session, has_request_context, current_app, url_for, request
 from flask_mail import Mail
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
@@ -701,21 +703,40 @@ def is_valid_email(email):
 
 def get_mongo_db():
     '''
-    Get MongoDB database connection.
+    Get MongoDB database instance from the application extensions.
     
     Returns:
         Database object
     '''
     try:
         with current_app.app_context():
-            if not hasattr(current_app._get_current_object(), 'mongo_client'):
-                raise RuntimeError('MongoDB client not initialized in application context')
-            db = current_app._get_current_object().mongo_client[current_app.config.get('SESSION_MONGODB_DB', 'ficodb')]
+            if 'mongo' not in current_app.extensions:
+                mongo_uri = os.getenv('MONGO_URI')
+                if not mongo_uri:
+                    logger.error("MONGO_URI environment variable not set",
+                                extra={'session_id': session.get('sid', 'no-session-id'), 'ip_address': request.remote_addr if has_request_context() else 'unknown'})
+                    raise RuntimeError("MONGO_URI environment variable not set")
+                
+                client = MongoClient(
+                    mongo_uri,
+                    serverSelectionTimeoutMS=5000,
+                    tls=True,
+                    tlsCAFile=certifi.where() if os.getenv('MONGO_CA_FILE') is None else os.getenv('MONGO_CA_FILE'),
+                    maxPoolSize=50,
+                    minPoolSize=5
+                )
+                client.admin.command('ping')
+                current_app.extensions['mongo'] = client
+                logger.info("MongoDB client initialized successfully in utils.get_mongo_db",
+                           extra={'session_id': session.get('sid', 'no-session-id'), 'ip_address': request.remote_addr if has_request_context() else 'unknown'})
+            
+            db = current_app.extensions['mongo']['ficodb']
             # Verify connection
             db.command('ping')
             return db
     except Exception as e:
-        logger.error(f"{trans('general_mongo_connection_error', default='Error getting MongoDB connection')}: {str(e)}", exc_info=True)
+        logger.error(f"Failed to connect to MongoDB database: {str(e)}",
+                    exc_info=True, extra={'session_id': session.get('sid', 'no-session-id'), 'ip_address': request.remote_addr if has_request_context() else 'unknown'})
         raise
 
 def close_mongo_db():
@@ -1036,9 +1057,6 @@ def send_sms_reminder(recipient, message):
 def send_whatsapp_reminder(recipient, message):
     '''
     Send a WhatsApp reminder to the specified recipient.
-    
-    Args:
-        reminder to the specified recipient.
     
     Args:
         recipient: Phone number of the recipient
