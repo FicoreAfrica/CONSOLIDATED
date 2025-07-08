@@ -56,7 +56,7 @@ def index():
         current_app.logger.error(f"Error rendering personal index: {str(e)}", extra={'session_id': session.get('sid', 'unknown')})
         flash(trans('general_error', default='An error occurred'), 'danger')
         return render_template(
-            'error.html',
+            'personal/GENERAL/error.html',
             error_message="Unable to load the personal finance dashboard due to an internal error.",
             title=trans('general_welcome', lang=session.get('lang', 'en'), default='Welcome'),
             is_admin=utils.is_admin
