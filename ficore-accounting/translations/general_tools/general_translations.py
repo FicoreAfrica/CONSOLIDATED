@@ -8,6 +8,15 @@ GENERAL_TRANSLATIONS = {
         'general_i_am_owed': 'I Am Owed',
         'general_net_position': 'Net Position',
         'general_view_detailed_summary': 'View Detailed Summary',
+        'general_logout': 'Logout',
+        'general_not_found': 'Page Not Found',
+        'general_no_tools_available': 'No tools available yet.',
+        'general_home': 'Home',
+        'general_home_desc': 'Go to your personal dashboard.',
+        'general_home_tooltip': 'Your personal home page.',
+        'general_business_home': 'Business Home',
+        'general_business_home_desc': 'Go to your business dashboard.',
+        'general_business_home_tooltip': 'Your business home page.',
         'general_en': 'English',
         'general_ha': 'Hausa',
         'general_personal_desc': 'Manage your personal account and preferences.',
@@ -1311,6 +1320,15 @@ GENERAL_TRANSLATIONS = {
         'general_mode_toggle_tooltip_switch_to_black': 'Juya zuwa yanayin haske', # Literally: "Turn to light mode"
         'toggle_light_mode': 'Kunna yanayin haske', # "Turn on light mode"
         'toggle_dark_mode': 'Kunna yanayin duhu', # "Turn on dark mode"
+        'general_logout': 'Fita', # "Logout"
+        'general_not_found': 'Ba a Samo Shafin ba', # "Page Not Found"
+        'general_no_tools_available': 'Babu kayan aiki da aka samu tukuna.', # "No tools available yet."
+        'general_home': 'Gida', # "Home"
+        'general_home_desc': 'Je zuwa dashboard dinka na sirri.', # "Go to your personal dashboard."
+        'general_home_tooltip': 'Shafinka na gida na sirri.', # "Your personal home page."
+        'general_business_home': 'Gida na Kasuwanci', # "Business Home"
+        'general_business_home_desc': 'Je zuwa dashboard dinka na kasuwanci.', # "Go to your business dashboard."
+        'general_business_home_tooltip': 'Shafinka na gida na kasuwanci.',
         'taxation_calculator_desc': 'Duba harajinku.',
         'general_personal_desc': 'Sarrafa asusunka na sirri da zaɓuɓɓukanka.',
         'general_trader_desc': 'Samu kayan aiki da fasalulluka ga yan kasuwa.',
