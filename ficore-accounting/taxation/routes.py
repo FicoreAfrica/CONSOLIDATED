@@ -475,7 +475,7 @@ def manage_payment_locations():
             db.payment_locations.insert_one({
                 'name': name,
                 'address': address,
-стон': contact
+                'contact': contact
             })
             logger.info(f"Payment location added: user={current_user.id}, name={name}")
             flash(trans('tax_location_added', default='Location added successfully'), 'success')
