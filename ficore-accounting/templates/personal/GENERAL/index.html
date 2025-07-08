@@ -134,7 +134,6 @@
                 <p class="text-muted text-center">{{ t('general_no_actions_available', default='No quick actions available.') | e }}</p>
             {% endif %}
         </div>
-
     {% else %}
         <!-- Hero Section -->
         <section class="section-card hero text-center">
@@ -185,15 +184,17 @@
                 </div>
             </div>
         </section>
+    {% endif %}
 
-        <!-- Tools Overview -->
-        <section class="section-card tools-section">
-            <h2 class="section-title text-center"><i class="bi bi-tools me-2 text-primary"></i>{{ t('general_our_tools', default='Explore Our Tools') | e }}</h2>
-            <p class="text-center text-muted mb-4">{{ t('general_tools_desc', default='Discover powerful tools for personal finance, business management, and agent services.') | e }}</p>
-            {% if explore_features_for_template %}
+    <!-- Tools Overview (Moved to be visible for all users) -->
+    <section class="section-card tools-section">
+        <h2 class="section-title text-center"><i class="bi bi-tools me-2 text-primary"></i>{{ t('general_our_tools', default='Explore Our Tools') | e }}</h2>
+        <p class="text-center text-muted mb-4">{{ t('general_tools_desc', default='Discover powerful tools for personal finance, business management, and agent services.') | e }}</p>
+        {% if current_user.is_authenticated %}
+            {% if tools_for_template %}
                 {% set categories = ['Personal', 'Business', 'Agent'] %}
                 {% for category in categories %}
-                    {% set category_tools = explore_features_for_template | selectattr('category', 'equalto', category) | list %}
+                    {% set category_tools = tools_for_template | selectattr('category', 'equalto', category) | list %}
                     {% if category_tools %}
                         <div class="mb-4">
                             <h3 class="fw-bold text-primary">{{ t('general_' + category | lower + '_tools', default=category + ' Tools') | e }}</h3>
@@ -203,7 +204,7 @@
                                         <div class="tool-card h-100 shadow-sm">
                                             <h4 class="fw-bold"><i class="bi {{ tool.get('icon', 'bi-circle') | e }} me-2 text-primary"></i>{{ t(tool.get('label_key', ''), default=tool.get('label', 'Tool')) | e }}</h4>
                                             <p class="text-muted">{{ t(tool.get('description_key', ''), default=tool.get('description', 'Description not available')) | e }}</p>
-                                            <a href="{{ url_for('users.signup', role=category | lower) | e }}" class="btn btn-primary btn-sm mt-auto">{{ t('general_get_started', default='Get Started') | e }}</a>
+                                            <a href="{{ url_for(tool.get('endpoint', 'personal.index')) | e }}" class="btn btn-primary btn-sm mt-auto">{{ t('general_access_now', default='Access Now') | e }}</a>
                                         </div>
                                     </div>
                                 {% endfor %}
@@ -214,8 +215,38 @@
             {% else %}
                 <p class="text-muted text-center">{{ t('general_no_tools_available', default='No tools available at the moment.') | e }}</p>
             {% endif %}
-        </section>
+        {% else %}
+            {% if explore_features_for_template %}
+                {% set categories = ['Personal', 'Business', 'Agent'] %}
+                {% for category in categories %}
+                    {% set category_tools = explore_features_for_template | selectattr('category', 'equalto', category) | list %}
+                    {% if category_tools %}
+                        <div class="mb-4">
+                            <h3 class="fw-bold text-primary">{{ t('general_' + category | lower + '_tools', default=category + ' Tools') | e }}</h3>
+                            <div class="row row-cols-1 row-cols-md-3 g-4">
+                                {% for tool in category_tools %}
+                                    <div class="col">
+                                        <div class="tool-card h-100 shadow-sm position-relative">
+                                            <h4 class="fw-bold"><i class="bi {{ tool.get('icon', 'bi-circle') | e }} me-2 text-primary"></i>{{ t(tool.get('label_key', ''), default=tool.get('label', 'Tool')) | e }}</h4>
+                                            <p class="text-muted">{{ t(tool.get('description_key', ''), default=tool.get('description', 'Description not available')) | e }}</p>
+                                            <div class="position-absolute top-0 end-0 p-2">
+                                                <i class="bi bi-lock-fill text-muted" data-bs-toggle="tooltip" data-bs-title="{{ t('general_login_required', default='Log in to access this tool') | e }}"></i>
+                                            </div>
+                                            <a href="{{ url_for('users.login') | e }}?next={{ url_for(tool.get('endpoint', 'personal.index')) | e }}" class="btn btn-outline-primary btn-sm mt-auto" data-bs-toggle="tooltip" data-bs-title="{{ t('general_login_to_access', default='Log in to access this tool') | e }}">{{ t('general_login', default='Log In') | e }}</a>
+                                        </div>
+                                    </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    {% endif %}
+                {% endfor %}
+            {% else %}
+                <p class="text-muted text-center">{{ t('general_no_tools_available', default='No tools available at the moment.') | e }}</p>
+            {% endif %}
+        {% endif %}
+    </section>
 
+    {% if not current_user.is_authenticated %}
         <!-- Why FiCore -->
         <section class="section-card why-section">
             <h2 class="section-title text-center"><i class="bi bi-info-circle-fill me-2 text-primary"></i>{{ t('general_why_ficore', default='Why FiCore Africa?') | e }}</h2>
