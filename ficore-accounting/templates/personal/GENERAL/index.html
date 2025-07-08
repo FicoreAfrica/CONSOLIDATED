@@ -54,7 +54,7 @@
                         <i class="bi bi-heartbeat text-success"></i>
                     </div>
                     <div class="snapshot-info">
-                        <div class="snapshot-label fw-bold text-truncate">{{ t('financial_health_financial_health_score', default='Financial Health') | e }}</div>
+                        <div class="snapshot-label fw-bold">{{ t('financial_health_financial_health_score', default='Financial Health') | e }}</div>
                         <div class="stat-card-value" id="financialHealthScore">0%</div>
                     </div>
                 </div>
@@ -63,7 +63,7 @@
                         <i class="bi bi-shield-check text-info"></i>
                     </div>
                     <div class="snapshot-info">
-                        <div class="snapshot-label fw-bold text-truncate">{{ t('emergency_fund_savings', default='Emergency Fund') | e }}</div>
+                        <div class="snapshot-label fw-bold">{{ t('emergency_fund_savings', default='Emergency Fund') | e }}</div>
                         <div class="stat-card-value" id="emergencyFund">₦0</div>
                     </div>
                 </div>
@@ -84,7 +84,7 @@
                         <i class="bi bi-bell text-muted"></i>
                     </div>
                     <div class="notification-content">
-                        <div class="notification-description text-truncate">{{ t('general_loading_notifications', default='Loading notifications...') | e }}</div>
+                        <div class="notification-description">{{ t('general_loading_notifications', default='Loading notifications...') | e }}</div>
                         <div class="notification-time text-muted">{{ t('general_just_now', default='Just now') | e }}</div>
                     </div>
                 </div>
@@ -105,7 +105,7 @@
                         <i class="bi bi-info-circle text-muted"></i>
                     </div>
                     <div class="activity-content">
-                        <div class="activity-description text-truncate">{{ t('general_loading_activities', default='Loading recent activities...') | e }}</div>
+                        <div class="activity-description">{{ t('general_loading_activities', default='Loading recent activities...') | e }}</div>
                         <div class="activity-time text-muted">{{ t('general_just_now', default='Just now') | e }}</div>
                     </div>
                 </div>
@@ -124,8 +124,8 @@
                                     <span class="badge bg-danger position-absolute top-0 end-0 translate-middle rounded-pill">{{ tool.badge }}</span>
                                 {% endif %}
                                 <i class="bi {{ tool.get('icon', 'bi-circle') | e }} action-icon"></i>
-                                <div class="action-label text-truncate">{{ t(tool.get('label_key', ''), default=tool.get('label', '')) | e }}</div>
-                                <p class="text-muted text-truncate fs-7">{{ t(tool.get('description_key', ''), default=tool.get('description', tool.get('label', '') + '_desc')) | e }}</p>
+                                <div class="action-label">{{ t(tool.get('label_key', ''), default=tool.get('label', '')) | e }}</div>
+                                <p class="text-muted fs-7">{{ t(tool.get('description_key', ''), default=tool.get('description', tool.get('label', '') + '_desc')) | e }}</p>
                             </a>
                         </div>
                     {% endfor %}
@@ -186,13 +186,16 @@
         </section>
     {% endif %}
 
-    <!-- Tools Overview (Moved to be visible for all users) -->
+    <!-- Tools Overview (Visible for all users) -->
     <section class="section-card tools-section">
         <h2 class="section-title text-center"><i class="bi bi-tools me-2 text-primary"></i>{{ t('general_our_tools', default='Explore Our Tools') | e }}</h2>
-        <p class="text-center text-muted mb-4">{{ t('general_tools_desc', default='Discover powerful tools for personal finance, business management, and agent services.') | e }}</p>
+        <p class="text-center text-muted mb-4">{{ t('general_tools_desc', default='Powerful tools to manage your finances effectively.') | e }}</p>
         {% if current_user.is_authenticated %}
+            {% if current_user.role == 'personal' %}
+                {% set tools_for_template = _PERSONAL_EXPLORE_FEATURES %}
+            {% endif %}
             {% if tools_for_template %}
-                {% set categories = ['Personal', 'Business', 'Agent'] %}
+                {% set categories = ['Personal'] %}
                 {% for category in categories %}
                     {% set category_tools = tools_for_template | selectattr('category', 'equalto', category) | list %}
                     {% if category_tools %}
@@ -210,6 +213,8 @@
                                 {% endfor %}
                             </div>
                         </div>
+                    {% else %}
+                        <p class="text-muted text-center">{{ t('general_no_tools_available', default='No tools available at the moment.') | e }}</p>
                     {% endif %}
                 {% endfor %}
             {% else %}
@@ -504,7 +509,7 @@ document.addEventListener('DOMContentLoaded', function() {
                                     <i class="bi bi-bell ${notification.read ? 'text-muted' : 'text-primary'}"></i>
                                 </div>
                                 <div class="notification-content">
-                                    <div class="notification-description text-truncate">${notification.message}</div>
+                                    <div class="notification-description">${notification.message}</div>
                                     <div class="notification-time text-muted">${formatTimeAgo(notification.time)}</div>
                                 </div>
                             </div>
@@ -516,7 +521,7 @@ document.addEventListener('DOMContentLoaded', function() {
                                     <i class="bi bi-bell text-muted"></i>
                                 </div>
                                 <div class="notification-content">
-                                    <div class="notification-description text-truncate">${translations.no_notifications}</div>
+                                    <div class="notification-description">${translations.no_notifications}</div>
                                     <div class="notification-time text-muted">${translations.check_back_later}</div>
                                 </div>
                             </div>
@@ -533,9 +538,8 @@ document.addEventListener('DOMContentLoaded', function() {
                                 <i class="bi bi-bell text-muted"></i>
                             </div>
                             <div class="notification-content">
-                                <div class="notification-description text-truncate">${translations.no_notifications}</div>
+                                <div class="notification-description">${translations.no_notifications}</div>
                                 <div class="notification-time text-muted">${translations.check_back_later}</div>
-                                </div>
                             </div>
                         `;
                     }
@@ -555,7 +559,7 @@ document.addEventListener('DOMContentLoaded', function() {
                                     <i class="bi ${getActivityIcon(activity.type)} ${getActivityColor(activity.type)}"></i>
                                 </div>
                                 <div class="activity-content">
-                                    <div class="activity-description text-truncate">${activity.description}</div>
+                                    <div class="activity-description">${activity.description}</div>
                                     <div class="activity-time text-muted">${formatTimeAgo(activity.timestamp)}</div>
                                 </div>
                                 ${activity.details && activity.details.amount ? `<div class="activity-amount text-nowrap">${format_currency(activity.details.amount)}</div>` : ''}
@@ -568,7 +572,7 @@ document.addEventListener('DOMContentLoaded', function() {
                                     <i class="bi bi-info-circle text-muted"></i>
                                 </div>
                                 <div class="activity-content">
-                                    <div class="activity-description text-truncate">${translations.no_recent_activity}</div>
+                                    <div class="activity-description">${translations.no_recent_activity}</div>
                                     <div class="activity-time text-muted">${translations.start_by_adding}</div>
                                 </div>
                             </div>
