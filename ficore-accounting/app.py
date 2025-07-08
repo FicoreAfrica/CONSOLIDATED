@@ -594,6 +594,94 @@ def create_app():
                 tools_for_template = utils.ALL_TOOLS
                 explore_features_for_template = utils.ADMIN_EXPLORE_FEATURES
                 bottom_nav_items = utils.ADMIN_NAV
+        else:
+            # Provide a curated snapshot of the ecosystem for unauthorized users
+            explore_features_for_template = utils.generate_tools_with_urls([
+                # 3 Personal Tools
+                {
+                    "endpoint": "personal.budget.main",
+                    "label": "Budget Planner",
+                    "label_key": "budget_budget_planner",
+                    "description_key": "budget_budget_desc",
+                    "tooltip_key": "budget_tooltip",
+                    "icon": "bi-wallet",
+                    "category": "Personal"
+                },
+                {
+                    "endpoint": "personal.financial_health.main",
+                    "label": "Financial Health",
+                    "label_key": "financial_health_calculator",
+                    "description_key": "financial_health_desc",
+                    "tooltip_key": "financial_health_tooltip",
+                    "icon": "bi-heart",
+                    "category": "Personal"
+                },
+                {
+                    "endpoint": "personal.quiz.main",
+                    "label": "Financial Personality Quiz",
+                    "label_key": "quiz_personality_quiz",
+                    "description_key": "quiz_personality_desc",
+                    "tooltip_key": "quiz_tooltip",
+                    "icon": "bi-question-circle",
+                    "category": "Personal"
+                },
+                # 3 Business Tools
+                {
+                    "endpoint": "inventory.index",
+                    "label": "Inventory",
+                    "label_key": "inventory_dashboard",
+                    "description_key": "inventory_dashboard_desc",
+                    "tooltip_key": "inventory_tooltip",
+                    "icon": "bi-box",
+                    "category": "Business"
+                },
+                {
+                    "endpoint": "creditors.index",
+                    "label": "I Owe",
+                    "label_key": "creditors_dashboard",
+                    "description_key": "creditors_dashboard_desc",
+                    "tooltip_key": "creditors_tooltip",
+                    "icon": "bi-person-lines",
+                    "category": "Business"
+                },
+                {
+                    "endpoint": "debtors.index",
+                    "label": "They Owe",
+                    "label_key": "debtors_dashboard",
+                    "description_key": "debtors_dashboard_desc",
+                    "tooltip_key": "debtors_tooltip",
+                    "icon": "bi-person-plus",
+                    "category": "Business"
+                },
+                # 3 Agent Functions
+                {
+                    "endpoint": "agents_bp.agent_portal",
+                    "label": "Agent Portal",
+                    "label_key": "agents_dashboard",
+                    "description_key": "agents_dashboard_desc",
+                    "tooltip_key": "agents_tooltip",
+                    "icon": "bi-person-workspace",
+                    "category": "Agent"
+                },
+                {
+                    "endpoint": "coins.history",
+                    "label": "Coins",
+                    "label_key": "coins_dashboard",
+                    "description_key": "coins_dashboard_desc",
+                    "tooltip_key": "coins_tooltip",
+                    "icon": "bi-coin",
+                    "category": "Agent"
+                },
+                {
+                    "endpoint": "news_bp.news_list",
+                    "label": "News",
+                    "label_key": "news_list",
+                    "description_key": "news_list_desc",
+                    "tooltip_key": "news_tooltip",
+                    "icon": "bi-newspaper",
+                    "category": "Agent"
+                }
+            ])
 
         # Debugging logs for navigation data
         current_app.logger.debug(f"DEBUGGING ICONS (context_processor): tools_for_template (first 2 items): {tools_for_template[:2]}")
@@ -722,19 +810,6 @@ def create_app():
                     return redirect(url_for('general_bp.home'))
             elif current_user.role == 'personal':
                 return redirect(url_for('personal.index'))
-            else:
-                try:
-                    return render_template(
-                        'general/home.html',
-                        title=utils.trans('general_welcome', lang=lang)
-                    )
-                except TemplateNotFound as e:
-                    logger.error(f'Template not found: {str(e)}', exc_info=True)
-                    return render_template(
-                        'personal/GENERAL/error.html',
-                        error=str(e),
-                        title=utils.trans('general_welcome', lang=lang)
-                    ), 404
         try:
             courses = app.config.get('COURSES', [])
             logger.info(f'Retrieved {len(courses)} courses')
@@ -743,7 +818,8 @@ def create_app():
                 courses=courses,
                 sample_courses=courses,
                 title=utils.trans('general_welcome', lang=lang),
-                is_anonymous=session.get('is_anonymous', False)
+                is_anonymous=session.get('is_anonymous', False),
+                is_public=True  # Indicate public marketing page
             )
         except TemplateNotFound as e:
             logger.error(f'Template not found: {str(e)}', exc_info=True)
