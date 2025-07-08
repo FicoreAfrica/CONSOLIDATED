@@ -109,6 +109,7 @@ def main():
     try:
         try:
             log_tool_usage(
+                get_mongo_db(),
                 tool_name='net_worth',
                 user_id=current_user.id if current_user.is_authenticated else None,
                 session_id=session['sid'],
@@ -126,6 +127,7 @@ def main():
             if action == 'calculate_net_worth' and form.validate_on_submit():
                 try:
                     log_tool_usage(
+                        get_mongo_db(),
                         tool_name='net_worth',
                         user_id=current_user.id if current_user.is_authenticated else None,
                         session_id=session['sid'],
@@ -360,6 +362,7 @@ def summary():
     try:
         try:
             log_tool_usage(
+                get_mongo_db(),
                 tool_name='net_worth',
                 user_id=current_user.id if current_user.is_authenticated else None,
                 session_id=session.get('sid', 'unknown'),
@@ -390,7 +393,7 @@ def summary():
 @net_worth_bp.route('/unsubscribe/<email>')
 @custom_login_required
 @requires_role(['personal', 'admin'])
-def unsubscribe():
+def unsubscribe(email):
     """Unsubscribe user from net worth emails using MongoDB."""
     if 'sid' not in session:
         create_anonymous_session()
@@ -401,6 +404,7 @@ def unsubscribe():
     try:
         try:
             log_tool_usage(
+                get_mongo_db(),
                 tool_name='net_worth',
                 user_id=current_user.id if current_user.is_authenticated else None,
                 session_id=session['sid'],
