@@ -7,6 +7,7 @@ GENERAL_TRANSLATIONS = {
         'general_who_we_serve': 'Who We Serve',
         'general_i_am_owed': 'I Am Owed',
         'general_net_position': 'Net Position',
+        'general_logout': 'Log out',
         'general_view_detailed_summary': 'View Detailed Summary',
         'general_logout': 'Logout',
         'general_not_found': 'Page Not Found',
@@ -1329,6 +1330,7 @@ GENERAL_TRANSLATIONS = {
         'general_business_home': 'Gida na Kasuwanci', # "Business Home"
         'general_business_home_desc': 'Je zuwa dashboard dinka na kasuwanci.', # "Go to your business dashboard."
         'general_business_home_tooltip': 'Shafinka na gida na kasuwanci.',
+        'general_logout': 'Fita',
         'taxation_calculator_desc': 'Duba harajinku.',
         'general_personal_desc': 'Sarrafa asusunka na sirri da zaɓuɓɓukanka.',
         'general_trader_desc': 'Samu kayan aiki da fasalulluka ga yan kasuwa.',
