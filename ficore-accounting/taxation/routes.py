@@ -200,7 +200,7 @@ def seed_tax_data():
             {'role': 'personal', 'min_income': 12000001.0, 'max_income': 25000000.0, 'rate': 0.21, 'description': trans('tax_rate_personal_21_2026', default='21% PAYE for income ₦12,000,001 to ₦25,000,000 in 2026'), 'year': 2026},
             {'role': 'personal', 'min_income': 25000001.0, 'max_income': 50000000.0, 'rate': 0.23, 'description': trans('tax_rate_personal_23_2026', default='23% PAYE for income ₦25,000,001 to ₦50,000,000 in 2026'), 'year': 2026},
             {'role': 'personal', 'min_income': 50000001.0, 'max_income': float('inf'), 'rate': 0.25, 'description': trans('tax_rate_personal_25_2026', default='25% PAYE for income above ₦50,000,000 in 2026'), 'year': 2026},
-            {'role': 'company', 'min_income': 0.0, 'max_income': 25000000.0, 'rate': 0.0, 'description': trans('tax_rate_cit_small_2025', default='0% CIT for turnover ≤ ₦25M in 2025, simplified return, no audit'), 'year': 2025},
+            {'role': 'company', 'min_income': 0.0, 'max_income': 25000096.0, 'rate': 0.0, 'description': trans('tax_rate_cit_small_2025', default='0% CIT for turnover ≤ ₦25M in 2025, simplified return, no audit'), 'year': 2025},
             {'role': 'company', 'min_income': 25000001.0, 'max_income': 100000000.0, 'rate': 0.25, 'description': trans('tax_rate_cit_medium_2025', default='25% CIT for turnover ₦25M+ to ₦100M in 2025'), 'year': 2025},
             {'role': 'company', 'min_income': 100000001.0, 'max_income': float('inf'), 'rate': 0.30, 'description': trans('tax_rate_cit_large_2025', default='30% CIT for turnover > ₦100M in 2025'), 'year': 2025},
             {'role': 'company', 'min_income': 0.0, 'max_income': 50000000.0, 'rate': 0.0, 'description': trans('tax_rate_cit_small', default='0% CIT for turnover ≤ ₦50M, simplified return, no audit'), 'year': 2026},
@@ -240,24 +240,27 @@ def seed_tax_data():
 def calculate_tax():
     form = TaxCalculationForm()
     db = get_mongo_db()
-    tax_rates = list(db.tax_rates.find())
+    # Filter out documents without 'role' (e.g., version document)
+    tax_rates = list(db.tax_rates.find({'role': {'$exists': True}}))
     vat_rules = list(db.vat_rules.find())
+    # Log tax_rates for debugging
+    logger.debug(f"Fetched tax_rates: {tax_rates}")
     serialized_tax_rates = [
         {
-            'role': rate['role'],
-            'min_income': rate['min_income'],
-            'max_income': rate['max_income'],
-            'rate': rate['rate'],
-            'description': rate['description'],
+            'role': rate.get('role', 'unknown'),  # Fallback for missing 'role'
+            'min_income': rate.get('min_income', 0.0),
+            'max_income': rate.get('max_income', float('inf')),
+            'rate': rate.get('rate', 0.0),
+            'description': rate.get('description', ''),
             '_id': str(rate['_id']),
             'year': rate.get('year', '')
-        } for rate in tax_rates
+        } for rate in tax_rates if rate.get('_id') != 'version'  # Explicitly exclude version document
     ]
     serialized_vat_rules = [
         {
-            'category': rule['category'],
-            'vat_exempt': rule['vat_exempt'],
-            'description': rule['description'],
+            'category': rule.get('category', 'unknown'),
+            'vat_exempt': rule.get('vat_exempt', False),
+            'description': rule.get('description', ''),
             '_id': str(rule['_id'])
         } for rule in vat_rules
     ]
@@ -428,24 +431,24 @@ def manage_tax_rates():
         logger.info(f"Tax rate added: user={current_user.id}, role={form.role.data}, rate={form.rate.data}")
         flash(trans('tax_rate_added', default='Tax rate added successfully'), 'success')
         return redirect(url_for('taxation_bp.manage_tax_rates'))
-    rates = list(db.tax_rates.find())
+    rates = list(db.tax_rates.find({'role': {'$exists': True}}))  # Filter out version document
     vat_rules = list(db.vat_rules.find())
     serialized_rates = [
         {
-            'role': rate['role'],
-            'min_income': rate['min_income'],
-            'max_income': rate['max_income'],
-            'rate': rate['rate'],
-            'description': rate['description'],
+            'role': rate.get('role', 'unknown'),
+            'min_income': rate.get('min_income', 0.0),
+            'max_income': rate.get('max_income', float('inf')),
+            'rate': rate.get('rate', 0.0),
+            'description': rate.get('description', ''),
             '_id': str(rate['_id']),
             'year': rate.get('year', '')
-        } for rate in rates
+        } for rate in rates if rate.get('_id') != 'version'
     ]
     serialized_vat_rules = [
         {
-            'category': rule['category'],
-            'vat_exempt': rule['vat_exempt'],
-            'description': rule['description'],
+            'category': rule.get('category', 'unknown'),
+            'vat_exempt': rule.get('vat_exempt', False),
+            'description': rule.get('description', ''),
             '_id': str(rule['_id'])
         } for rule in vat_rules
     ]
@@ -456,7 +459,7 @@ def manage_tax_rates():
         rates=serialized_rates,
         vat_rules=serialized_vat_rules,
         policy_notice=trans('tax_policy_notice', default='New tax laws effective 1 January 2026: Rent relief of ₦200,000 for income ≤ ₦1M, VAT exemptions for essentials, 0% CIT for small businesses ≤ ₦50M with simplified returns, 30% CIT for large businesses, VAT credits for businesses.'),
-        title=trans('tax_manage_rates_title', default='Manage Tax Rates', lang=session.get('lang', 'en'))
+        title=trans('tax_manage_rates_title', default='Manage Tax Rates', lang=session.get('ing', 'en'))
     )
 
 @taxation_bp.route('/admin/locations', methods=['GET', 'POST'])
@@ -472,7 +475,7 @@ def manage_payment_locations():
             db.payment_locations.insert_one({
                 'name': name,
                 'address': address,
-                'contact': contact
+стон': contact
             })
             logger.info(f"Payment location added: user={current_user.id}, name={name}")
             flash(trans('tax_location_added', default='Location added successfully'), 'success')
@@ -504,7 +507,7 @@ def manage_tax_deadlines():
     db = get_mongo_db()
     if request.method == 'POST':
         deadline_date = request.form.get('deadline_date')
-        description = request.form.get('description')
+ description = request.form.get('description')
         if deadline_date and description:
             try:
                 deadline_date = datetime.datetime.strptime(deadline_date, '%Y-%m-%d')
